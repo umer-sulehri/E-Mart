@@ -1,0 +1,151 @@
+import { z } from 'zod';
+
+export const RegisterSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  phone: z.string().regex(/^\+?[0-9]{10,15}$/, 'Invalid phone number').optional(),
+  email: z.string().email('Invalid email address').optional(),
+}).refine((data) => data.phone || data.email, {
+  message: 'Either phone or email is required',
+});
+
+export const LoginSchema = z.object({
+  phone: z.string().regex(/^\+?[0-9]{10,15}$/, 'Invalid phone number').optional(),
+  email: z.string().email('Invalid email address').optional(),
+}).refine((data) => data.phone || data.email, {
+  message: 'Either phone or email is required',
+});
+
+export const OtpVerifySchema = z.object({
+  code: z.string().length(6, 'OTP must be 6 digits'),
+});
+
+export const otpRequestSchema = z.object({
+  identifier: z.string().min(1, 'Phone or email is required'),
+});
+
+export const otpVerifySchema = z.object({
+  identifier: z.string().min(1, 'Identifier is required'),
+  code: z.string().length(6, 'OTP must be 6 digits'),
+});
+
+export const orderItemSchema = z.object({
+  productId: z.string(),
+  productName: z.string(),
+  productImage: z.string(),
+  price: z.number().positive(),
+  quantity: z.number().int().positive(),
+});
+
+export const CreateOrderSchema = z.object({
+  items: z.array(orderItemSchema).min(1, 'At least one item is required'),
+  address: z.string().min(5, 'Address is required'),
+  paymentMethod: z.enum(['cod', 'card', 'transfer']),
+});
+
+export const orderCreateSchema = z.object({
+  items: z.array(orderItemSchema).min(1, 'At least one item is required'),
+  address: z.string().min(5, 'Address is required'),
+  paymentMethod: z.enum(['cod', 'card', 'transfer']),
+});
+
+export const orderUpdateStatusSchema = z.object({
+  status: z.enum(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']),
+});
+
+export const CreateProductSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  nameUrdu: z.string().optional(),
+  description: z.string().min(1, 'Description is required'),
+  descriptionUrdu: z.string().optional(),
+  price: z.number().positive('Price must be positive'),
+  originalPrice: z.number().positive().optional(),
+  stock: z.number().int().min(0, 'Stock cannot be negative'),
+  categoryId: z.string().min(1, 'Category is required'),
+  images: z.array(z.string().url()).min(1, 'At least one image is required'),
+  tags: z.array(z.string()).default([]),
+  isFeatured: z.boolean().default(false),
+  isNew: z.boolean().default(false),
+});
+
+export const productCreateSchema = CreateProductSchema;
+
+export const productUpdateSchema = CreateProductSchema.partial();
+
+export const productBulkCreateSchema = z.object({
+  products: z.array(CreateProductSchema).min(1, 'At least one product is required'),
+});
+
+export const UpdateProductSchema = CreateProductSchema.partial();
+
+export const CreateReviewSchema = z.object({
+  productId: z.string().min(1, 'Product ID is required'),
+  rating: z.number().int().min(1, 'Rating must be at least 1').max(5, 'Rating must be at most 5'),
+  comment: z.string().min(1, 'Comment is required').max(500, 'Comment is too long'),
+});
+
+export const reviewCreateSchema = z.object({
+  rating: z.number().int().min(1, 'Rating must be at least 1').max(5, 'Rating must be at most 5'),
+  comment: z.string().min(1, 'Comment is required').max(500, 'Comment is too long'),
+});
+
+export const CreateCategorySchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  nameUrdu: z.string().optional(),
+  slug: z.string().regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
+  icon: z.string().min(1, 'Icon is required'),
+  image: z.string().url().optional(),
+  parentId: z.string().optional(),
+});
+
+export const categoryCreateSchema = CreateCategorySchema;
+
+export const categoryUpdateSchema = CreateCategorySchema.partial();
+
+export const SearchSchema = z.object({
+  query: z.string().min(1, 'Search query is required'),
+});
+
+export const cartItemAddSchema = z.object({
+  productId: z.string().min(1, 'Product ID is required'),
+  quantity: z.number().int().positive().default(1),
+});
+
+export const cartItemUpdateSchema = z.object({
+  quantity: z.number().int().positive(),
+});
+
+export const wishlistAddSchema = z.object({
+  productId: z.string().min(1, 'Product ID is required'),
+});
+
+export const paymentProcessSchema = z.object({
+  orderId: z.string(),
+  amount: z.number().positive(),
+  method: z.string(),
+});
+
+export const codProcessSchema = z.object({
+  orderId: z.string(),
+});
+
+export const voiceSearchSchema = z.object({
+  query: z.string().min(1, 'Voice query is required'),
+});
+
+export const notificationPrefsUpdateSchema = z.object({
+  emailNotifications: z.boolean().optional(),
+  pushNotifications: z.boolean().optional(),
+  orderUpdates: z.boolean().optional(),
+  promotions: z.boolean().optional(),
+});
+
+export const createSocialLinkSchema = z.object({
+  platform: z.string().min(1, 'Platform is required'),
+  label: z.string().min(1, 'Label is required'),
+  url: z.string().url('Must be a valid URL'),
+  icon: z.string().min(1, 'Icon identifier is required'),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
+});
+
+export const updateSocialLinkSchema = createSocialLinkSchema.partial();
