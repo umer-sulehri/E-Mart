@@ -3,8 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/authStore';
-import { mockOrders } from '@/lib/mock/orders';
-import { mockProducts } from '@/lib/mock/products';
+import { useSellerOrders } from '@/hooks/useSeller';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { SearchIcon, EyeIcon, OrderIcon } from '@/components/icons';
 
@@ -19,13 +18,10 @@ export default function SellerOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 10;
 
-  const sellerProductIds = useMemo(() => mockProducts.slice(0, 12).map(p => p.id), []);
+  const { data: ordersData } = useSellerOrders(currentPage, perPage);
+  const allOrders = ordersData?.orders ?? [];
 
-  const orders = useMemo(() => {
-    return mockOrders.filter(order =>
-      order.items.some(item => sellerProductIds.includes(item.productId))
-    );
-  }, [sellerProductIds]);
+  const orders = useMemo(() => allOrders, [allOrders]);
 
   const filtered = useMemo(() => {
     return orders

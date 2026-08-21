@@ -49,6 +49,31 @@ export default function AdminTranslationsPage() {
   const [translations, setTranslations] = useState<TranslationEntry[]>(() =>
     flatten(en as Record<string, unknown>)
   );
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const markChanged = () => { setHasChanges(true); setSaved(false); };
+
+  const handleSaveAll = async () => {
+    setSaving(true);
+    try {
+      const payload: Record<string, { en: string; ur: string }> = {};
+      for (const t of translations) {
+        payload[t.key] = { en: t.en, ur: t.ur };
+      }
+      await fetch('/api/v1/admin/translations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ translations: payload }),
+      });
+      setHasChanges(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!search) return translations;
@@ -92,6 +117,7 @@ export default function AdminTranslationsPage() {
         t.key === editingKey ? { ...t, en: draftEn, ur: draftUr } : t
       )
     );
+    markChanged();
     setEditingKey(null);
   };
 
@@ -127,6 +153,34 @@ export default function AdminTranslationsPage() {
           >
             Showing {filtered.length} of {translations.length} translations
           </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {saved && (
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-success)' }}>
+              Saved!
+            </span>
+          )}
+          <button
+            onClick={handleSaveAll}
+            disabled={saving || !hasChanges}
+            style={{
+              height: '44px',
+              padding: '0 20px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'var(--color-primary)',
+              color: '#fff',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: hasChanges && !saving ? 'pointer' : 'not-allowed',
+              opacity: hasChanges && !saving ? 1 : 0.5,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
       </div>
 

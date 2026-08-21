@@ -2,26 +2,43 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockProducts } from '@/lib/mock/products';
+import { useProduct } from '@/hooks/useProducts';
 import { Product } from '@/lib/types';
 import { ArrowLeftIcon, CheckCircleIcon } from '@/components/icons';
 
 export default function SellerEditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [saved, setSaved] = useState(false);
-
-  const product = mockProducts[0];
+  const resolvedParams = params as any;
+  const slug = resolvedParams?.id ?? '';
+  const { data: product, isLoading } = useProduct(slug);
 
   const [form, setForm] = useState({
-    name: product.name,
+    name: '',
     brand: 'Generic',
-    category: product.category?.slug || '',
-    description: product.description,
-    price: product.price,
-    originalPrice: product.originalPrice || product.price,
-    stock: product.stock,
-    stockStatus: product.stock > 10 ? 'available' : product.stock > 0 ? 'limited' : 'out-of-stock',
+    category: '',
+    description: '',
+    price: 0,
+    originalPrice: 0,
+    stock: 0,
+    stockStatus: 'available',
   });
+
+  const [initialized, setInitialized] = useState(false);
+
+  if (product && !initialized) {
+    setForm({
+      name: product.name,
+      brand: 'Generic',
+      category: product.category?.slug || '',
+      description: product.description,
+      price: product.price,
+      originalPrice: product.originalPrice || product.price,
+      stock: product.stock,
+      stockStatus: product.stock > 10 ? 'available' : product.stock > 0 ? 'limited' : 'out-of-stock',
+    });
+    setInitialized(true);
+  }
 
   const handleSave = () => {
     setSaved(true);

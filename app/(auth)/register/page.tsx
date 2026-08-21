@@ -8,8 +8,16 @@ import { useRequestOtp } from '@/hooks/useAuth';
 import { AuthLayout } from '@/components/common/AuthLayout';
 import { EyeIcon, EyeOffIcon, CheckIcon, CloseIcon } from '@/components/icons';
 
+function PasswordRequirement({ label, met }: { label: string; met: boolean }) {
+  return (
+    <li className={`text-[11px] flex items-center gap-1.5 transition-colors duration-300 ${met ? 'text-[var(--color-success)]' : 'text-[var(--color-text-secondary)]'}`}>
+      {met ? <CheckIcon className="w-3 h-3" /> : <CloseIcon className="w-3 h-3" />}
+      {label}
+    </li>
+  );
+}
+
 export default function RegisterPage() {
-  const { t } = useTranslations();
   const router = useRouter();
   const requestOtp = useRequestOtp();
   const [fullName, setFullName] = useState('');
@@ -62,6 +70,8 @@ export default function RegisterPage() {
         sessionStorage.setItem('otpIdentifier', email.trim());
         sessionStorage.setItem('registerName', fullName.trim());
         sessionStorage.setItem('registerUserType', userType);
+        sessionStorage.setItem('registerPassword', password);
+        sessionStorage.setItem('registerPhone', phone.trim());
         router.push('/otp-verify');
       },
       onError: (err) => {
@@ -69,13 +79,6 @@ export default function RegisterPage() {
       },
     });
   };
-
-  const PasswordRequirement = ({ label, met }: { label: string; met: boolean }) => (
-    <li className={`text-[11px] flex items-center gap-1.5 transition-colors duration-300 ${met ? 'text-[var(--color-success)]' : 'text-[var(--color-text-secondary)]'}`}>
-      {met ? <CheckIcon className="w-3 h-3" /> : <CloseIcon className="w-3 h-3" />}
-      {label}
-    </li>
-  );
 
   return (
     <AuthLayout title="Create Account" maxWidth="500px">

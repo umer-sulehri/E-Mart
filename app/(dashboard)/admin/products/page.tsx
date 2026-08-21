@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { useAdminProducts, useDeleteProduct } from '@/hooks/useAdmin';
-import { mockCategories } from '@/lib/mock/products';
+import { useCategories } from '@/hooks/useCategories';
 import { PlusIcon, EyeIcon, EditIcon, TrashIcon } from '@/components/icons';
 import type { Product } from '@/lib/types';
 
@@ -27,12 +27,23 @@ export default function ProductsManagementPage() {
   const itemsPerPage = 10;
 
   const { data: adminData, isLoading } = useAdminProducts(currentPage, itemsPerPage);
+  const { data: categories } = useCategories();
   const products = adminData?.products;
   const totalCount = adminData?.total;
 
   const deleteProduct = useDeleteProduct();
 
-  const filteredProducts = useMemo(() => products || [], [products]);
+  const filteredProducts = useMemo(() => {
+    let result = products || [];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((p: any) => p.name?.toLowerCase().includes(q) || p.slug?.toLowerCase().includes(q));
+    }
+    if (categoryFilter) {
+      result = result.filter((p: any) => p.category?.id === categoryFilter || p.categoryId === categoryFilter);
+    }
+    return result;
+  }, [products, search, categoryFilter]);
   const totalPages = Math.ceil((totalCount || 0) / itemsPerPage);
 
   const getStockStatus = (stock: number) => {
@@ -72,7 +83,7 @@ export default function ProductsManagementPage() {
     e.preventDefault();
     if (!selectedProduct) return;
     try {
-      await fetch(`/api/admin/products/${selectedProduct.id}`, {
+      await fetch(`/api/v1/admin/products/${selectedProduct.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selectedProduct),
@@ -131,7 +142,7 @@ export default function ProductsManagementPage() {
                 className="h-[48px] w-full rounded-[10px] border border-border bg-surface px-4 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">All Categories</option>
-                {mockCategories.map((cat) => (
+                {(categories ?? []).map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>

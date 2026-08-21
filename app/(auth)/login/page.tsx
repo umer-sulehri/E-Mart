@@ -3,15 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
-import { useRequestOtp } from '@/hooks/useAuth';
+import { useLogin } from '@/hooks/useAuth';
+import { useAuthStore } from '@/lib/store/authStore';
 import { AuthLayout } from '@/components/common/AuthLayout';
-import { EyeIcon, EyeOffIcon, ArrowLeftIcon } from '@/components/icons';
+import { EyeIcon, EyeOffIcon } from '@/components/icons';
 
 export default function LoginPage() {
-  const { t } = useTranslations();
   const router = useRouter();
-  const requestOtp = useRequestOtp();
+  const loginMutation = useLogin();
+  const setAuth = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,15 +28,18 @@ export default function LoginPage() {
       return;
     }
     setError('');
-    requestOtp.mutate(email.trim(), {
-      onSuccess: () => {
-        sessionStorage.setItem('otpIdentifier', email.trim());
-        router.push('/otp-verify');
-      },
-      onError: (err) => {
-        setError(err.message || 'Failed to send OTP. Please try again.');
-      },
-    });
+    loginMutation.mutate(
+      { email: email.trim(), password },
+      {
+        onSuccess: (data) => {
+          setAuth(data.user, '');
+          router.push('/');
+        },
+        onError: (err) => {
+          setError(err.message || 'Invalid email or password. Please try again.');
+        },
+      }
+    );
   };
 
   return (
@@ -114,14 +117,14 @@ export default function LoginPage() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={requestOtp.isPending}
+          disabled={loginMutation.isPending}
           className="w-full py-3.5 rounded-[10px] text-base font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5 mt-2.5 disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
         >
-          {requestOtp.isPending ? (
+          {loginMutation.isPending ? (
             <span className="flex items-center justify-center gap-2">
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Sending OTP...
+              Signing in...
             </span>
           ) : 'Login'}
         </button>

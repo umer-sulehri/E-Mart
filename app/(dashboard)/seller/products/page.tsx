@@ -2,12 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { mockProducts } from '@/lib/mock/products';
+import { useSellerProducts } from '@/hooks/useSeller';
+import { useCategories } from '@/hooks/useCategories';
 import { Product } from '@/lib/types';
 import { SearchIcon, EditIcon, TrashIcon, EyeIcon, PlusIcon, StarIcon, CheckCircleIcon } from '@/components/icons';
-import { mockCategories } from '@/lib/mock/products';
-
-const CATEGORIES = mockCategories.flatMap(c => [c, ...(c.children || [])]);
 
 export default function SellerProductsPage() {
   const [search, setSearch] = useState('');
@@ -17,7 +15,10 @@ export default function SellerProductsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const perPage = 10;
 
-  const products = mockProducts.slice(0, 12);
+  const { data: productsData } = useSellerProducts(currentPage, perPage);
+  const { data: categories } = useCategories();
+  const CATEGORIES = categories ?? [];
+  const products = productsData?.products ?? [];
 
   const filtered = useMemo(() => {
     return products.filter(p => {

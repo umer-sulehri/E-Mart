@@ -12,6 +12,7 @@ interface AuthStore {
   login: (user: User, token: string) => void;
   logout: () => void;
   switchMode: (mode: UserMode) => void;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -39,6 +40,8 @@ export const useAuthStore = create<AuthStore>()(
         }),
 
       switchMode: (mode) => set({ currentMode: mode }),
+
+      setUser: (user) => set({ user }),
     }),
     { name: 'emart-auth' },
   ),

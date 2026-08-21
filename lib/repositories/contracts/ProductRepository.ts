@@ -7,6 +7,7 @@ export interface ProductFilters {
   minRating?: number;
   search?: string;
   sort?: string;
+  sellerId?: string;
 }
 
 export interface ProductRepository {

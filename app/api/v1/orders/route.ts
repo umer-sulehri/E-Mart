@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OrderRepository, ProductRepository, CartRepository } from '@/lib/repositories/index';
 import { getSession } from '@/lib/auth/getSession';
+import { notifyNewOrder } from '@/lib/notifications/dispatch';
 
 export async function GET() {
   const user = await getSession();
@@ -59,6 +60,8 @@ export async function POST(request: NextRequest) {
   });
 
   await CartRepository.clear(user.id);
+
+  void notifyNewOrder(user, order.id);
 
   return NextResponse.json({ order }, { status: 201 });
 }

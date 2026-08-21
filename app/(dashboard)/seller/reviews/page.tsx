@@ -1,27 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { mockReviews } from '@/lib/mock/orders';
-import { mockProducts } from '@/lib/mock/products';
+import { useSellerReviews } from '@/hooks/useReviews';
 import { StarIcon, SearchIcon } from '@/components/icons';
 
 export default function SellerReviewsPage() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
 
-  const reviews = [
-    { id: 'r1', userName: 'Ahmed Khan', productName: 'Wireless Mouse', rating: 5, comment: 'Excellent quality! Works perfectly with my laptop.', createdAt: '2025-02-10', productId: 'prod-1' },
-    { id: 'r2', userName: 'Sara Malik', productName: 'Notebook Set', rating: 4, comment: 'Good quality paper. Fast delivery.', createdAt: '2025-02-08', productId: 'prod-2' },
-    { id: 'r3', userName: 'Ali Hassan', productName: 'Protein Bar Pack', rating: 5, comment: 'Amazing taste! Will definitely order again.', createdAt: '2025-02-05', productId: 'prod-3' },
-    { id: 'r4', userName: 'Fatima Ali', productName: 'Power Bank', rating: 4, comment: 'Good battery life. Slightly heavy but works well.', createdAt: '2025-02-01', productId: 'prod-4' },
-    { id: 'r5', userName: 'Usman Raza', productName: 'Bluetooth Speaker', rating: 3, comment: 'Sound quality is average. Expected better for the price.', createdAt: '2025-01-28', productId: 'prod-5' },
-  ];
+  const { data: reviewsData, isLoading } = useSellerReviews();
+  const reviews = reviewsData ?? [];
 
   const filtered = reviews
-    .filter(r => !search || r.productName.toLowerCase().includes(search.toLowerCase()) || r.userName.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => sortBy === 'newest' ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() : b.rating - a.rating);
+    .filter((r: any) => !search || r.productName?.toLowerCase().includes(search.toLowerCase()) || r.userName?.toLowerCase().includes(search.toLowerCase()))
+    .sort((a: any, b: any) => sortBy === 'newest' ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() : b.rating - a.rating);
 
-  const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+  const avgRating = reviews.length > 0 ? reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length : 0;
 
   return (
     <div className="space-y-6">
@@ -44,7 +38,7 @@ export default function SellerReviewsPage() {
           <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Average Rating</p>
         </div>
         <div className="rounded-[14px] p-5 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
-          <p className="text-3xl font-bold" style={{ color: '#6E8B5E' }}>{reviews.filter(r => r.rating >= 4).length}</p>
+          <p className="text-3xl font-bold" style={{ color: '#6E8B5E' }}>{reviews.filter((r: any) => r.rating >= 4).length}</p>
           <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Positive (4-5★)</p>
         </div>
       </div>
@@ -66,16 +60,20 @@ export default function SellerReviewsPage() {
 
       {/* Reviews List */}
       <div className="space-y-3">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="rounded-[16px] p-8 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
+            <p style={{ color: 'var(--color-text-secondary)' }}>Loading reviews...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="rounded-[16px] p-8 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
             <p style={{ color: 'var(--color-text-secondary)' }}>No reviews found.</p>
           </div>
-        ) : filtered.map(review => (
+        ) : filtered.map((review: any) => (
           <div key={review.id} className="rounded-[14px] p-5" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)', borderLeft: '4px solid var(--color-primary)' }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
-                  {review.userName.charAt(0)}
+                  {review.userName?.charAt(0) ?? '?'}
                 </div>
                 <div>
                   <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{review.userName}</p>

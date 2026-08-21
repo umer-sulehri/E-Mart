@@ -26,6 +26,16 @@ export const otpRequestSchema = z.object({
 export const otpVerifySchema = z.object({
   identifier: z.string().min(1, 'Identifier is required'),
   code: z.string().length(6, 'OTP must be 6 digits'),
+  purpose: z.enum(['register', 'reset']).optional(),
+  name: z.string().min(2).optional(),
+  userType: z.enum(['customer', 'seller']).optional(),
+  password: z.string().min(6).optional(),
+  phone: z.string().optional(),
+});
+
+export const loginCredentialsSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 export const orderItemSchema = z.object({
@@ -39,13 +49,13 @@ export const orderItemSchema = z.object({
 export const CreateOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1, 'At least one item is required'),
   address: z.string().min(5, 'Address is required'),
-  paymentMethod: z.enum(['cod', 'card', 'transfer']),
+  paymentMethod: z.enum(['cod', 'stripe', 'jazzcash', 'easypaisa', 'card', 'transfer']),
 });
 
 export const orderCreateSchema = z.object({
   items: z.array(orderItemSchema).min(1, 'At least one item is required'),
   address: z.string().min(5, 'Address is required'),
-  paymentMethod: z.enum(['cod', 'card', 'transfer']),
+  paymentMethod: z.enum(['cod', 'stripe', 'jazzcash', 'easypaisa', 'card', 'transfer']),
 });
 
 export const orderUpdateStatusSchema = z.object({
@@ -149,3 +159,30 @@ export const createSocialLinkSchema = z.object({
 });
 
 export const updateSocialLinkSchema = createSocialLinkSchema.partial();
+
+export const forgotPasswordSchema = z.object({
+  identifier: z.string().min(1, 'Phone or email is required'),
+});
+
+export const resetPasswordSchema = z.object({
+  identifier: z.string().min(1, 'Identifier is required'),
+  code: z.string().length(6, 'OTP must be 6 digits'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+    .regex(/[a-z]/, 'Password must contain a lowercase letter')
+    .regex(/[0-9]/, 'Password must contain a number'),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+    .regex(/[a-z]/, 'Password must contain a lowercase letter')
+    .regex(/[0-9]/, 'Password must contain a number'),
+});
+
+export const updateProfileSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
+  phone: z.string().regex(/^\+?[0-9]{10,15}$/, 'Invalid phone number').optional(),
+  email: z.string().email('Invalid email address').optional(),
+});

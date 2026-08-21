@@ -2,23 +2,39 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
+import { apiFetch } from '@/lib/api/client';
 import { UserIcon, CheckCircleIcon, EditIcon } from '@/components/icons';
 
 export default function UserProfilePage() {
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const [profile, setProfile] = useState({
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    address: 'Lahore, Pakistan',
   });
 
-  const handleSave = () => {
-    setEditing(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const updated = await apiFetch<{ user: typeof user }>('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({ name: profile.name, email: profile.email, phone: profile.phone }),
+      });
+      if (updated.user) setUser(updated.user);
+      setEditing(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -31,6 +47,12 @@ export default function UserProfilePage() {
       {saved && (
         <div className="rounded-xl p-4 flex items-center gap-2" style={{ background: 'rgba(110,139,94,0.15)', color: '#6E8B5E' }}>
           <CheckCircleIcon className="w-5 h-5" /> Profile updated successfully!
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-xl p-4 text-sm" style={{ background: 'rgba(182,92,75,0.1)', color: 'var(--color-error)', border: '1px solid var(--color-error)' }}>
+          {error}
         </div>
       )}
 
@@ -50,8 +72,8 @@ export default function UserProfilePage() {
       <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <div className="flex items-center justify-between mb-4 pb-3" style={{ borderBottom: '2px solid var(--color-primary)' }}>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>Personal Information</h3>
-          <button onClick={() => editing ? handleSave() : setEditing(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all" style={{ background: editing ? 'var(--color-primary)' : 'var(--color-surface-alt)', color: editing ? 'white' : 'var(--color-text-primary)', border: `1px solid ${editing ? 'var(--color-primary)' : 'var(--color-border)'}` }}>
-            {editing ? <><CheckCircleIcon className="w-4 h-4" /> Save</> : <><EditIcon className="w-4 h-4" /> Edit</>}
+          <button onClick={() => editing ? handleSave() : setEditing(true)} disabled={saving} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all" style={{ background: editing ? 'var(--color-primary)' : 'var(--color-surface-alt)', color: editing ? 'white' : 'var(--color-text-primary)', border: `1px solid ${editing ? 'var(--color-primary)' : 'var(--color-border)'}` }}>
+            {saving ? 'Saving...' : editing ? <><CheckCircleIcon className="w-4 h-4" /> Save</> : <><EditIcon className="w-4 h-4" /> Edit</>}
           </button>
         </div>
         <div className="space-y-4">
@@ -59,7 +81,6 @@ export default function UserProfilePage() {
             { label: 'Full Name', key: 'name' as const, type: 'text' },
             { label: 'Email', key: 'email' as const, type: 'email' },
             { label: 'Phone', key: 'phone' as const, type: 'tel' },
-            { label: 'Address', key: 'address' as const, type: 'text' },
           ].map(field => (
             <div key={field.key}>
               <label className="block mb-1.5 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{field.label}</label>

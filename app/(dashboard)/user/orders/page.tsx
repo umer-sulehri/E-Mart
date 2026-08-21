@@ -12,11 +12,15 @@ type FilterStatus = 'all' | OrderStatus;
 
 export default function UserOrdersPage() {
   const [filter, setFilter] = useState<FilterStatus>('all');
-  const { data, isLoading, isError } = useOrders();
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 10;
+  const { data, isLoading, isError } = useOrders(currentPage, perPage);
 
   const orders = data?.orders ?? [];
+  const totalCount = data?.total ?? 0;
 
   const filtered = filter === 'all' ? orders : orders.filter((o) => o.status === filter);
+  const totalPages = Math.ceil(totalCount / perPage);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -97,6 +101,31 @@ export default function UserOrdersPage() {
               </Card>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <p className="text-sm text-text-secondary">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="h-[40px] px-4 rounded-full text-sm font-semibold bg-surface border border-border text-text-secondary hover:bg-surface-alt disabled:opacity-40 transition-colors"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="h-[40px] px-4 rounded-full text-sm font-semibold bg-primary text-text-inverse hover:bg-primary-dark disabled:opacity-40 transition-colors"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </div>

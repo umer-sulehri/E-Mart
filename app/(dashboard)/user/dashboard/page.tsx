@@ -2,16 +2,18 @@
 
 import Link from 'next/link';
 import { useOrders } from '@/hooks/useOrders';
+import { useUserReviews } from '@/hooks/useReviews';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { OrderIcon, UserIcon, HeartIcon, PackageIcon, ShoppingCartIcon, StarIcon, CogIcon, ClockIcon, CheckCircleIcon } from '@/components/icons';
-import { mockCategories } from '@/lib/mock/products';
-import { mockProducts } from '@/lib/mock/products';
+import { useCategories } from '@/hooks/useCategories';
 
 export default function UserDashboardPage() {
   const authUser = useAuthStore((s) => s.user);
   const { data: ordersData } = useOrders(1, 5);
+  const { data: categories } = useCategories();
+  const { data: userReviews } = useUserReviews();
   const wishlistCount = useWishlistStore(s => s.items.length);
 
   const recentOrders = ordersData?.orders ?? [];
@@ -31,7 +33,7 @@ export default function UserDashboardPage() {
         {[
           { icon: OrderIcon, label: 'Total Orders', value: totalOrders, color: 'var(--color-primary)' },
           { icon: HeartIcon, label: 'Wishlist', value: wishlistCount || 0, color: '#B65C4B' },
-          { icon: StarIcon, label: 'Reviews', value: '3', color: '#C9902E' },
+          { icon: StarIcon, label: 'Reviews', value: userReviews?.length ?? '—', color: '#C9902E' },
         ].map(stat => (
           <div key={stat.label} className="rounded-[14px] p-5 text-center transition-all duration-300 hover:-translate-y-1" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
             <stat.icon className="w-8 h-8 mx-auto mb-2" style={{ color: stat.color }} />
@@ -88,7 +90,7 @@ export default function UserDashboardPage() {
       <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <h3 className="font-bold mb-4 pb-3" style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}>Shop by Category</h3>
         <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
-          {mockCategories.map(cat => (
+          {(categories ?? []).map(cat => (
             <Link key={cat.id} href={`/categories/${cat.slug}`} className="rounded-[12px] p-3 text-center transition-all duration-300 hover:-translate-y-1" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
               <span className="text-2xl block mb-1">{cat.icon}</span>
               <span className="text-[10px] font-semibold block" style={{ color: 'var(--color-text-primary)' }}>{cat.name}</span>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockCategories } from '@/lib/mock/products';
+import { useCategories } from '@/hooks/useCategories';
 import { CheckCircleIcon, PlusIcon, TrashIcon, ArrowLeftIcon } from '@/components/icons';
 
 interface ColorInput { name: string; hex: string; }
@@ -33,7 +33,8 @@ export default function SellerAddProductPage() {
   const [colors, setColors] = useState<ColorInput[]>([{ name: '', hex: '#000000' }]);
   const [specs, setSpecs] = useState<SpecInput[]>([{ key: '', value: '' }]);
 
-  const categories = mockCategories.flatMap(c => [c, ...(c.children || [])]);
+  const { data: apiCategories } = useCategories();
+  const categories = (apiCategories ?? []).flatMap(c => [c, ...(c.children || [])]);
 
   const autoDiscount = form.originalPrice && form.price && Number(form.originalPrice) > Number(form.price)
     ? Math.round(((Number(form.originalPrice) - Number(form.price)) / Number(form.originalPrice)) * 100)

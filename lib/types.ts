@@ -16,7 +16,9 @@ export interface Product {
   tags: string[];
   isFeatured: boolean;
   isNew: boolean;
+  status?: string;
   createdAt: string;
+  sellerId?: string;
 }
 
 export interface Category {
@@ -40,6 +42,7 @@ export interface CartItem {
 export interface Order {
   id: string;
   orderNumber: string;
+  userId?: string;
   items: OrderItem[];
   status: OrderStatus;
   total: number;
@@ -67,6 +70,7 @@ export interface User {
   phone: string;
   role: 'buyer' | 'seller' | 'admin';
   avatar?: string;
+  status?: string;
   createdAt: string;
   isBlocked?: boolean;
 }

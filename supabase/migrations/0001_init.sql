@@ -420,6 +420,19 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Profiles
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
 CREATE POLICY "Profiles: owner can select own"
   ON profiles FOR SELECT
   USING (auth.uid() = id);
@@ -430,12 +443,8 @@ CREATE POLICY "Profiles: owner can update own"
 
 CREATE POLICY "Profiles: admin full access"
   ON profiles FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- Customer Addresses
 ALTER TABLE customer_addresses ENABLE ROW LEVEL SECURITY;

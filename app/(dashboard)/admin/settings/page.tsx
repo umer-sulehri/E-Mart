@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { GearIcon, CheckCircleIcon, PlusIcon, EditIcon, TrashIcon } from '@/components/icons';
 
 interface SocialLink {
@@ -43,11 +43,58 @@ export default function AdminSettingsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLink, setNewLink] = useState({ platform: 'facebook', label: '', url: '', icon: '' });
   const [editDraft, setEditDraft] = useState({ platform: '', label: '', url: '', icon: '' });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSaveSettings = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  };
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/v1/admin/settings');
+        if (res.ok) {
+          const data = await res.json();
+          const s = data.settings;
+          if (s.platformName !== undefined) setPlatformName(s.platformName);
+          if (s.supportEmail !== undefined) setSupportEmail(s.supportEmail);
+          if (s.defaultCurrency !== undefined) setDefaultCurrency(s.defaultCurrency);
+          if (s.taxRate !== undefined) setTaxRate(String(s.taxRate));
+          if (s.shippingFee !== undefined) setShippingFee(String(s.shippingFee));
+          if (s.freeShippingThreshold !== undefined) setFreeShippingThreshold(String(s.freeShippingThreshold));
+          if (s.emailNotifications !== undefined) setEmailNotifications(s.emailNotifications);
+          if (s.smsNotifications !== undefined) setSmsNotifications(s.smsNotifications);
+          if (s.autoApproveProducts !== undefined) setAutoApproveProducts(s.autoApproveProducts);
+          if (s.maintenanceMode !== undefined) setMaintenanceMode(s.maintenanceMode);
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleSaveSettings = useCallback(async () => {
+    setSaving(true);
+    try {
+      await fetch('/api/v1/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platformName,
+          supportEmail,
+          defaultCurrency,
+          taxRate: Number(taxRate),
+          shippingFee: Number(shippingFee),
+          freeShippingThreshold: Number(freeShippingThreshold),
+          emailNotifications,
+          smsNotifications,
+          autoApproveProducts,
+          maintenanceMode,
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } finally {
+      setSaving(false);
+    }
+  }, [platformName, supportEmail, defaultCurrency, taxRate, shippingFee, freeShippingThreshold, emailNotifications, smsNotifications, autoApproveProducts, maintenanceMode]);
 
   const handleMoveUp = (id: string) => {
     setSocialLinks(prev => {
@@ -299,18 +346,26 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-secondary)' }}>
+          Loading settings...
+        </div>
+      )}
+
       {/* Save Button */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
         <button
           onClick={handleSaveSettings}
+          disabled={saving}
           style={{
             ...btnBase,
             background: 'var(--color-primary)',
             color: '#fff',
+            opacity: saving ? 0.6 : 1,
           }}
         >
           <CheckCircleIcon className="w-[18px] h-[18px]" />
-          Save Settings
+          {saving ? 'Saving...' : 'Save Settings'}
         </button>
       </div>
 

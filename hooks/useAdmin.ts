@@ -100,6 +100,30 @@ export function useAdminStats() {
   });
 }
 
+interface AdminAnalyticsMetrics {
+  revenueTotal: number;
+  revenueToday: number;
+  revenueThisMonth: number;
+  ordersTotal: number;
+  ordersToday: number;
+  ordersThisMonth: number;
+  customersTotal: number;
+  avgOrderValue: number;
+  statusBreakdown: Record<string, number>;
+  topProducts: { id: string; name: string; quantitySold: number; revenue: number }[];
+  revenueSeries: { date: string; revenue: number; orders: number }[];
+  lowStockProducts: { id: string; name: string; stock: number }[];
+  ordersPerCustomer: number;
+}
+
+export function useAdminAnalytics(days = 30) {
+  return useQuery({
+    queryKey: ['adminAnalytics', days],
+    queryFn: () => apiFetch<{ metrics: AdminAnalyticsMetrics; rangeDays: number }>(`/admin/analytics/dashboard?days=${days}`),
+    select: (data) => data.metrics,
+  });
+}
+
 export function useAdminCategories() {
   return useQuery({
     queryKey: ['adminCategories'],

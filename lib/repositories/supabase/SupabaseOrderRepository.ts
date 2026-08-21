@@ -37,6 +37,7 @@ function mapOrderRow(row: OrderRow): Order {
   return {
     id: row.id,
     orderNumber: row.order_number,
+    userId: row.user_id,
     items,
     status: row.status as OrderStatus,
     total: row.total,

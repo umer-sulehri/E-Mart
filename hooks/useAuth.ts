@@ -10,6 +10,16 @@ export function useCurrentUser() {
   });
 }
 
+export function useLogin() {
+  return useMutation({
+    mutationFn: (data: { email: string; password: string }) =>
+      apiFetch<{ user: User }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  });
+}
+
 export function useRequestOtp() {
   return useMutation({
     mutationFn: (identifier: string) =>
@@ -22,10 +32,26 @@ export function useRequestOtp() {
 
 export function useVerifyOtp() {
   return useMutation({
-    mutationFn: (data: { phone: string; otp: string }) =>
+    mutationFn: (data: {
+      identifier: string;
+      otp: string;
+      purpose?: 'register' | 'reset';
+      name?: string;
+      userType?: 'customer' | 'seller';
+      password?: string;
+      contactPhone?: string;
+    }) =>
       apiFetch<{ user: User; token: string }>('/auth/otp/verify', {
         method: 'POST',
-        body: JSON.stringify({ identifier: data.phone, code: data.otp }),
+        body: JSON.stringify({
+          identifier: data.identifier,
+          code: data.otp,
+          purpose: data.purpose,
+          name: data.name,
+          userType: data.userType,
+          password: data.password,
+          phone: data.contactPhone,
+        }),
       }),
   });
 }

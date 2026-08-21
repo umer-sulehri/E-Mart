@@ -6,13 +6,15 @@ import { Product } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { StarIcon, ShoppingCartIcon, HeartIcon, TruckIcon, CheckCircleIcon } from '@/components/icons';
 import { useCartStore } from '@/lib/store/cartStore';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
+  const toggleWishlist = useWishlistStore((s) => s.toggleItem);
+  const isWishlisted = useWishlistStore((s) => s.hasItem(product.id));
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
-  const [wishlisted, setWishlisted] = useState(false);
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) addItem(product);
@@ -132,12 +134,12 @@ export function ProductDetailClient({ product }: { product: Product }) {
               <ShoppingCartIcon className="w-5 h-5" />
               {added ? 'Added to Cart!' : 'Add to Cart'}
             </Button>
-            <button onClick={() => setWishlisted(!wishlisted)}
-              aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+            <button onClick={() => toggleWishlist(product.id)}
+              aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               className={`w-12 h-12 flex items-center justify-center rounded-[10px] border-2 transition-all ${
-                wishlisted ? 'border-error bg-error/10 text-error' : 'border-border text-text-secondary hover:border-error/50 hover:text-error'
+                isWishlisted ? 'border-error bg-error/10 text-error' : 'border-border text-text-secondary hover:border-error/50 hover:text-error'
               }`}>
-              <HeartIcon className="w-5 h-5" filled={wishlisted} />
+              <HeartIcon className="w-5 h-5" filled={isWishlisted} />
             </button>
           </div>
 

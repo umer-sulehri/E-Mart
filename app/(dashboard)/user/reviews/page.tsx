@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { mockReviews } from '@/lib/mock/orders';
-import { mockProducts } from '@/lib/mock/products';
+import { useUserReviews } from '@/hooks/useReviews';
+import { useProducts } from '@/hooks/useProducts';
+import { useOrders } from '@/hooks/useOrders';
 import { StarIcon, SearchIcon, EditIcon, TrashIcon, CheckCircleIcon } from '@/components/icons';
 
 export default function UserReviewsPage() {
@@ -13,15 +14,20 @@ export default function UserReviewsPage() {
   const [comment, setComment] = useState('');
   const [hoveredStar, setHoveredStar] = useState(0);
 
-  const myReviews = [
-    { id: 'r1', productName: 'Basmati Rice 5kg', rating: 5, comment: 'Excellent quality rice! Very aromatic and fresh.', createdAt: '2025-02-02' },
-    { id: 'r2', productName: 'Sunflower Oil 3L', rating: 4, comment: 'Fresh oil, good for daily cooking.', createdAt: '2025-02-01' },
-    { id: 'r3', productName: 'Power Bank 10000mAh', rating: 5, comment: 'Fast charging and compact design!', createdAt: '2025-01-25' },
-  ];
+  const { data: reviews, isLoading } = useUserReviews();
+  const { data: ordersData } = useOrders(1, 100);
+  const { data: productsData } = useProducts({}, 1, 50);
+  const allProducts = productsData?.products ?? [];
 
-  const eligibleProducts = mockProducts.slice(0, 4);
+  const deliveredProductIds = new Set(
+    (ordersData?.orders ?? [])
+      .filter((o) => o.status === 'delivered')
+      .flatMap((o) => o.items.map((i) => i.productId))
+  );
+  const eligibleProducts = allProducts.filter((p) => deliveredProductIds.has(p.id)).slice(0, 4);
 
-  const filtered = myReviews.filter(r => !search || r.productName.toLowerCase().includes(search.toLowerCase()));
+  const myReviews = reviews ?? [];
+  const filtered = myReviews.filter((r: any) => !search || r.productName?.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-6">
@@ -34,18 +40,22 @@ export default function UserReviewsPage() {
       <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <h3 className="font-bold mb-4 pb-3" style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}>Write a Review</h3>
         <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>Products you&apos;ve purchased that are eligible for review:</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {eligibleProducts.map(p => (
-            <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-              <img src={p.images[0]} alt={p.name} className="w-12 h-12 rounded-lg object-cover" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{p.name}</p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Rs {p.price.toLocaleString()}</p>
+        {eligibleProducts.length === 0 ? (
+          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>No eligible products found. Complete an order to leave a review.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {eligibleProducts.map(p => (
+              <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+                <img src={p.images[0]} alt={p.name} className="w-12 h-12 rounded-lg object-cover" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{p.name}</p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Rs {p.price.toLocaleString()}</p>
+                </div>
+                <button onClick={() => { setEditReview(null); setShowWriteReview(true); setRating(0); setComment(''); }} className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: 'var(--color-primary)', color: 'white' }}>Review</button>
               </div>
-              <button onClick={() => { setEditReview(null); setShowWriteReview(true); setRating(0); setComment(''); }} className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: 'var(--color-primary)', color: 'white' }}>Review</button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* My Reviews */}
@@ -58,9 +68,11 @@ export default function UserReviewsPage() {
           </div>
         </div>
         <div className="space-y-3">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <p className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>Loading reviews...</p>
+          ) : filtered.length === 0 ? (
             <p className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>No reviews found.</p>
-          ) : filtered.map(review => (
+          ) : filtered.map((review: any) => (
             <div key={review.id} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', borderLeft: '4px solid var(--color-primary)' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">

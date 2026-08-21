@@ -19,6 +19,7 @@ interface ProductRow {
   is_featured: boolean;
   is_new: boolean;
   created_at: string;
+  seller_id?: string;
   categories?: CategoryRow;
   product_images?: ProductImageRow[];
 }
@@ -74,6 +75,7 @@ function mapRow(row: ProductRow): Product {
     isFeatured: row.is_featured,
     isNew: row.is_new,
     createdAt: row.created_at,
+    sellerId: row.seller_id,
   };
 }
 
@@ -130,6 +132,9 @@ export class SupabaseProductRepository implements ProductRepository {
             query = query.order('created_at', { ascending: false });
             break;
         }
+      }
+      if (filters.sellerId) {
+        query = query.eq('seller_id', filters.sellerId);
       }
     }
 
@@ -190,6 +195,7 @@ export class SupabaseProductRepository implements ProductRepository {
         is_new: rest.isNew,
         rating: 0,
         review_count: 0,
+        seller_id: rest.sellerId,
       })
       .select('*, categories(*), product_images(image_url, sort_order)')
       .single();

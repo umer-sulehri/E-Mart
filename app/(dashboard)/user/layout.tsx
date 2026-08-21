@@ -8,6 +8,7 @@ import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { AccessibilityControls } from '@/components/common/AccessibilityControls';
 import {
   HomeIcon, PackageIcon, HeartIcon, UserIcon, BellIcon, LogoutIcon, CloseIcon,
+  LockIcon, MapPinIcon,
 } from '@/components/icons';
 
 const MOBILE_NAV_ITEMS = [
@@ -20,6 +21,8 @@ const MOBILE_NAV_ITEMS = [
 const DESKTOP_NAV_ITEMS = [
   ...MOBILE_NAV_ITEMS,
   { label: 'Notifications', href: '/user/notifications', icon: BellIcon },
+  { label: 'Change Password', href: '/user/change-password', icon: LockIcon },
+  { label: 'Addresses', href: '/user/addresses', icon: MapPinIcon },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
@@ -29,6 +32,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/user/profile': 'Profile',
   '/user/notifications': 'Notifications',
   '/user/reviews': 'Reviews',
+  '/user/change-password': 'Change Password',
+  '/user/addresses': 'My Addresses',
 };
 
 function getPageTitle(pathname: string): string {

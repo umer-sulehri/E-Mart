@@ -68,10 +68,14 @@ export default function CartPage() {
                         <MinusIcon className="w-4 h-4" />
                       </button>
                       <span className="w-10 text-center text-sm font-semibold">{item.quantity}</span>
+                      {item.quantity >= item.product.stock && (
+                        <span className="text-[10px] text-text-secondary whitespace-nowrap">Max stock</span>
+                      )}
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                         aria-label="Increase quantity"
-                        className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full border border-border bg-bg hover:bg-surface-alt transition-colors"
+                        disabled={item.quantity >= item.product.stock}
+                        className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full border border-border bg-bg hover:bg-surface-alt transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <PlusIcon className="w-4 h-4" />
                       </button>

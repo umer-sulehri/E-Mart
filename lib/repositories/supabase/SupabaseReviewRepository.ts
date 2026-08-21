@@ -46,6 +46,44 @@ export class SupabaseReviewRepository implements ReviewRepository {
     };
   }
 
+  async findByUser(userId: string): Promise<Review[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('product_reviews')
+      .select('*, profiles:user_id(name)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((row) => ({
+      id: row.id as string,
+      userId: row.user_id as string,
+      userName: (row.profiles as { name: string } | null)?.name ?? 'Anonymous',
+      productId: row.product_id as string,
+      rating: row.rating as number,
+      comment: (row.comment as string) ?? '',
+      createdAt: row.created_at as string,
+    }));
+  }
+
+  async findBySellerProducts(productIds: string[]): Promise<Review[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('product_reviews')
+      .select('*, profiles:user_id(name)')
+      .in('product_id', productIds)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((row) => ({
+      id: row.id as string,
+      userId: row.user_id as string,
+      userName: (row.profiles as { name: string } | null)?.name ?? 'Anonymous',
+      productId: row.product_id as string,
+      rating: row.rating as number,
+      comment: (row.comment as string) ?? '',
+      createdAt: row.created_at as string,
+    }));
+  }
+
   async delete(id: string): Promise<void> {
     const supabase = await createClient();
     const { error } = await supabase

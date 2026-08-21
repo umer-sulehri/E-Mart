@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useAdminStats, useAdminProducts } from '@/hooks/useAdmin';
+import { useAdminStats, useAdminProducts, useAdminAnalytics } from '@/hooks/useAdmin';
 import { useAdminOrders } from '@/hooks/useOrders';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import {
@@ -22,22 +22,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
-
-const MONTHLY_DATA = [
-  { month: 'Jan', orders: 120, revenue: 24800 },
-  { month: 'Feb', orders: 98, revenue: 19600 },
-  { month: 'Mar', orders: 145, revenue: 31200 },
-  { month: 'Apr', orders: 132, revenue: 27400 },
-  { month: 'May', orders: 168, revenue: 35800 },
-  { month: 'Jun', orders: 155, revenue: 32100 },
-  { month: 'Jul', orders: 190, revenue: 41200 },
-  { month: 'Aug', orders: 178, revenue: 38600 },
-  { month: 'Sep', orders: 210, revenue: 45300 },
-  { month: 'Oct', orders: 195, revenue: 42700 },
-  { month: 'Nov', orders: 230, revenue: 49800 },
-  { month: 'Dec', orders: 258, revenue: 56200 },
-];
+} from '@/components/ui/Charts';
 
 const STAT_CONFIGS = [
   { key: 'users', label: 'Total Users', icon: UsersIcon, color: 'var(--color-accent)', trend: +12.5 },
@@ -54,6 +39,7 @@ function formatCurrency(amount: number) {
 
 export default function AdminDashboardPage() {
   const { data: stats, isLoading: statsLoading } = useAdminStats();
+  const { data: analytics } = useAdminAnalytics(30);
   const { data: ordersData, isLoading: ordersLoading } = useAdminOrders(1, 10);
 
   const statsMap: Record<string, string | number> = {
@@ -64,6 +50,12 @@ export default function AdminDashboardPage() {
   };
 
   const recentOrders = ordersData?.orders ?? [];
+  const chartData =
+    analytics?.revenueSeries.map((d) => ({
+      day: d.date.slice(5),
+      orders: d.orders,
+      revenue: d.revenue,
+    })) ?? [];
 
   return (
     <div className="space-y-6">
@@ -123,47 +115,76 @@ export default function AdminDashboardPage() {
             style={{ borderBottom: '2px solid var(--color-primary)' }}
           >
             <h3 className="font-bold text-text-primary">Orders &amp; Revenue Trend</h3>
-            <span className="text-xs text-text-secondary">Last 12 months</span>
+            <span className="text-xs text-text-secondary">
+              Last 30 days{analytics ? ` · Today: ${analytics.ordersToday} orders (${formatCurrency(analytics.revenueToday)})` : ''}
+            </span>
           </div>
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={MONTHLY_DATA} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
-                  axisLine={{ stroke: 'var(--color-border)' }}
-                />
-                <YAxis
-                  tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
-                  axisLine={{ stroke: 'var(--color-border)' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--color-bg)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 12,
-                    fontSize: 13,
-                  }}
-                  formatter={(value: any, name: any) =>
-                    name === 'revenue' ? [`Rs ${Number(value).toLocaleString()}`, 'Revenue'] : [`${value}`, `${name}`]
-                  }
-                />
-                <Bar
-                  dataKey="orders"
-                  fill="var(--color-primary)"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={32}
-                />
-                <Bar
-                  dataKey="revenue"
-                  fill="var(--color-accent)"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={32}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                No order data for this period yet.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 11, fill: 'var(--color-text-secondary)' }}
+                    axisLine={{ stroke: 'var(--color-border)' }}
+                    interval={4}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
+                    axisLine={{ stroke: 'var(--color-border)' }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--color-bg)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 12,
+                      fontSize: 13,
+                    }}
+                    formatter={(value: unknown, name: unknown) =>
+                      name === 'revenue' ? [`Rs ${Number(value).toLocaleString()}`, 'Revenue'] : [`${value}`, `${name}`]
+                    }
+                  />
+                  <Bar
+                    dataKey="orders"
+                    fill="var(--color-primary)"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={32}
+                  />
+                  <Bar
+                    dataKey="revenue"
+                    fill="var(--color-accent)"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={32}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
+          {analytics && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-border">
+              <div>
+                <p className="text-xs text-text-secondary">Revenue (month)</p>
+                <p className="font-bold text-text-primary">{formatCurrency(analytics.revenueThisMonth)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-secondary">Avg. order value</p>
+                <p className="font-bold text-text-primary">{formatCurrency(analytics.avgOrderValue)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-secondary">Orders / customer</p>
+                <p className="font-bold text-text-primary">{analytics.ordersPerCustomer}</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-secondary">Orders (30d)</p>
+                <p className="font-bold text-text-primary">{analytics.ordersThisMonth}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
@@ -227,6 +248,54 @@ export default function AdminDashboardPage() {
               <ArrowRightIcon className="w-4 h-4 text-text-secondary ml-auto" />
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* ── Reports + Low Stock ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-[16px] bg-surface border border-border p-6">
+          <h3 className="font-bold text-text-primary mb-4">Export Reports</h3>
+          <p className="text-sm text-text-secondary mb-4">Download CSV reports for accounting and analysis.</p>
+          <div className="flex flex-wrap gap-3">
+            {[
+              { type: 'sales', label: 'Sales Report' },
+              { type: 'products', label: 'Products Report' },
+              { type: 'customers', label: 'Customers Report' },
+            ].map((report) => (
+              <a
+                key={report.type}
+                href={`/api/v1/admin/reports?type=${report.type}`}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] border border-border bg-bg text-sm font-semibold text-text-primary hover:border-primary hover:text-primary transition-colors min-h-[48px]"
+              >
+                <ChartBarIcon className="w-4 h-4" />
+                {report.label}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[16px] bg-surface border border-border p-6">
+          <h3 className="font-bold text-text-primary mb-4">Low Stock Alerts</h3>
+          {!analytics ? (
+            <p className="text-sm text-text-secondary">Loading…</p>
+          ) : analytics.lowStockProducts.length === 0 ? (
+            <p className="text-sm text-text-secondary">All products are well stocked.</p>
+          ) : (
+            <ul className="space-y-2">
+              {analytics.lowStockProducts.slice(0, 5).map((product) => (
+                <li key={product.id} className="flex items-center justify-between text-sm">
+                  <span className="text-text-primary truncate pr-3">{product.name}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap ${
+                      product.stock === 0 ? 'bg-error/20 text-error' : 'bg-warning/20 text-warning'
+                    }`}
+                  >
+                    {product.stock === 0 ? 'Out of stock' : `${product.stock} left`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

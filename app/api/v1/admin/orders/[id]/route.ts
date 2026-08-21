@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OrderRepository } from '@/lib/repositories/index';
+import { OrderRepository, UserRepository } from '@/lib/repositories/index';
 import { OrderStatus } from '@/lib/types';
 import { requireAdmin } from '@/lib/auth/requireAdmin';
+import { dispatchOrderStatusNotifications } from '@/lib/notifications/dispatch';
 
 export async function GET(
   _request: NextRequest,
@@ -42,6 +43,12 @@ export async function PUT(
 
   try {
     const order = await OrderRepository.updateStatus(id, body.status);
+    if (order) {
+      const customer = order.userId ? await UserRepository.findById(order.userId) : null;
+      if (customer) {
+        void dispatchOrderStatusNotifications(customer, order, body.status as OrderStatus);
+      }
+    }
     return NextResponse.json({ order }, { status: 200 });
   } catch {
     return NextResponse.json({ error: 'Order not found' }, { status: 404 });

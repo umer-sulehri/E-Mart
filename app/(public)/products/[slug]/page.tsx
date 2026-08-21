@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useProduct, useProducts } from '@/hooks/useProducts';
-import { useProductReviews } from '@/hooks/useReviews';
+import { useProductReviews, useCreateReview } from '@/hooks/useReviews';
 import { StarIcon } from '@/components/icons';
 import { ProductDetailClient } from '@/components/product/ProductDetailClient';
 import { useCartStore } from '@/lib/store/cartStore';
+import { useAuthStore } from '@/lib/store/authStore';
 import type { Product } from '@/lib/types';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -23,8 +24,38 @@ function ProductDetailPageInner({ params }: { params: Promise<{ slug: string }> 
   const { data: product, isLoading, isError } = useProduct(slug);
   const { data: productsData } = useProducts({ category: product?.categoryId }, 1, 8);
   const { data: reviews } = useProductReviews(slug);
+  const createReview = useCreateReview(slug);
+  const { isAuthenticated } = useAuthStore();
+
+  const [reviewRating, setReviewRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [reviewError, setReviewError] = useState('');
 
   const relatedProducts = (productsData?.products ?? []).filter((p) => p.id !== product?.id).slice(0, 4);
+
+  const handleSubmitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    setReviewError('');
+    setReviewSuccess(false);
+    if (reviewRating === 0) { setReviewError('Please select a star rating'); return; }
+    if (!reviewComment.trim()) { setReviewError('Please enter a comment'); return; }
+    createReview.mutate(
+      { rating: reviewRating, comment: reviewComment.trim() },
+      {
+        onSuccess: () => {
+          setReviewSuccess(true);
+          setReviewRating(0);
+          setReviewComment('');
+          setTimeout(() => setReviewSuccess(false), 3000);
+        },
+        onError: (err) => {
+          setReviewError(err instanceof Error ? err.message : 'Failed to submit review');
+        },
+      }
+    );
+  };
 
   if (isLoading) {
     return (
@@ -66,6 +97,73 @@ function ProductDetailPageInner({ params }: { params: Promise<{ slug: string }> 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <ProductDetailClient product={product} />
+
+      {/* Review Submission Form */}
+      <section className="mt-12">
+        <div className="bg-surface border border-border rounded-[16px] p-6">
+          <h2 className="text-xl font-bold text-text-primary mb-4">Write a Review</h2>
+          {!isAuthenticated ? (
+            <p className="text-sm text-text-secondary">
+              Please <Link href="/login" className="font-semibold text-primary-dark hover:underline">log in</Link> to submit a review.
+            </p>
+          ) : (
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              <div>
+                <label className="block mb-1.5 text-sm font-semibold text-text-primary">Your Rating</label>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setReviewRating(s)}
+                      onMouseEnter={() => setHoverRating(s)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="transition-transform hover:scale-110"
+                    >
+                      <StarIcon
+                        className="w-7 h-7 text-warning cursor-pointer"
+                        filled={s <= (hoverRating || reviewRating)}
+                      />
+                    </button>
+                  ))}
+                  {reviewRating > 0 && (
+                    <span className="text-sm text-text-secondary ml-2">{reviewRating}/5</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block mb-1.5 text-sm font-semibold text-text-primary">Your Review</label>
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  rows={4}
+                  placeholder="Share your experience with this product..."
+                  className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 transition-all resize-none"
+                  style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+                />
+              </div>
+              {reviewError && (
+                <div className="rounded-xl p-3 text-sm" style={{ background: 'rgba(182,92,75,0.1)', color: 'var(--color-error)', border: '1px solid var(--color-error)' }}>
+                  {reviewError}
+                </div>
+              )}
+              {reviewSuccess && (
+                <div className="rounded-xl p-3 text-sm" style={{ background: 'rgba(110,139,94,0.15)', color: '#6E8B5E' }}>
+                  Review submitted successfully!
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={createReview.isPending}
+                className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
+              >
+                {createReview.isPending ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
 
       {/* Reviews Section */}
       {reviews && reviews.length > 0 && (

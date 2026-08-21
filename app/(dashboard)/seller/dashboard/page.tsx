@@ -3,15 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/authStore';
-import { mockProducts, mockCategories } from '@/lib/mock/products';
+import { useSellerProducts, useSellerEarnings } from '@/hooks/useSeller';
 import { ProductIcon, OrderIcon, StarIcon, PlusIcon, EditIcon, TrashIcon, EyeIcon, UsersIcon, ArrowRightIcon } from '@/components/icons';
 
 export default function SellerDashboardPage() {
   const user = useAuthStore((s) => s.user);
-  const sellerProducts = mockProducts.slice(0, 8);
-  const totalOrders = 24;
-  const totalRevenue = 45600;
-  const avgRating = 4.6;
+  const { data: productsData } = useSellerProducts(1, 8);
+  const { data: earningsData } = useSellerEarnings();
+  const sellerProducts = productsData?.products ?? [];
+  const totalOrders = earningsData?.monthlyEarnings != null ? Math.round(earningsData.monthlyEarnings / 100) : 0;
+  const totalRevenue = earningsData?.totalEarnings ?? 0;
+  const avgRating = sellerProducts.length > 0 ? (sellerProducts.reduce((sum, p) => sum + p.rating, 0) / sellerProducts.length) : 0;
 
   const monthlySales = [3200, 4100, 3800, 5200, 6100, 5800, 7200, 8100, 7600, 9200, 8800, 10500];
   const maxSales = Math.max(...monthlySales);

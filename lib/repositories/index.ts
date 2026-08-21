@@ -24,7 +24,18 @@ import { SupabaseSocialLinkRepository } from './supabase/SupabaseSocialLinkRepos
 export type { ProductFilters } from './contracts/ProductRepository';
 export type { TranslationEntry } from './contracts/TranslationRepository';
 
-const useSupabase = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+function isRealSupabaseConfig(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  return (
+    url.length > 0 &&
+    key.length > 0 &&
+    !url.includes('your-') &&
+    !key.includes('your-') &&
+    url.startsWith('http')
+  );
+}
+const useSupabase = isRealSupabaseConfig();
 
 const productRepo = useSupabase ? new SupabaseProductRepository() : new LocalProductRepository();
 const categoryRepo = useSupabase ? new SupabaseCategoryRepository() : new LocalCategoryRepository();

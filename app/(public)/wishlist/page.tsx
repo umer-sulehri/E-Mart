@@ -4,16 +4,18 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useCartStore } from '@/lib/store/cartStore';
-import { mockProducts } from '@/lib/mock/products';
+import { useProducts } from '@/hooks/useProducts';
 import { HeartIcon, ShoppingCartIcon, TrashIcon, StarIcon } from '@/components/icons';
 
 export default function WishlistPage() {
   const { items, removeItem } = useWishlistStore();
   const addItem = useCartStore((s) => s.addItem);
+  const { data: productsData } = useProducts({}, 1, 200);
+  const allProducts = productsData?.products ?? [];
 
   const wishlistProducts = useMemo(
-    () => items.map((wi) => mockProducts.find((p) => p.id === wi.productId)).filter(Boolean) as NonNullable<ReturnType<typeof mockProducts.find>>[],
-    [items],
+    () => items.map((wi) => allProducts.find((p) => p.id === wi.productId)).filter(Boolean) as NonNullable<ReturnType<typeof allProducts.find>>[],
+    [items, allProducts],
   );
 
   if (wishlistProducts.length === 0) {

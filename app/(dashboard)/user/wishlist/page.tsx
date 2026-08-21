@@ -1,21 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useCartStore } from '@/lib/store/cartStore';
-import { mockProducts } from '@/lib/mock/products';
+import { useProducts } from '@/hooks/useProducts';
 import { HeartIcon, ShoppingCartIcon, TrashIcon, SearchIcon } from '@/components/icons';
 
 export default function UserWishlistPage() {
   const { items, removeItem } = useWishlistStore();
   const addItem = useCartStore(s => s.addItem);
   const [search, setSearch] = useState('');
+  const { data: productsData } = useProducts({}, 1, 200);
+  const allProducts = productsData?.products ?? [];
 
-  const wishlistProducts = items.map(item => {
-    const product = mockProducts.find(p => p.id === item.productId);
+  const wishlistProducts = useMemo(() => items.map(item => {
+    const product = allProducts.find(p => p.id === item.productId);
     return product ? { ...item, product } : null;
-  }).filter(Boolean);
+  }).filter(Boolean), [items, allProducts]);
 
   const filtered = search
     ? wishlistProducts.filter((item: any) => item.product.name.toLowerCase().includes(search.toLowerCase()))

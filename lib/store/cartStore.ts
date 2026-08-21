@@ -19,17 +19,21 @@ export const useCartStore = create<CartStore>()(
       addItem: (product, quantity = 1) => {
         const items = get().items;
         const existing = items.find((i) => i.productId === product.id);
+        const maxQty = product.stock;
         if (existing) {
+          const newQty = Math.min(existing.quantity + quantity, maxQty);
           set({
             items: items.map((i) =>
               i.productId === product.id
-                ? { ...i, quantity: i.quantity + quantity }
+                ? { ...i, quantity: newQty }
                 : i
             ),
           });
         } else {
+          const newQty = Math.min(quantity, maxQty);
+          if (newQty <= 0) return;
           set({
-            items: [...items, { id: `cart-${product.id}-${Date.now()}`, productId: product.id, product, quantity }],
+            items: [...items, { id: `cart-${product.id}-${Date.now()}`, productId: product.id, product, quantity: newQty }],
           });
         }
       },
@@ -43,7 +47,7 @@ export const useCartStore = create<CartStore>()(
         }
         set({
           items: get().items.map((i) =>
-            i.productId === productId ? { ...i, quantity } : i
+            i.productId === productId ? { ...i, quantity: Math.min(quantity, i.product.stock) } : i
           ),
         });
       },

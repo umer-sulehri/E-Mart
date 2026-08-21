@@ -22,6 +22,8 @@ export default function OtpVerifyPage() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const identifier = typeof window !== 'undefined' ? sessionStorage.getItem('otpIdentifier') : null;
+  const registerName = typeof window !== 'undefined' ? sessionStorage.getItem('registerName') : null;
+  const purpose: 'register' | 'reset' = registerName ? 'register' : 'reset';
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -73,13 +75,24 @@ export default function OtpVerifyPage() {
     }
 
     verifyOtp.mutate(
-      { phone: id, otp: code },
+      {
+        identifier: id,
+        otp: code,
+        purpose,
+        name: registerName ?? undefined,
+        userType: (sessionStorage.getItem('registerUserType') as 'customer' | 'seller') ?? undefined,
+        password: sessionStorage.getItem('registerPassword') ?? undefined,
+        contactPhone: sessionStorage.getItem('registerPhone') ?? undefined,
+      },
       {
         onSuccess: (data) => {
           login(data.user, data.token);
           setSuccess(true);
           sessionStorage.removeItem('otpIdentifier');
           sessionStorage.removeItem('registerName');
+          sessionStorage.removeItem('registerUserType');
+          sessionStorage.removeItem('registerPassword');
+          sessionStorage.removeItem('registerPhone');
           setTimeout(() => router.push('/'), 1500);
         },
         onError: (err) => {

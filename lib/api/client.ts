@@ -6,8 +6,12 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     ...options,
   });
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `HTTP ${res.status}`);
+    const data = await res.json().catch(() => null);
+    const detail =
+      data?.message ??
+      (typeof data?.error === 'string' ? data.error : null) ??
+      `Request failed (HTTP ${res.status})`;
+    throw new Error(detail);
   }
   return res.json();
 }

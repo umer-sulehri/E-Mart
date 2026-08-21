@@ -74,7 +74,7 @@ export class SupabaseWishlistRepository implements WishlistRepository {
     const imgMap = new Map<string, string[]>();
     (imagesRes.data ?? []).forEach((img) => {
       const arr = imgMap.get(img.product_id as string) ?? [];
-      arr.push(img.url as string);
+      arr.push(img.image_url as string);
       imgMap.set(img.product_id as string, arr);
     });
 

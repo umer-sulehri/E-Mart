@@ -20,11 +20,19 @@ export function useOrders(page = 1, limit = 20) {
   });
 }
 
+export interface OrderItemPayload {
+  productId: string;
+  productName: string;
+  productImage: string;
+  price: number;
+  quantity: number;
+}
+
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { address: string; paymentMethod: string }) =>
-      apiFetch<Order>('/orders', {
+    mutationFn: (data: { address: string; paymentMethod: string; items: OrderItemPayload[] }) =>
+      apiFetch<{ order: Order }>('/orders', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
@@ -32,6 +40,27 @@ export function useCreateOrder() {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
+  });
+}
+
+export interface PaymentInitiationResponse {
+  success: boolean;
+  provider: string;
+  configured: boolean;
+  redirectUrl?: string;
+  formActionUrl?: string;
+  formFields?: Record<string, string>;
+  transactionId?: string;
+  message?: string;
+}
+
+export function useInitiatePayment() {
+  return useMutation({
+    mutationFn: ({ provider, orderId }: { provider: string; orderId: string }) =>
+      apiFetch<PaymentInitiationResponse>(`/payments/${provider}/initiate`, {
+        method: 'POST',
+        body: JSON.stringify({ orderId }),
+      }),
   });
 }
 

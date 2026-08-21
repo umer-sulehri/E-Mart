@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useAdminOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { OrderStatus } from '@/lib/types';
@@ -11,10 +11,12 @@ import { SearchIcon, EyeIcon } from '@/components/icons';
 type FilterStatus = 'all' | OrderStatus;
 
 const STATUS_OPTIONS: OrderStatus[] = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+const PAGE_SIZE = 10;
 
 export default function AdminOrdersPage() {
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [openStatusRow, setOpenStatusRow] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useAdminOrders();
@@ -22,17 +24,22 @@ export default function AdminOrdersPage() {
 
   const orders = data?.orders ?? [];
 
-  const filtered = orders
+  const filtered = useMemo(() => orders
     .filter((o) => filter === 'all' || o.status === filter)
-    .filter(
-      (o) =>
-        search.trim() === '' ||
-        o.orderNumber.toLowerCase().includes(search.toLowerCase()),
-    );
+    .filter((o) => search.trim() === '' || o.orderNumber.toLowerCase().includes(search.toLowerCase()) || o.address?.toLowerCase().includes(search.toLowerCase())),
+    [orders, filter, search]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleStatusChange = (id: string, status: OrderStatus) => {
     updateStatus.mutate({ id, status });
     setOpenStatusRow(null);
+  };
+
+  const parseAddress = (address: string) => {
+    const parts = address.split(',').map((p) => p.trim());
+    return parts[0] || '—';
   };
 
   return (
@@ -111,7 +118,7 @@ export default function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.map((order) => (
+                {paginated.map((order) => (
                   <tr
                     key={order.id}
                     className="hover:bg-surface-alt/50 transition-colors"
@@ -119,7 +126,9 @@ export default function AdminOrdersPage() {
                     <td className="px-4 py-3 font-medium text-text-primary whitespace-nowrap">
                       #{order.orderNumber}
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">—</td>
+                    <td className="px-4 py-3 text-text-secondary">
+                      {parseAddress(order.address)}
+                    </td>
                     <td className="px-4 py-3 text-text-primary">
                       {order.items.length}
                     </td>
@@ -200,6 +209,49 @@ export default function AdminOrdersPage() {
             </table>
           </div>
         </Card>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <p className="text-sm text-text-secondary">
+            Page {page} of {totalPages} ({filtered.length} orders)
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="h-[40px] px-4 rounded-[10px] border border-border bg-surface text-sm font-semibold text-text-primary disabled:opacity-40 hover:bg-surface-alt transition-colors"
+            >
+              Previous
+            </button>
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) pageNum = i + 1;
+              else if (page <= 3) pageNum = i + 1;
+              else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+              else pageNum = page - 2 + i;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  className={`h-[40px] w-[40px] rounded-[10px] text-sm font-semibold transition-colors ${
+                    page === pageNum ? 'bg-primary text-text-inverse' : 'border border-border bg-surface text-text-primary hover:bg-surface-alt'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="h-[40px] px-4 rounded-[10px] border border-border bg-surface text-sm font-semibold text-text-primary disabled:opacity-40 hover:bg-surface-alt transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

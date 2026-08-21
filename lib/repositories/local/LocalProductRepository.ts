@@ -86,6 +86,9 @@ export class LocalProductRepository implements ProductRepository {
             break;
         }
       }
+      if (filters.sellerId) {
+        result = result.filter((p) => p.sellerId === filters.sellerId);
+      }
     }
 
     const total = result.length;
@@ -114,6 +117,7 @@ export class LocalProductRepository implements ProductRepository {
       rating: 0,
       reviewCount: 0,
       createdAt: new Date().toISOString(),
+      sellerId: data.sellerId,
     };
     products.push(product);
     return product;

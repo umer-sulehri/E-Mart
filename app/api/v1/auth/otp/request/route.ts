@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { otpRequestSchema } from '@/lib/validation/schemas';
-import { OtpRepository, UserRepository } from '@/lib/repositories/index';
+import { OtpRepository } from '@/lib/repositories/index';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -10,8 +10,6 @@ export async function POST(request: NextRequest) {
   }
 
   const { identifier } = parsed.data;
-
-  await UserRepository.findOrCreate(identifier);
 
   const code =
     process.env.NODE_ENV === 'production'

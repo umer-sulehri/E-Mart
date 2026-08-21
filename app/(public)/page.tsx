@@ -2,7 +2,8 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { mockCategories, mockProducts } from '@/lib/mock/products';
+import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 import { mockBlogPosts } from '@/lib/mock/blog';
 import { useTranslations } from '@/hooks/useTranslations';
 import { useCartStore } from '@/lib/store/cartStore';
@@ -46,17 +47,21 @@ export default function HomePage() {
     ref.current.scrollBy({ left: amount, behavior: 'smooth' });
   };
 
-  const trendingProducts = mockProducts.filter((p) => {
+  const { data: allProductsData } = useProducts({}, 1, 50);
+  const { data: categories } = useCategories();
+  const allProducts = allProductsData?.products ?? [];
+
+  const trendingProducts = allProducts.filter((p) => {
     if (trendingTab === 'all') return true;
-    if (trendingTab === 'fruits') return p.tags.includes('organic') || p.tags.includes('fresh');
-    if (trendingTab === 'vegetables') return p.tags.includes('fresh');
-    if (trendingTab === 'groceries') return p.tags.includes('staple') || p.tags.includes('cooking');
+    if (trendingTab === 'fruits') return p.tags?.includes('organic') || p.tags?.includes('fresh');
+    if (trendingTab === 'vegetables') return p.tags?.includes('fresh');
+    if (trendingTab === 'groceries') return p.tags?.includes('staple') || p.tags?.includes('cooking');
     return true;
   });
 
-  const bestSelling = mockProducts.filter((p) => p.rating >= 4.3).slice(0, 8);
-  const popular = [...mockProducts].sort((a, b) => b.reviewCount - a.reviewCount).slice(0, 8);
-  const justArrived = mockProducts.filter((p) => p.isNew);
+  const bestSelling = allProducts.filter((p) => p.rating >= 4.3).slice(0, 8);
+  const popular = [...allProducts].sort((a, b) => b.reviewCount - a.reviewCount).slice(0, 8);
+  const justArrived = allProducts.filter((p) => p.isNew);
 
   return (
     <div>
@@ -140,10 +145,10 @@ export default function HomePage() {
             <ArrowLeftIcon className="w-4 h-4" />
           </button>
           <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2" style={{ scrollbarWidth: 'none' }}>
-            {mockCategories.map((cat) => (
+            {(categories ?? []).map((cat) => (
               <Link key={cat.id} href={`/categories/${cat.slug}`} className="flex-shrink-0 snap-start">
                 <div className="w-[140px] h-[160px] bg-surface border border-border rounded-[12px] flex flex-col items-center justify-center gap-3 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group">
-                  <span className="text-4xl group-hover:scale-110 transition-transform" role="img" aria-label={cat.name}>{cat.icon}</span>
+                  <span className="text-4xl group-hover:scale-110 transition-transform" role="img" aria-label={cat.name}>{cat.icon || '📦'}</span>
                   <span className="text-sm font-semibold text-text-primary text-center px-2">{cat.name}</span>
                 </div>
               </Link>

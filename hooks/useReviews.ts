@@ -6,6 +6,12 @@ interface ReviewsResponse {
   reviews: Review[];
 }
 
+interface ReviewWithProduct extends Review {
+  productName: string;
+  productImage: string;
+  productSlug: string;
+}
+
 export function useProductReviews(productSlug: string) {
   return useQuery({
     queryKey: ['reviews', productSlug],
@@ -25,5 +31,21 @@ export function useCreateReview(productSlug: string) {
       }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['reviews', productSlug] }),
+  });
+}
+
+export function useUserReviews() {
+  return useQuery({
+    queryKey: ['userReviews'],
+    queryFn: () => apiFetch<{ reviews: ReviewWithProduct[] }>('/auth/reviews'),
+    select: (data) => data.reviews,
+  });
+}
+
+export function useSellerReviews() {
+  return useQuery({
+    queryKey: ['sellerReviews'],
+    queryFn: () => apiFetch<{ reviews: ReviewWithProduct[] }>('/seller/reviews'),
+    select: (data) => data.reviews,
   });
 }

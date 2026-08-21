@@ -9,6 +9,14 @@ export class LocalReviewRepository implements ReviewRepository {
     return reviews.filter((r) => r.productId === productId);
   }
 
+  findByUser(userId: string): Review[] {
+    return reviews.filter((r) => r.userId === userId);
+  }
+
+  findBySellerProducts(productIds: string[]): Review[] {
+    return reviews.filter((r) => productIds.includes(r.productId));
+  }
+
   create(data: Omit<Review, 'id' | 'createdAt'>): Review {
     const review: Review = {
       ...data,

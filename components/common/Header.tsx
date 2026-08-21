@@ -11,14 +11,13 @@ import { useTranslations } from '@/hooks/useTranslations';
 import { useHydrated } from '@/hooks/useHydrated';
 import { mockCategories } from '@/lib/mock/products';
 import { IconButton } from '@/components/ui/Icon';
-import { SearchIcon, ShoppingCartIcon, UserIcon, MenuIcon, CloseIcon, HeartIcon } from '@/components/icons';
+import { ShoppingCartIcon, UserIcon, MenuIcon, CloseIcon, HeartIcon } from '@/components/icons';
 import { CartDrawer } from '@/components/cart/CartDrawer';
-import { VoiceSearch } from '@/components/common/VoiceSearch';
+import { SearchBar } from '@/components/search/SearchBar';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [categoryOpen, setCategoryOpen] = useState(false);
   const hydrated = useHydrated();
   const router = useRouter();
@@ -29,11 +28,6 @@ export function Header() {
   const { user, currentMode, switchMode } = useAuthStore();
   const { t } = useTranslations();
   const catTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleVoiceResult = (transcript: string) => {
-    setSearchQuery(transcript);
-    window.location.href = `/products?search=${encodeURIComponent(transcript)}`;
-  };
 
   return (
     <>
@@ -64,13 +58,7 @@ export function Header() {
           </Link>
 
           <div className="flex-1 hidden sm:flex items-center max-w-xl mx-auto">
-            <div className="relative w-full flex items-center">
-              <input type="search" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && searchQuery.trim()) window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`; }} placeholder={t('products.search')} aria-label={t('products.search')} className="w-full h-[48px] pl-11 pr-12 bg-bg border border-border rounded-l-[10px] text-base text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
-              <SearchIcon className="absolute left-3 w-5 h-5 text-text-secondary pointer-events-none" />
-              <div className="absolute right-1">
-                <VoiceSearch onResult={handleVoiceResult} />
-              </div>
-            </div>
+            <SearchBar />
           </div>
 
           <div className="flex items-center gap-1">
@@ -114,13 +102,7 @@ export function Header() {
         {/* Mobile Search */}
         {mobileMenuOpen && (
           <div className="sm:hidden px-4 pb-3">
-            <div className="relative flex items-center">
-              <input type="search" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && searchQuery.trim()) window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`; }} placeholder={t('products.search')} aria-label={t('products.search')} className="w-full h-[48px] pl-11 pr-12 bg-bg border border-border rounded-l-[10px] text-base text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
-              <SearchIcon className="absolute left-3 w-5 h-5 text-text-secondary pointer-events-none" />
-              <div className="absolute right-1">
-                <VoiceSearch onResult={handleVoiceResult} />
-              </div>
-            </div>
+            <SearchBar />
           </div>
         )}
 
