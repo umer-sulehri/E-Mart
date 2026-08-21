@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
@@ -13,7 +12,6 @@ import { PlusIcon, EyeIcon, EditIcon, TrashIcon } from '@/components/icons';
 import type { Product } from '@/lib/types';
 
 export default function ProductsManagementPage() {
-  const router = useRouter();
   const { showToast } = useToast();
 
   const [search, setSearch] = useState('');
@@ -22,7 +20,7 @@ export default function ProductsManagementPage() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const itemsPerPage = 10;
 
@@ -34,13 +32,13 @@ export default function ProductsManagementPage() {
   const deleteProduct = useDeleteProduct();
 
   const filteredProducts = useMemo(() => {
-    let result = products || [];
+    let result: Product[] = products || [];
     if (search.trim()) {
       const q = search.toLowerCase();
-      result = result.filter((p: any) => p.name?.toLowerCase().includes(q) || p.slug?.toLowerCase().includes(q));
+      result = result.filter((p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q));
     }
     if (categoryFilter) {
-      result = result.filter((p: any) => p.category?.id === categoryFilter || p.categoryId === categoryFilter);
+      result = result.filter((p) => p.category?.id === categoryFilter || p.categoryId === categoryFilter);
     }
     return result;
   }, [products, search, categoryFilter]);
@@ -52,19 +50,23 @@ export default function ProductsManagementPage() {
     return { label: 'In Stock', color: 'bg-success text-success' };
   };
 
-  const handleView = (product: any) => {
+  const handleView = (product: Product) => {
     setSelectedProduct(product);
     setViewModalOpen(true);
   };
 
-  const handleEdit = (product: any) => {
+  const handleEdit = (product: Product) => {
     setSelectedProduct(product);
     setEditModalOpen(true);
   };
 
-  const handleDelete = (product: any) => {
+  const handleDelete = (product: Product) => {
     setSelectedProduct(product);
     setDeleteModalOpen(true);
+  };
+
+  const updateSelected = (patch: Partial<Product>) => {
+    setSelectedProduct((prev) => (prev ? { ...prev, ...patch } : prev));
   };
 
   const confirmDelete = async () => {
@@ -192,7 +194,7 @@ export default function ProductsManagementPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredProducts.map((product: Product) => {
+                  filteredProducts.map((product) => {
                     const stock = product.stock ?? 0;
                     const stockStatus = getStockStatus(stock);
                     return (
@@ -295,7 +297,7 @@ export default function ProductsManagementPage() {
             <h2 className="mb-4 text-xl font-bold text-text-primary">Product Details</h2>
             <div className="mb-4 overflow-hidden rounded-[10px]">
               <img
-                src={selectedProduct.image || '/placeholder.png'}
+                src={selectedProduct.images?.[0] || '/placeholder.png'}
                 alt={selectedProduct.name}
                 width={400}
                 height={200}
@@ -309,7 +311,7 @@ export default function ProductsManagementPage() {
               </div>
               <div>
                 <span className="text-sm text-text-secondary">Category</span>
-                <p className="font-medium text-text-primary">{selectedProduct.categoryName || '—'}</p>
+                <p className="font-medium text-text-primary">{selectedProduct.category?.name || '—'}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -351,7 +353,7 @@ export default function ProductsManagementPage() {
                 <Input
                   label="Product Name"
                   value={selectedProduct.name || ''}
-                  onChange={(e) => setSelectedProduct({ ...selectedProduct, name: e.target.value })}
+                  onChange={(e) => updateSelected({ name: e.target.value })}
                   className="h-[48px] rounded-[10px]"
                   required
                 />
@@ -364,7 +366,7 @@ export default function ProductsManagementPage() {
                     type="number"
                     step="0.01"
                     value={selectedProduct.price ?? 0}
-                    onChange={(e) => setSelectedProduct({ ...selectedProduct, price: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => updateSelected({ price: parseFloat(e.target.value) || 0 })}
                     className="h-[48px] rounded-[10px]"
                     required
                   />
@@ -375,7 +377,7 @@ export default function ProductsManagementPage() {
                     label="Stock"
                     type="number"
                     value={selectedProduct.stock ?? 0}
-                    onChange={(e) => setSelectedProduct({ ...selectedProduct, stock: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => updateSelected({ stock: parseInt(e.target.value) || 0 })}
                     className="h-[48px] rounded-[10px]"
                     required
                   />
@@ -385,7 +387,7 @@ export default function ProductsManagementPage() {
                 <label className="mb-1 block text-sm text-text-secondary">Description</label>
                 <textarea
                   value={selectedProduct.description || ''}
-                  onChange={(e) => setSelectedProduct({ ...selectedProduct, description: e.target.value })}
+                  onChange={(e) => updateSelected({ description: e.target.value })}
                   className="w-full rounded-[10px] border border-border bg-surface px-4 py-3 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary min-h-[100px]"
                   rows={3}
                 />

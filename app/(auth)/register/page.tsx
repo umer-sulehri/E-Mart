@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
 import { useRequestOtp } from '@/hooks/useAuth';
 import { AuthLayout } from '@/components/common/AuthLayout';
 import { EyeIcon, EyeOffIcon, CheckIcon, CloseIcon } from '@/components/icons';

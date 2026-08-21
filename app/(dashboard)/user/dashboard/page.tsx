@@ -6,7 +6,7 @@ import { useUserReviews } from '@/hooks/useReviews';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { OrderIcon, UserIcon, HeartIcon, PackageIcon, ShoppingCartIcon, StarIcon, CogIcon, ClockIcon, CheckCircleIcon } from '@/components/icons';
+import { OrderIcon, HeartIcon, PackageIcon, ShoppingCartIcon, StarIcon } from '@/components/icons';
 import { useCategories } from '@/hooks/useCategories';
 
 export default function UserDashboardPage() {

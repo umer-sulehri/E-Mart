@@ -29,11 +29,10 @@ export default function AdminUsersPage() {
   const blockUser = useBlockUser();
   const unblockUser = useUnblockUser();
 
-  const users = data?.users ?? [];
   const total = data?.total ?? 0;
 
   const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
+    return (data?.users ?? []).filter((user) => {
       const matchesSearch =
         !search ||
         user.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -42,7 +41,7 @@ export default function AdminUsersPage() {
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       return matchesSearch && matchesRole;
     });
-  }, [users, search, roleFilter]);
+  }, [data, search, roleFilter]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 

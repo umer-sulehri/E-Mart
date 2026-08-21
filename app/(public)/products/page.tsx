@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useProducts } from '@/hooks/useProducts';
@@ -51,12 +51,13 @@ function ProductsContent() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    const cat = searchParams.get('category');
-    const q = searchParams.get('search');
-    if (cat) setSelectedCategory(cat);
-    if (q) setSearchQuery(q);
-  }, [searchParams]);
+  // Keep local filter state in sync when the URL changes (e.g. back/forward navigation).
+  const [syncedParams, setSyncedParams] = useState(searchParams);
+  if (searchParams !== syncedParams) {
+    setSyncedParams(searchParams);
+    setSelectedCategory(searchParams.get('category') || null);
+    setSearchQuery(searchParams.get('search') || '');
+  }
 
   const filters: ProductFilters = useMemo(() => ({
     category: selectedCategory || undefined,

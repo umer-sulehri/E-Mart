@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
 import {
   HomeIcon, PackageIcon, OrderIcon, UserIcon, StarIcon, GearIcon,
@@ -38,6 +37,7 @@ const BUYER_NAV = [
 
 export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, currentMode, logout } = useAuthStore();
 
   const navItems = user?.role === 'admin' ? ADMIN_NAV : currentMode === 'seller' ? SELLER_NAV : BUYER_NAV;
@@ -93,7 +93,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
 
           <div className="mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <button
-              onClick={() => { logout(); window.location.href = '/'; }}
+              onClick={() => { logout(); router.push('/'); }}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 w-full"
               style={{ color: 'rgba(255,255,255,0.4)' }}
               title={collapsed ? 'Logout' : undefined}

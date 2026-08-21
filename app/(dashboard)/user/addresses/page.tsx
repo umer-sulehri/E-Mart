@@ -34,7 +34,20 @@ export default function AddressesPage() {
     } catch { setAddresses([]); } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchAddresses(); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await apiFetch<{ addresses: Address[] }>('/auth/addresses');
+        if (!cancelled) setAddresses(data.addresses || []);
+      } catch {
+        if (!cancelled) setAddresses([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSave = async () => {
     setSaving(true); setError(''); setSuccess('');

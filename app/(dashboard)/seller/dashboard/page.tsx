@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useSellerProducts, useSellerEarnings } from '@/hooks/useSeller';
-import { ProductIcon, OrderIcon, StarIcon, PlusIcon, EditIcon, TrashIcon, EyeIcon, UsersIcon, ArrowRightIcon } from '@/components/icons';
+import { ProductIcon, OrderIcon, StarIcon, PlusIcon, EditIcon, TrashIcon, EyeIcon, ArrowRightIcon } from '@/components/icons';
 
 export default function SellerDashboardPage() {
   const user = useAuthStore((s) => s.user);

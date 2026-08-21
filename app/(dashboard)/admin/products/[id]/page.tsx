@@ -24,7 +24,17 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
   const { data: product, isLoading, error } = useProduct(id ?? '');
 
-  const [formData, setFormData] = useState({
+  interface ProductFormState {
+    name: string;
+    price: number;
+    originalPrice: number;
+    stock: number;
+    description: string;
+    tags: string;
+    featured: boolean;
+  }
+
+  const [formData, setFormData] = useState<ProductFormState>({
     name: '',
     price: 0,
     originalPrice: 0,
@@ -33,22 +43,23 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     tags: '',
     featured: false,
   });
+  const [formProductId, setFormProductId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (product) {
-      setFormData({
-        name: product.name || '',
-        price: product.price ?? 0,
-        originalPrice: product.originalPrice ?? 0,
-        stock: product.stock ?? 0,
-        description: product.description || '',
-        tags: (product.tags || []).join(', '),
-        featured: product.isFeatured ?? false,
-      });
-    }
-  }, [product]);
+  // Initialize the form once per loaded product (render-phase state adjustment).
+  if (product && formProductId !== product.id) {
+    setFormProductId(product.id);
+    setFormData({
+      name: product.name || '',
+      price: product.price ?? 0,
+      originalPrice: product.originalPrice ?? 0,
+      stock: product.stock ?? 0,
+      description: product.description || '',
+      tags: (product.tags || []).join(', '),
+      featured: product.isFeatured ?? false,
+    });
+  }
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof ProductFormState>(field: K, value: ProductFormState[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useAdminStats, useAdminProducts, useAdminAnalytics } from '@/hooks/useAdmin';
+import { useAdminStats, useAdminAnalytics } from '@/hooks/useAdmin';
 import { useAdminOrders } from '@/hooks/useOrders';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import {

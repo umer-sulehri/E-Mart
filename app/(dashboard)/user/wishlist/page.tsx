@@ -6,24 +6,33 @@ import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useCartStore } from '@/lib/store/cartStore';
 import { useProducts } from '@/hooks/useProducts';
 import { HeartIcon, ShoppingCartIcon, TrashIcon, SearchIcon } from '@/components/icons';
+import type { Product } from '@/lib/types';
+
+interface WishlistEntry {
+  productId: string;
+  addedAt: string;
+  product: Product;
+}
 
 export default function UserWishlistPage() {
   const { items, removeItem } = useWishlistStore();
   const addItem = useCartStore(s => s.addItem);
   const [search, setSearch] = useState('');
   const { data: productsData } = useProducts({}, 1, 200);
-  const allProducts = productsData?.products ?? [];
 
-  const wishlistProducts = useMemo(() => items.map(item => {
-    const product = allProducts.find(p => p.id === item.productId);
-    return product ? { ...item, product } : null;
-  }).filter(Boolean), [items, allProducts]);
+  const wishlistProducts = useMemo<WishlistEntry[]>(() => {
+    const allProducts = productsData?.products ?? [];
+    return items.map(item => {
+      const product = allProducts.find(p => p.id === item.productId);
+      return product ? { productId: item.productId, addedAt: item.addedAt, product } : null;
+    }).filter((entry): entry is WishlistEntry => entry !== null);
+  }, [items, productsData]);
 
   const filtered = search
-    ? wishlistProducts.filter((item: any) => item.product.name.toLowerCase().includes(search.toLowerCase()))
+    ? wishlistProducts.filter((item) => item.product.name.toLowerCase().includes(search.toLowerCase()))
     : wishlistProducts;
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: Product) => {
     addItem(product);
     removeItem(product.id);
   };
@@ -51,7 +60,7 @@ export default function UserWishlistPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((item: any) => (
+          {filtered.map((item) => (
             <div key={item.productId} className="rounded-[14px] overflow-hidden transition-all duration-300 hover:-translate-y-1" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
               <div className="relative">
                 <img src={item.product.images[0]} alt={item.product.name} className="w-full h-48 object-cover" />

@@ -1,17 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProduct } from '@/hooks/useProducts';
-import { Product } from '@/lib/types';
 import { ArrowLeftIcon, CheckCircleIcon } from '@/components/icons';
 
 export default function SellerEditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [saved, setSaved] = useState(false);
-  const resolvedParams = params as any;
-  const slug = resolvedParams?.id ?? '';
-  const { data: product, isLoading } = useProduct(slug);
+  const [slug, setSlug] = useState('');
+
+  useEffect(() => {
+    params.then((p) => setSlug(p.id));
+  }, [params]);
+
+  const { data: product } = useProduct(slug);
 
   const [form, setForm] = useState({
     name: '',

@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useUserReviews } from '@/hooks/useReviews';
+import { useUserReviews, type ReviewWithProduct } from '@/hooks/useReviews';
 import { useProducts } from '@/hooks/useProducts';
 import { useOrders } from '@/hooks/useOrders';
-import { StarIcon, SearchIcon, EditIcon, TrashIcon, CheckCircleIcon } from '@/components/icons';
+import { StarIcon, SearchIcon, EditIcon, TrashIcon } from '@/components/icons';
 
 export default function UserReviewsPage() {
   const [search, setSearch] = useState('');
   const [showWriteReview, setShowWriteReview] = useState(false);
-  const [editReview, setEditReview] = useState<any>(null);
+  const [editReview, setEditReview] = useState<ReviewWithProduct | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [hoveredStar, setHoveredStar] = useState(0);
@@ -27,7 +27,7 @@ export default function UserReviewsPage() {
   const eligibleProducts = allProducts.filter((p) => deliveredProductIds.has(p.id)).slice(0, 4);
 
   const myReviews = reviews ?? [];
-  const filtered = myReviews.filter((r: any) => !search || r.productName?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = myReviews.filter((r) => !search || r.productName?.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-6">
@@ -72,7 +72,7 @@ export default function UserReviewsPage() {
             <p className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>Loading reviews...</p>
           ) : filtered.length === 0 ? (
             <p className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>No reviews found.</p>
-          ) : filtered.map((review: any) => (
+          ) : filtered.map((review) => (
             <div key={review.id} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', borderLeft: '4px solid var(--color-primary)' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">

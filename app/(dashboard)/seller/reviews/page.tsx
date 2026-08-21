@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSellerReviews } from '@/hooks/useReviews';
+import { useSellerReviews, type ReviewWithProduct } from '@/hooks/useReviews';
 import { StarIcon, SearchIcon } from '@/components/icons';
 
 export default function SellerReviewsPage() {
@@ -12,10 +12,10 @@ export default function SellerReviewsPage() {
   const reviews = reviewsData ?? [];
 
   const filtered = reviews
-    .filter((r: any) => !search || r.productName?.toLowerCase().includes(search.toLowerCase()) || r.userName?.toLowerCase().includes(search.toLowerCase()))
-    .sort((a: any, b: any) => sortBy === 'newest' ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() : b.rating - a.rating);
+    .filter((r) => !search || r.productName?.toLowerCase().includes(search.toLowerCase()) || r.userName?.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => sortBy === 'newest' ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() : b.rating - a.rating);
 
-  const avgRating = reviews.length > 0 ? reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length : 0;
+  const avgRating = reviews.length > 0 ? reviews.reduce((s: number, r: ReviewWithProduct) => s + r.rating, 0) / reviews.length : 0;
 
   return (
     <div className="space-y-6">
@@ -38,7 +38,7 @@ export default function SellerReviewsPage() {
           <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Average Rating</p>
         </div>
         <div className="rounded-[14px] p-5 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
-          <p className="text-3xl font-bold" style={{ color: '#6E8B5E' }}>{reviews.filter((r: any) => r.rating >= 4).length}</p>
+          <p className="text-3xl font-bold" style={{ color: '#6E8B5E' }}>{reviews.filter((r) => r.rating >= 4).length}</p>
           <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Positive (4-5★)</p>
         </div>
       </div>
@@ -68,7 +68,7 @@ export default function SellerReviewsPage() {
           <div className="rounded-[16px] p-8 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
             <p style={{ color: 'var(--color-text-secondary)' }}>No reviews found.</p>
           </div>
-        ) : filtered.map((review: any) => (
+        ) : filtered.map((review) => (
           <div key={review.id} className="rounded-[14px] p-5" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)', borderLeft: '4px solid var(--color-primary)' }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/hooks/useAdmin';
 import { Category } from '@/lib/types';
-import { SearchIcon, PlusIcon, EditIcon, TrashIcon, CheckCircleIcon } from '@/components/icons';
+import { SearchIcon, PlusIcon, EditIcon, TrashIcon } from '@/components/icons';
 
 export default function AdminCategoriesPage() {
   const [search, setSearch] = useState('');

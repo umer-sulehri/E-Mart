@@ -11,12 +11,13 @@ export default function WishlistPage() {
   const { items, removeItem } = useWishlistStore();
   const addItem = useCartStore((s) => s.addItem);
   const { data: productsData } = useProducts({}, 1, 200);
-  const allProducts = productsData?.products ?? [];
 
-  const wishlistProducts = useMemo(
-    () => items.map((wi) => allProducts.find((p) => p.id === wi.productId)).filter(Boolean) as NonNullable<ReturnType<typeof allProducts.find>>[],
-    [items, allProducts],
-  );
+  const wishlistProducts = useMemo(() => {
+    const allProducts = productsData?.products ?? [];
+    return items
+      .map((wi) => allProducts.find((p) => p.id === wi.productId))
+      .filter((p): p is NonNullable<typeof p> => p !== undefined);
+  }, [items, productsData]);
 
   if (wishlistProducts.length === 0) {
     return (

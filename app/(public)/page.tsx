@@ -30,7 +30,7 @@ const brands = [
 const popularSearches = ['Rice', 'Milk', 'Bread', 'Eggs', 'Chicken', 'Apples', 'Tea', 'Oil', 'Sugar', 'Flour', 'Soap', 'Detergent'];
 
 export default function HomePage() {
-  const { t, locale } = useTranslations();
+  const { t } = useTranslations();
   const addItem = useCartStore((s) => s.addItem);
   const [activeBanner, setActiveBanner] = useState(0);
   const [trendingTab, setTrendingTab] = useState('all');
@@ -70,7 +70,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="relative rounded-[16px] overflow-hidden bg-surface">
             <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${activeBanner * 100}%)` }}>
-              {banners.map((banner, i) => (
+              {banners.map((banner) => (
                 <div key={banner.id} className="min-w-full relative">
                   <div className="flex flex-col md:flex-row items-center gap-6 p-8 md:p-12 min-h-[280px] md:min-h-[360px]">
                     <div className="flex-1 z-10">

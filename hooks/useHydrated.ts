@@ -1,11 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 
+const emptySubscribe = () => () => {};
+
+/**
+ * Returns `false` during SSR and the hydration render, `true` afterwards.
+ * Implemented with useSyncExternalStore so server and client snapshots
+ * match without triggering cascading renders.
+ */
 export function useHydrated() {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-  return hydrated;
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 }

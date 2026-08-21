@@ -7,7 +7,7 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { AccessibilityControls } from '@/components/common/AccessibilityControls';
 import {
-  HomeIcon, PackageIcon, HeartIcon, UserIcon, BellIcon, LogoutIcon, CloseIcon,
+  HomeIcon, PackageIcon, HeartIcon, UserIcon, BellIcon, LogoutIcon,
   LockIcon, MapPinIcon,
 } from '@/components/icons';
 

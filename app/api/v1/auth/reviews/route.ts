@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { ReviewRepository, ProductRepository } from '@/lib/repositories/index';
 import { getSession } from '@/lib/auth/getSession';
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   const user = await getSession();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

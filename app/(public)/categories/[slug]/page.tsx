@@ -6,6 +6,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
 import { Card } from '@/components/ui/Card';
 import { StarIcon } from '@/components/icons';
+import type { Category } from '@/lib/types';
 
 export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   return <CategoryPageInner params={params} />;
@@ -17,30 +18,23 @@ function CategoryPageInner({ params }: { params: Promise<{ slug: string }> }) {
 
   const { data: categories = [], isLoading: catsLoading } = useCategories();
 
-  // Search both top-level categories AND their children by slug
-  const category = React.useMemo(() => {
-    if (!slug) return undefined;
-    // First try top-level
-    const top = categories.find((c) => c.slug === slug);
-    if (top) return top;
-    // Then search children
-    for (const cat of categories) {
-      if (cat.children) {
-        const child = cat.children.find((c) => c.slug === slug);
-        if (child) return { ...child, parent: cat };
+  // Search both top-level categories AND their children by slug.
+  // Plain derivation — React Compiler handles memoization.
+  let category: Category | undefined;
+  if (slug) {
+    category = categories.find((c) => c.slug === slug);
+    if (!category) {
+      for (const cat of categories) {
+        const child = cat.children?.find((c) => c.slug === slug);
+        if (child) {
+          category = child;
+          break;
+        }
       }
     }
-    return undefined;
-  }, [categories, slug]);
+  }
 
-  // Determine if this is a parent or child category for filtering
-  const categoryId = React.useMemo(() => {
-    if (!category) return undefined;
-    // If it's a child category (has parentId), filter by its own ID
-    if ('parentId' in category && category.parentId) return category.id;
-    // If it's a top-level category, filter by its ID (repo will include children)
-    return category.id;
-  }, [category]);
+  const categoryId = category?.id;
 
   const { data: productsData, isLoading: productsLoading } = useProducts(
     categoryId ? { category: categoryId } : undefined,

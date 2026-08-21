@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useAuthStore } from '@/lib/store/authStore';
 import { useSellerOrders } from '@/hooks/useSeller';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { SearchIcon, EyeIcon, OrderIcon } from '@/components/icons';
@@ -12,16 +11,13 @@ type FilterStatus = 'all' | string;
 const STATUS_OPTIONS = ['all', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
 
 export default function SellerOrdersPage() {
-  const user = useAuthStore((s) => s.user);
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 10;
 
   const { data: ordersData } = useSellerOrders(currentPage, perPage);
-  const allOrders = ordersData?.orders ?? [];
-
-  const orders = useMemo(() => allOrders, [allOrders]);
+  const orders = useMemo(() => ordersData?.orders ?? [], [ordersData]);
 
   const filtered = useMemo(() => {
     return orders

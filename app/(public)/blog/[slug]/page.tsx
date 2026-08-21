@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { mockBlogPosts, getBlogPostBySlug } from '@/lib/mock/blog';
 import { useTranslations } from '@/hooks/useTranslations';
 import { ClockIcon, ArrowLeftIcon, ArrowRightIcon, HeartIcon } from '@/components/icons';
-import type { BlogPost } from '@/lib/types';
 
 export default function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   return <BlogDetailInner params={params} />;

@@ -6,7 +6,7 @@ interface ReviewsResponse {
   reviews: Review[];
 }
 
-interface ReviewWithProduct extends Review {
+export interface ReviewWithProduct extends Review {
   productName: string;
   productImage: string;
   productSlug: string;

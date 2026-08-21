@@ -177,7 +177,7 @@ export class SupabaseProductRepository implements ProductRepository {
   async create(data: Omit<Product, 'id' | 'createdAt' | 'rating' | 'reviewCount'>): Promise<Product> {
     const supabase = await createClient();
 
-    const { images, category, ...rest } = data;
+    const { images, ...rest } = data;
     const { data: row, error } = await supabase
       .from('products')
       .insert({
@@ -226,7 +226,7 @@ export class SupabaseProductRepository implements ProductRepository {
   async update(id: string, data: Partial<Product>): Promise<Product | null> {
     const supabase = await createClient();
 
-    const { images, category, ...rest } = data;
+    const { images, ...rest } = data;
     const updatePayload: Record<string, unknown> = {};
     if (rest.slug !== undefined) updatePayload.slug = rest.slug;
     if (rest.name !== undefined) updatePayload.name = rest.name;

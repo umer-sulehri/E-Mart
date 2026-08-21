@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
-import { UserIcon, CheckCircleIcon, EditIcon } from '@/components/icons';
+import { CheckCircleIcon, EditIcon } from '@/components/icons';
 
 export default function SellerProfilePage() {
   const user = useAuthStore((s) => s.user);

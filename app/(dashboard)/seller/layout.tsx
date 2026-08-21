@@ -42,17 +42,10 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!isAuthenticated) router.push('/login');
   }, [isAuthenticated, router]);
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -84,7 +77,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
         <div className="h-full overflow-y-auto scrollbar-hide px-3 py-4 flex flex-col">
           {/* Logo + close (mobile) */}
           <div className="flex items-center justify-between mb-6 px-3">
-            <Link href="/seller/dashboard" className="flex items-center gap-2">
+            <Link href="/seller/dashboard" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
               <span className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>{sidebarOpen || mobileOpen ? 'E-Mart' : 'EM'}</span>
             </Link>
             <button
@@ -115,6 +108,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      onClick={() => setMobileOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
                         ${sidebarOpen || mobileOpen ? '' : 'justify-center'}
                         ${isActive ? 'bg-primary text-text-inverse' : 'text-text-inverse/60 hover:text-text-inverse hover:bg-white/10'}`}
@@ -229,8 +223,8 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
 
       {/* Main content */}
       <main
-        className="transition-all duration-300 pt-[64px] min-h-screen"
-        style={{ marginLeft: mounted && typeof window !== 'undefined' && window.innerWidth >= 1024 ? sidebarWidth : 0, background: 'var(--color-bg)' }}
+        className="transition-all duration-300 pt-[64px] min-h-screen lg:[margin-left:var(--sbw)]"
+        style={{ '--sbw': `${sidebarWidth}px`, background: 'var(--color-bg)' } as React.CSSProperties}
       >
         <div className="p-4 lg:p-6 max-w-[1400px] mx-auto">
           {children}

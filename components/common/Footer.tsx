@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useTranslations } from '@/hooks/useTranslations';
 import { useSocialLinks } from '@/hooks/useSocialLinks';
 import { CloseIcon } from '@/components/icons';

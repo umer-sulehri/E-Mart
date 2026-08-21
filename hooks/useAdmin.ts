@@ -1,14 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
-import { Product, Order, User, Category } from '@/lib/types';
+import { Product, User, Category } from '@/lib/types';
 
 interface AdminProductsResponse {
   products: Product[];
-  total: number;
-}
-
-interface AdminOrdersResponse {
-  orders: Order[];
   total: number;
 }
 

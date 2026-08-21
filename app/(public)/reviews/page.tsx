@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { StarIcon } from '@/components/icons';
 
 const mockReviews = [

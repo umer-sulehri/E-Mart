@@ -35,12 +35,12 @@ export function SearchBar() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const term = query.trim();
-    if (term.length < 2) {
-      setSuggestions([]);
-      setOpen(false);
-      return;
-    }
     debounceRef.current = setTimeout(async () => {
+      if (term.length < 2) {
+        setSuggestions([]);
+        setOpen(false);
+        return;
+      }
       setLoading(true);
       try {
         const res = await fetch(`/api/v1/search/suggestions?q=${encodeURIComponent(term)}`);

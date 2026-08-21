@@ -22,12 +22,10 @@ export default function AdminOrdersPage() {
   const { data, isLoading, isError } = useAdminOrders();
   const updateStatus = useUpdateOrderStatus();
 
-  const orders = data?.orders ?? [];
-
-  const filtered = useMemo(() => orders
+  const filtered = useMemo(() => (data?.orders ?? [])
     .filter((o) => filter === 'all' || o.status === filter)
     .filter((o) => search.trim() === '' || o.orderNumber.toLowerCase().includes(search.toLowerCase()) || o.address?.toLowerCase().includes(search.toLowerCase())),
-    [orders, filter, search]);
+    [data, filter, search]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);

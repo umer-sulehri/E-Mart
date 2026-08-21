@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { apiFetch } from '@/lib/api/client';
-import { UserIcon, CheckCircleIcon, EditIcon } from '@/components/icons';
+import { CheckCircleIcon, EditIcon } from '@/components/icons';
 
 export default function UserProfilePage() {
   const user = useAuthStore((s) => s.user);

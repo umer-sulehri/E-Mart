@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
   const { identifier } = parsed.data;
 
-  const user = await UserRepository.findOrCreate(identifier);
+  await UserRepository.findOrCreate(identifier);
 
   const code =
     process.env.NODE_ENV === 'production'
