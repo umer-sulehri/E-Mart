@@ -91,6 +91,9 @@ export interface ProductFilters {
   sort?: string;
   minPrice?: number;
   maxPrice?: number;
+  minRating?: number;
+  sellerId?: string;
+  ids?: string[];
 }
 
 export interface Translation {

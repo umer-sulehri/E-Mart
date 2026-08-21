@@ -39,8 +39,7 @@ interface ProductImageRow {
   sort_order?: number;
 }
 
-function mapRow(row: ProductRow): Product {
-  const category: Category = row.categories
+function mapRow(row: ProductRow): Product {  const category: Category = row.categories
     ? {
         id: row.categories.id,
         slug: row.categories.slug,
@@ -79,6 +78,10 @@ function mapRow(row: ProductRow): Product {
   };
 }
 
+function sanitizeSearchTerm(term: string): string {
+  return term.replace(/[,()]/g, ' ').trim().slice(0, 80);
+}
+
 export class SupabaseProductRepository implements ProductRepository {
   async findAll(filters?: ProductFilters, page: number = 1, limit: number = 20): Promise<{ products: Product[]; total: number }> {
     const supabase = await createClient();
@@ -88,6 +91,9 @@ export class SupabaseProductRepository implements ProductRepository {
       .select('*, categories(*), product_images(image_url, sort_order)', { count: 'exact' });
 
     if (filters) {
+      if (filters.ids?.length) {
+        query = query.in('id', filters.ids);
+      }
       if (filters.category) {
         const { data: cat } = await supabase
           .from('categories')
@@ -114,8 +120,10 @@ export class SupabaseProductRepository implements ProductRepository {
         query = query.lte('price', filters.maxPrice);
       }
       if (filters.search) {
-        const term = filters.search;
-        query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%,tags.cs.{${term}}`);
+        const term = sanitizeSearchTerm(filters.search);
+        if (term) {
+          query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%,tags.cs.{${term}}`);
+        }
       }
       if (filters.sort) {
         switch (filters.sort) {
@@ -174,29 +182,31 @@ export class SupabaseProductRepository implements ProductRepository {
     return mapRow(data as ProductRow);
   }
 
+  private static toInsertPayload(data: Omit<Product, 'id' | 'createdAt' | 'rating' | 'reviewCount'>) {
+    return {
+      slug: data.slug,
+      name: data.name,
+      name_urdu: data.nameUrdu,
+      description: data.description,
+      description_urdu: data.descriptionUrdu,
+      price: data.price,
+      original_price: data.originalPrice,
+      category_id: data.categoryId,
+      stock: data.stock,
+      tags: data.tags,
+      is_featured: data.isFeatured,
+      is_new: data.isNew,
+      seller_id: data.sellerId,
+    };
+  }
+
   async create(data: Omit<Product, 'id' | 'createdAt' | 'rating' | 'reviewCount'>): Promise<Product> {
     const supabase = await createClient();
 
-    const { images, ...rest } = data;
+    const { images } = data;
     const { data: row, error } = await supabase
       .from('products')
-      .insert({
-        slug: rest.slug,
-        name: rest.name,
-        name_urdu: rest.nameUrdu,
-        description: rest.description,
-        description_urdu: rest.descriptionUrdu,
-        price: rest.price,
-        original_price: rest.originalPrice,
-        category_id: rest.categoryId,
-        stock: rest.stock,
-        tags: rest.tags,
-        is_featured: rest.isFeatured,
-        is_new: rest.isNew,
-        rating: 0,
-        review_count: 0,
-        seller_id: rest.sellerId,
-      })
+      .insert({ ...SupabaseProductRepository.toInsertPayload(data), rating: 0, review_count: 0 })
       .select('*, categories(*), product_images(image_url, sort_order)')
       .single();
 
@@ -216,11 +226,38 @@ export class SupabaseProductRepository implements ProductRepository {
   }
 
   async createBulk(products: Omit<Product, 'id' | 'createdAt' | 'rating' | 'reviewCount'>[]): Promise<Product[]> {
-    const results: Product[] = [];
-    for (const product of products) {
-      results.push(await this.create(product));
+    if (products.length === 0) return [];
+
+    const supabase = await createClient();
+
+    const inserts = products.map((data) => ({
+      ...SupabaseProductRepository.toInsertPayload(data),
+      rating: 0,
+      review_count: 0,
+    }));
+    const { data: rows, error } = await supabase
+      .from('products')
+      .insert(inserts)
+      .select('*, categories(*), product_images(image_url, sort_order)');
+    if (error) throw error;
+
+    const imagesByProductId = new Map<string, ProductImageRow[]>();
+    const imageRows = products.flatMap((data, i) =>
+      data.images.map((url, j) => ({ product_id: rows[i].id, image_url: url, sort_order: j })),
+    );
+    if (imageRows.length > 0) {
+      const { error: imgError } = await supabase.from('product_images').insert(imageRows);
+      if (imgError) throw imgError;
+      for (const r of imageRows) {
+        const list = imagesByProductId.get(r.product_id) ?? [];
+        list.push({ image_url: r.image_url, sort_order: r.sort_order });
+        imagesByProductId.set(r.product_id, list);
+      }
     }
-    return results;
+
+    return rows.map((row) =>
+      mapRow({ ...row, product_images: imagesByProductId.get(row.id) ?? [] } as ProductRow),
+    );
   }
 
   async update(id: string, data: Partial<Product>): Promise<Product | null> {
@@ -275,15 +312,8 @@ export class SupabaseProductRepository implements ProductRepository {
   }
 
   async search(query: string): Promise<Product[]> {
-    const supabase = await createClient();
-    const term = query.toLowerCase();
-
-    const { data, error } = await supabase
-      .from('products')
-      .select('*, categories(*), product_images(image_url, sort_order)')
-      .or(`name.ilike.%${term}%,description.ilike.%${term}%,tags.cs.{${term}}`);
-
-    if (error) throw error;
-    return (data ?? []).map(mapRow);
+    const term = sanitizeSearchTerm(query);
+    if (!term) return [];
+    return (await this.findAll({ search: term }, 1, 20)).products;
   }
 }

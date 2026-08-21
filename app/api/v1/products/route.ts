@@ -11,6 +11,10 @@ export async function GET(request: NextRequest) {
   if (searchParams.get('maxPrice')) filters.maxPrice = Number(searchParams.get('maxPrice'));
   if (searchParams.get('search')) filters.search = searchParams.get('search')!;
   if (searchParams.get('sort')) filters.sort = searchParams.get('sort')!;
+  const idsParam = searchParams.get('ids');
+  if (idsParam) {
+    filters.ids = idsParam.split(',').map((id) => id.trim()).filter(Boolean);
+  }
 
   const page = searchParams.get('page') ? Number(searchParams.get('page')) : 1;
   const limit = searchParams.get('limit') ? Number(searchParams.get('limit')) : 20;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useUserReviews, type ReviewWithProduct } from '@/hooks/useReviews';
 import { useProducts } from '@/hooks/useProducts';
 import { useOrders } from '@/hooks/useOrders';
@@ -16,15 +16,27 @@ export default function UserReviewsPage() {
 
   const { data: reviews, isLoading } = useUserReviews();
   const { data: ordersData } = useOrders(1, 100);
-  const { data: productsData } = useProducts({}, 1, 50);
-  const allProducts = productsData?.products ?? [];
 
-  const deliveredProductIds = new Set(
-    (ordersData?.orders ?? [])
-      .filter((o) => o.status === 'delivered')
-      .flatMap((o) => o.items.map((i) => i.productId))
+  const deliveredProductIds = useMemo(
+    () =>
+      new Set(
+        (ordersData?.orders ?? [])
+          .filter((o) => o.status === 'delivered')
+          .flatMap((o) => o.items.map((i) => i.productId)),
+      ),
+    [ordersData],
   );
-  const eligibleProducts = allProducts.filter((p) => deliveredProductIds.has(p.id)).slice(0, 4);
+  const eligibleIds = useMemo(() => [...deliveredProductIds], [deliveredProductIds]);
+  const { data: productsData } = useProducts(
+    { ids: eligibleIds },
+    1,
+    Math.max(eligibleIds.length, 1),
+    { enabled: eligibleIds.length > 0 },
+  );
+  const eligibleProducts = useMemo(
+    () => (productsData?.products ?? []).slice(0, 4),
+    [productsData],
+  );
 
   const myReviews = reviews ?? [];
   const filtered = myReviews.filter((r) => !search || r.productName?.toLowerCase().includes(search.toLowerCase()));

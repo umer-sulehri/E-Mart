@@ -18,12 +18,18 @@ export default function UserWishlistPage() {
   const { items, removeItem } = useWishlistStore();
   const addItem = useCartStore(s => s.addItem);
   const [search, setSearch] = useState('');
-  const { data: productsData } = useProducts({}, 1, 200);
+  const productIds = useMemo(() => items.map((wi) => wi.productId), [items]);
+  const { data: productsData } = useProducts(
+    { ids: productIds },
+    1,
+    Math.max(productIds.length, 1),
+    { enabled: productIds.length > 0 },
+  );
 
   const wishlistProducts = useMemo<WishlistEntry[]>(() => {
-    const allProducts = productsData?.products ?? [];
+    const byId = new Map((productsData?.products ?? []).map((p) => [p.id, p]));
     return items.map(item => {
-      const product = allProducts.find(p => p.id === item.productId);
+      const product = byId.get(item.productId);
       return product ? { productId: item.productId, addedAt: item.addedAt, product } : null;
     }).filter((entry): entry is WishlistEntry => entry !== null);
   }, [items, productsData]);

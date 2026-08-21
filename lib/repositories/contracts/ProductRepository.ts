@@ -1,14 +1,6 @@
-import { Product } from '@/lib/types';
+import { Product, ProductFilters } from '@/lib/types';
 
-export interface ProductFilters {
-  category?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  minRating?: number;
-  search?: string;
-  sort?: string;
-  sellerId?: string;
-}
+export type { ProductFilters };
 
 export interface ProductRepository {
   findAll(filters?: ProductFilters, page?: number, limit?: number): { products: Product[]; total: number } | Promise<{ products: Product[]; total: number }>;

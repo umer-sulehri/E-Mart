@@ -9,6 +9,10 @@ export class LocalProductRepository implements ProductRepository {
     let result = [...products];
 
     if (filters) {
+      if (filters.ids?.length) {
+        const idSet = new Set(filters.ids);
+        result = result.filter((p) => idSet.has(p.id));
+      }
       if (filters.category) {
         // Search the full category tree (top-level + children) for the target
         let targetCategory = mockCategories.find((c) => c.id === filters.category || c.slug === filters.category);

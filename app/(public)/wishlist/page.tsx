@@ -10,12 +10,18 @@ import { HeartIcon, ShoppingCartIcon, TrashIcon, StarIcon } from '@/components/i
 export default function WishlistPage() {
   const { items, removeItem } = useWishlistStore();
   const addItem = useCartStore((s) => s.addItem);
-  const { data: productsData } = useProducts({}, 1, 200);
+  const productIds = useMemo(() => items.map((wi) => wi.productId), [items]);
+  const { data: productsData } = useProducts(
+    { ids: productIds },
+    1,
+    Math.max(productIds.length, 1),
+    { enabled: productIds.length > 0 },
+  );
 
   const wishlistProducts = useMemo(() => {
-    const allProducts = productsData?.products ?? [];
+    const byId = new Map((productsData?.products ?? []).map((p) => [p.id, p]));
     return items
-      .map((wi) => allProducts.find((p) => p.id === wi.productId))
+      .map((wi) => byId.get(wi.productId))
       .filter((p): p is NonNullable<typeof p> => p !== undefined);
   }, [items, productsData]);
 
