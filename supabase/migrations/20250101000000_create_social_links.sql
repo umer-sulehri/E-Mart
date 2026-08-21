@@ -24,7 +24,8 @@ create policy "Public can view active social links"
   using (is_active = true);
 
 -- Admin full access
+drop policy if exists "Admins have full access to social links" on public.social_links;
 create policy "Admins have full access to social links"
   on public.social_links for all
-  using (auth.jwt() ->> 'role' = 'admin')
-  with check (auth.jwt() ->> 'role' = 'admin');
+  using (public.is_admin())
+  with check (public.is_admin());

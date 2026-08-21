@@ -467,12 +467,7 @@ CREATE POLICY "Addresses: owner delete own"
 
 CREATE POLICY "Addresses: admin read"
   ON customer_addresses FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Categories
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
@@ -483,30 +478,15 @@ CREATE POLICY "Categories: public read"
 
 CREATE POLICY "Categories: admin insert"
   ON categories FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "Categories: admin update"
   ON categories FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 CREATE POLICY "Categories: admin delete"
   ON categories FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Products
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
@@ -517,30 +497,15 @@ CREATE POLICY "Products: public read"
 
 CREATE POLICY "Products: admin insert"
   ON products FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "Products: admin update"
   ON products FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 CREATE POLICY "Products: admin delete"
   ON products FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Product Variants
 ALTER TABLE product_variants ENABLE ROW LEVEL SECURITY;
@@ -551,30 +516,15 @@ CREATE POLICY "Product variants: public read"
 
 CREATE POLICY "Product variants: admin insert"
   ON product_variants FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "Product variants: admin update"
   ON product_variants FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 CREATE POLICY "Product variants: admin delete"
   ON product_variants FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Product Images
 ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
@@ -585,30 +535,15 @@ CREATE POLICY "Product images: public read"
 
 CREATE POLICY "Product images: admin insert"
   ON product_images FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "Product images: admin update"
   ON product_images FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 CREATE POLICY "Product images: admin delete"
   ON product_images FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Product Attributes
 ALTER TABLE product_attributes ENABLE ROW LEVEL SECURITY;
@@ -619,30 +554,15 @@ CREATE POLICY "Product attributes: public read"
 
 CREATE POLICY "Product attributes: admin insert"
   ON product_attributes FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "Product attributes: admin update"
   ON product_attributes FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 CREATE POLICY "Product attributes: admin delete"
   ON product_attributes FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Carts
 ALTER TABLE carts ENABLE ROW LEVEL SECURITY;
@@ -707,12 +627,7 @@ CREATE POLICY "Orders: owner select"
 
 CREATE POLICY "Orders: admin full access"
   ON orders FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Order Items
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
@@ -728,12 +643,7 @@ CREATE POLICY "Order items: owner select"
 
 CREATE POLICY "Order items: admin full access"
   ON order_items FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Payments
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
@@ -749,12 +659,7 @@ CREATE POLICY "Payments: owner select own"
 
 CREATE POLICY "Payments: admin full access"
   ON payments FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Wishlists
 ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
@@ -773,12 +678,7 @@ CREATE POLICY "Wishlists: owner delete own"
 
 CREATE POLICY "Wishlists: admin read"
   ON wishlists FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Product Reviews
 ALTER TABLE product_reviews ENABLE ROW LEVEL SECURITY;
@@ -801,12 +701,7 @@ CREATE POLICY "Reviews: owner delete own"
 
 CREATE POLICY "Reviews: admin delete"
   ON product_reviews FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Translations
 ALTER TABLE translations ENABLE ROW LEVEL SECURITY;
@@ -817,30 +712,15 @@ CREATE POLICY "Translations: public read"
 
 CREATE POLICY "Translations: admin insert"
   ON translations FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "Translations: admin update"
   ON translations FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 CREATE POLICY "Translations: admin delete"
   ON translations FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Social Links
 ALTER TABLE social_links ENABLE ROW LEVEL SECURITY;
@@ -851,30 +731,15 @@ CREATE POLICY "Social links: public read"
 
 CREATE POLICY "Social links: admin insert"
   ON social_links FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "Social links: admin update"
   ON social_links FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 CREATE POLICY "Social links: admin delete"
   ON social_links FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());
 
 -- Notification Preferences
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
@@ -897,9 +762,4 @@ CREATE POLICY "Notification prefs: owner delete own"
 
 CREATE POLICY "Notification prefs: admin read"
   ON notification_preferences FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (public.is_admin());

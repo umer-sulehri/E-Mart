@@ -44,9 +44,7 @@ CREATE POLICY "Email logs: owner read"
 
 CREATE POLICY "Email logs: admin full access"
   ON public.email_logs FOR ALL
-  USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+  USING (public.is_admin());
 
 -- ============================================================================
 -- SMS LOGS
@@ -74,9 +72,7 @@ CREATE POLICY "SMS logs: owner read"
 
 CREATE POLICY "SMS logs: admin full access"
   ON public.sms_logs FOR ALL
-  USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+  USING (public.is_admin());
 
 -- ============================================================================
 -- SEARCH HISTORY + TRENDING SEARCHES
@@ -149,9 +145,7 @@ CREATE POLICY "Analytics events: insert any"
 
 CREATE POLICY "Analytics events: admin full access"
   ON public.analytics_events FOR ALL
-  USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+  USING (public.is_admin());
 
 -- ============================================================================
 -- SELLER PAYOUTS
@@ -184,9 +178,7 @@ CREATE POLICY "Seller payouts: owner insert own"
 
 CREATE POLICY "Seller payouts: admin full access"
   ON public.seller_payouts FOR ALL
-  USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+  USING (public.is_admin());
 
 -- ============================================================================
 -- ORDER TRACKING (status timeline per order)
@@ -216,9 +208,7 @@ CREATE POLICY "Order tracking: owner select"
 
 CREATE POLICY "Order tracking: admin full access"
   ON public.order_tracking FOR ALL
-  USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+  USING (public.is_admin());
 
 -- ============================================================================
 -- FULL-TEXT SEARCH on products (name weighted A, description weighted B)
