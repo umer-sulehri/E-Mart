@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/lib/store/cartStore';
@@ -9,8 +9,10 @@ import { useUiStore } from '@/lib/store/uiStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useCategories } from '@/hooks/useCategories';
 import { useHydrated } from '@/hooks/useHydrated';
+import { useLogout } from '@/hooks/useAuth';
 import { SearchBar } from '@/components/search/SearchBar';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
+import { NotificationBell } from '@/components/common/NotificationBell';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -18,6 +20,16 @@ const navLinks = [
   { href: '/categories', label: 'Categories' },
   { href: '/blog', label: 'Blog' },
   { href: '/wishlist', label: 'Wishlist' },
+  { href: '/contact', label: 'Contact' },
+];
+
+const accountMenu = [
+  { href: '/user/dashboard', label: 'My Dashboard' },
+  { href: '/user/orders', label: 'My Orders' },
+  { href: '/user/reviews', label: 'My Reviews' },
+  { href: '/user/addresses', label: 'Addresses' },
+  { href: '/user/profile', label: 'Profile Settings' },
+  { href: '/user/change-password', label: 'Change Password' },
 ];
 
 function SearchIconSvg() {
@@ -31,8 +43,11 @@ function SearchIconSvg() {
 export function Header() {
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLLIElement>(null);
   const hydrated = useHydrated();
   const router = useRouter();
+  const logout = useLogout();
   const items = useCartStore((s) => s.items);
   const removeItem = useCartStore((s) => s.removeItem);
   const cartTotal = useCartStore((s) => s.total());
@@ -50,6 +65,24 @@ export function Header() {
         ? '/admin/dashboard'
         : '/user/dashboard'
       : '/login';
+
+  // Close the account dropdown on outside click.
+  useEffect(() => {
+    if (!accountOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [accountOpen]);
+
+  const handleLogout = async () => {
+    setAccountOpen(false);
+    await logout.mutateAsync();
+    router.push('/');
+  };
 
   return (
     <>
@@ -183,11 +216,53 @@ export function Header() {
                 <h5 className="mb-0">+980-34984089</h5>
               </div>
 
-              <ul className="d-flex justify-content-end list-unstyled m-0">
-                <li>
-                  <Link href={accountHref} className="rounded-circle bg-light p-2 mx-1 d-inline-flex" aria-label="Account">
-                    <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15.71 12.71a6 6 0 1 0-7.42 0a10 10 0 0 0-6.22 8.18a1 1 0 0 0 2 .22a8 8 0 0 1 15.9 0a1 1 0 0 0 1 .89h.11a1 1 0 0 0 .88-1.1a10 10 0 0 0-6.25-8.19ZM12 12a4 4 0 1 1 4-4a4 4 0 0 1-4 4Z" /></svg>
-                  </Link>
+              <ul className="d-flex justify-content-end list-unstyled m-0 align-items-center">
+                <li className="d-none d-sm-block">
+                  <NotificationBell />
+                </li>
+                <li className="position-relative" ref={accountRef}>
+                  {hydrated && user ? (
+                    <div className="dropdown">
+                      <button
+                        type="button"
+                        className="rounded-circle bg-light p-2 mx-1 border-0 d-inline-flex"
+                        aria-label="Account menu"
+                        aria-expanded={accountOpen}
+                        onClick={() => setAccountOpen(!accountOpen)}
+                      >
+                        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15.71 12.71a6 6 0 1 0-7.42 0a10 10 0 0 0-6.22 8.18a1 1 0 0 0 2 .22a8 8 0 0 1 15.9 0a1 1 0 0 0 1 .89h.11a1 1 0 0 0 .88-1.1a10 10 0 0 0-6.25-8.19ZM12 12a4 4 0 1 1 4-4a4 4 0 0 1-4 4Z" /></svg>
+                      </button>
+                      {accountOpen && (
+                        <>
+                          <div className="position-fixed" style={{ inset: 0, zIndex: 1040 }} onClick={() => setAccountOpen(false)} />
+                          <ul
+                            className="dropdown-menu show position-absolute end-0 mt-2 shadow"
+                            style={{ zIndex: 1045 }}
+                            aria-label="Account menu"
+                          >
+                            <li><h6 className="dropdown-header">{user.name} ({user.role})</h6></li>
+                            {accountMenu.map((item) => (
+                              <li key={item.href}>
+                                <Link href={item.href} className="dropdown-item" onClick={() => setAccountOpen(false)}>
+                                  {item.label}
+                                </Link>
+                              </li>
+                            ))}
+                            <li><hr className="dropdown-divider" /></li>
+                            <li>
+                              <button type="button" className="dropdown-item" onClick={handleLogout}>
+                                Logout
+                              </button>
+                            </li>
+                          </ul>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <Link href={accountHref} className="rounded-circle bg-light p-2 mx-1 d-inline-flex" aria-label="Account">
+                      <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15.71 12.71a6 6 0 1 0-7.42 0a10 10 0 0 0-6.22 8.18a1 1 0 0 0 2 .22a8 8 0 0 1 15.9 0a1 1 0 0 0 1 .89h.11a1 1 0 0 0 .88-1.1a10 10 0 0 0-6.25-8.19ZM12 12a4 4 0 1 1 4-4a4 4 0 0 1-4 4Z" /></svg>
+                    </Link>
+                  )}
                 </li>
                 <li className="position-relative">
                   <Link href="/wishlist" className="rounded-circle bg-light p-2 mx-1 d-inline-flex position-relative" aria-label="Wishlist">
@@ -264,6 +339,24 @@ export function Header() {
                     {hydrated && user ? 'My Account' : 'Login'}
                   </Link>
                 </li>
+                {hydrated && user && (
+                  <>
+                    <li className="nav-item">
+                      <Link href="/user/notifications" className="nav-link" onClick={() => setNavOpen(false)}>
+                        Notifications
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <button
+                        type="button"
+                        className="nav-link btn btn-link text-start"
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </button>
+                    </li>
+                  </>
+                )}
                 <li className="nav-item d-flex align-items-center px-3">
                   <LanguageSwitcher />
                 </li>

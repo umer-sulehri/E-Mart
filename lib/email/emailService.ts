@@ -10,7 +10,8 @@ export type EmailTemplate =
   | 'refund_processed'
   | 'review_reminder'
   | 'promotional'
-  | 'email_verification';
+  | 'email_verification'
+  | 'contact';
 
 export interface SendEmailParams {
   to: string;
@@ -18,6 +19,7 @@ export interface SendEmailParams {
   html: string;
   template: EmailTemplate;
   userId?: string;
+  replyTo?: string;
 }
 
 export interface SendEmailResult {
@@ -78,6 +80,7 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
         to: [params.to],
         subject: params.subject,
         html: params.html,
+        ...(params.replyTo ? { reply_to: params.replyTo } : {}),
       }),
     });
 

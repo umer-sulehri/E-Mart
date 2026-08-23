@@ -33,6 +33,7 @@ const platformIcons: Record<string, React.ReactNode> = {
 };
 
 const companyLinks = [
+  { href: '/about', label: 'About Us' },
   { href: '/blog', label: 'Our Journals' },
   { href: '/categories', label: 'Categories' },
   { href: '/products', label: 'Shop' },
@@ -41,12 +42,26 @@ const companyLinks = [
 
 const serviceLinks = [
   { href: '/contact', label: 'Contact' },
-  { href: '/products', label: 'FAQ' },
+  { href: '/faq', label: 'FAQ' },
   { href: '/wishlist', label: 'Wishlist' },
   { href: '/cart', label: 'Cart' },
   { href: '/checkout', label: 'Checkout' },
   { href: '/login', label: 'My Account' },
 ];
+
+const legalLinks = [
+  { href: '/privacy-policy', label: 'Privacy Policy' },
+  { href: '/terms', label: 'Terms of Service' },
+];
+
+// Fallbacks used until an admin configures real profiles via Social Links.
+const defaultSocialUrls: Record<string, string> = {
+  facebook: 'https://www.facebook.com/',
+  twitter: 'https://twitter.com/',
+  youtube: 'https://www.youtube.com/',
+  instagram: 'https://www.instagram.com/',
+  tiktok: 'https://www.tiktok.com/',
+};
 
 export function Footer() {
   const { data: socialLinks = [] } = useSocialLinks();
@@ -100,13 +115,11 @@ export function Footer() {
                   <ul className="d-flex list-unstyled gap-2">
                     {(activeLinks.length > 0
                       ? activeLinks
-                      : [
-                          { id: 'fb', platform: 'facebook', url: '#' },
-                          { id: 'tw', platform: 'twitter', url: '#' },
-                          { id: 'yt', platform: 'youtube', url: '#' },
-                          { id: 'ig', platform: 'instagram', url: '#' },
-                          { id: 'tt', platform: 'tiktok', url: '#' },
-                        ]
+                      : Object.entries(defaultSocialUrls).map(([platform, url], i) => ({
+                          id: `default-${i}`,
+                          platform,
+                          url,
+                        }))
                     ).map((link) => (
                       <li key={link.id}>
                         <a href={link.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light" aria-label={link.platform}>
@@ -181,6 +194,15 @@ export function Footer() {
           <div className="row">
             <div className="col-md-6 copyright">
               <p>© {new Date().getFullYear()} E-Mart. All rights reserved.</p>
+            </div>
+            <div className="col-md-6 text-md-end">
+              <ul className="d-flex list-unstyled gap-3 justify-content-md-end mb-0">
+                {legalLinks.map((item) => (
+                  <li key={item.href}>
+                    <Link href={item.href} className="nav-link small">{item.label}</Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
