@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLogin } from '@/hooks/useAuth';
 import { useAuthStore } from '@/lib/store/authStore';
 import { AuthLayout } from '@/components/common/AuthLayout';
@@ -10,10 +10,12 @@ import { EyeIcon, EyeOffIcon } from '@/components/icons';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const loginMutation = useLogin();
   const setAuth = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
@@ -29,11 +31,14 @@ export default function LoginPage() {
     }
     setError('');
     loginMutation.mutate(
-      { email: email.trim(), password },
+      { email: email.trim(), password, rememberMe },
       {
         onSuccess: (data) => {
           setAuth(data.user, '');
-          if (data.user.role === 'admin') {
+          const next = searchParams.get('next');
+          if (next && next.startsWith('/')) {
+            router.push(next);
+          } else if (data.user.role === 'admin') {
             router.push('/admin/dashboard');
           } else if (data.user.role === 'seller') {
             router.push('/seller/dashboard');
@@ -113,8 +118,19 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Forgot Password */}
-        <div className="text-right">
+        {/* Remember Me / Forgot Password */}
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 accent-[var(--color-primary)]"
+            />
+            <span className="text-[13px]" style={{ color: 'var(--color-text-primary)' }}>
+              Remember me
+            </span>
+          </label>
           <Link href="/forgot-password" className="text-[13px] font-semibold" style={{ color: 'var(--color-primary-dark)' }}>
             Forgot Password?
           </Link>

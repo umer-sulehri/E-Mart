@@ -19,18 +19,37 @@ export const OtpVerifySchema = z.object({
   code: z.string().length(6, 'OTP must be 6 digits'),
 });
 
+/** Pakistan mobile number: 03XX-XXXXXXX or +92-3XX-XXXXXXX (separator optional). */
+export const pkPhoneRegex = /^(?:\+92[-\s]?|0)3\d{2}[-\s]?\d{7}$/;
+
+/** Strong password shared by registration / reset / change flows. */
+export const strongPasswordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+  .regex(/[a-z]/, 'Password must contain a lowercase letter')
+  .regex(/[0-9]/, 'Password must contain a number');
+
 export const otpRequestSchema = z.object({
   identifier: z.string().min(1, 'Phone or email is required'),
+});
+
+/**
+ * Registration pre-verification request: personal data is held server-side
+ * (keyed to the pending OTP) so credentials never round-trip through
+ * browser storage.
+ */
+export const registrationOtpSchema = otpRequestSchema.extend({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(80),
+  password: strongPasswordSchema,
+  userType: z.enum(['customer', 'seller']).default('customer'),
+  phone: z.string().regex(pkPhoneRegex, 'Enter a valid Pakistani mobile number (e.g. +92-300-1234567)').optional(),
 });
 
 export const otpVerifySchema = z.object({
   identifier: z.string().min(1, 'Identifier is required'),
   code: z.string().length(6, 'OTP must be 6 digits'),
   purpose: z.enum(['register', 'reset']).optional(),
-  name: z.string().min(2).optional(),
-  userType: z.enum(['customer', 'seller']).optional(),
-  password: z.string().min(6).optional(),
-  phone: z.string().optional(),
 });
 
 export const loginCredentialsSchema = z.object({
@@ -201,18 +220,14 @@ export const forgotPasswordSchema = z.object({
 export const resetPasswordSchema = z.object({
   identifier: z.string().min(1, 'Identifier is required'),
   code: z.string().length(6, 'OTP must be 6 digits'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain an uppercase letter')
-    .regex(/[a-z]/, 'Password must contain a lowercase letter')
-    .regex(/[0-9]/, 'Password must contain a number'),
+  newPassword: strongPasswordSchema,
 });
 
 export const changePasswordSchema = z.object({
+  // Current password only needs to be present; legacy accounts may have
+  // weaker passwords than the new policy requires.
   currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain an uppercase letter')
-    .regex(/[a-z]/, 'Password must contain a lowercase letter')
-    .regex(/[0-9]/, 'Password must contain a number'),
+  newPassword: strongPasswordSchema,
 });
 
 export const updateProfileSchema = z.object({

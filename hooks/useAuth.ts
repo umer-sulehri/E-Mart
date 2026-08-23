@@ -12,7 +12,7 @@ export function useCurrentUser() {
 
 export function useLogin() {
   return useMutation({
-    mutationFn: (data: { email: string; password: string }) =>
+    mutationFn: (data: { email: string; password: string; rememberMe?: boolean }) =>
       apiFetch<{ user: User }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -22,11 +22,26 @@ export function useLogin() {
 
 export function useRequestOtp() {
   return useMutation({
-    mutationFn: (identifier: string) =>
-      apiFetch<{ message: string }>('/auth/otp/request', {
+    mutationFn: (
+      data:
+        | string
+        | {
+            identifier: string;
+            name: string;
+            password: string;
+            userType: 'customer' | 'seller';
+            phone?: string;
+          }
+    ) => {
+      const payload =
+        typeof data === 'string'
+          ? { identifier: data }
+          : data;
+      return apiFetch<{ message: string }>('/auth/otp/request', {
         method: 'POST',
-        body: JSON.stringify({ identifier }),
-      }),
+        body: JSON.stringify(payload),
+      });
+    },
   });
 }
 
@@ -36,10 +51,6 @@ export function useVerifyOtp() {
       identifier: string;
       otp: string;
       purpose?: 'register' | 'reset';
-      name?: string;
-      userType?: 'customer' | 'seller';
-      password?: string;
-      contactPhone?: string;
     }) =>
       apiFetch<{ user: User; token: string }>('/auth/otp/verify', {
         method: 'POST',
@@ -47,10 +58,6 @@ export function useVerifyOtp() {
           identifier: data.identifier,
           code: data.otp,
           purpose: data.purpose,
-          name: data.name,
-          userType: data.userType,
-          password: data.password,
-          phone: data.contactPhone,
         }),
       }),
   });

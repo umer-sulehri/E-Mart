@@ -11,18 +11,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { identifier, code, purpose, name, userType, password, phone } = parsed.data;
+  const { identifier, code, purpose } = parsed.data;
 
   if (!OtpRepository.verify(identifier, code)) {
-    return NextResponse.json({ error: 'Invalid OTP' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Invalid or expired code. Please request a new one.' },
+      { status: 401 }
+    );
   }
 
-  // ── Registration: create a real Supabase auth account and sign in ──────────
-  if (purpose === 'register') {
-    if (!identifier.includes('@') || !password) {
+  // ── Registration: complete the pending sign-up held server-side ───────────
+  const registration = OtpRepository.getPendingRegistration(identifier);
+
+  if (purpose === 'register' || registration) {
+    if (!identifier.includes('@') || !registration) {
       return NextResponse.json(
-        { error: 'Email and password are required to complete registration' },
-        { status: 400 }
+        { error: 'Registration session expired. Please sign up again.' },
+        { status: 410 }
       );
     }
 
@@ -30,22 +35,28 @@ export async function POST(request: NextRequest) {
 
     const existing = await UserRepository.findByEmail(identifier);
     if (existing) {
+      OtpRepository.clearPendingRegistration(identifier);
       return NextResponse.json(
         { error: 'An account with this email already exists. Please login instead.' },
         { status: 409 }
       );
     }
 
-    const metadata: Record<string, string> = {};
-    if (name) metadata.name = name;
-    if (phone) metadata.phone = phone;
+    const role = registration.userType === 'seller' ? 'seller' : 'buyer';
 
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email: identifier,
-      password,
+      password: registration.password,
       email_confirm: true,
-      user_metadata: metadata,
+      user_metadata: {
+        name: registration.name,
+        ...(registration.phone ? { phone: registration.phone } : {}),
+      },
+      app_metadata: { role },
     });
+
+    // The pending credentials have served their purpose either way.
+    OtpRepository.clearPendingRegistration(identifier);
 
     if (createError || !created.user) {
       const msg = createError?.message?.toLowerCase().includes('already')
@@ -54,13 +65,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 409 });
     }
 
-    const role = userType === 'seller' ? 'seller' : 'buyer';
     const { error: profileError } = await admin.from('profiles').upsert(
       {
         id: created.user.id,
-        name: name ?? identifier.split('@')[0],
+        name: registration.name,
         email: identifier,
         role,
+        ...(registration.phone ? { phone: registration.phone } : {}),
       },
       { onConflict: 'id' }
     );
@@ -71,7 +82,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: identifier,
-      password,
+      password: registration.password,
     });
     if (signInError) {
       return NextResponse.json({ error: signInError.message }, { status: 500 });
@@ -95,14 +106,25 @@ export async function POST(request: NextRequest) {
         }
       : {
           id: created.user.id,
-          name: name ?? identifier.split('@')[0],
+          name: registration.name,
           email: identifier,
-          phone: phone ?? '',
+          phone: registration.phone ?? '',
           role,
           createdAt: created.user.created_at ?? new Date().toISOString(),
         };
 
-    return NextResponse.json({ user, token: '' }, { status: 200 });
+    const response = NextResponse.json({ user, token: '' }, { status: 200 });
+    // Start the sliding activity window (see proxy.ts) — new registrations
+    // default to "remember me" for a 30-day persistent session.
+    const cookieBase = {
+      httpOnly: true as const,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+    response.cookies.set('em_active', '1', { ...cookieBase, maxAge: 30 * 60 });
+    response.cookies.set('em_remember', '1', { ...cookieBase, maxAge: 30 * 24 * 60 * 60 });
+    return response;
   }
 
   // ── Legacy/other purposes (e.g. identifier-based flows) ────────────────────

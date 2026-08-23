@@ -1,7 +1,16 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function updateSession(request: NextRequest) {
+export interface SessionUpdateResult {
+  response: NextResponse;
+  /** Authenticated Supabase user (verified), or null when signed out. */
+  user: {
+    id: string;
+    role?: string;
+  } | null;
+}
+
+export async function updateSession(request: NextRequest): Promise<SessionUpdateResult> {
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -29,7 +38,12 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  // getUser() validates the JWT against the auth server — safe to trust.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return supabaseResponse;
+  const role = (user?.app_metadata?.role as string | undefined) ?? undefined;
+
+  return { response: supabaseResponse, user: user ? { id: user.id, role } : null };
 }

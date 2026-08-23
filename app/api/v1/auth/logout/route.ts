@@ -15,5 +15,7 @@ export async function POST() {
   }
 
   response.cookies.set('session', '', { maxAge: 0, path: '/' });
+  response.cookies.set('em_active', '', { maxAge: 0, path: '/' });
+  response.cookies.set('em_remember', '', { maxAge: 0, path: '/' });
   return response;
 }

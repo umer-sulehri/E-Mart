@@ -48,14 +48,57 @@ export async function proxy(request: NextRequest) {
 
   const useSupabase = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  // Sliding activity window shared with the login route.
+  const ACTIVE_COOKIE = 'em_active';
+  const REMEMBER_COOKIE = 'em_remember';
+
+  function activeCookieOptions(maxAge?: number) {
+    return {
+      httpOnly: true as const,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      path: '/',
+      ...(maxAge !== undefined ? { maxAge } : {}),
+    };
+  }
+
   if (useSupabase) {
     const { updateSession } = await import('@/lib/supabase/middleware');
-    const response = await updateSession(request);
+    const { response, user } = await updateSession(request);
 
     if (pathname.startsWith('/user') || pathname.startsWith('/admin') || pathname.startsWith('/seller')) {
-      const session = request.cookies.get('sb-access-token')?.value ?? request.cookies.get('session')?.value;
-      if (!session) {
-        return NextResponse.redirect(new URL('/login', request.url));
+      if (!user) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('next', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+
+      const hasActive = request.cookies.has(ACTIVE_COOKIE);
+      const remembered = request.cookies.has(REMEMBER_COOKIE);
+
+      if (!hasActive) {
+        if (!remembered) {
+          // No recent activity and no "remember me" — treat as logged out
+          // (covers browser-close auto-logout and inactivity timeout).
+          const loginUrl = new URL('/login', request.url);
+          loginUrl.searchParams.set('next', pathname);
+          return NextResponse.redirect(loginUrl);
+        }
+        // Remembered device: silently re-open a fresh activity window.
+        response.cookies.set(ACTIVE_COOKIE, '1', activeCookieOptions(30 * 60));
+      } else {
+        // Slide the inactivity window forward on every request.
+        response.cookies.set(ACTIVE_COOKIE, '1', activeCookieOptions(30 * 60));
+      }
+
+      // Role enforcement at the edge: pages are protected in addition to the
+      // API layer so unauthorized roles never render privileged dashboards.
+      const role = user.role;
+      if (
+        (pathname.startsWith('/admin') && role !== 'admin') ||
+        (pathname.startsWith('/seller') && role !== 'seller' && role !== 'admin')
+      ) {
+        return NextResponse.redirect(new URL('/', request.url));
       }
     }
 
@@ -66,7 +109,9 @@ export async function proxy(request: NextRequest) {
 
   if (pathname.startsWith('/user') || pathname.startsWith('/admin') || pathname.startsWith('/seller')) {
     if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('next', pathname);
+      return NextResponse.redirect(loginUrl);
     }
 
     try {

@@ -25,12 +25,13 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [userType, setUserType] = useState<'customer' | 'seller'>('customer');
   const [phone, setPhone] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const passwordChecks = useMemo(() => ({
-    length: password.length >= 6,
+    length: password.length >= 8,
     upper: /[A-Z]/.test(password),
     lower: /[a-z]/.test(password),
     number: /[0-9]/.test(password),
@@ -52,11 +53,16 @@ export default function RegisterPage() {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
     if (!fullName.trim()) newErrors.fullName = 'Full name is required';
+    else if (fullName.trim().length < 2) newErrors.fullName = 'Name must be at least 2 characters';
     if (!email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Invalid email format';
     if (!password) newErrors.password = 'Password is required';
     else if (!Object.values(passwordChecks).every(Boolean)) newErrors.password = 'Password does not meet all requirements';
     if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (phone.trim() && !/^(\+92[-\s]?|0)3\d{2}[-\s]?\d{7}$/.test(phone.trim())) {
+      newErrors.phone = 'Enter a valid Pakistani mobile number (e.g. +92-300-1234567 or 0300-1234567)';
+    }
+    if (!agreeTerms) newErrors.terms = 'You must accept the Terms & Conditions to continue';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -64,19 +70,27 @@ export default function RegisterPage() {
     }
 
     setErrors({});
-    requestOtp.mutate(email.trim(), {
-      onSuccess: () => {
-        sessionStorage.setItem('otpIdentifier', email.trim());
-        sessionStorage.setItem('registerName', fullName.trim());
-        sessionStorage.setItem('registerUserType', userType);
-        sessionStorage.setItem('registerPassword', password);
-        sessionStorage.setItem('registerPhone', phone.trim());
-        router.push('/otp-verify');
+    requestOtp.mutate(
+      {
+        identifier: email.trim(),
+        name: fullName.trim(),
+        password,
+        userType,
+        ...(phone.trim() ? { phone: phone.trim() } : {}),
       },
-      onError: (err) => {
-        setErrors({ general: err.message || 'Failed to send OTP. Please try again.' });
-      },
-    });
+      {
+        onSuccess: () => {
+          // Only non-sensitive routing hints are kept client-side; the
+          // registration payload itself is held server-side with the OTP.
+          sessionStorage.setItem('otpIdentifier', email.trim());
+          sessionStorage.setItem('otpPurpose', 'register');
+          router.push('/otp-verify');
+        },
+        onError: (err) => {
+          setErrors({ general: err.message || 'Failed to send OTP. Please try again.' });
+        },
+      }
+    );
   };
 
   return (
@@ -155,7 +169,7 @@ export default function RegisterPage() {
             <div className="mt-2 p-3 rounded-lg" style={{ background: '#f8f9fa', borderLeft: '3px solid var(--color-primary)' }}>
               <p className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>Password must contain:</p>
               <ul className="space-y-1">
-                <PasswordRequirement label="At least 6 characters" met={passwordChecks.length} />
+                <PasswordRequirement label="At least 8 characters" met={passwordChecks.length} />
                 <PasswordRequirement label="At least 1 uppercase letter (A-Z)" met={passwordChecks.upper} />
                 <PasswordRequirement label="At least 1 lowercase letter (a-z)" met={passwordChecks.lower} />
                 <PasswordRequirement label="At least 1 number (0-9)" met={passwordChecks.number} />
@@ -235,14 +249,40 @@ export default function RegisterPage() {
           <input
             type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="e.g., 0300-1234567"
+            onChange={(e) => { setPhone(e.target.value); setErrors((p) => ({ ...p, phone: '' })); }}
+            placeholder="e.g., +92-300-1234567"
             className="w-full px-4 py-3 rounded-lg text-sm transition-all duration-300 bg-white focus:outline-none"
-            style={{ border: '1px solid var(--color-border)' }}
+            style={{ border: errors.phone ? '2px solid var(--color-error)' : '1px solid var(--color-border)' }}
             onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(122,155,118,0.2)'; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = errors.phone ? 'var(--color-error)' : 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
           />
-          <small className="text-[11px] text-[var(--color-text-secondary)] mt-1 block">Optional but recommended for order updates.</small>
+          {errors.phone && <p className="text-xs text-[var(--color-error)] mt-1">{errors.phone}</p>}
+          {!errors.phone && (
+            <small className="text-[11px] text-[var(--color-text-secondary)] mt-1 block">Optional but recommended for order updates.</small>
+          )}
+        </div>
+
+        {/* Terms & Conditions */}
+        <div>
+          <label className="flex items-start gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={agreeTerms}
+              onChange={(e) => { setAgreeTerms(e.target.checked); setErrors((p) => ({ ...p, terms: '' })); }}
+              className="mt-0.5 w-4 h-4 accent-[var(--color-primary)]"
+            />
+            <span className="text-sm leading-snug" style={{ color: 'var(--color-text-primary)' }}>
+              I agree to the{' '}
+              <Link href="/terms" target="_blank" className="font-semibold underline" style={{ color: 'var(--color-primary-dark)' }}>
+                Terms &amp; Conditions
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy-policy" target="_blank" className="font-semibold underline" style={{ color: 'var(--color-primary-dark)' }}>
+                Privacy Policy
+              </Link>
+            </span>
+          </label>
+          {errors.terms && <p className="text-xs text-[var(--color-error)] mt-1">{errors.terms}</p>}
         </div>
 
         {/* Submit */}
