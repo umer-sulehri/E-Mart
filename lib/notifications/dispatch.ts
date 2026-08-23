@@ -1,4 +1,5 @@
 import { OrderRepository, NotificationPreferencesRepository } from '@/lib/repositories/index';
+import { getOptionalSupabase } from '@/lib/supabase/optional';
 import { User } from '@/lib/types';
 import { sendEmail } from '@/lib/email/emailService';
 import {
@@ -39,6 +40,38 @@ async function getPreferences(userId: string): Promise<{ email: boolean; sms: bo
   }
 }
 
+const STATUS_COPY: Record<Exclude<OrderStatus, 'pending'>, { title: string; message: (n: string) => string }> = {
+  confirmed: { title: 'Order Confirmed', message: (n) => `Order #${n} has been confirmed and is being prepared.` },
+  processing: { title: 'Order Processing', message: (n) => `Order #${n} is being prepared for shipment.` },
+  shipped: { title: 'Order Shipped', message: (n) => `Order #${n} has shipped and is on its way.` },
+  delivered: { title: 'Order Delivered', message: (n) => `Order #${n} has been delivered. Enjoy!` },
+  cancelled: { title: 'Order Cancelled', message: (n) => `Order #${n} was cancelled. Any payment will be refunded.` },
+};
+
+/** Best-effort insert of an in-app feed row into the notifications table. */
+async function insertInAppNotification(
+  userId: string,
+  orderId: string,
+  orderNumber: string,
+  status: OrderStatus
+): Promise<void> {
+  try {
+    const supabase = await getOptionalSupabase();
+    if (!supabase || status === 'pending') return;
+
+    const copy = STATUS_COPY[status];
+    await supabase.from('notifications').insert({
+      user_id: userId,
+      type: 'order',
+      title: copy.title,
+      message: copy.message(orderNumber),
+      link: `/user/orders/${orderId}`,
+    });
+  } catch {
+    // Feed insert failures must never break the dispatch flow.
+  }
+}
+
 /**
  * Fire-and-forget notifications for an order status transition.
  * Never throws — notification failures must not break checkout or admin flows.
@@ -49,6 +82,8 @@ export async function dispatchOrderStatusNotifications(
   status: OrderStatus
 ): Promise<void> {
   try {
+    await insertInAppNotification(user.id, order.id, order.orderNumber, status);
+
     const prefs = await getPreferences(user.id);
     const url = trackingUrl(order.id);
 

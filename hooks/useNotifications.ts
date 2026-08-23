@@ -22,3 +22,58 @@ export function useUpdateNotificationPreferences() {
       queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] }),
   });
 }
+
+export interface FeedNotification {
+  id: string;
+  type: string;
+  title: string;
+  message?: string;
+  link?: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+interface FeedResponse {
+  notifications: FeedNotification[];
+  unreadCount: number;
+}
+
+const FEED_KEY = ['notifications'] as const;
+
+export function useNotificationFeed(limit = 30, enabled = true) {
+  return useQuery({
+    queryKey: [...FEED_KEY, limit],
+    queryFn: () => apiFetch<FeedResponse>(`/notifications?limit=${limit}`),
+    enabled,
+    refetchInterval: 60_000,
+  });
+}
+
+function useInvalidateFeed() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: FEED_KEY });
+}
+
+export function useMarkNotificationRead() {
+  const invalidate = useInvalidateFeed();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ success: boolean }>('/notifications', {
+        method: 'PATCH',
+        body: JSON.stringify({ id }),
+      }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const invalidate = useInvalidateFeed();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ success: boolean }>('/notifications', {
+        method: 'PATCH',
+        body: JSON.stringify({ all: true }),
+      }),
+    onSuccess: invalidate,
+  });
+}
