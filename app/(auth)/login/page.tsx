@@ -33,7 +33,13 @@ export default function LoginPage() {
       {
         onSuccess: (data) => {
           setAuth(data.user, '');
-          router.push('/');
+          if (data.user.role === 'admin') {
+            router.push('/admin/dashboard');
+          } else if (data.user.role === 'seller') {
+            router.push('/seller/dashboard');
+          } else {
+            router.push('/');
+          }
         },
         onError: (err) => {
           setError(err.message || 'Invalid email or password. Please try again.');
@@ -44,6 +50,13 @@ export default function LoginPage() {
 
   return (
     <AuthLayout title="Login to Account">
+      <div className="mb-5 p-3 rounded-lg text-xs" style={{ background: 'rgba(122,155,118,0.1)', border: '1px dashed var(--color-primary)' }}>
+        <p className="font-semibold mb-1" style={{ color: 'var(--color-primary-dark)' }}>Temporary Admin Login</p>
+        <p style={{ color: 'var(--color-text-secondary)' }}>
+          Email: <span className="font-mono font-semibold">admin@emart.com</span> · Password: <span className="font-mono font-semibold">Admin@12345</span>
+        </p>
+        <p className="mt-1" style={{ color: 'var(--color-text-secondary)' }}>Admins land on the Admin Dashboard automatically after login.</p>
+      </div>
       {error && (
         <div
           className="mb-5 p-3 rounded-lg text-center text-sm font-medium animate-[shake_0.5s_ease]"

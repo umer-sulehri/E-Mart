@@ -94,7 +94,7 @@ export function useUpdateOrderStatus() {
   return useMutation({
     mutationFn: (data: { id: string; status: string }) =>
       apiFetch<Order>(`/admin/orders/${data.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify({ status: data.status }),
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminOrders'] }),

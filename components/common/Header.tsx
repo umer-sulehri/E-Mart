@@ -1,177 +1,324 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useUiStore } from '@/lib/store/uiStore';
 import { useAuthStore } from '@/lib/store/authStore';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useCategories } from '@/hooks/useCategories';
 import { useHydrated } from '@/hooks/useHydrated';
-import { mockCategories } from '@/lib/mock/products';
-import { IconButton } from '@/components/ui/Icon';
-import { ShoppingCartIcon, UserIcon, MenuIcon, CloseIcon, HeartIcon } from '@/components/icons';
-import { CartDrawer } from '@/components/cart/CartDrawer';
 import { SearchBar } from '@/components/search/SearchBar';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/products', label: 'Shop' },
+  { href: '/categories', label: 'Categories' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/wishlist', label: 'Wishlist' },
+];
+
+function SearchIconSvg() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z" />
+    </svg>
+  );
+}
+
 export function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const hydrated = useHydrated();
-  const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
+  const router = useRouter();
+  const items = useCartStore((s) => s.items);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const removeItem = useCartStore((s) => s.removeItem);
+  const cartTotal = useCartStore((s) => s.total());
+  const itemCount = useCartStore((s) => s.itemCount());
   const wishlistCount = useWishlistStore((s) => s.items.length);
-  const setCartOpen = useUiStore((s) => s.setCartOpen);
   const cartOpen = useUiStore((s) => s.cartOpen);
-  const { user, currentMode, switchMode } = useAuthStore();
-  const { t } = useTranslations();
-  const catTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const setCartOpen = useUiStore((s) => s.setCartOpen);
+  const { user } = useAuthStore();
+  const { data: categoriesData } = useCategories();
+  const categories = categoriesData ?? [];
+
+  const accountHref =
+    hydrated && user
+      ? user.role === 'admin'
+        ? '/admin/dashboard'
+        : '/user/dashboard'
+      : '/login';
 
   return (
     <>
-      {/* Top Bar */}
-      <div className="text-xs hidden md:block" style={{ background: 'var(--color-primary-dark)', color: 'rgba(255,255,255,0.8)' }}>
-        <div className="max-w-7xl mx-auto px-4 h-[36px] flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span style={{ color: '#d8ee68' }}>Free Delivery on Orders Over Rs 2,000</span>
-            <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
-            <span>24/7 Customer Support</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <Link href="/user/orders" className="hover:opacity-80 transition-colors min-h-[32px] inline-flex items-center">{t('nav.orders')}</Link>
+      {/* offcanvas: cart */}
+      <div className={`offcanvas offcanvas-end${cartOpen ? ' show' : ''}`} style={{ visibility: cartOpen ? 'visible' : 'hidden' }} tabIndex={-1} id="offcanvasCart" aria-labelledby="My Cart">
+        <div className="offcanvas-header justify-content-center">
+          <button type="button" className="btn-close" aria-label="Close" onClick={() => setCartOpen(false)} />
+        </div>
+        <div className="offcanvas-body">
+          <div className="order-md-last">
+            <h4 className="d-flex justify-content-between align-items-center mb-3">
+              <span className="text-primary">Your cart</span>
+              <span className="badge bg-primary rounded-pill">{hydrated ? itemCount : 0}</span>
+            </h4>
+            {items.length === 0 ? (
+              <p className="text-body-secondary">Your cart is empty.</p>
+            ) : (
+              <ul className="list-group mb-3">
+                {items.map((item) => (
+                  <li key={item.productId} className="list-group-item d-flex justify-content-between lh-sm">
+                    <div>
+                      <h6 className="my-0">{item.product.name}</h6>
+                      <small className="text-body-secondary">Qty {item.quantity}</small>
+                    </div>
+                    <span className="text-body-secondary">
+                      Rs {(item.product.price * item.quantity).toLocaleString()}
+                      <button
+                        type="button"
+                        className="btn-close btn-sm ms-2"
+                        style={{ fontSize: '0.6em' }}
+                        aria-label={`Remove ${item.product.name}`}
+                        onClick={() => removeItem(item.productId)}
+                      />
+                    </span>
+                  </li>
+                ))}
+                <li className="list-group-item d-flex justify-content-between">
+                  <span>Total (PKR)</span>
+                  <strong>Rs {cartTotal.toLocaleString()}</strong>
+                </li>
+              </ul>
+            )}
+            <Link href="/checkout" className="w-100 btn btn-primary btn-lg" onClick={() => setCartOpen(false)}>
+              Continue to checkout
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Main Header */}
-      <header className="sticky top-0 z-50 border-b" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
-        <div className="max-w-7xl mx-auto px-4 h-[64px] flex items-center gap-3">
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? 'Close Menu' : 'Open Menu'} className="sm:hidden min-w-[48px] min-h-[48px] flex items-center justify-center rounded-[10px] hover:bg-bg transition-colors">
-            {mobileMenuOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
-          </button>
-
-          <Link href="/" className="flex-shrink-0" aria-label="E-Mart Home">
-            <h1 className="text-xl font-extrabold tracking-tight" style={{ color: 'var(--color-primary)' }}>E-Mart</h1>
-          </Link>
-
-          <div className="flex-1 hidden sm:flex items-center max-w-xl mx-auto">
-            <SearchBar />
-          </div>
-
-          <div className="flex items-center gap-1">
-            <div className="sm:hidden">
-              <LanguageSwitcher />
-            </div>
-            <Link href="/wishlist" className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full hover:bg-surface transition-colors relative" aria-label="Wishlist">
-              <HeartIcon className="w-6 h-6" />
-              {hydrated && wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1 text-text-inverse text-[11px] font-bold rounded-full leading-none" style={{ background: 'var(--color-primary)' }}>
-                  {wishlistCount}
-                </span>
-              )}
-            </Link>
-            <IconButton label="Shopping Cart" onClick={() => setCartOpen(true)} badge={hydrated ? itemCount : 0}>
-              <ShoppingCartIcon className="w-6 h-6" />
-            </IconButton>
-            {hydrated && user ? (
-              <div className="flex items-center gap-2">
-                {(user.role === 'seller' || user.role === 'admin') && (
-                  <div className="hidden lg:flex items-center gap-1 px-3 py-1.5 rounded-full cursor-pointer transition-all duration-300" style={{ background: currentMode === 'seller' ? 'var(--color-primary)' : 'rgba(122,155,118,0.15)', color: currentMode === 'seller' ? 'white' : 'var(--color-text-primary)', border: '2px solid var(--color-primary)' }} onClick={() => switchMode(currentMode === 'buyer' ? 'seller' : 'buyer')}>
-                    <span className="text-xs font-semibold">{currentMode === 'seller' ? 'Seller Mode' : 'Buyer Mode'}</span>
-                  </div>
-                )}
-                <Link href={user.role === 'admin' ? '/admin/dashboard' : currentMode === 'seller' ? '/seller/dashboard' : '/user/dashboard'} className="flex items-center gap-2 px-3 py-2 rounded-[10px] hover:bg-bg transition-colors min-h-[48px]">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
-                    {user.name?.charAt(0) || 'U'}
-                  </div>
-                  <span className="hidden lg:block text-sm font-semibold text-text-primary">{user.name}</span>
-                </Link>
-              </div>
-            ) : (
-              <Link href="/login" className="flex items-center gap-2 px-3 py-2 rounded-[10px] hover:bg-bg transition-colors min-h-[48px]">
-                <UserIcon className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-                <span className="hidden lg:block text-sm font-semibold text-text-primary">{t('nav.login')}</span>
-              </Link>
-            )}
+      {/* offcanvas: search */}
+      <div className={`offcanvas offcanvas-end${searchOpen ? ' show' : ''}`} style={{ visibility: searchOpen ? 'visible' : 'hidden' }} tabIndex={-1} id="offcanvasSearch" aria-labelledby="Search">
+        <div className="offcanvas-header justify-content-center">
+          <button type="button" className="btn-close" aria-label="Close" onClick={() => setSearchOpen(false)} />
+        </div>
+        <div className="offcanvas-body">
+          <div className="order-md-last">
+            <h4 className="d-flex justify-content-between align-items-center mb-3">
+              <span className="text-primary">Search</span>
+            </h4>
+            <form
+              role="search"
+              className="d-flex mt-3 gap-0"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = new FormData(e.currentTarget).get('q');
+                if (q) {
+                  router.push(`/products?search=${encodeURIComponent(String(q))}`);
+                  setSearchOpen(false);
+                }
+              }}
+            >
+              <input name="q" className="form-control rounded-start rounded-0 bg-light" type="search" placeholder="What are you looking for?" aria-label="What are you looking for?" />
+              <button className="btn btn-dark rounded-end rounded-0" type="submit">Search</button>
+            </form>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Search */}
-        {mobileMenuOpen && (
-          <div className="sm:hidden px-4 pb-3">
-            <SearchBar />
-          </div>
-        )}
+      {/* offcanvas backdrop */}
+      {(cartOpen || searchOpen || navOpen) && (
+        <div
+          className="offcanvas-backdrop fade show"
+          onClick={() => {
+            setCartOpen(false);
+            setSearchOpen(false);
+            setNavOpen(false);
+          }}
+        />
+      )}
 
-        {/* Category Navigation */}
-        <div className="border-t border-border bg-bg/50 hidden md:block">
-          <div className="max-w-7xl mx-auto px-4 h-[44px] flex items-center gap-1">
-            <div className="relative" onMouseEnter={() => { clearTimeout(catTimeoutRef.current!); setCategoryOpen(true); }} onMouseLeave={() => { catTimeoutRef.current = setTimeout(() => setCategoryOpen(false), 200); }}>
-              <button className="flex items-center gap-2 h-[44px] px-4 text-text-inverse text-sm font-semibold rounded-t-[8px] transition-colors" style={{ background: 'var(--color-primary)' }}>
-                <MenuIcon className="w-4 h-4" />
-                All Categories
-              </button>
-              {categoryOpen && (
-                <div className="absolute top-full left-0 w-[280px] bg-surface border border-border rounded-b-[10px] shadow-lg z-50 py-2">
-                  {mockCategories.map(cat => (
-                    <Link key={cat.id} href={`/categories/${cat.slug}`} className="flex items-center gap-3 px-4 py-3 text-sm text-text-primary hover:bg-bg transition-colors min-h-[48px]" onClick={() => setCategoryOpen(false)}>
-                      <span className="text-xl">{cat.icon}</span>
-                      <span className="font-medium">{cat.name}</span>
-                      {cat.children && cat.children.length > 0 && (
-                        <span className="ml-auto text-text-secondary text-xs">{cat.children.length}+</span>
-                      )}
-                    </Link>
-                  ))}
+      <header>
+        <div className="container-fluid">
+          <div className="row py-3 border-bottom">
+            <div className="col-sm-4 col-lg-3 text-center text-sm-start d-flex align-items-center justify-content-center justify-content-sm-start">
+              <div className="main-logo">
+                <Link href="/" aria-label="E-Mart Home" className="text-decoration-none">
+                  <span style={{ fontFamily: 'var(--font-nunito)', fontWeight: 800, fontSize: '1.9rem', color: '#222' }}>
+                    E<span style={{ color: '#FFC43F' }}>-</span>Mart
+                  </span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
+              <div className="search-bar row bg-light p-2 my-2 rounded-4">
+                <div className="col-md-4 d-none d-md-block">
+                  <select
+                    className="form-select border-0 bg-transparent"
+                    aria-label="Search category"
+                    defaultValue=""
+                    onChange={(e) => e.target.value && router.push(`/products?category=${e.target.value}`)}
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.slug}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
-              )}
+                <div className="col-11 col-md-7">
+                  <SearchBar variant="bare" />
+                </div>
+                <div className="col-1 d-flex align-items-center justify-content-end text-secondary">
+                  <SearchIconSvg />
+                </div>
+              </div>
             </div>
 
-            <nav className="flex items-center gap-1 ml-1" aria-label="Main navigation">
-              {[
-                { href: '/', label: t('nav.home') },
-                { href: '/products', label: t('nav.products') },
-                { href: '/categories', label: t('home.shopByCategory') },
-              ].map(link => (
-                <Link key={link.href} href={link.href} className="h-[44px] flex items-center px-3 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface rounded-[6px] transition-colors">
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+            <div className="col-sm-8 col-lg-4 d-flex justify-content-end gap-5 align-items-center mt-4 mt-sm-0 justify-content-center justify-content-sm-end">
+              <div className="support-box text-end d-none d-xl-block">
+                <span className="fs-6 text-muted">For Support?</span>
+                <h5 className="mb-0">+980-34984089</h5>
+              </div>
+
+              <ul className="d-flex justify-content-end list-unstyled m-0">
+                <li>
+                  <Link href={accountHref} className="rounded-circle bg-light p-2 mx-1 d-inline-flex" aria-label="Account">
+                    <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15.71 12.71a6 6 0 1 0-7.42 0a10 10 0 0 0-6.22 8.18a1 1 0 0 0 2 .22a8 8 0 0 1 15.9 0a1 1 0 0 0 1 .89h.11a1 1 0 0 0 .88-1.1a10 10 0 0 0-6.25-8.19ZM12 12a4 4 0 1 1 4-4a4 4 0 0 1-4 4Z" /></svg>
+                  </Link>
+                </li>
+                <li className="position-relative">
+                  <Link href="/wishlist" className="rounded-circle bg-light p-2 mx-1 d-inline-flex position-relative" aria-label="Wishlist">
+                    <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M20.16 4.61A6.27 6.27 0 0 0 12 4a6.27 6.27 0 0 0-8.16 9.48l7.45 7.45a1 1 0 0 0 1.42 0l7.45-7.45a6.27 6.27 0 0 0 0-8.87Zm-1.41 7.46L12 18.81l-6.75-6.74a4.28 4.28 0 0 1 3-7.3a4.25 4.25 0 0 1 3 1.25a1 1 0 0 0 1.42 0a4.27 4.27 0 0 1 6 6.05Z" /></svg>
+                    {hydrated && wishlistCount > 0 && (
+                      <span className="position-absolute translate-middle badge rounded-pill bg-danger" style={{ top: 2, left: '85%', fontSize: '0.62rem' }}>
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+                <li className="d-lg-none">
+                  <button type="button" className="rounded-circle bg-light p-2 mx-1 border-0 d-inline-flex" aria-label="Cart" onClick={() => setCartOpen(true)}>
+                    <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M8.5 19a1.5 1.5 0 1 0 1.5 1.5A1.5 1.5 0 0 0 8.5 19ZM19 16H7a1 1 0 0 1 0-2h8.491a3.013 3.013 0 0 0 2.885-2.176l1.585-5.55A1 1 0 0 0 19 5H6.74a3.007 3.007 0 0 0-2.82-2H3a1 1 0 0 0 0 2h.921a1.005 1.005 0 0 1 .962.725l.155.545v.005l1.641 5.742A3 3 0 0 0 7 18h12a1 1 0 0 0 0-2Zm-1.326-9l-1.22 4.274a1.005 1.005 0 0 1-.963.726H8.754l-.255-.892L7.326 7ZM16.5 19a1.5 1.5 0 1 0 1.5 1.5a1.5 1.5 0 0 0-1.5-1.5Z" /></svg>
+                  </button>
+                </li>
+                <li className="d-lg-none">
+                  <button type="button" className="rounded-circle bg-light p-2 mx-1 border-0 d-inline-flex" aria-label="Search" onClick={() => setSearchOpen(true)}>
+                    <SearchIconSvg />
+                  </button>
+                </li>
+              </ul>
+
+              <div className="cart text-end d-none d-lg-block dropdown">
+                <button
+                  className="border-0 bg-transparent d-flex flex-column gap-2 lh-1"
+                  type="button"
+                  onClick={() => setCartOpen(true)}
+                >
+                  <span className="fs-6 text-muted dropdown-toggle">Your Cart</span>
+                  <span className="cart-total fs-5 fw-bold">
+                    Rs {(hydrated ? cartTotal : 0).toLocaleString()}
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <nav className="sm:hidden bg-surface border-t border-border px-4 py-4" aria-label="Mobile navigation">
-            <div className="flex flex-col gap-1">
-              {[
-                { href: '/', label: t('nav.home') },
-                { href: '/products', label: t('nav.products') },
-                { href: '/categories', label: t('home.shopByCategory') },
-                { href: '/user/orders', label: t('nav.orders') },
-                { href: '/login', label: t('nav.login') },
-              ].map(link => (
-                <Link key={link.href} href={link.href} className="h-[48px] flex items-center gap-3 px-4 rounded-[12px] text-text-primary hover:bg-bg transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  {link.label}
-                </Link>
-              ))}
+        {/* Mobile / tablet nav offcanvas */}
+        {navOpen && (
+          <div className="offcanvas offcanvas-end show" style={{ visibility: 'visible' }} tabIndex={-1} id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+            <div className="offcanvas-header justify-content-center">
+              <button type="button" className="btn-close" aria-label="Close" onClick={() => setNavOpen(false)} />
             </div>
-            <div className="mt-4 border-t border-border pt-4">
-              <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2 px-4">{t('home.shopByCategory')}</p>
-              <div className="grid grid-cols-3 gap-2">
-                {mockCategories.map(cat => (
-                  <Link key={cat.id} href={`/categories/${cat.slug}`} className="flex flex-col items-center gap-1 p-3 bg-bg rounded-[10px] text-center hover:bg-surface-alt transition-colors min-h-[48px]" onClick={() => setMobileMenuOpen(false)}>
-                    <span className="text-xl">{cat.icon}</span>
-                    <span className="text-xs font-medium text-text-primary line-clamp-1">{cat.name}</span>
-                  </Link>
+            <div className="offcanvas-body">
+              <select
+                className="filter-categories border-0 mb-0 me-5"
+                aria-label="Shop by departments"
+                defaultValue=""
+                onChange={(e) => {
+                  if (e.target.value) {
+                    router.push(`/categories/${e.target.value}`);
+                    setNavOpen(false);
+                  }
+                }}
+              >
+                <option value="">Shop by Departments</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.slug}>{c.name}</option>
                 ))}
-              </div>
+              </select>
+
+              <ul className="navbar-nav justify-content-end menu-list list-unstyled d-flex gap-md-3 mb-0">
+                {navLinks.map((link) => (
+                  <li key={link.href} className="nav-item active">
+                    <Link href={link.href} className="nav-link" onClick={() => setNavOpen(false)}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+                <li className="nav-item">
+                  <Link href={accountHref} className="nav-link" onClick={() => setNavOpen(false)}>
+                    {hydrated && user ? 'My Account' : 'Login'}
+                  </Link>
+                </li>
+                <li className="nav-item d-flex align-items-center px-3">
+                  <LanguageSwitcher />
+                </li>
+              </ul>
             </div>
-          </nav>
+          </div>
         )}
 
-        <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
+        <div className="container-fluid">
+          <div className="row py-3">
+            <div className="d-flex justify-content-center justify-content-sm-between align-items-center">
+              <nav className="main-menu d-flex navbar navbar-expand-lg">
+                <button
+                  className="navbar-toggler d-lg-none"
+                  type="button"
+                  data-bs-toggle="offcanvas"
+                  aria-controls="offcanvasNavbar"
+                  onClick={() => setNavOpen(true)}
+                >
+                  <span className="navbar-toggler-icon" />
+                </button>
+
+                <select
+                  className="filter-categories border-0 mb-0 me-5 d-none d-xl-block"
+                  aria-label="Shop by departments"
+                  defaultValue=""
+                  onChange={(e) => e.target.value && router.push(`/categories/${e.target.value}`)}
+                >
+                  <option value="">Shop by Departments</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.slug}>{c.name}</option>
+                  ))}
+                </select>
+
+                <ul className="navbar-nav justify-content-end menu-list list-unstyled d-none d-lg-flex gap-md-3 mb-0">
+                  {navLinks.map((link, i) => (
+                    <li key={link.href} className={`nav-item${i === 0 ? ' active' : ''}`}>
+                      <Link href={link.href} className="nav-link">{link.label}</Link>
+                    </li>
+                  ))}
+                  {hydrated && user ? (
+                    <li className="nav-item">
+                      <Link href="/user/orders" className="nav-link">Orders</Link>
+                    </li>
+                  ) : (
+                    <li className="nav-item">
+                      <Link href="/login" className="nav-link">Login</Link>
+                    </li>
+                  )}
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
       </header>
     </>
   );

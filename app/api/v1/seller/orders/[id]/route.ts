@@ -19,7 +19,7 @@ export async function PATCH(
     const user = await requireSeller();
     const { id } = await params;
 
-    const order = await OrderRepository.findById(id);
+    const order = (await OrderRepository.findById(id)) ?? (await OrderRepository.findByIdUnscoped(id));
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }

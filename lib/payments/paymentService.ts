@@ -1,5 +1,6 @@
 import crypto from 'crypto';
-import { getOptionalSupabase } from '@/lib/supabase/optional';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getOptionalSupabase, isSupabaseConfigured } from '@/lib/supabase/optional';
 
 export type PaymentProvider = 'cod' | 'stripe' | 'jazzcash' | 'easypaisa';
 
@@ -307,9 +308,9 @@ export async function markPaymentCompleted(params: {
   transactionId?: string;
   orderId?: string;
 }): Promise<void> {
-  const supabase = await getOptionalSupabase();
-  if (!supabase) return;
+  if (!isSupabaseConfigured()) return;
   try {
+    const supabase = createAdminClient();
     let query = supabase
       .from('payments')
       .update({ status: 'completed', updated_at: new Date().toISOString() });

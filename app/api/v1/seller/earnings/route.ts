@@ -16,7 +16,7 @@ export async function GET() {
     const { products } = await ProductRepository.findAll({ sellerId: user.id });
     const sellerProductIds = new Set(products.map((p) => p.id));
 
-    const allOrders = await OrderRepository.findAll();
+    const allOrders = await OrderRepository.findAllUnscoped();
     const sellerOrders = allOrders.filter((order) =>
       order.items.some((item) => sellerProductIds.has(item.productId))
     );

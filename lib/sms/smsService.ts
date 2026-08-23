@@ -1,5 +1,6 @@
 import crypto from 'crypto';
-import { getOptionalSupabase } from '@/lib/supabase/optional';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { isSupabaseConfigured } from '@/lib/supabase/optional';
 
 export type SmsTemplate =
   | 'order_confirmation'
@@ -45,9 +46,9 @@ export function isValidPkPhone(phone: string): boolean {
 }
 
 async function logSms(params: SendSmsParams, status: 'sent' | 'failed', error?: string, messageId?: string): Promise<void> {
-  const supabase = await getOptionalSupabase();
-  if (!supabase) return;
+  if (!isSupabaseConfigured()) return;
   try {
+    const supabase = createAdminClient();
     await supabase.from('sms_logs').insert({
       user_id: params.userId ?? null,
       phone: params.to,

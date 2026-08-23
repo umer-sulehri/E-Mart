@@ -1,4 +1,5 @@
-import { getOptionalSupabase } from '@/lib/supabase/optional';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { isSupabaseConfigured } from '@/lib/supabase/optional';
 
 export type EmailTemplate =
   | 'order_confirmation'
@@ -32,9 +33,9 @@ export function isEmailConfigured(): boolean {
 }
 
 async function logEmail(params: SendEmailParams, status: 'sent' | 'failed', error?: string, messageId?: string): Promise<void> {
-  const supabase = await getOptionalSupabase();
-  if (!supabase) return;
+  if (!isSupabaseConfigured()) return;
   try {
+    const supabase = createAdminClient();
     await supabase.from('email_logs').insert({
       user_id: params.userId ?? null,
       to_address: params.to,

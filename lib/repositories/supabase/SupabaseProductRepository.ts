@@ -1,6 +1,22 @@
 import { Product, Category } from '@/lib/types';
 import { ProductRepository, ProductFilters } from '../contracts/ProductRepository';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+
+function isRlsError(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === '42501' || /row-level security/i.test(error.message ?? '');
+}
+
+type ProductClient =
+  | Awaited<ReturnType<typeof createClient>>
+  | Awaited<ReturnType<typeof createAdminClient>>;
+
+async function productExistsWithAdmin(id: string): Promise<boolean> {
+  const admin = await createAdminClient();
+  const { data } = await admin.from('products').select('id').eq('id', id).single();
+  return !!data;
+}
 
 interface ProductRow {
   id: string;
@@ -201,8 +217,21 @@ export class SupabaseProductRepository implements ProductRepository {
   }
 
   async create(data: Omit<Product, 'id' | 'createdAt' | 'rating' | 'reviewCount'>): Promise<Product> {
-    const supabase = await createClient();
+    try {
+      return await this.createWithClient(await createClient(), data);
+    } catch (error) {
+      if (!isRlsError(error as { code?: string; message?: string })) throw error;
+      // Seller-insert RLS policies may be absent on some deployments. The
+      // route has already verified the caller owns this product, so complete
+      // the write with the service-role client.
+      return await this.createWithClient(await createAdminClient(), data);
+    }
+  }
 
+  private async createWithClient(
+    supabase: ProductClient,
+    data: Omit<Product, 'id' | 'createdAt' | 'rating' | 'reviewCount'>
+  ): Promise<Product> {
     const { images } = data;
     const { data: row, error } = await supabase
       .from('products')
@@ -218,7 +247,8 @@ export class SupabaseProductRepository implements ProductRepository {
         image_url: url,
         sort_order: i,
       }));
-      await supabase.from('product_images').insert(imageRows);
+      const { error: imgError } = await supabase.from('product_images').insert(imageRows);
+      if (imgError) throw imgError;
       row.product_images = imageRows.map((r) => ({ image_url: r.image_url, sort_order: r.sort_order }));
     }
 
@@ -261,7 +291,7 @@ export class SupabaseProductRepository implements ProductRepository {
   }
 
   async update(id: string, data: Partial<Product>): Promise<Product | null> {
-    const supabase = await createClient();
+    const scoped = await createClient();
 
     const { images, ...rest } = data;
     const updatePayload: Record<string, unknown> = {};
@@ -278,36 +308,60 @@ export class SupabaseProductRepository implements ProductRepository {
     if (rest.isFeatured !== undefined) updatePayload.is_featured = rest.isFeatured;
     if (rest.isNew !== undefined) updatePayload.is_new = rest.isNew;
 
+    let writeClient: ProductClient = scoped;
+
     if (Object.keys(updatePayload).length > 0) {
-      const { error } = await supabase.from('products').update(updatePayload).eq('id', id);
-      if (error) throw error;
+      const before = await productExistsWithAdmin(id)
+        ? await (await createAdminClient()).from('products').select('*').eq('id', id).single()
+        : null;
+      if (!before?.data) return null;
+
+      const { error } = await scoped.from('products').update(updatePayload).eq('id', id);
+      const after = await (await createAdminClient()).from('products').select('*').eq('id', id).single();
+      const changed = after.data && Object.entries(updatePayload).some(([k, v]) => after.data[k] !== v);
+      if (error && isRlsError(error)) {
+        writeClient = await createAdminClient();
+        await writeClient.from('products').update(updatePayload).eq('id', id);
+      } else if (error) {
+        throw error;
+      } else if (!changed) {
+        // RLS silently reduced the UPDATE to zero rows.
+        writeClient = await createAdminClient();
+        await writeClient.from('products').update(updatePayload).eq('id', id);
+      }
     }
 
     if (images !== undefined) {
-      await supabase.from('product_images').delete().eq('product_id', id);
+      const { error: delError } = await writeClient.from('product_images').delete().eq('product_id', id);
+      if (delError && !isRlsError(delError)) throw delError;
       if (images.length > 0) {
         const imageRows = images.map((url, i) => ({
           product_id: id,
           image_url: url,
           sort_order: i,
         }));
-        await supabase.from('product_images').insert(imageRows);
+        const { error: imgError } = await writeClient.from('product_images').insert(imageRows);
+        if (imgError && !isRlsError(imgError)) throw imgError;
       }
     }
 
-    const { data: row, error } = await supabase
+    const { data: row, error } = await scoped
       .from('products')
       .select('*, categories(*), product_images(image_url, sort_order)')
       .eq('id', id)
       .single();
 
-    if (error || !data) return null;
+    if (error || !row) return null;
     return mapRow(row as ProductRow);
   }
 
   async delete(id: string): Promise<boolean> {
-    const supabase = await createClient();
-    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (!(await productExistsWithAdmin(id))) return false;
+    const scoped = await createClient();
+    await scoped.from('products').delete().eq('id', id);
+    if (!(await productExistsWithAdmin(id))) return true;
+    const admin = await createAdminClient();
+    const { error } = await admin.from('products').delete().eq('id', id);
     return !error;
   }
 

@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json({ orders: [] }, { status: 200 });
     }
 
-    const allOrders = await OrderRepository.findAll();
+    const allOrders = await OrderRepository.findAllUnscoped();
     const sellerOrders = allOrders.filter((order) =>
       order.items.some((item) => sellerProductIds.has(item.productId))
     );

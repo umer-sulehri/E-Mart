@@ -12,9 +12,23 @@ export async function POST(
   }
 
   const { id } = await params;
+  const order = await OrderRepository.findById(id);
+  if (!order) {
+    return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+  }
+  if (order.userId !== user.id && user.role !== 'admin') {
+    return NextResponse.json({ error: 'You do not have permission to cancel this order' }, { status: 403 });
+  }
+  if (user.role !== 'admin' && !['pending', 'confirmed'].includes(order.status)) {
+    return NextResponse.json({ error: 'Order can no longer be cancelled' }, { status: 400 });
+  }
+
   try {
-    const order = await OrderRepository.cancel(id);
-    return NextResponse.json({ order }, { status: 200 });
+    const cancelled = await OrderRepository.cancel(id);
+    if (!cancelled) {
+      return NextResponse.json({ error: 'Order cannot be cancelled' }, { status: 400 });
+    }
+    return NextResponse.json({ order: cancelled }, { status: 200 });
   } catch {
     return NextResponse.json(
       { error: 'Order not found or cannot be cancelled' },

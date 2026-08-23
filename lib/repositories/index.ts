@@ -9,6 +9,8 @@ import { LocalTranslationRepository } from './local/LocalTranslationRepository';
 import { LocalOtpRepository } from './local/LocalOtpRepository';
 import { LocalNotificationPreferencesRepository } from './local/LocalNotificationPreferencesRepository';
 import { LocalSocialLinkRepository } from './local/LocalSocialLinkRepository';
+import { LocalBannerRepository } from './local/LocalBannerRepository';
+import { LocalBlogPostRepository } from './local/LocalBlogPostRepository';
 
 import { SupabaseProductRepository } from './supabase/SupabaseProductRepository';
 import { SupabaseCategoryRepository } from './supabase/SupabaseCategoryRepository';
@@ -20,6 +22,8 @@ import { SupabaseReviewRepository } from './supabase/SupabaseReviewRepository';
 import { SupabaseTranslationRepository } from './supabase/SupabaseTranslationRepository';
 import { SupabaseNotificationPreferencesRepository } from './supabase/SupabaseNotificationPreferencesRepository';
 import { SupabaseSocialLinkRepository } from './supabase/SupabaseSocialLinkRepository';
+import { SupabaseBannerRepository } from './supabase/SupabaseBannerRepository';
+import { SupabaseBlogPostRepository } from './supabase/SupabaseBlogPostRepository';
 
 export type { ProductFilters } from './contracts/ProductRepository';
 export type { TranslationEntry } from './contracts/TranslationRepository';
@@ -48,6 +52,8 @@ const translationRepo = useSupabase ? new SupabaseTranslationRepository() : new 
 const otpRepo = new LocalOtpRepository();
 const notifPrefsRepo = useSupabase ? new SupabaseNotificationPreferencesRepository() : new LocalNotificationPreferencesRepository();
 const socialLinkRepo = useSupabase ? new SupabaseSocialLinkRepository() : new LocalSocialLinkRepository();
+const bannerRepo = useSupabase ? new SupabaseBannerRepository() : new LocalBannerRepository();
+const blogPostRepo = useSupabase ? new SupabaseBlogPostRepository() : new LocalBlogPostRepository();
 
 export { productRepo as ProductRepository };
 export { categoryRepo as CategoryRepository };
@@ -60,6 +66,8 @@ export { translationRepo as TranslationRepository };
 export { otpRepo as OtpRepository };
 export { notifPrefsRepo as NotificationPreferencesRepository };
 export { socialLinkRepo as SocialLinkRepository };
+export { bannerRepo as BannerRepository };
+export { blogPostRepo as BlogPostRepository };
 
 export function getProductRepository() { return productRepo; }
 export function getCategoryRepository() { return categoryRepo; }
@@ -71,3 +79,5 @@ export function getReviewRepository() { return reviewRepo; }
 export function getTranslationRepository() { return translationRepo; }
 export function getNotificationPreferencesRepository() { return notifPrefsRepo; }
 export function getSocialLinkRepository() { return socialLinkRepo; }
+export function getBannerRepository() { return bannerRepo; }
+export function getBlogPostRepository() { return blogPostRepo; }

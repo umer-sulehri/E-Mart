@@ -1,0 +1,30 @@
+/*
+ * Integration layer — loaded AFTER bootstrap + template CSS.
+ * Bridges the FoodMart template with E-Mart fonts and fixes
+ * Tailwind-preflight vs Bootstrap conflicts on storefront pages.
+ */
+
+body {
+  font-family: var(--font-open-sans), 'Open Sans', system-ui, sans-serif;
+  background-color: #ffffff;
+  color: #222222;
+  line-height: 1.7;
+}
+
+h1, h2, h3, h4, h5, h6,
+.section-title, .banner-title {
+  font-family: var(--font-nunito), 'Nunito', system-ui, sans-serif;
+}
+
+/* Tailwind preflight makes svg/svg use display:block — restore inline flow
+   inside template components that rely on inline icons. */
+svg:not([class]) {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Template product/blog images keep natural sizing */
+.product-item figure img.tab-image {
+  width: auto;
+  max-width: 100%;
+}

@@ -1,21 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { mockBlogPosts, getBlogCategories } from '@/lib/mock/blog';
+import { useBlogPosts } from '@/hooks/useBlogPosts';
 import { useTranslations } from '@/hooks/useTranslations';
 import { ClockIcon, ArrowRightIcon } from '@/components/icons';
 import type { BlogPost } from '@/lib/types';
 
-const categories = ['All', ...getBlogCategories()];
-
 export default function BlogPage() {
   const { t } = useTranslations();
+  const { data: posts = [] } = useBlogPosts();
   const [activeCategory, setActiveCategory] = useState('All');
 
+  const categories = useMemo(
+    () => ['All', ...Array.from(new Set(posts.map((p) => p.category)))],
+    [posts],
+  );
+
   const filtered = activeCategory === 'All'
-    ? mockBlogPosts
-    : mockBlogPosts.filter((p) => p.category === activeCategory);
+    ? posts
+    : posts.filter((p) => p.category === activeCategory);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

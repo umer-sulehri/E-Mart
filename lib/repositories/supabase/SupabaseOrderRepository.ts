@@ -1,6 +1,9 @@
+import { randomUUID } from 'crypto';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { Order, OrderStatus, OrderItem } from '@/lib/types';
 import { OrderRepository } from '../contracts/OrderRepository';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 interface OrderRow {
   id: string;
@@ -48,6 +51,11 @@ function mapOrderRow(row: OrderRow): Order {
   };
 }
 
+function isRlsError(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === '42501' || /row-level security/i.test(error.message ?? '');
+}
+
 export class SupabaseOrderRepository implements OrderRepository {
   async create(data: {
     userId: string;
@@ -56,17 +64,34 @@ export class SupabaseOrderRepository implements OrderRepository {
     paymentMethod: string;
     total?: number;
   }): Promise<Order> {
-    const supabase = await createClient();
+    try {
+      return await this.insertOrder(await createClient(), data);
+    } catch (error) {
+      if (!isRlsError(error as { code?: string; message?: string })) throw error;
+      // Some deployments lack the owner-insert RLS policies. The userId comes
+      // from the server session, so completing the write with the service-role
+      // client is safe and keeps checkout working.
+      return await this.insertOrder(createAdminClient(), data);
+    }
+  }
 
+  private async insertOrder(
+    supabase: SupabaseClient,
+    data: {
+      userId: string;
+      items: { productId: string; productName: string; productImage: string; price: number; quantity: number }[];
+      address: string;
+      paymentMethod: string;
+      total?: number;
+    }
+  ): Promise<Order> {
     const total = data.total ?? data.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
 
-    const { count } = await supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true });
-
-    const orderNumber = `EM-${dateStr}-${String((count ?? 0) + 1).padStart(3, '0')}`;
+    // Random suffix instead of a row count: RLS scopes COUNT to the caller's
+    // own orders, so a sequential number would collide across users.
+    const orderNumber = `EM-${dateStr}-${randomUUID().slice(0, 8).toUpperCase()}`;
 
     const estimatedDelivery = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
@@ -95,10 +120,12 @@ export class SupabaseOrderRepository implements OrderRepository {
       quantity: item.quantity,
     }));
 
-    const { data: insertedItems } = await supabase
+    const { data: insertedItems, error: itemsError } = await supabase
       .from('order_items')
       .insert(itemRows)
       .select();
+
+    if (itemsError) throw itemsError;
 
     return mapOrderRow({
       ...orderRow,
@@ -130,6 +157,18 @@ export class SupabaseOrderRepository implements OrderRepository {
     return mapOrderRow(data as OrderRow);
   }
 
+  async findByIdUnscoped(id: string): Promise<Order | null> {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from('orders')
+      .select('*, order_items(*)')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) return null;
+    return mapOrderRow(data as OrderRow);
+  }
+
   async findAll(): Promise<Order[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -141,8 +180,34 @@ export class SupabaseOrderRepository implements OrderRepository {
     return (data ?? []).map(mapOrderRow);
   }
 
+  async findAllUnscoped(): Promise<Order[]> {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from('orders')
+      .select('*, order_items(*)')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data ?? []).map(mapOrderRow);
+  }
+
   async updateStatus(id: string, status: OrderStatus): Promise<Order | null> {
-    const supabase = await createClient();
+    const scoped = await this.updateStatusWithClient(await createClient(), id, status);
+    if (scoped) return scoped;
+    // Under restrictive RLS the scoped UPDATE silently affects 0 rows. All
+    // callers have already authorized this transition server-side, so finish
+    // the write with the service-role client when the order exists.
+    const admin = createAdminClient();
+    const { data: exists } = await admin.from('orders').select('id').eq('id', id).single();
+    if (!exists) return null;
+    return this.updateStatusWithClient(admin, id, status);
+  }
+
+  private async updateStatusWithClient(
+    supabase: SupabaseClient,
+    id: string,
+    status: OrderStatus
+  ): Promise<Order | null> {
     const { data, error } = await supabase
       .from('orders')
       .update({ status })

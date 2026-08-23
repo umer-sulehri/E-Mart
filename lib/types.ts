@@ -131,3 +131,21 @@ export interface SocialLink {
   createdAt: string;
   updatedAt: string;
 }
+
+export type BannerSlot = 'hero' | 'promo-small' | 'promo-wide';
+
+export interface Banner {
+  id: string;
+  slot: BannerSlot;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  imageUrl?: string;
+  badgeText?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -55,7 +55,15 @@ export class LocalOrderRepository implements OrderRepository {
     return orders.find((o) => o.id === id) ?? null;
   }
 
+  findByIdUnscoped(id: string): Order | null {
+    return orders.find((o) => o.id === id) ?? null;
+  }
+
   findAll(): Order[] {
+    return [...orders];
+  }
+
+  findAllUnscoped(): Order[] {
     return [...orders];
   }
 

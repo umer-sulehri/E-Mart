@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { syncWishlistAdd, syncWishlistRemove } from './wishlistSync';
 
 export interface WishlistItem {
   productId: string;
@@ -23,13 +24,16 @@ export const useWishlistStore = create<WishlistStore>()(
       addItem: (productId) =>
         set((state) => {
           if (state.items.some((i) => i.productId === productId)) return state;
+          syncWishlistAdd(productId);
           return { items: [...state.items, { productId, addedAt: new Date().toISOString() }] };
         }),
 
-      removeItem: (productId) =>
+      removeItem: (productId) => {
+        syncWishlistRemove(productId);
         set((state) => ({
           items: state.items.filter((i) => i.productId !== productId),
-        })),
+        }));
+      },
 
       toggleItem: (productId) => {
         const { items } = get();

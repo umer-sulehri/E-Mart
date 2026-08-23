@@ -36,11 +36,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const metadata: Record<string, string> = {};
+    if (name) metadata.name = name;
+    if (phone) metadata.phone = phone;
+
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email: identifier,
       password,
       email_confirm: true,
-      user_metadata: { name, phone },
+      user_metadata: metadata,
     });
 
     if (createError || !created.user) {
@@ -51,16 +55,18 @@ export async function POST(request: NextRequest) {
     }
 
     const role = userType === 'seller' ? 'seller' : 'buyer';
-    await admin.from('profiles').upsert(
+    const { error: profileError } = await admin.from('profiles').upsert(
       {
         id: created.user.id,
         name: name ?? identifier.split('@')[0],
         email: identifier,
         role,
-        is_blocked: false,
       },
       { onConflict: 'id' }
     );
+    if (profileError) {
+      console.error('[register] profile upsert failed:', profileError.message);
+    }
 
     const supabase = await createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({

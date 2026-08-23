@@ -4,6 +4,7 @@ import { useEffect, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useUiStore } from '@/lib/store/uiStore';
 import { useCartStore } from '@/lib/store/cartStore';
+import { hydrateWishlistFromServer } from '@/lib/store/wishlistSync';
 import { ToastProvider } from '@/components/ui/Toast';
 import { QueryProvider } from '@/components/QueryProvider';
 
@@ -22,6 +23,7 @@ export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     useUiStore.persist.rehydrate();
     useCartStore.persist.rehydrate();
+    void hydrateWishlistFromServer();
   }, []);
 
   useEffect(() => {

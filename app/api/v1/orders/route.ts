@@ -51,17 +51,26 @@ export async function POST(request: NextRequest) {
     total += product.price * qty;
   }
 
-  const order = await OrderRepository.create({
-    userId: user.id,
-    items: orderItems,
-    address: body.address,
-    paymentMethod: body.paymentMethod,
-    total,
-  });
+  try {
+    const order = await OrderRepository.create({
+      userId: user.id,
+      items: orderItems,
+      address: body.address,
+      paymentMethod: body.paymentMethod,
+      total,
+    });
 
-  await CartRepository.clear(user.id);
+    await CartRepository.clear(user.id);
 
-  void notifyNewOrder(user, order.id);
+    void notifyNewOrder(user, order.id);
 
-  return NextResponse.json({ order }, { status: 201 });
+    return NextResponse.json({ order }, { status: 201 });
+  } catch (error) {
+    const message =
+      error instanceof Error && /row-level security/i.test(error.message)
+        ? 'Could not save your order due to a database permission issue. Please contact support.'
+        : 'Failed to place your order. Please try again.';
+    console.error('[POST /orders] order creation failed:', error);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

@@ -12,7 +12,11 @@ interface Suggestion {
   slug: string;
 }
 
-export function SearchBar() {
+interface SearchBarProps {
+  variant?: 'default' | 'bare';
+}
+
+export function SearchBar({ variant = 'default' }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -91,7 +95,11 @@ export function SearchBar() {
         aria-expanded={open}
         aria-controls="search-suggestions"
         aria-autocomplete="list"
-        className="w-full h-[48px] pl-11 pr-12 bg-bg border border-border rounded-l-[10px] text-base text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+        className={
+          variant === 'bare'
+            ? 'w-full h-[44px] pl-11 pr-12 bg-transparent border-0 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none rounded-lg'
+            : 'w-full h-[48px] pl-11 pr-12 bg-bg border border-border rounded-l-[10px] text-base text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors'
+        }
       />
       <SearchIcon className="absolute left-3 w-5 h-5 text-text-secondary pointer-events-none" />
       <div className="absolute right-1">

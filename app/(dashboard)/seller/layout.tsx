@@ -44,15 +44,19 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (!isAuthenticated) router.push('/login');
-  }, [isAuthenticated, router]);
+    if (!isAuthenticated) {
+      router.push('/login');
+    } else if (user && user.role !== 'seller' && user.role !== 'admin') {
+      router.push('/');
+    }
+  }, [isAuthenticated, user, router]);
 
   const handleLogout = useCallback(() => {
     logout();
     router.push('/');
   }, [logout, router]);
 
-  if (!user) return null;
+  if (!user || (user.role !== 'seller' && user.role !== 'admin')) return null;
 
   const sidebarWidth = sidebarOpen ? 260 : 72;
   const pageTitle = getPageTitle(pathname);

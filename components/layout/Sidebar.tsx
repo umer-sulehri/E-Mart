@@ -16,6 +16,8 @@ const ADMIN_NAV = [
   { label: 'Users', href: '/admin/users', icon: UsersIcon },
   { label: 'Sellers', href: '/admin/sellers', icon: UsersIcon },
   { label: 'Categories', href: '/admin/categories', icon: ClipboardListIcon },
+  { label: 'Banners', href: '/admin/banners', icon: ChartIcon },
+  { label: 'Blog Posts', href: '/admin/blog', icon: ClipboardListIcon },
   { label: 'Analytics', href: '/admin/analytics', icon: ChartIcon },
   { label: 'Settings', href: '/admin/settings', icon: GearIcon },
 ];

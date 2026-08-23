@@ -8,7 +8,7 @@ interface ProfileRow {
   email?: string;
   phone: string;
   role: string;
-  avatar?: string;
+  avatar_url?: string;
   created_at: string;
   is_blocked?: boolean;
 }
@@ -20,7 +20,7 @@ function mapProfile(row: ProfileRow): User {
     email: row.email,
     phone: row.phone,
     role: row.role as User['role'],
-    avatar: row.avatar,
+    avatar: row.avatar_url,
     createdAt: row.created_at,
     isBlocked: row.is_blocked,
   };
@@ -80,16 +80,18 @@ export class SupabaseUserRepository implements UserRepository {
 
   async create(data: Omit<User, 'id' | 'createdAt'>): Promise<User> {
     const supabase = await createClient();
+    const payload: Record<string, unknown> = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone || null,
+      role: data.role,
+      avatar_url: data.avatar,
+    };
+    if (data.isBlocked !== undefined) payload.is_blocked = data.isBlocked;
+
     const { data: row, error } = await supabase
       .from('profiles')
-      .insert({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        role: data.role,
-        avatar: data.avatar,
-        is_blocked: data.isBlocked ?? false,
-      })
+      .insert(payload)
       .select()
       .single();
 
@@ -105,7 +107,7 @@ export class SupabaseUserRepository implements UserRepository {
     if (data.email !== undefined) updatePayload.email = data.email;
     if (data.phone !== undefined) updatePayload.phone = data.phone;
     if (data.role !== undefined) updatePayload.role = data.role;
-    if (data.avatar !== undefined) updatePayload.avatar = data.avatar;
+    if (data.avatar !== undefined) updatePayload.avatar_url = data.avatar;
     if (data.isBlocked !== undefined) updatePayload.is_blocked = data.isBlocked;
 
     const { data: row, error } = await supabase
@@ -161,10 +163,9 @@ export class SupabaseUserRepository implements UserRepository {
       .from('profiles')
       .insert({
         name: isEmail ? identifier.split('@')[0] : `User ${identifier.slice(-4)}`,
-        phone: isEmail ? '' : identifier,
+        phone: isEmail ? null : identifier,
         email: isEmail ? identifier : null,
         role: 'buyer',
-        is_blocked: false,
       })
       .select()
       .single();

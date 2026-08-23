@@ -160,6 +160,40 @@ export const createSocialLinkSchema = z.object({
 
 export const updateSocialLinkSchema = createSocialLinkSchema.partial();
 
+export const createBannerSchema = z.object({
+  slot: z.enum(['hero', 'promo-small', 'promo-wide']).default('hero'),
+  title: z.string().min(1, 'Title is required'),
+  subtitle: z.string().optional(),
+  description: z.string().optional(),
+  imageUrl: z.string().optional(),
+  badgeText: z.string().optional(),
+  ctaLabel: z.string().optional(),
+  ctaHref: z.string().optional(),
+  sortOrder: z.number().int().default(0),
+  isActive: z.boolean().default(true),
+});
+
+export const updateBannerSchema = createBannerSchema.partial();
+
+export const createBlogPostSchema = z.object({
+  slug: z
+    .string()
+    .min(1, 'Slug is required')
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be kebab-case'),
+  title: z.string().min(1, 'Title is required'),
+  excerpt: z.string().min(1, 'Excerpt is required'),
+  content: z.string().min(1, 'Content is required'),
+  author: z.string().default('E-Mart Team'),
+  category: z.string().default('general'),
+  tags: z.array(z.string()).default([]),
+  coverImage: z.string().default('/images/post-thumb-1.jpg'),
+  readTime: z.number().int().positive().default(4),
+});
+
+export const updateBlogPostSchema = createBlogPostSchema.partial().extend({
+  isPublished: z.boolean().optional(),
+});
+
 export const forgotPasswordSchema = z.object({
   identifier: z.string().min(1, 'Phone or email is required'),
 });
