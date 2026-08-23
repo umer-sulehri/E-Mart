@@ -23,6 +23,10 @@ export class LocalReviewRepository implements ReviewRepository {
       .slice(0, limit);
   }
 
+  findById(id: string): Review | null {
+    return reviews.find((r) => r.id === id) ?? null;
+  }
+
   create(data: Omit<Review, 'id' | 'createdAt'>): Review {
     const review: Review = {
       ...data,
@@ -37,6 +41,13 @@ export class LocalReviewRepository implements ReviewRepository {
     const index = reviews.findIndex((r) => r.id === id && r.userId === userId);
     if (index === -1) return null;
     reviews[index] = { ...reviews[index], ...data };
+    return reviews[index];
+  }
+
+  addSellerReply(id: string, reply: string): Review | null {
+    const index = reviews.findIndex((r) => r.id === id);
+    if (index === -1) return null;
+    reviews[index] = { ...reviews[index], sellerReply: reply, repliedAt: new Date().toISOString() };
     return reviews[index];
   }
 

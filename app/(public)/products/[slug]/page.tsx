@@ -216,6 +216,14 @@ function ProductDetailPageInner({ params }: { params: Promise<{ slug: string }> 
                     </div>
                   </div>
                   <p className="text-sm text-text-secondary leading-relaxed">{review.comment}</p>
+                  {review.sellerReply && (
+                    <div className="mt-3 p-3 rounded-xl" style={{ background: 'var(--color-surface-alt)', borderLeft: '3px solid var(--color-primary)' }}>
+                      <p className="text-xs font-bold mb-1 text-primary-dark">
+                        Store reply{review.repliedAt ? ` · ${new Date(review.repliedAt).toLocaleDateString()}` : ''}
+                      </p>
+                      <p className="text-sm text-text-secondary">{review.sellerReply}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

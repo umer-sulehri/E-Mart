@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
 import { useSellerOrders, useUpdateSellerOrderStatus, type SellerOrderStatus } from '@/hooks/useSeller';
-import { SearchIcon, EyeIcon, OrderIcon } from '@/components/icons';
+import { SearchIcon, OrderIcon, CloseIcon, TruckIcon, PackageIcon } from '@/components/icons';
+import { useToast } from '@/components/ui/Toast';
+import type { Order } from '@/lib/types';
 
 type FilterStatus = 'all' | string;
 
@@ -19,6 +20,7 @@ const NEXT_STATUS_OPTIONS: Record<string, SellerOrderStatus[]> = {
 };
 
 export default function SellerOrdersPage() {
+  const toast = useToast();
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,7 +29,25 @@ export default function SellerOrdersPage() {
   const { data: ordersData } = useSellerOrders(currentPage, perPage);
   const updateStatus = useUpdateSellerOrderStatus();
   const [statusError, setStatusError] = useState('');
+  const [shipTarget, setShipTarget] = useState<Order | null>(null);
+  const [trackingInput, setTrackingInput] = useState('');
+  const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const orders = useMemo(() => ordersData?.orders ?? [], [ordersData]);
+
+  const confirmShip = () => {
+    if (!shipTarget) return;
+    updateStatus.mutate(
+      { id: shipTarget.id, status: 'shipped', trackingNumber: trackingInput.trim() || undefined },
+      {
+        onSuccess: () => {
+          toast.showToast(`Order #${shipTarget.orderNumber} marked as shipped.`, 'success');
+          setShipTarget(null);
+          setTrackingInput('');
+        },
+        onError: (err) => setStatusError(err instanceof Error ? err.message : 'Failed to update status.'),
+      }
+    );
+  };
 
   const filtered = useMemo(() => {
     return orders
@@ -153,6 +173,12 @@ export default function SellerOrdersPage() {
                       Rs {order.total.toLocaleString()}
                     </td>
                     <td className="p-4">
+                      {order.trackingNumber && (
+                        <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-secondary)' }} title="Tracking number">
+                          <TruckIcon className="w-3 h-3 inline mr-1 -mt-0.5" />
+                          {order.trackingNumber}
+                        </p>
+                      )}
                       {NEXT_STATUS_OPTIONS[order.status]?.length ? (
                         <select
                           value={order.status}
@@ -160,6 +186,10 @@ export default function SellerOrdersPage() {
                           onChange={(e) => {
                             const next = e.target.value as SellerOrderStatus;
                             setStatusError('');
+                            if (next === 'shipped') {
+                              setShipTarget(order);
+                              return;
+                            }
                             updateStatus.mutate(
                               { id: order.id, status: next },
                               {
@@ -190,13 +220,13 @@ export default function SellerOrdersPage() {
                       )}
                     </td>
                     <td className="p-4">
-                      <Link
-                        href={`/user/orders/${order.id}`}
+                      <button
+                        onClick={() => setViewOrder(order)}
                         className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60"
-                        title="View order"
+                        title="View order details"
                       >
-                        <EyeIcon className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
-                      </Link>
+                        <OrderIcon className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -228,6 +258,91 @@ export default function SellerOrdersPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Ship Modal — collect tracking number */}
+      {shipTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShipTarget(null)}>
+          <div className="w-full max-w-md rounded-[16px] p-6" style={{ background: 'var(--color-bg)' }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>Ship Order #{shipTarget.orderNumber}</h3>
+              <button onClick={() => setShipTarget(null)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-secondary)' }} aria-label="Close">
+                <CloseIcon className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+              Add the carrier tracking number so the customer can follow delivery. You can leave it blank and add it later.
+            </p>
+            <label className="block mb-1.5 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Tracking number</label>
+            <input
+              type="text"
+              value={trackingInput}
+              onChange={e => setTrackingInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); confirmShip(); } }}
+              placeholder="e.g. TCS-123456789"
+              maxLength={64}
+              className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+              autoFocus
+            />
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => { setShipTarget(null); setTrackingInput(''); }} className="flex-1 py-3 rounded-xl text-sm font-semibold" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>Cancel</button>
+              <button onClick={confirmShip} disabled={updateStatus.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+                {updateStatus.isPending ? 'Saving…' : 'Mark as Shipped'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Details Modal */}
+      {viewOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setViewOrder(null)}>
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[16px] p-6" style={{ background: 'var(--color-bg)' }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 pb-3" style={{ borderBottom: '2px solid var(--color-primary)' }}>
+              <h3 className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>Order #{viewOrder.orderNumber}</h3>
+              <button onClick={() => setViewOrder(null)} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-secondary)' }} aria-label="Close">
+                <CloseIcon className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm mb-5">
+              <p style={{ color: 'var(--color-text-secondary)' }}>Date</p>
+              <p style={{ color: 'var(--color-text-primary)' }}>{new Date(viewOrder.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+              <p style={{ color: 'var(--color-text-secondary)' }}>Status</p>
+              <p className="capitalize font-semibold" style={{ color: 'var(--color-text-primary)' }}>{viewOrder.status}</p>
+              <p style={{ color: 'var(--color-text-secondary)' }}>Payment</p>
+              <p className="uppercase" style={{ color: 'var(--color-text-primary)' }}>{viewOrder.paymentMethod}</p>
+              <p style={{ color: 'var(--color-text-secondary)' }}>Deliver to</p>
+              <p style={{ color: 'var(--color-text-primary)' }}>{viewOrder.address}</p>
+              {viewOrder.trackingNumber && (
+                <>
+                  <p style={{ color: 'var(--color-text-secondary)' }}>Tracking</p>
+                  <p className="font-semibold inline-flex items-center gap-1" style={{ color: 'var(--color-primary)' }}>
+                    <TruckIcon className="w-4 h-4" /> {viewOrder.trackingNumber}
+                  </p>
+                </>
+              )}
+            </div>
+            <h4 className="text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: 'var(--color-text-secondary)' }}>Items in this order</h4>
+            <div className="space-y-2">
+              {viewOrder.items.map(item => (
+                <div key={item.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: 'var(--color-surface)' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={item.productImage} alt={item.productName} className="w-10 h-10 rounded-lg object-cover" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{item.productName}</p>
+                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Qty {item.quantity} × Rs {item.price.toLocaleString()}</p>
+                  </div>
+                  <PackageIcon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-border)' }} />
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between mt-4 pt-3 text-base font-bold" style={{ borderTop: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}>
+              <span>Total</span>
+              <span>Rs {viewOrder.total.toLocaleString()}</span>
+            </div>
+          </div>
         </div>
       )}
     </div>

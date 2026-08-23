@@ -8,5 +8,6 @@ export interface OrderRepository {
   findAll(): Order[] | Promise<Order[]>;
   findAllUnscoped(): Order[] | Promise<Order[]>;
   updateStatus(id: string, status: OrderStatus): Order | null | Promise<Order | null>;
+  setTrackingNumber(id: string, trackingNumber: string): Order | null | Promise<Order | null>;
   cancel(id: string): Order | null | Promise<Order | null>;
 }

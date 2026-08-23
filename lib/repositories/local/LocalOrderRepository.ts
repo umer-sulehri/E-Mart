@@ -74,6 +74,13 @@ export class LocalOrderRepository implements OrderRepository {
     return order;
   }
 
+  setTrackingNumber(id: string, trackingNumber: string): Order | null {
+    const order = orders.find((o) => o.id === id);
+    if (!order) return null;
+    order.trackingNumber = trackingNumber;
+    return order;
+  }
+
   cancel(id: string): Order | null {
     const order = orders.find((o) => o.id === id);
     if (!order) return null;

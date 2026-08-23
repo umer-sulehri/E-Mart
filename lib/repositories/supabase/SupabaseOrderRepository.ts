@@ -15,6 +15,7 @@ interface OrderRow {
   estimated_delivery?: string;
   address: string;
   payment_method: string;
+  tracking_number?: string | null;
   order_items?: OrderItemRow[];
 }
 
@@ -48,6 +49,7 @@ function mapOrderRow(row: OrderRow): Order {
     estimatedDelivery: row.estimated_delivery,
     address: row.address,
     paymentMethod: row.payment_method,
+    trackingNumber: row.tracking_number ?? undefined,
   };
 }
 
@@ -217,6 +219,30 @@ export class SupabaseOrderRepository implements OrderRepository {
 
     if (error || !data) return null;
     return mapOrderRow(data as OrderRow);
+  }
+
+  async setTrackingNumber(id: string, trackingNumber: string): Promise<Order | null> {
+    const scoped = await createClient();
+    const { data } = await scoped
+      .from('orders')
+      .update({ tracking_number: trackingNumber })
+      .eq('id', id)
+      .select('*, order_items(*)')
+      .maybeSingle();
+    if (data) return mapOrderRow(data as OrderRow);
+
+    // Same RLS fallback as updateStatus: transitions are authorized upstream.
+    const admin = createAdminClient();
+    const { data: exists } = await admin.from('orders').select('id').eq('id', id).single();
+    if (!exists) return null;
+    const { data: updated, error } = await admin
+      .from('orders')
+      .update({ tracking_number: trackingNumber })
+      .eq('id', id)
+      .select('*, order_items(*)')
+      .single();
+    if (error || !updated) return null;
+    return mapOrderRow(updated as OrderRow);
   }
 
   async cancel(id: string): Promise<Order | null> {

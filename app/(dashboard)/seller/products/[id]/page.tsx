@@ -8,6 +8,7 @@ import {
   useUpdateSellerProduct,
   useDeleteSellerProduct,
 } from '@/hooks/useSeller';
+import { useImageUpload } from '@/hooks/useUpload';
 import { ArrowLeftIcon, CheckCircleIcon, PlusIcon, TrashIcon } from '@/components/icons';
 
 const MAX_IMAGES = 5;
@@ -72,6 +73,24 @@ export default function SellerEditProductPage({ params }: { params: Promise<{ id
     }
     setError('');
     setForm({ ...form, images: [...form.images, url], imageUrlInput: '' });
+  };
+
+  const upload = useImageUpload((message) => setError(message));
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (form.images.length >= MAX_IMAGES) {
+      setError(`Maximum of ${MAX_IMAGES} images per product.`);
+      return;
+    }
+    upload.mutate(file, {
+      onSuccess: (res) => {
+        setError('');
+        setForm((f) => ({ ...f, images: [...f.images, res.url] }));
+      },
+    });
   };
 
   const handleSave = async () => {
@@ -218,6 +237,17 @@ export default function SellerEditProductPage({ params }: { params: Promise<{ id
               style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
               aria-label="Image URL"
             />
+            <label className="mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:opacity-80" style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}>
+              <PlusIcon className="w-4 h-4" />
+              {upload.isPending ? 'Uploading…' : 'Upload from device'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleFileSelected}
+                disabled={upload.isPending}
+              />
+            </label>
           </div>
 
           <div className="flex gap-3">

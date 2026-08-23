@@ -1,6 +1,7 @@
-import { Review } from '@/lib/types';
+﻿import { Review } from '@/lib/types';
 import { ReviewRepository } from '../contracts/ReviewRepository';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export class SupabaseReviewRepository implements ReviewRepository {
   async findByProduct(productId: string): Promise<Review[]> {
@@ -19,6 +20,8 @@ export class SupabaseReviewRepository implements ReviewRepository {
       rating: row.rating as number,
       comment: (row.comment as string) ?? '',
       createdAt: row.created_at as string,
+      sellerReply: (row.seller_reply as string | null) ?? undefined,
+      repliedAt: (row.replied_at as string | null) ?? undefined,
     }));
   }
 
@@ -43,6 +46,8 @@ export class SupabaseReviewRepository implements ReviewRepository {
       rating: row.rating as number,
       comment: (row.comment as string) ?? '',
       createdAt: row.created_at as string,
+      sellerReply: (row.seller_reply as string | null) ?? undefined,
+      repliedAt: (row.replied_at as string | null) ?? undefined,
     };
   }
 
@@ -62,6 +67,8 @@ export class SupabaseReviewRepository implements ReviewRepository {
       rating: row.rating as number,
       comment: (row.comment as string) ?? '',
       createdAt: row.created_at as string,
+      sellerReply: (row.seller_reply as string | null) ?? undefined,
+      repliedAt: (row.replied_at as string | null) ?? undefined,
     }));
   }
 
@@ -81,6 +88,8 @@ export class SupabaseReviewRepository implements ReviewRepository {
       rating: row.rating as number,
       comment: (row.comment as string) ?? '',
       createdAt: row.created_at as string,
+      sellerReply: (row.seller_reply as string | null) ?? undefined,
+      repliedAt: (row.replied_at as string | null) ?? undefined,
     }));
   }
 
@@ -102,6 +111,8 @@ export class SupabaseReviewRepository implements ReviewRepository {
       rating: row.rating as number,
       comment: (row.comment as string) ?? '',
       createdAt: row.created_at as string,
+      sellerReply: (row.seller_reply as string | null) ?? undefined,
+      repliedAt: (row.replied_at as string | null) ?? undefined,
     }));
   }
 
@@ -132,6 +143,52 @@ export class SupabaseReviewRepository implements ReviewRepository {
       rating: row.rating as number,
       comment: (row.comment as string) ?? '',
       createdAt: row.created_at as string,
+      sellerReply: (row.seller_reply as string | null) ?? undefined,
+      repliedAt: (row.replied_at as string | null) ?? undefined,
+    };
+  }
+
+  async findById(id: string): Promise<Review | null> {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from('product_reviews')
+      .select('*, profiles:user_id(name)')
+      .eq('id', id)
+      .maybeSingle();
+    if (!data) return null;
+    return {
+      id: data.id as string,
+      userId: data.user_id as string,
+      userName: (data.profiles as { name: string } | null)?.name ?? 'Anonymous',
+      productId: data.product_id as string,
+      rating: data.rating as number,
+      comment: (data.comment as string) ?? '',
+      createdAt: data.created_at as string,
+    };
+  }
+
+  async addSellerReply(id: string, reply: string): Promise<Review | null> {
+    // product_reviews RLS only lets authors update their rows, and replies are
+    // written by the selling store — ownership is verified in the route, so
+    // this write uses the service-role client.
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from('product_reviews')
+      .update({ seller_reply: reply, replied_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('*, profiles:user_id(name)')
+      .maybeSingle();
+    if (error || !data) return null;
+    return {
+      id: data.id as string,
+      userId: data.user_id as string,
+      userName: (data.profiles as { name: string } | null)?.name ?? 'Anonymous',
+      productId: data.product_id as string,
+      rating: data.rating as number,
+      comment: (data.comment as string) ?? '',
+      createdAt: data.created_at as string,
+      sellerReply: (data.seller_reply as string | null) ?? undefined,
+      repliedAt: (data.replied_at as string | null) ?? undefined,
     };
   }
 

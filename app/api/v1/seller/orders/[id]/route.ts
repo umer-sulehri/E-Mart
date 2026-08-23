@@ -33,13 +33,28 @@ export async function PATCH(
     }
 
     const body = await request.json();
+
+    const trackingNumber =
+      typeof body.trackingNumber === 'string' ? body.trackingNumber.trim().slice(0, 64) : '';
+
     const validStatuses: OrderStatus[] = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
-    if (!body.status || !validStatuses.includes(body.status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    if (body.status !== undefined) {
+      if (!validStatuses.includes(body.status)) {
+        return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+      }
+    } else if (!trackingNumber) {
+      return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
     }
 
-    const updated = await OrderRepository.updateStatus(id, body.status);
-    if (updated) {
+    let updated = order;
+    if (body.status) {
+      updated = (await OrderRepository.updateStatus(id, body.status)) ?? order;
+    }
+    if (trackingNumber) {
+      updated = (await OrderRepository.setTrackingNumber(id, trackingNumber)) ?? updated;
+    }
+
+    if (updated && body.status) {
       const customer = updated.userId ? await UserRepository.findById(updated.userId) : null;
       if (customer) {
         void dispatchOrderStatusNotifications(customer, updated, body.status as OrderStatus);

@@ -2,14 +2,46 @@
 
 import { useState } from 'react';
 import { useSellerReviews, type ReviewWithProduct } from '@/hooks/useReviews';
-import { StarIcon, SearchIcon } from '@/components/icons';
+import { useReplyToReview } from '@/hooks/useSeller';
+import { useToast } from '@/components/ui/Toast';
+import { StarIcon, SearchIcon, CheckCircleIcon, EditIcon } from '@/components/icons';
 
 export default function SellerReviewsPage() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
+  const toast = useToast();
+  const replyMutation = useReplyToReview();
+  const [replyTarget, setReplyTarget] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replyError, setReplyError] = useState('');
 
   const { data: reviewsData, isLoading } = useSellerReviews();
   const reviews = reviewsData ?? [];
+
+  const openReply = (review: ReviewWithProduct) => {
+    setReplyTarget(review.id);
+    setReplyText(review.sellerReply ?? '');
+    setReplyError('');
+  };
+
+  const submitReply = () => {
+    if (!replyTarget) return;
+    if (replyText.trim().length < 2) {
+      setReplyError('Reply must be at least 2 characters.');
+      return;
+    }
+    replyMutation.mutate(
+      { id: replyTarget, reply: replyText.trim() },
+      {
+        onSuccess: () => {
+          toast.showToast('Reply published.', 'success');
+          setReplyTarget(null);
+          setReplyText('');
+        },
+        onError: (err) => setReplyError(err instanceof Error ? err.message : 'Failed to save reply.'),
+      }
+    );
+  };
 
   const filtered = reviews
     .filter((r) => !search || r.productName?.toLowerCase().includes(search.toLowerCase()) || r.userName?.toLowerCase().includes(search.toLowerCase()))
@@ -88,6 +120,43 @@ export default function SellerReviewsPage() {
             </div>
             <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-2" style={{ background: 'rgba(122,155,118,0.12)', color: 'var(--color-primary)' }}>{review.productName}</span>
             <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{review.comment}</p>
+
+            {review.sellerReply && replyTarget !== review.id && (
+              <div className="mt-3 p-3 rounded-xl text-sm" style={{ background: 'rgba(122,155,118,0.08)', borderLeft: '3px solid var(--color-primary)' }}>
+                <p className="text-xs font-bold mb-1" style={{ color: 'var(--color-primary)' }}>
+                  Your reply{review.repliedAt ? ` · ${new Date(review.repliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                </p>
+                <p style={{ color: 'var(--color-text-secondary)' }}>{review.sellerReply}</p>
+              </div>
+            )}
+
+            {replyTarget === review.id ? (
+              <div className="mt-3">
+                <textarea
+                  rows={3}
+                  value={replyText}
+                  onChange={e => { setReplyText(e.target.value); setReplyError(''); }}
+                  placeholder="Respond publicly to this customer…"
+                  maxLength={1000}
+                  className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 resize-vertical"
+                  style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+                  autoFocus
+                />
+                {replyError && (
+                  <p className="text-xs mt-1 font-medium" style={{ color: 'var(--color-error)' }}>{replyError}</p>
+                )}
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => { setReplyTarget(null); setReplyError(''); }} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-secondary)' }}>Cancel</button>
+                  <button onClick={submitReply} disabled={replyMutation.isPending} className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: 'var(--color-primary)' }}>
+                    {replyMutation.isPending ? 'Saving…' : 'Publish Reply'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => openReply(review)} className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:opacity-80" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: review.sellerReply ? 'var(--color-text-secondary)' : 'var(--color-primary)' }}>
+                {review.sellerReply ? <><EditIcon className="w-3.5 h-3.5" /> Edit reply</> : <><CheckCircleIcon className="w-3.5 h-3.5" /> Respond</>}
+              </button>
+            )}
           </div>
         ))}
       </div>

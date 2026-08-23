@@ -173,15 +173,30 @@ export function useDeleteSellerProduct() {
 export function useUpdateSellerOrderStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: SellerOrderStatus }) =>
+    mutationFn: ({ id, status, trackingNumber }: { id: string; status?: SellerOrderStatus; trackingNumber?: string }) =>
       apiFetch<{ order: Order }>(`/seller/orders/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({
+          ...(status ? { status } : {}),
+          ...(trackingNumber ? { trackingNumber } : {}),
+        }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sellerOrders'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
+  });
+}
+
+export function useReplyToReview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reply }: { id: string; reply: string }) =>
+      apiFetch<{ review: unknown }>(`/seller/reviews/${id}`, {
+        method: 'POST',
+        body: JSON.stringify({ reply }),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sellerReviews'] }),
   });
 }
 

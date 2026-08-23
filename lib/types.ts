@@ -50,6 +50,8 @@ export interface Order {
   estimatedDelivery?: string;
   address: string;
   paymentMethod: string;
+  /** Carrier tracking number, set by the seller when shipping. */
+  trackingNumber?: string;
 }
 
 export interface OrderItem {
@@ -89,6 +91,9 @@ export interface Review {
   createdAt: string;
   /** True when the reviewer has an order containing this product. */
   verified?: boolean;
+  /** Public reply from the selling store. */
+  sellerReply?: string;
+  repliedAt?: string;
 }
 
 export interface ProductFilters {
