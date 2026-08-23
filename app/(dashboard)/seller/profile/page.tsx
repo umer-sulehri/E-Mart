@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useSellerProfile, useUpdateSellerProfile } from '@/hooks/useSeller';
 import { useToast } from '@/components/ui/Toast';
@@ -15,6 +15,8 @@ interface ProfileForm {
   businessAddress: string;
 }
 
+type ProfileField = keyof ProfileForm;
+
 export default function SellerProfilePage() {
   const toast = useToast();
   const user = useAuthStore((s) => s.user);
@@ -22,28 +24,23 @@ export default function SellerProfilePage() {
   const updateProfile = useUpdateSellerProfile();
 
   const [editing, setEditing] = useState(false);
-  const [profile, setProfile] = useState<ProfileForm>({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    storeName: '',
-    storeDescription: '',
-    businessAddress: '',
-  });
+  // Only user modifications are stored; everything else derives from the
+  // server profile. This avoids syncing effects entirely.
+  const [edits, setEdits] = useState<Partial<Record<ProfileField, string>>>({});
 
-  // Seed from the server profile once it arrives.
-  useEffect(() => {
-    if (!serverProfile) return;
-    setProfile((prev) => ({
-      ...prev,
-      name: serverProfile.name ?? prev.name,
-      email: serverProfile.email ?? prev.email,
-      phone: serverProfile.phone ?? prev.phone,
-      storeName: serverProfile.storeName ?? prev.storeName,
-      storeDescription: serverProfile.storeDescription ?? prev.storeDescription,
-      businessAddress: serverProfile.businessAddress ?? prev.businessAddress,
-    }));
-  }, [serverProfile]);
+  const base: ProfileForm = {
+    name: serverProfile?.name ?? user?.name ?? '',
+    email: serverProfile?.email ?? user?.email ?? '',
+    phone: serverProfile?.phone ?? '',
+    storeName: serverProfile?.storeName ?? '',
+    storeDescription: serverProfile?.storeDescription ?? '',
+    businessAddress: serverProfile?.businessAddress ?? '',
+  };
+
+  const profile: ProfileForm = { ...base, ...edits };
+
+  const startEditing = () => setEdits({ ...profile });
+  const cancelEditing = () => setEdits({});
 
   const handleSave = async () => {
     if (!profile.name.trim()) {
@@ -59,13 +56,14 @@ export default function SellerProfilePage() {
         businessAddress: profile.businessAddress,
       });
       toast.showToast('Profile updated successfully!', 'success');
+      setEdits({});
       setEditing(false);
     } catch (err) {
       toast.showToast(err instanceof Error ? err.message : 'Failed to save profile.', 'error');
     }
   };
 
-  const fields: { label: string; key: keyof ProfileForm; type: string }[] = [
+  const fields: { label: string; key: ProfileField; type: string }[] = [
     { label: 'Full Name', key: 'name', type: 'text' },
     { label: 'Email', key: 'email', type: 'email' },
     { label: 'Phone', key: 'phone', type: 'tel' },
@@ -101,7 +99,7 @@ export default function SellerProfilePage() {
           {editing ? (
             <div className="flex gap-2">
               <button
-                onClick={() => setEditing(false)}
+                onClick={() => { cancelEditing(); setEditing(false); }}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
                 style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}
               >
@@ -118,7 +116,7 @@ export default function SellerProfilePage() {
             </div>
           ) : (
             <button
-              onClick={() => setEditing(true)}
+              onClick={() => { startEditing(); setEditing(true); }}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
               style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}
             >
@@ -134,7 +132,7 @@ export default function SellerProfilePage() {
                 id={`sp-${field.key}`}
                 type={field.type}
                 value={profile[field.key]}
-                onChange={e => setProfile({ ...profile, [field.key]: e.target.value })}
+                onChange={e => setEdits(prev => ({ ...prev, [field.key]: e.target.value }))}
                 disabled={!editing || field.key === 'email'}
                 className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 transition-all disabled:opacity-60"
                 style={{ background: editing ? 'var(--color-bg)' : 'var(--color-surface-alt)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
@@ -147,7 +145,7 @@ export default function SellerProfilePage() {
               id="sp-desc"
               rows={3}
               value={profile.storeDescription}
-              onChange={e => setProfile({ ...profile, storeDescription: e.target.value })}
+              onChange={e => setEdits(prev => ({ ...prev, storeDescription: e.target.value }))}
               disabled={!editing}
               placeholder="Tell customers about your store…"
               className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 resize-vertical disabled:opacity-60"

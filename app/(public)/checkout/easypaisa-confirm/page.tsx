@@ -1,37 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
 import { Order } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { CheckCircleIcon } from '@/components/icons';
 
 /**
  * EasyPaisa redirect-back landing page. The gateway returns the customer
  * here after payment with the order id and transaction reference.
  */
-export default function EasypaisaConfirmPage() {
+function EasypaisaConfirmContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
   const ref = searchParams.get('ref');
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!orderId) {
-      setLoading(false);
-      return;
-    }
-    apiFetch<{ order: Order }>(`/orders/${orderId}`)
-      .then((data) => setOrder(data.order))
-      .catch(() => setOrder(null))
-      .finally(() => setLoading(false));
-  }, [orderId]);
+  const { data: order, isLoading } = useQuery({
+    queryKey: ['order', orderId],
+    queryFn: () => apiFetch<{ order: Order }>(`/orders/${orderId!}`).then((d) => d.order),
+    enabled: !!orderId,
+    retry: false,
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-14 text-center">
         <span className="inline-block w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -70,5 +64,13 @@ export default function EasypaisaConfirmPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function EasypaisaConfirmPage() {
+  return (
+    <Suspense fallback={null}>
+      <EasypaisaConfirmContent />
+    </Suspense>
   );
 }

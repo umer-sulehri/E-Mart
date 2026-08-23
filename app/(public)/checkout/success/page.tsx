@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
 import { Order } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
@@ -45,24 +46,16 @@ function buildInvoiceHtml(order: Order): string {
   </body></html>`;
 }
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!orderId) {
-      setError('No order reference found.');
-      setLoading(false);
-      return;
-    }
-    apiFetch<{ order: Order }>(`/orders/${orderId}`)
-      .then((data) => setOrder(data.order))
-      .catch(() => setError('We could not load this order. It may belong to a different account.'))
-      .finally(() => setLoading(false));
-  }, [orderId]);
+  const { data: order, isLoading, error } = useQuery({
+    queryKey: ['order', orderId],
+    queryFn: () => apiFetch<{ order: Order }>(`/orders/${orderId!}`).then((d) => d.order),
+    enabled: !!orderId,
+    retry: false,
+  });
 
   const downloadInvoice = () => {
     if (!order) return;
@@ -93,23 +86,27 @@ export default function CheckoutSuccessPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-14">
-      {loading && (
+      {isLoading && (
         <div className="flex flex-col items-center gap-4 py-20" aria-live="polite">
           <span className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
           <p className="text-sm text-text-secondary">Loading your order…</p>
         </div>
       )}
 
-      {!loading && error && (
+      {!isLoading && (!orderId || error) && (
         <Card className="p-8 text-center">
-          <p className="text-error font-semibold mb-3">{error}</p>
+          <p className="text-error font-semibold mb-3">
+            {orderId
+              ? 'We could not load this order. It may belong to a different account.'
+              : 'No order reference found.'}
+          </p>
           <Link href="/user/orders">
             <Button variant="outline">View My Orders</Button>
           </Link>
         </Card>
       )}
 
-      {!loading && order && (
+      {!isLoading && order && (
         <>
           <div className="text-center mb-8">
             <div className="w-20 h-20 mx-auto mb-5 rounded-full flex items-center justify-center animate-[pop_0.45s_ease]" style={{ background: 'rgba(34,197,94,0.15)' }}>
@@ -182,5 +179,13 @@ export default function CheckoutSuccessPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }
