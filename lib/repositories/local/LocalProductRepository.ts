@@ -65,6 +65,9 @@ export class LocalProductRepository implements ProductRepository {
       if (filters.minRating !== undefined) {
         result = result.filter((p) => p.rating >= filters.minRating!);
       }
+      if (filters.inStock) {
+        result = result.filter((p) => p.stock > 0);
+      }
       if (filters.search) {
         const q = filters.search.toLowerCase();
         result = result.filter(
@@ -84,6 +87,9 @@ export class LocalProductRepository implements ProductRepository {
             break;
           case 'rating':
             result.sort((a, b) => b.rating - a.rating);
+            break;
+          case 'popularity':
+            result.sort((a, b) => (b.reviewCount - a.reviewCount) || (b.rating - a.rating));
             break;
           case 'newest':
             result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

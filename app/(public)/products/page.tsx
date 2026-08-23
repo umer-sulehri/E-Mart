@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useMemo, Suspense } from 'react';
-import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api/client';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
-import { Product, ProductFilters } from '@/lib/types';
+import { ProductFilters } from '@/lib/types';
+import { ProductCard } from '@/components/product/ProductCard';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StarIcon, CloseIcon, SearchIcon } from '@/components/icons';
@@ -13,6 +15,7 @@ import { StarIcon, CloseIcon, SearchIcon } from '@/components/icons';
 const ITEMS_PER_PAGE = 20;
 
 const SORT_OPTIONS = [
+  { value: 'popularity', label: 'Most Popular' },
   { value: 'newest', label: 'Newest' },
   { value: 'price_asc', label: 'Price: Low to High' },
   { value: 'price_desc', label: 'Price: High to Low' },
@@ -45,9 +48,13 @@ function ProductsContent() {
 
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory || null);
-  const [sort, setSort] = useState('newest');
+  const [sort, setSort] = useState('popularity');
   const [priceRange, setPriceRange] = useState<{ min?: number; max?: number }>({});
+  const [customMin, setCustomMin] = useState('');
+  const [customMax, setCustomMax] = useState('');
   const [minRating, setMinRating] = useState(0);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [sellerId, setSellerId] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -66,10 +73,18 @@ function ProductsContent() {
     minPrice: priceRange.min,
     maxPrice: priceRange.max,
     minRating: minRating > 0 ? minRating : undefined,
-  }), [selectedCategory, searchQuery, sort, priceRange, minRating]);
+    inStock: inStockOnly || undefined,
+    sellerId: sellerId || undefined,
+  }), [selectedCategory, searchQuery, sort, priceRange, minRating, inStockOnly, sellerId]);
 
   const { data, isLoading, isError, error } = useProducts(filters, page, ITEMS_PER_PAGE);
   const { data: categories = [] } = useCategories();
+  const { data: sellers = [] } = useQuery({
+    queryKey: ['sellers'],
+    queryFn: () => apiFetch<{ sellers: { id: string; name: string; storeName?: string }[] }>('/sellers'),
+    select: (d) => d.sellers,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const total = data?.total ?? 0;
   const filtered = data?.products ?? [];
@@ -80,14 +95,18 @@ function ProductsContent() {
   const clearFilters = () => {
     setSelectedCategory(null);
     setSearchQuery('');
-    setSort('newest');
+    setSort('popularity');
     setPriceRange({});
+    setCustomMin('');
+    setCustomMax('');
     setMinRating(0);
+    setInStockOnly(false);
+    setSellerId('');
     setPage(1);
     router.push('/products');
   };
 
-  const hasActiveFilters = selectedCategory || searchQuery || sort !== 'newest' || priceRange.min !== undefined || priceRange.max !== undefined || minRating > 0;
+  const hasActiveFilters = selectedCategory || searchQuery || sort !== 'popularity' || priceRange.min !== undefined || priceRange.max !== undefined || minRating > 0 || inStockOnly || sellerId;
 
   if (isError) {
     return (
@@ -180,7 +199,77 @@ function ProductsContent() {
                 );
               })}
             </div>
+            <div className="flex items-center gap-2 mt-3">
+              <input
+                type="number"
+                min={0}
+                value={customMin}
+                onChange={(e) => setCustomMin(e.target.value)}
+                placeholder="Min"
+                aria-label="Minimum price"
+                className="w-full min-w-0 h-[40px] px-2 rounded-[8px] border border-border bg-bg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <span className="text-text-secondary">–</span>
+              <input
+                type="number"
+                min={0}
+                value={customMax}
+                onChange={(e) => setCustomMax(e.target.value)}
+                placeholder="Max"
+                aria-label="Maximum price"
+                className="w-full min-w-0 h-[40px] px-2 rounded-[8px] border border-border bg-bg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2"
+              onClick={() => {
+                const min = Number(customMin);
+                const max = Number(customMax);
+                setPriceRange({
+                  min: customMin && Number.isFinite(min) ? min : undefined,
+                  max: customMax && Number.isFinite(max) ? max : undefined,
+                });
+                setPage(1);
+              }}
+            >
+              Apply Custom Range
+            </Button>
           </Card>
+
+          {/* Availability */}
+          <Card className="p-4 mb-4">
+            <h3 className="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wide">Availability</h3>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={inStockOnly}
+                onChange={(e) => { setInStockOnly(e.target.checked); setPage(1); }}
+                className="w-4 h-4 accent-[var(--color-primary)]"
+              />
+              <span className="text-sm text-text-secondary">In stock only</span>
+            </label>
+          </Card>
+
+          {/* Seller */}
+          {sellers.length > 0 && (
+            <Card className="p-4 mb-4">
+              <h3 className="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wide">Seller</h3>
+              <select
+                value={sellerId}
+                onChange={(e) => { setSellerId(e.target.value); setPage(1); }}
+                className="w-full h-[40px] px-2 rounded-[8px] border border-border bg-bg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">All Sellers</option>
+                {sellers.map((seller) => (
+                  <option key={seller.id} value={seller.id}>
+                    {seller.storeName || seller.name}
+                  </option>
+                ))}
+              </select>
+            </Card>
+          )}
 
           {/* Rating Filter */}
           <Card className="p-4 mb-4">
@@ -260,7 +349,7 @@ function ProductsContent() {
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filtered.map((product) => (
-                  <ProductGridCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
 
@@ -316,47 +405,3 @@ function ProductsContent() {
   );
 }
 
-function ProductGridCard({ product }: { product: Product }) {
-  return (
-    <Link href={`/products/${product.slug}`}>
-      <Card className="overflow-hidden hover:shadow-md transition-shadow h-full">
-        <div className="relative aspect-[4/3] bg-surface-alt">
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-          {product.originalPrice && (
-            <span className="absolute top-2 left-2 bg-error text-text-inverse text-xs font-bold px-2 py-1 rounded-full">
-              -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-            </span>
-          )}
-          {product.isNew && (
-            <span className="absolute top-2 right-2 bg-success text-text-inverse text-xs font-bold px-2 py-1 rounded-full">
-              NEW
-            </span>
-          )}
-        </div>
-        <div className="p-3">
-          <h3 className="text-sm font-semibold text-text-primary mb-1 line-clamp-2">{product.name}</h3>
-          <div className="flex items-center gap-1 mb-2">
-            <StarIcon className="w-4 h-4 text-warning" filled />
-            <span className="text-xs text-text-secondary">{product.rating} ({product.reviewCount})</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-base font-bold text-text-primary">Rs {product.price.toLocaleString()}</span>
-            {product.originalPrice && (
-              <span className="text-xs text-text-secondary line-through">
-                Rs {product.originalPrice.toLocaleString()}
-              </span>
-            )}
-          </div>
-          <span className={`text-xs mt-1 inline-block ${product.stock > 0 ? 'text-success' : 'text-error'}`}>
-            {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
-          </span>
-        </div>
-      </Card>
-    </Link>
-  );
-}

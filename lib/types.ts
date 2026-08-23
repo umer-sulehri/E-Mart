@@ -97,6 +97,7 @@ export interface ProductFilters {
   maxPrice?: number;
   minRating?: number;
   sellerId?: string;
+  inStock?: boolean;
   ids?: string[];
 }
 

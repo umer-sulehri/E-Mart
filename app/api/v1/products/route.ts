@@ -15,6 +15,10 @@ export async function GET(request: NextRequest) {
   }
   if (searchParams.get('search')) filters.search = searchParams.get('search')!;
   if (searchParams.get('sort')) filters.sort = searchParams.get('sort')!;
+  if (searchParams.get('sellerId')) filters.sellerId = searchParams.get('sellerId')!;
+  if (searchParams.get('inStock') === 'true' || searchParams.get('inStock') === '1') {
+    filters.inStock = true;
+  }
   const idsParam = searchParams.get('ids');
   if (idsParam) {
     filters.ids = idsParam.split(',').map((id) => id.trim()).filter(Boolean);

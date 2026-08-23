@@ -138,6 +138,9 @@ export class SupabaseProductRepository implements ProductRepository {
       if (filters.minRating !== undefined) {
         query = query.gte('rating', filters.minRating);
       }
+      if (filters.inStock) {
+        query = query.gt('stock', 0);
+      }
       if (filters.search) {
         const term = sanitizeSearchTerm(filters.search);
         if (term) {
@@ -154,6 +157,11 @@ export class SupabaseProductRepository implements ProductRepository {
             break;
           case 'rating':
             query = query.order('rating', { ascending: false });
+            break;
+          case 'popularity':
+            query = query
+              .order('review_count', { ascending: false, nullsFirst: false })
+              .order('rating', { ascending: false });
             break;
           case 'newest':
             query = query.order('created_at', { ascending: false });
