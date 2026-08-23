@@ -11,6 +11,9 @@ interface ProfileRow {
   avatar_url?: string;
   created_at: string;
   is_blocked?: boolean;
+  store_name?: string | null;
+  store_description?: string | null;
+  business_address?: string | null;
 }
 
 function mapProfile(row: ProfileRow): User {
@@ -23,6 +26,9 @@ function mapProfile(row: ProfileRow): User {
     avatar: row.avatar_url,
     createdAt: row.created_at,
     isBlocked: row.is_blocked,
+    storeName: row.store_name ?? undefined,
+    storeDescription: row.store_description ?? undefined,
+    businessAddress: row.business_address ?? undefined,
   };
 }
 
@@ -109,6 +115,9 @@ export class SupabaseUserRepository implements UserRepository {
     if (data.role !== undefined) updatePayload.role = data.role;
     if (data.avatar !== undefined) updatePayload.avatar_url = data.avatar;
     if (data.isBlocked !== undefined) updatePayload.is_blocked = data.isBlocked;
+    if (data.storeName !== undefined) updatePayload.store_name = data.storeName;
+    if (data.storeDescription !== undefined) updatePayload.store_description = data.storeDescription;
+    if (data.businessAddress !== undefined) updatePayload.business_address = data.businessAddress;
 
     const { data: row, error } = await supabase
       .from('profiles')

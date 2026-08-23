@@ -73,6 +73,10 @@ export interface User {
   status?: string;
   createdAt: string;
   isBlocked?: boolean;
+  /** Seller store profile */
+  storeName?: string;
+  storeDescription?: string;
+  businessAddress?: string;
 }
 
 export interface Review {

@@ -28,7 +28,15 @@ export async function PUT(request: NextRequest) {
     const user = await requireSeller();
     const body = await request.json();
 
-    const allowedFields = ['name', 'phone', 'email', 'avatar'];
+    const allowedFields = [
+      'name',
+      'phone',
+      'email',
+      'avatar',
+      'storeName',
+      'storeDescription',
+      'businessAddress',
+    ];
     const updates: Record<string, unknown> = {};
     for (const field of allowedFields) {
       if (body[field] !== undefined) {

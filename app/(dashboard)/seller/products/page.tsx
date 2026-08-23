@@ -2,23 +2,37 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useSellerProducts } from '@/hooks/useSeller';
+import { useSellerProducts, useDeleteSellerProduct } from '@/hooks/useSeller';
 import { useCategories } from '@/hooks/useCategories';
+import { useToast } from '@/components/ui/Toast';
 import { Product } from '@/lib/types';
 import { SearchIcon, EditIcon, TrashIcon, EyeIcon, PlusIcon, StarIcon, CheckCircleIcon } from '@/components/icons';
 
 export default function SellerProductsPage() {
+  const toast = useToast();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Product | null>(null);
   const perPage = 10;
 
   const { data: productsData } = useSellerProducts(currentPage, perPage);
   const { data: categories } = useCategories();
+  const deleteProduct = useDeleteSellerProduct();
   const CATEGORIES = categories ?? [];
-  const products = productsData?.products ?? [];
+  const products = useMemo(() => productsData?.products ?? [], [productsData]);
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    try {
+      await deleteProduct.mutateAsync(deleteConfirm.id);
+      toast.showToast(`"${deleteConfirm.name}" was deleted.`, 'success');
+      setDeleteConfirm(null);
+    } catch (err) {
+      toast.showToast(err instanceof Error ? err.message : 'Failed to delete product.', 'error');
+    }
+  };
 
   const filtered = useMemo(() => {
     return products.filter(p => {
@@ -100,7 +114,7 @@ export default function SellerProductsPage() {
                       <Link href={`/seller/products/${product.id}`} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60">
                         <EditIcon className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                       </Link>
-                      <button onClick={() => setDeleteConfirm(product.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60">
+                      <button onClick={() => setDeleteConfirm(product)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60" aria-label={`Delete ${product.name}`}>
                         <TrashIcon className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
                       </button>
                     </div>
@@ -155,10 +169,14 @@ export default function SellerProductsPage() {
               <TrashIcon className="w-8 h-8" style={{ color: 'var(--color-error)' }} />
             </div>
             <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Delete Product?</h3>
-            <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>This action cannot be undone.</p>
+            <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+              &quot;{deleteConfirm.name}&quot; will be permanently removed. This action cannot be undone.
+            </p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 rounded-xl text-sm font-semibold" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>Cancel</button>
-              <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'var(--color-error)' }}>Delete</button>
+              <button onClick={handleDelete} disabled={deleteProduct.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60" style={{ background: 'var(--color-error)' }}>
+                {deleteProduct.isPending ? 'Deleting…' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>

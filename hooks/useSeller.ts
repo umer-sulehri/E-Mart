@@ -79,6 +79,9 @@ interface SellerProfileResponse {
   email: string;
   phone?: string;
   avatar?: string;
+  storeName?: string;
+  storeDescription?: string;
+  businessAddress?: string;
 }
 
 export function useSellerProducts(page = 1, limit = 20) {
@@ -192,7 +195,16 @@ export function useSellerProfile() {
 export function useUpdateSellerProfile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name?: string; phone?: string; avatar?: string }) =>
+    mutationFn: (
+      data: {
+        name?: string;
+        phone?: string;
+        avatar?: string;
+        storeName?: string;
+        storeDescription?: string;
+        businessAddress?: string;
+      }
+    ) =>
       apiFetch<SellerProfileResponse>('/seller/profile', {
         method: 'PUT',
         body: JSON.stringify(data),

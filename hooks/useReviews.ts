@@ -21,13 +21,13 @@ export function useProductReviews(productSlug: string) {
   });
 }
 
-export function useCreateReview(productSlug: string) {
+export function useCreateReview(productSlug = '') {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { rating: number; comment: string }) =>
-      apiFetch<Review>(`/products/${productSlug}/reviews`, {
+    mutationFn: (data: { rating: number; comment: string; slug?: string }) =>
+      apiFetch<Review>(`/products/${data.slug ?? productSlug}/reviews`, {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({ rating: data.rating, comment: data.comment }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews', productSlug] });
