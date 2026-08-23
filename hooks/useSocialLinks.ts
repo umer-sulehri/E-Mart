@@ -16,6 +16,11 @@ export function useAdminSocialLinks() {
   });
 }
 
+function invalidateAll(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ['adminSocialLinks'] });
+  queryClient.invalidateQueries({ queryKey: ['socialLinks'] });
+}
+
 export function useCreateSocialLink() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -24,9 +29,7 @@ export function useCreateSocialLink() {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminSocialLinks'] });
-    },
+    onSuccess: () => invalidateAll(queryClient),
   });
 }
 
@@ -38,9 +41,7 @@ export function useUpdateSocialLink() {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminSocialLinks'] });
-    },
+    onSuccess: () => invalidateAll(queryClient),
   });
 }
 
@@ -51,8 +52,6 @@ export function useDeleteSocialLink() {
       apiFetch<{ success: boolean }>(`/admin/social-links/${id}`, {
         method: 'DELETE',
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminSocialLinks'] });
-    },
+    onSuccess: () => invalidateAll(queryClient),
   });
 }

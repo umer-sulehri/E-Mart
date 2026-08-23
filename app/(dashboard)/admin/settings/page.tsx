@@ -2,25 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { GearIcon, CheckCircleIcon, PlusIcon, EditIcon, TrashIcon } from '@/components/icons';
-
-interface SocialLink {
-  id: string;
-  platform: string;
-  label: string;
-  url: string;
-  icon: string;
-  isActive: boolean;
-  sortOrder: number;
-}
-
-const defaultSocialLinks: SocialLink[] = [
-  { id: crypto.randomUUID(), platform: 'facebook', label: 'Facebook', url: 'https://facebook.com/emart', icon: 'FacebookIcon', isActive: true, sortOrder: 0 },
-  { id: crypto.randomUUID(), platform: 'instagram', label: 'Instagram', url: 'https://instagram.com/emart', icon: 'InstagramIcon', isActive: true, sortOrder: 1 },
-  { id: crypto.randomUUID(), platform: 'whatsapp', label: 'WhatsApp', url: 'https://wa.me/1234567890', icon: 'WhatsappIcon', isActive: true, sortOrder: 2 },
-  { id: crypto.randomUUID(), platform: 'tiktok', label: 'TikTok', url: 'https://tiktok.com/@emart', icon: 'TiktokIcon', isActive: true, sortOrder: 3 },
-  { id: crypto.randomUUID(), platform: 'youtube', label: 'YouTube', url: 'https://youtube.com/emart', icon: 'YoutubeIcon', isActive: true, sortOrder: 4 },
-  { id: crypto.randomUUID(), platform: 'x', label: 'X (Twitter)', url: 'https://x.com/emart', icon: 'XIcon', isActive: true, sortOrder: 5 },
-];
+import {
+  useAdminSocialLinks,
+  useCreateSocialLink,
+  useUpdateSocialLink,
+  useDeleteSocialLink,
+} from '@/hooks/useSocialLinks';
+import { SocialLink } from '@/lib/types';
 
 const platformOptions = ['facebook', 'instagram', 'whatsapp', 'tiktok', 'youtube', 'x'];
 
@@ -37,7 +25,11 @@ export default function AdminSettingsPage() {
   const [autoApproveProducts, setAutoApproveProducts] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
 
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(defaultSocialLinks);
+  const { data: socialLinks = [], isLoading: linksLoading } = useAdminSocialLinks();
+  const createLink = useCreateSocialLink();
+  const updateLink = useUpdateSocialLink();
+  const deleteLink = useDeleteSocialLink();
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -45,6 +37,7 @@ export default function AdminSettingsPage() {
   const [editDraft, setEditDraft] = useState({ platform: '', label: '', url: '', icon: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [linksError, setLinksError] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -96,43 +89,38 @@ export default function AdminSettingsPage() {
     }
   }, [platformName, supportEmail, defaultCurrency, taxRate, shippingFee, freeShippingThreshold, emailNotifications, smsNotifications, autoApproveProducts, maintenanceMode]);
 
-  const handleMoveUp = (id: string) => {
-    setSocialLinks(prev => {
-      const idx = prev.findIndex(l => l.id === id);
-      if (idx <= 0) return prev;
-      const next = [...prev];
-      [next[idx - 1].sortOrder, next[idx].sortOrder] = [next[idx].sortOrder, next[idx - 1].sortOrder];
-      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
-      return next;
-    });
+  const handleMove = async (id: string, direction: -1 | 1) => {
+    setLinksError('');
+    const sorted = [...socialLinks].sort((a, b) => a.sortOrder - b.sortOrder);
+    const idx = sorted.findIndex((l) => l.id === id);
+    const swapIdx = idx + direction;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= sorted.length) return;
+    try {
+      await updateLink.mutateAsync({ id: sorted[idx].id, data: { sortOrder: sorted[swapIdx].sortOrder } });
+      await updateLink.mutateAsync({ id: sorted[swapIdx].id, data: { sortOrder: sorted[idx].sortOrder } });
+    } catch (err) {
+      setLinksError(err instanceof Error ? err.message : 'Failed to reorder link.');
+    }
   };
 
-  const handleMoveDown = (id: string) => {
-    setSocialLinks(prev => {
-      const idx = prev.findIndex(l => l.id === id);
-      if (idx === -1 || idx >= prev.length - 1) return prev;
-      const next = [...prev];
-      [next[idx].sortOrder, next[idx + 1].sortOrder] = [next[idx + 1].sortOrder, next[idx].sortOrder];
-      [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
-      return next;
-    });
-  };
-
-  const handleAddLink = () => {
+  const handleAddLink = async () => {
     if (!newLink.label || !newLink.url) return;
     try { new URL(newLink.url); } catch { return; }
-    const link: SocialLink = {
-      id: crypto.randomUUID(),
-      platform: newLink.platform,
-      label: newLink.label,
-      url: newLink.url,
-      icon: newLink.icon || `${newLink.platform}Icon`,
-      isActive: true,
-      sortOrder: socialLinks.length,
-    };
-    setSocialLinks(prev => [...prev, link]);
-    setNewLink({ platform: 'facebook', label: '', url: '', icon: '' });
-    setShowAddForm(false);
+    setLinksError('');
+    try {
+      await createLink.mutateAsync({
+        platform: newLink.platform,
+        label: newLink.label,
+        url: newLink.url,
+        icon: newLink.icon || `${newLink.platform}Icon`,
+        isActive: true,
+        sortOrder: socialLinks.length,
+      });
+      setNewLink({ platform: 'facebook', label: '', url: '', icon: '' });
+      setShowAddForm(false);
+    } catch (err) {
+      setLinksError(err instanceof Error ? err.message : 'Failed to add link.');
+    }
   };
 
   const handleStartEdit = (link: SocialLink) => {
@@ -140,20 +128,35 @@ export default function AdminSettingsPage() {
     setEditDraft({ platform: link.platform, label: link.label, url: link.url, icon: link.icon });
   };
 
-  const handleSaveEdit = (id: string) => {
+  const handleSaveEdit = async (id: string) => {
     if (!editDraft.label || !editDraft.url) return;
     try { new URL(editDraft.url); } catch { return; }
-    setSocialLinks(prev => prev.map(l => l.id === id ? { ...l, ...editDraft } : l));
-    setEditingId(null);
+    setLinksError('');
+    try {
+      await updateLink.mutateAsync({ id, data: editDraft });
+      setEditingId(null);
+    } catch (err) {
+      setLinksError(err instanceof Error ? err.message : 'Failed to save link.');
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setSocialLinks(prev => prev.filter(l => l.id !== id));
-    setDeleteConfirmId(null);
+  const handleDelete = async (id: string) => {
+    setLinksError('');
+    try {
+      await deleteLink.mutateAsync(id);
+      setDeleteConfirmId(null);
+    } catch (err) {
+      setLinksError(err instanceof Error ? err.message : 'Failed to delete link.');
+    }
   };
 
-  const handleToggleActive = (id: string) => {
-    setSocialLinks(prev => prev.map(l => l.id === id ? { ...l, isActive: !l.isActive } : l));
+  const handleToggleActive = async (link: SocialLink) => {
+    setLinksError('');
+    try {
+      await updateLink.mutateAsync({ id: link.id, data: { isActive: !link.isActive } });
+    } catch (err) {
+      setLinksError(err instanceof Error ? err.message : 'Failed to update link.');
+    }
   };
 
   const inputStyle = {
@@ -397,6 +400,25 @@ export default function AdminSettingsPage() {
         </button>
       </div>
 
+      {linksError && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: 'var(--color-error)',
+            color: '#fff',
+            padding: '12px 20px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            fontWeight: 600,
+          }}
+          role="alert"
+        >
+          {linksError}
+        </div>
+      )}
+
       {/* Add Link Form */}
       {showAddForm && (
         <div
@@ -496,7 +518,14 @@ export default function AdminSettingsPage() {
             </tr>
           </thead>
           <tbody>
-            {socialLinks
+            {socialLinks.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                  {linksLoading ? 'Loading links…' : 'No social links yet. Add one to show it in the footer.'}
+                </td>
+              </tr>
+            ) : (
+            socialLinks
               .sort((a, b) => a.sortOrder - b.sortOrder)
               .map(link => {
                 const isEditing = editingId === link.id;
@@ -564,7 +593,7 @@ export default function AdminSettingsPage() {
                     {/* Active Toggle */}
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <Toggle on={link.isActive} onToggle={() => handleToggleActive(link.id)} />
+                        <Toggle on={link.isActive} onToggle={() => handleToggleActive(link)} />
                       </div>
                     </td>
 
@@ -572,7 +601,8 @@ export default function AdminSettingsPage() {
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                         <button
-                          onClick={() => handleMoveUp(link.id)}
+                          onClick={() => handleMove(link.id, -1)}
+                          disabled={updateLink.isPending}
                           style={{
                             width: '32px',
                             height: '32px',
@@ -592,7 +622,8 @@ export default function AdminSettingsPage() {
                         </button>
                         <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: 600 }}>{link.sortOrder}</span>
                         <button
-                          onClick={() => handleMoveDown(link.id)}
+                          onClick={() => handleMove(link.id, 1)}
+                          disabled={updateLink.isPending}
                           style={{
                             width: '32px',
                             height: '32px',
@@ -682,11 +713,12 @@ export default function AdminSettingsPage() {
                             </button>
                           </>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                       </div>
+                     </td>
+                   </tr>
+                 );
+               })
+            )}
           </tbody>
         </table>
       </div>

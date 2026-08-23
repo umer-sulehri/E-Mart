@@ -33,7 +33,7 @@ function limitForPath(pathname: string): number {
   return RATE_LIMIT_MAX;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api/')) {
