@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useAdminUsers, useBlockUser, useUnblockUser } from '@/hooks/useAdmin';
+import { useAuthStore } from '@/lib/store/authStore';
+import {
+  useAdminUsers,
+  useBlockUser,
+  useUnblockUser,
+  useUpdateUser,
+  useDeleteUser,
+} from '@/hooks/useAdmin';
 import { User } from '@/lib/types';
 import {
   SearchIcon,
@@ -24,10 +31,15 @@ export default function AdminUsersPage() {
   const [viewUser, setViewUser] = useState<User | null>(null);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', role: 'buyer' });
+  const [formError, setFormError] = useState('');
 
+  const currentUser = useAuthStore((s) => s.user);
   const { data, isLoading } = useAdminUsers(page, PAGE_SIZE);
   const blockUser = useBlockUser();
   const unblockUser = useUnblockUser();
+  const updateUser = useUpdateUser();
+  const deleteUserMutation = useDeleteUser();
 
   const total = data?.total ?? 0;
 
@@ -60,6 +72,50 @@ export default function AdminUsersPage() {
       unblockUser.mutate(user.id as string);
     } else {
       blockUser.mutate(user.id as string);
+    }
+  };
+
+  const openEditModal = (user: User) => {
+    setFormError('');
+    setEditForm({
+      name: (user.name as string) ?? '',
+      email: (user.email as string) ?? '',
+      phone: (user.phone as string) ?? '',
+      role: (user.role as string) ?? 'buyer',
+    });
+    setEditUser(user);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editUser) return;
+    if (editForm.name.trim().length < 2) {
+      setFormError('Name must be at least 2 characters.');
+      return;
+    }
+    try {
+      await updateUser.mutateAsync({
+        id: editUser.id as string,
+        body: {
+          name: editForm.name.trim(),
+          email: editForm.email.trim() || undefined,
+          phone: editForm.phone.trim() || undefined,
+          role: editForm.role,
+        },
+      });
+      setEditUser(null);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to update user.');
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteUser) return;
+    try {
+      await deleteUserMutation.mutateAsync(deleteUser.id as string);
+      setDeleteUser(null);
+    } catch {
+      setDeleteUser(null);
     }
   };
 
@@ -445,7 +501,7 @@ export default function AdminUsersPage() {
                           <EyeIcon style={{ width: '18px', height: '18px' }} />
                         </button>
                         <button
-                          onClick={() => setEditUser(user)}
+                          onClick={() => openEditModal(user)}
                           title="Edit"
                           style={{
                             width: '40px',
@@ -487,15 +543,25 @@ export default function AdminUsersPage() {
                         </button>
                         <button
                           onClick={() => setDeleteUser(user)}
-                          title="Delete"
+                          disabled={user.id === currentUser?.id || user.role === 'admin'}
+                          title={
+                            user.id === currentUser?.id
+                              ? 'You cannot delete your own account'
+                              : user.role === 'admin'
+                                ? 'Admin accounts cannot be deleted'
+                                : 'Delete (blocks the user)'
+                          }
                           style={{
                             width: '40px',
                             height: '40px',
                             borderRadius: '8px',
                             border: '1px solid var(--color-border)',
                             background: 'var(--color-surface)',
-                            color: 'var(--color-error)',
-                            cursor: 'pointer',
+                            color:
+                              user.id === currentUser?.id || user.role === 'admin'
+                                ? 'var(--color-border)'
+                                : 'var(--color-error)',
+                            cursor: user.id === currentUser?.id || user.role === 'admin' ? 'not-allowed' : 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -734,13 +800,24 @@ export default function AdminUsersPage() {
               </button>
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setEditUser(null);
-              }}
-              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-            >
+            {formError && (
+              <p
+                style={{
+                  margin: '0 0 16px',
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--color-error)',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid var(--color-error)',
+                }}
+              >
+                {formError}
+              </p>
+            )}
+
+            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {[
                 { label: 'Name', key: 'name', type: 'text' },
                 { label: 'Email', key: 'email', type: 'email' },
@@ -760,7 +837,11 @@ export default function AdminUsersPage() {
                   </label>
                   <input
                     type={field.type}
-                    defaultValue={(editUser as unknown as Record<string, unknown>)[field.key] as string ?? ''}
+                    value={(editForm as unknown as Record<string, string>)[field.key] ?? ''}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, [field.key]: e.target.value }))
+                    }
+                    required={field.key === 'name'}
                     style={{
                       width: '100%',
                       height: '48px',
@@ -790,7 +871,9 @@ export default function AdminUsersPage() {
                   Role
                 </label>
                 <select
-                  defaultValue={editUser.role as string}
+                  value={editForm.role}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, role: e.target.value }))}
+                  disabled={editUser.id === currentUser?.id}
                   style={{
                     width: '100%',
                     height: '48px',
@@ -808,6 +891,11 @@ export default function AdminUsersPage() {
                   <option value="seller">Seller</option>
                   <option value="admin">Admin</option>
                 </select>
+                {editUser.id === currentUser?.id && (
+                  <p style={{ marginTop: '6px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                    You cannot change your own role.
+                  </p>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
@@ -830,6 +918,7 @@ export default function AdminUsersPage() {
                 </button>
                 <button
                   type="submit"
+                  disabled={updateUser.isPending}
                   style={{
                     flex: 1,
                     height: '48px',
@@ -839,10 +928,11 @@ export default function AdminUsersPage() {
                     color: '#fff',
                     fontSize: '14px',
                     fontWeight: 600,
-                    cursor: 'pointer',
+                    cursor: updateUser.isPending ? 'wait' : 'pointer',
+                    opacity: updateUser.isPending ? 0.6 : 1,
                   }}
                 >
-                  Save Changes
+                  {updateUser.isPending ? 'Saving…' : 'Save Changes'}
                 </button>
               </div>
             </form>
@@ -906,8 +996,8 @@ export default function AdminUsersPage() {
                 margin: '0 0 24px',
               }}
             >
-              Are you sure you want to delete <strong>{deleteUser.name as string}</strong>?
-              This action cannot be undone.
+              Delete <strong>{deleteUser.name as string}</strong>? The account will be
+              blocked and unable to sign in. This action cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
@@ -927,7 +1017,15 @@ export default function AdminUsersPage() {
                 Cancel
               </button>
               <button
-                onClick={() => setDeleteUser(null)}
+                onClick={handleDeleteConfirm}
+                disabled={deleteUser.id === currentUser?.id || deleteUser.role === 'admin' || deleteUserMutation.isPending}
+                title={
+                  deleteUser.id === currentUser?.id
+                    ? 'You cannot delete your own account'
+                    : deleteUser.role === 'admin'
+                      ? 'Admin accounts cannot be deleted'
+                      : 'Block this user instead of deleting them'
+                }
                 style={{
                   flex: 1,
                   height: '48px',
@@ -937,10 +1035,12 @@ export default function AdminUsersPage() {
                   color: '#fff',
                   fontSize: '14px',
                   fontWeight: 600,
-                  cursor: 'pointer',
+                  cursor:
+                    deleteUser.id === currentUser?.id || deleteUser.role === 'admin' ? 'not-allowed' : 'pointer',
+                  opacity: deleteUser.id === currentUser?.id || deleteUser.role === 'admin' ? 0.5 : 1,
                 }}
               >
-                Delete
+                {deleteUserMutation.isPending ? 'Blocking…' : 'Delete'}
               </button>
             </div>
           </div>

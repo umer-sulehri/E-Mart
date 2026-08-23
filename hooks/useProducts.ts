@@ -17,6 +17,7 @@ export function useProducts(
       if (filters?.sort) params.set('sort', filters.sort);
       if (filters?.minPrice) params.set('minPrice', String(filters.minPrice));
       if (filters?.maxPrice) params.set('maxPrice', String(filters.maxPrice));
+      if (filters?.minRating) params.set('minRating', String(filters.minRating));
       if (filters?.ids?.length) params.set('ids', filters.ids.join(','));
       params.set('page', String(page));
       params.set('limit', String(limit));

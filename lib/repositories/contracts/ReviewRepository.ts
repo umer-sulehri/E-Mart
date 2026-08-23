@@ -4,6 +4,8 @@ export interface ReviewRepository {
   findByProduct(productId: string): Review[] | Promise<Review[]>;
   findByUser(userId: string): Review[] | Promise<Review[]>;
   findBySellerProducts(productIds: string[]): Review[] | Promise<Review[]>;
+  findRecent(limit?: number): (Review & { productName?: string; productSlug?: string })[] | Promise<(Review & { productName?: string; productSlug?: string })[]>;
   create(data: Omit<Review, 'id' | 'createdAt'>): Review | Promise<Review>;
+  update(id: string, userId: string, data: { rating?: number; comment?: string }): Review | null | Promise<Review | null>;
   delete(id: string): void | Promise<void>;
 }

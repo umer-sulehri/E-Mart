@@ -21,6 +21,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored reference template — not part of the app.
+    "Frontend template/**",
   ]),
 ]);
 

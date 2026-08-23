@@ -52,6 +52,35 @@ export function Footer() {
   const { data: socialLinks = [] } = useSocialLinks();
   const [subscribed, setSubscribed] = useState(false);
   const [email, setEmail] = useState('');
+  const [footerError, setFooterError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFooterError('');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setFooterError('Please enter a valid email address.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/v1/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'Subscription failed. Please try again.');
+      }
+      setSubscribed(true);
+      setEmail('');
+    } catch (err) {
+      setFooterError(err instanceof Error ? err.message : 'Subscription failed. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const activeLinks = socialLinks.filter((l) => l.isActive);
 
@@ -125,10 +154,7 @@ export function Footer() {
                 <form
                   className="d-flex mt-3 gap-0"
                   role="newsletter"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (email.trim()) setSubscribed(true);
-                  }}
+                  onSubmit={handleSubscribe}
                 >
                   <input
                     className="form-control rounded-start rounded-0 bg-light"
@@ -137,10 +163,14 @@ export function Footer() {
                     aria-label="Email Address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
-                  <button className="btn btn-dark rounded-end rounded-0" type="submit">Subscribe</button>
+                  <button className="btn btn-dark rounded-end rounded-0" type="submit" disabled={submitting}>
+                    {submitting ? '…' : 'Subscribe'}
+                  </button>
                 </form>
                 {subscribed && <p className="text-success small mt-2 mb-0">Thanks for subscribing!</p>}
+                {footerError && <p className="text-danger small mt-2 mb-0" role="alert">{footerError}</p>}
               </div>
             </div>
           </div>

@@ -9,6 +9,10 @@ export async function GET(request: NextRequest) {
   if (searchParams.get('category')) filters.category = searchParams.get('category')!;
   if (searchParams.get('minPrice')) filters.minPrice = Number(searchParams.get('minPrice'));
   if (searchParams.get('maxPrice')) filters.maxPrice = Number(searchParams.get('maxPrice'));
+  if (searchParams.get('minRating')) {
+    const minRating = Number(searchParams.get('minRating'));
+    if (Number.isFinite(minRating) && minRating > 0) filters.minRating = Math.min(minRating, 5);
+  }
   if (searchParams.get('search')) filters.search = searchParams.get('search')!;
   if (searchParams.get('sort')) filters.sort = searchParams.get('sort')!;
   const idsParam = searchParams.get('ids');

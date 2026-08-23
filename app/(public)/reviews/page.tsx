@@ -1,65 +1,64 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { StarIcon } from '@/components/icons';
+import { useProducts } from '@/hooks/useProducts';
+import { useRecentReviews, useCreateReview } from '@/hooks/useReviews';
+import { useAuthStore } from '@/lib/store/authStore';
 
-const mockReviews = [
-  {
-    id: 1,
-    name: 'Ahmed Khan',
-    product: 'Wireless Bluetooth Headphones',
-    rating: 5,
-    comment: 'Excellent sound quality and very comfortable to wear for long sessions. Battery life is impressive too!',
-    date: '2 days ago',
-    avatar: 'A',
-  },
-  {
-    id: 2,
-    name: 'Sara Malik',
-    product: 'Organic Green Tea (50 bags)',
-    rating: 4,
-    comment: 'Good quality tea with a nice flavor. Packaging could be better but the product itself is great.',
-    date: '5 days ago',
-    avatar: 'S',
-  },
-  {
-    id: 3,
-    name: 'Ali Raza',
-    product: 'Premium Protein Bar',
-    rating: 5,
-    comment: 'Amazing taste and texture. Perfect post-workout snack. Will definitely order again!',
-    date: '1 week ago',
-    avatar: 'A',
-  },
-  {
-    id: 4,
-    name: 'Fatima Noor',
-    product: 'Notebook Set (3 Pack)',
-    rating: 4,
-    comment: 'Nice notebooks with good paper quality. The binding is solid. Recommended for students.',
-    date: '2 weeks ago',
-    avatar: 'F',
-  },
-];
+function timeAgo(dateString: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days > 1 ? 's' : ''} ago`;
+  return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
 
 export default function ReviewsPage() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { data: reviews, isLoading } = useRecentReviews(30);
+  const { data: productsData } = useProducts({}, 1, 100, { enabled: isAuthenticated });
+
+  const [productId, setProductId] = useState('');
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const productList = productsData?.products ?? [];
+  const selectedProduct = productList.find((p) => p.id === productId);
+  const createReview = useCreateReview(selectedProduct?.slug ?? '__none__');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating === 0 || !reviewText.trim()) return;
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setRating(0);
-      setReviewText('');
-    }, 2000);
+    setSubmitError('');
+    if (!selectedProduct || rating === 0 || !reviewText.trim()) return;
+
+    try {
+      await createReview.mutateAsync({
+        rating,
+        comment: reviewText.trim(),
+      });
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setRating(0);
+        setReviewText('');
+        setProductId('');
+      }, 2500);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to submit review.');
+    }
   };
 
   const displayRating = hoverRating || rating;
+  const reviewList = reviews ?? [];
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -83,7 +82,20 @@ export default function ReviewsPage() {
           Write a Review
         </h2>
 
-        {submitted ? (
+        {!isAuthenticated ? (
+          <div className="py-4 text-center">
+            <p className="mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+              Sign in to share your experience with a product.
+            </p>
+            <Link
+              href="/login"
+              className="inline-block px-8 py-3 rounded-[10px] text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5"
+              style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
+            >
+              Sign In
+            </Link>
+          </div>
+        ) : submitted ? (
           <div
             className="py-6 text-center rounded-lg"
             style={{ background: 'rgba(110,139,94,0.1)', color: 'var(--color-success)' }}
@@ -93,6 +105,27 @@ export default function ReviewsPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {/* Product Select */}
+            <div>
+              <label htmlFor="review-product" className="block mb-2 font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                Product <span style={{ color: 'var(--color-error)' }}>*</span>
+              </label>
+              <select
+                id="review-product"
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
+                required
+                aria-required="true"
+                className="w-full px-4 py-3 rounded-[10px] text-sm bg-white focus:outline-none"
+                style={{ border: '2px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+              >
+                <option value="">Select a product…</option>
+                {productList.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Star Rating */}
             <div>
               <label className="block mb-2 font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
@@ -137,22 +170,29 @@ export default function ReviewsPage() {
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
                 rows={4}
+                maxLength={500}
                 placeholder="Tell us about your experience with this product..."
                 className="w-full px-4 py-3 rounded-[10px] text-sm transition-all duration-300 bg-white focus:outline-none resize-vertical"
                 style={{ border: '2px solid var(--color-border)' }}
                 onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(184, 175, 6, 0.2)'; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
+                required
+                aria-required="true"
               />
             </div>
+
+            {submitError && (
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-error)' }} role="alert">{submitError}</p>
+            )}
 
             {/* Submit */}
             <button
               type="submit"
-              disabled={rating === 0 || !reviewText.trim()}
+              disabled={rating === 0 || !reviewText.trim() || !productId || createReview.isPending}
               className="w-full py-3.5 rounded-[10px] text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
             >
-              Submit Review
+              {createReview.isPending ? 'Submitting…' : 'Submit Review'}
             </button>
           </form>
         )}
@@ -167,15 +207,26 @@ export default function ReviewsPage() {
           className="text-xl font-bold mb-6 pb-3"
           style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}
         >
-          All Reviews ({mockReviews.length})
+          All Reviews ({reviewList.length})
         </h2>
 
+        {isLoading && (
+          <p className="py-8 text-center" style={{ color: 'var(--color-text-secondary)' }}>Loading reviews…</p>
+        )}
+
+        {!isLoading && reviewList.length === 0 && (
+          <div className="text-center py-12">
+            <StarIcon className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--color-primary)', opacity: 0.6 }} />
+            <p className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>No reviews yet. Be the first to review!</p>
+          </div>
+        )}
+
         <div className="flex flex-col">
-          {mockReviews.map((review, i) => (
+          {reviewList.map((review, i) => (
             <div
               key={review.id}
               className="flex gap-4 py-5"
-              style={{ borderBottom: i < mockReviews.length - 1 ? '1px solid #eee' : 'none' }}
+              style={{ borderBottom: i < reviewList.length - 1 ? '1px solid #eee' : 'none' }}
             >
               {/* Avatar */}
               <div
@@ -185,14 +236,14 @@ export default function ReviewsPage() {
                   color: 'white',
                 }}
               >
-                {review.avatar}
+                {review.userName?.charAt(0)?.toUpperCase() || '?'}
               </div>
 
               {/* Content */}
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{review.name}</h3>
-                  <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{review.date}</span>
+                  <h3 className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{review.userName}</h3>
+                  <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{timeAgo(review.createdAt)}</span>
                 </div>
 
                 {/* Stars */}
@@ -208,15 +259,17 @@ export default function ReviewsPage() {
                 </div>
 
                 {/* Product Tag */}
-                <span
-                  className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold mb-2"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--color-primary-dark), var(--color-text-primary))',
-                    color: 'var(--color-primary)',
-                  }}
-                >
-                  {review.product}
-                </span>
+                {review.productName && (
+                  <span
+                    className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold mb-2"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--color-primary-dark), var(--color-text-primary))',
+                      color: 'var(--color-primary)',
+                    }}
+                  >
+                    {review.productName}
+                  </span>
+                )}
 
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>
                   {review.comment}
@@ -226,14 +279,6 @@ export default function ReviewsPage() {
           ))}
         </div>
       </div>
-
-      {/* Empty State (hidden when reviews exist) */}
-      {mockReviews.length === 0 && (
-        <div className="text-center py-12">
-          <StarIcon className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--color-primary)', opacity: 0.6 }} />
-          <p className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>No reviews yet. Be the first to review!</p>
-        </div>
-      )}
     </div>
   );
 }

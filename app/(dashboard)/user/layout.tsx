@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
+import { signOut } from '@/lib/auth/signOut';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { AccessibilityControls } from '@/components/common/AccessibilityControls';
 import {
@@ -52,7 +53,8 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     if (!isAuthenticated) router.push('/login');
   }, [isAuthenticated, router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     logout();
     router.push('/');
     setConfirmLogout(false);

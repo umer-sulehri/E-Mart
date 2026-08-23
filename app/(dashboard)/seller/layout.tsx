@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
+import { signOut } from '@/lib/auth/signOut';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { AccessibilityControls } from '@/components/common/AccessibilityControls';
 import {
@@ -51,7 +52,8 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
     }
   }, [isAuthenticated, user, router]);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
+    await signOut();
     logout();
     router.push('/');
   }, [logout, router]);

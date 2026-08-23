@@ -1,43 +1,83 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
-import { ChartBarIcon, OrderIcon, ArrowRightIcon, CheckCircleIcon } from '@/components/icons';
+import {
+  useSellerEarnings,
+  useSellerPayouts,
+} from '@/hooks/useSeller';
+import {
+  ChartBarIcon, OrderIcon, ArrowRightIcon, CheckCircleIcon, WalletIcon,
+} from '@/components/icons';
 
-const MONTHLY_EARNINGS = [
-  { month: 'Jan', amount: 32000 },
-  { month: 'Feb', amount: 41000 },
-  { month: 'Mar', amount: 38000 },
-  { month: 'Apr', amount: 52000 },
-  { month: 'May', amount: 61000 },
-  { month: 'Jun', amount: 58000 },
-  { month: 'Jul', amount: 72000 },
-  { month: 'Aug', amount: 81000 },
-  { month: 'Sep', amount: 76000 },
-  { month: 'Oct', amount: 92000 },
-  { month: 'Nov', amount: 88000 },
-  { month: 'Dec', amount: 105000 },
-];
+const PAYOUT_METHOD_LABELS: Record<string, string> = {
+  bank_transfer: 'Bank Transfer',
+  stripe_connect: 'Stripe Connect',
+  jazzcash: 'JazzCash',
+};
 
-const PAYOUT_HISTORY = [
-  { id: 'p1', date: '2025-02-15', amount: 45000, status: 'paid', method: 'Bank Transfer' },
-  { id: 'p2', date: '2025-01-15', amount: 38000, status: 'paid', method: 'Bank Transfer' },
-  { id: 'p3', date: '2024-12-15', amount: 32000, status: 'paid', method: 'JazzCash' },
-  { id: 'p4', date: '2024-11-15', amount: 28000, status: 'paid', method: 'Bank Transfer' },
-  { id: 'p5', date: '2025-03-15', amount: 52000, status: 'pending', method: 'Bank Transfer' },
-];
+const PAYOUT_STATUS_STYLES: Record<string, { background: string; color: string }> = {
+  paid: { background: 'rgba(110,139,94,0.15)', color: '#6E8B5E' },
+  processing: { background: 'rgba(201,144,46,0.15)', color: '#C9902E' },
+  requested: { background: 'rgba(201,144,46,0.15)', color: '#C9902E' },
+  rejected: { background: 'rgba(182,92,75,0.15)', color: '#B65C4B' },
+};
+
+function formatMonth(monthKey: string): string {
+  const [y, mm] = monthKey.split('-');
+  const label = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(mm) - 1];
+  return mm === '01' ? `Jan '${y.slice(2)}` : label;
+}
 
 export default function SellerEarningsPage() {
   const user = useAuthStore((s) => s.user);
+  const { data: earningsData, isLoading } = useSellerEarnings();
+  const { data: payoutData, refetch } = useSellerPayouts();
 
-  const stats = useMemo(() => {
-    const totalEarnings = MONTHLY_EARNINGS.reduce((s, m) => s + m.amount, 0);
-    const thisMonth = MONTHLY_EARNINGS[MONTHLY_EARNINGS.length - 1].amount;
-    const pendingPayout = PAYOUT_HISTORY.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
-    return { totalEarnings, thisMonth, pendingPayout, ordersCompleted: 24 };
-  }, []);
+  const [payoutAmount, setPayoutAmount] = useState('');
+  const [payoutMethod, setPayoutMethod] = useState<'bank_transfer' | 'stripe_connect' | 'jazzcash'>('bank_transfer');
+  const [payoutMessage, setPayoutMessage] = useState('');
+  const [payoutError, setPayoutError] = useState('');
+  const [requesting, setRequesting] = useState(false);
 
-  const maxAmount = Math.max(...MONTHLY_EARNINGS.map(m => m.amount));
+  const monthly = earningsData?.monthly ?? [];
+  const maxAmount = Math.max(...monthly.map((m) => m.amount), 1);
+  const thisMonth = monthly.length > 0 ? monthly[monthly.length - 1].amount : 0;
+  const summary = payoutData?.summary;
+  const payouts = payoutData?.payouts ?? [];
+
+  const handleRequestPayout = async () => {
+    setPayoutError('');
+    setPayoutMessage('');
+    const amount = Number(payoutAmount);
+    if (!(amount > 0)) {
+      setPayoutError('Enter a payout amount greater than zero.');
+      return;
+    }
+    if (summary && amount > summary.availableForPayout) {
+      setPayoutError(`Amount exceeds your available balance (Rs ${summary.availableForPayout.toLocaleString()}).`);
+      return;
+    }
+    setRequesting(true);
+    try {
+      const res = await fetch('/api/v1/seller/payout/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, method: payoutMethod }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Payout request failed.');
+      }
+      setPayoutMessage(`Payout of Rs ${amount.toLocaleString()} requested successfully.`);
+      setPayoutAmount('');
+      void refetch();
+    } catch (e) {
+      setPayoutError(e instanceof Error ? e.message : 'Payout request failed.');
+    } finally {
+      setRequesting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -57,10 +97,10 @@ export default function SellerEarningsPage() {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: ArrowRightIcon, label: 'Total Earnings', value: `Rs ${stats.totalEarnings.toLocaleString()}`, color: 'var(--color-primary)' },
-          { icon: ChartBarIcon, label: 'This Month', value: `Rs ${stats.thisMonth.toLocaleString()}`, color: '#C97B5A' },
-          { icon: OrderIcon, label: 'Pending Payouts', value: `Rs ${stats.pendingPayout.toLocaleString()}`, color: '#C9902E' },
-          { icon: CheckCircleIcon, label: 'Orders Completed', value: stats.ordersCompleted, color: '#6E8B5E' },
+          { icon: ArrowRightIcon, label: 'Gross Earnings', value: `Rs ${(earningsData?.totalEarnings ?? 0).toLocaleString()}`, color: 'var(--color-primary)' },
+          { icon: ChartBarIcon, label: 'This Month', value: `Rs ${thisMonth.toLocaleString()}`, color: '#C97B5A' },
+          { icon: OrderIcon, label: 'Net (after 10% fee)', value: summary ? `Rs ${summary.netEarnings.toLocaleString()}` : '—', color: '#C9902E' },
+          { icon: CheckCircleIcon, label: 'Available for Payout', value: summary ? `Rs ${summary.availableForPayout.toLocaleString()}` : '—', color: '#6E8B5E' },
         ].map(stat => (
           <div key={stat.label} className="rounded-[14px] p-5 transition-all duration-300 hover:-translate-y-1" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center gap-3">
@@ -68,7 +108,7 @@ export default function SellerEarningsPage() {
                 <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
               </div>
               <div>
-                <p className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>{stat.value}</p>
+                <p className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>{isLoading ? '…' : stat.value}</p>
                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{stat.label}</p>
               </div>
             </div>
@@ -78,68 +118,159 @@ export default function SellerEarningsPage() {
 
       {/* Monthly Earnings Chart */}
       <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
-        <h3 className="font-bold mb-4 pb-3" style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}>Monthly Earnings</h3>
-        <div className="flex items-end gap-1.5 h-48">
-          {MONTHLY_EARNINGS.map((item) => (
-            <div key={item.month} className="flex-1 flex flex-col items-center gap-1 group relative">
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 px-2 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap shadow-lg" style={{ background: 'var(--color-text-primary)', color: 'var(--color-text-inverse)' }}>
-                Rs {item.amount.toLocaleString()}
+        <h3 className="font-bold mb-4 pb-3" style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}>Monthly Earnings (last 12 months)</h3>
+        {monthly.length === 0 ? (
+          <p className="py-10 text-center text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            No sales data yet. Your monthly earnings will chart here once orders come in.
+          </p>
+        ) : (
+          <div className="flex items-end gap-1.5 h-48">
+            {monthly.map((item) => (
+              <div key={item.month} className="flex-1 flex flex-col items-center gap-1 group relative">
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 px-2 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap shadow-lg" style={{ background: 'var(--color-text-primary)', color: 'var(--color-text-inverse)' }}>
+                  Rs {item.amount.toLocaleString()}
+                </div>
+                <div
+                  className="w-full rounded-t-md transition-all duration-500"
+                  style={{
+                    height: `${Math.max((item.amount / maxAmount) * 100, item.amount > 0 ? 4 : 1)}%`,
+                    background: `linear-gradient(180deg, var(--color-primary), var(--color-primary-dark))`,
+                  }}
+                />
+                <span className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>{formatMonth(item.month)}</span>
               </div>
-              <div
-                className="w-full rounded-t-md transition-all duration-500"
-                style={{
-                  height: `${(item.amount / maxAmount) * 100}%`,
-                  background: `linear-gradient(180deg, var(--color-primary), var(--color-primary-dark))`,
-                }}
-              />
-              <span className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>{item.month}</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Request Payout */}
+      <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
+        <h3 className="font-bold mb-4 pb-3" style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}>Request a Payout</h3>
+        {summary && (
+          <p className="mb-4 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            Available balance: <strong style={{ color: 'var(--color-text-primary)' }}>Rs {summary.availableForPayout.toLocaleString()}</strong> · Minimum payout Rs 5,000 · Commission withheld: Rs {summary.commission.toLocaleString()}
+          </p>
+        )}
+        <div className="flex flex-wrap gap-3 items-end">
+          <div>
+            <label className="block mb-1.5 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Amount (Rs)</label>
+            <input
+              type="number"
+              min="0"
+              value={payoutAmount}
+              onChange={(e) => setPayoutAmount(e.target.value)}
+              placeholder="e.g. 10000"
+              className="px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 w-40"
+              style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+              aria-label="Payout amount"
+            />
+          </div>
+          <div>
+            <label className="block mb-1.5 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Method</label>
+            <select
+              value={payoutMethod}
+              onChange={(e) => setPayoutMethod(e.target.value as typeof payoutMethod)}
+              className="px-4 py-3 rounded-xl text-sm focus:outline-none"
+              style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+              aria-label="Payout method"
+            >
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="jazzcash">JazzCash</option>
+              <option value="stripe_connect">Stripe Connect</option>
+            </select>
+          </div>
+          <button
+            onClick={handleRequestPayout}
+            disabled={requesting}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
+          >
+            <WalletIcon className="w-4 h-4" /> {requesting ? 'Requesting…' : 'Request Payout'}
+          </button>
+        </div>
+        {payoutMessage && (
+          <p className="mt-3 text-sm font-medium px-4 py-2 rounded-xl inline-block" style={{ background: 'rgba(110,139,94,0.15)', color: '#6E8B5E' }}>{payoutMessage}</p>
+        )}
+        {payoutError && (
+          <p className="mt-3 text-sm font-medium px-4 py-2 rounded-xl inline-block" style={{ background: 'rgba(182,92,75,0.12)', color: 'var(--color-error)' }}>{payoutError}</p>
+        )}
+      </div>
+
+      {/* Top Earning Products */}
+      {(earningsData?.products?.length ?? 0) > 0 && (
+        <div className="rounded-[16px] overflow-hidden" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
+          <div className="p-5" style={{ borderBottom: '2px solid var(--color-primary)' }}>
+            <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>Top Earning Products</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr>
+                  {['Product', 'Units Sold', 'Earnings'].map(h => (
+                    <th key={h} className="text-left p-4 font-semibold text-sm" style={{ background: 'var(--color-primary-dark)', color: 'var(--color-primary)' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[...earningsData!.products].sort((a, b) => b.earnings - a.earnings).map(product => (
+                  <tr key={product.name} className="transition-colors hover:bg-white/50" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <td className="p-4 font-medium" style={{ color: 'var(--color-text-primary)' }}>{product.name}</td>
+                    <td className="p-4" style={{ color: 'var(--color-text-secondary)' }}>{product.quantity}</td>
+                    <td className="p-4 font-semibold" style={{ color: 'var(--color-text-primary)' }}>Rs {product.earnings.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Payout History */}
       <div className="rounded-[16px] overflow-hidden" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <div className="p-5" style={{ borderBottom: '2px solid var(--color-primary)' }}>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>Payout History</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr>
-                {['Date', 'Amount', 'Status', 'Method'].map(h => (
-                  <th key={h} className="text-left p-4 font-semibold text-sm" style={{ background: 'var(--color-primary-dark)', color: 'var(--color-primary)' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {PAYOUT_HISTORY.map(payout => (
-                <tr key={payout.id} className="transition-colors hover:bg-white/50" style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <td className="p-4 whitespace-nowrap" style={{ color: 'var(--color-text-secondary)' }}>
-                    {new Date(payout.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                  </td>
-                  <td className="p-4 font-semibold whitespace-nowrap" style={{ color: 'var(--color-text-primary)' }}>
-                    Rs {payout.amount.toLocaleString()}
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                      style={{
-                        background: payout.status === 'paid' ? 'rgba(110,139,94,0.15)' : 'rgba(201,144,46,0.15)',
-                        color: payout.status === 'paid' ? '#6E8B5E' : '#C9902E',
-                      }}
-                    >
-                      {payout.status.charAt(0).toUpperCase() + payout.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="p-4" style={{ color: 'var(--color-text-secondary)' }}>
-                    {payout.method}
-                  </td>
+        {payouts.length === 0 ? (
+          <p className="p-10 text-center text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            No payouts yet. Requests you submit will appear here with their status.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr>
+                  {['Date', 'Amount', 'Status', 'Method'].map(h => (
+                    <th key={h} className="text-left p-4 font-semibold text-sm" style={{ background: 'var(--color-primary-dark)', color: 'var(--color-primary)' }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {payouts.map(payout => (
+                  <tr key={payout.id} className="transition-colors hover:bg-white/50" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <td className="p-4 whitespace-nowrap" style={{ color: 'var(--color-text-secondary)' }}>
+                      {new Date(payout.requestedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </td>
+                    <td className="p-4 font-semibold whitespace-nowrap" style={{ color: 'var(--color-text-primary)' }}>
+                      Rs {payout.amount.toLocaleString()}
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className="px-2.5 py-1 rounded-full text-xs font-semibold capitalize"
+                        style={PAYOUT_STATUS_STYLES[payout.status] ?? PAYOUT_STATUS_STYLES.requested}
+                      >
+                        {payout.status}
+                      </span>
+                    </td>
+                    <td className="p-4" style={{ color: 'var(--color-text-secondary)' }}>
+                      {PAYOUT_METHOD_LABELS[payout.method] ?? payout.method}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

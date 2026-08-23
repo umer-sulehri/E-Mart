@@ -65,7 +65,8 @@ function ProductsContent() {
     sort,
     minPrice: priceRange.min,
     maxPrice: priceRange.max,
-  }), [selectedCategory, searchQuery, sort, priceRange]);
+    minRating: minRating > 0 ? minRating : undefined,
+  }), [selectedCategory, searchQuery, sort, priceRange, minRating]);
 
   const { data, isLoading, isError, error } = useProducts(filters, page, ITEMS_PER_PAGE);
   const { data: categories = [] } = useCategories();

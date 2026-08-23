@@ -8,7 +8,6 @@ import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useBanners } from '@/hooks/useBanners';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
-import { useCartStore } from '@/lib/store/cartStore';
 import { ProductCard } from '@/components/site/ProductCard';
 import type { Banner, Product } from '@/lib/types';
 
@@ -37,21 +36,46 @@ function ArrowRightSvg() {
   );
 }
 
-function ArrowLeftSvg() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" style={{ transform: 'rotate(180deg)' }}>
-      <path fill="currentColor" d="M14.7 5.3a1 1 0 0 0-1.4 1.4l4.3 4.3H4a1 1 0 0 0 0 2h13.6l-4.3 4.3a1 1 0 1 0 1.4 1.4l6-6a1 1 0 0 0 0-1.4Z" />
-    </svg>
-  );
-}
-
 const categoryIcons: Record<string, string> = {
   default: '/images/icon-vegetables-broccoli.png',
 };
 
 export default function HomePage() {
   const [trendingTab, setTrendingTab] = useState<string>('all');
-  const addItem = useCartStore((s) => s.addItem);
+  const [newsletterName, setNewsletterName] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterState, setNewsletterState] = useState<'idle' | 'loading' | 'done'>('idle');
+  const [newsletterError, setNewsletterError] = useState('');
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNewsletterError('');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newsletterEmail.trim())) {
+      setNewsletterError('Please enter a valid email address.');
+      return;
+    }
+    setNewsletterState('loading');
+    try {
+      const res = await fetch('/api/v1/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: newsletterEmail.trim(),
+          ...(newsletterName.trim() ? { name: newsletterName.trim() } : {}),
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Subscription failed. Please try again.');
+      }
+      setNewsletterState('done');
+      setNewsletterEmail('');
+      setNewsletterName('');
+    } catch (err) {
+      setNewsletterState('idle');
+      setNewsletterError(err instanceof Error ? err.message : 'Subscription failed. Please try again.');
+    }
+  };
 
   const { data: allProductsData } = useProducts({}, 1, 20);
   const { data: newestData } = useProducts({ sort: 'newest' }, 1, 12);
@@ -328,25 +352,52 @@ export default function HomePage() {
                   <p>Subscribe to the E-Mart newsletter for exclusive deals, fresh arrivals and seasonal offers delivered straight to your inbox.</p>
                 </div>
                 <div className="col-md-6 p-5">
-                  <form onSubmit={(e) => e.preventDefault()}>
-                    <div className="mb-3">
-                      <label htmlFor="nl-name" className="form-label">Name</label>
-                      <input type="text" className="form-control form-control-lg" name="name" id="nl-name" placeholder="Name" />
+                  {newsletterState === 'done' ? (
+                    <div className="p-4 rounded-4 h-100 d-flex align-items-center" style={{ background: 'rgba(255,255,255,0.85)' }}>
+                      <div>
+                        <h3 className="section-title mb-2">You&apos;re subscribed! 🎉</h3>
+                        <p className="mb-0">Keep an eye on your inbox for exclusive deals and fresh arrivals.</p>
+                      </div>
                     </div>
-                    <div className="mb-3">
-                      <label htmlFor="nl-email" className="form-label">Email</label>
-                      <input type="email" className="form-control form-control-lg" name="email" id="nl-email" placeholder="abc@mail.com" />
-                    </div>
-                    <div className="form-check form-check-inline mb-3">
-                      <label className="form-check-label" htmlFor="subscribe">
-                        <input className="form-check-input" type="checkbox" id="subscribe" value="subscribe" />
-                        Subscribe to the newsletter
-                      </label>
-                    </div>
-                    <div className="d-grid gap-2">
-                      <button type="submit" className="btn btn-dark btn-lg">Submit</button>
-                    </div>
-                  </form>
+                  ) : (
+                    <form onSubmit={handleNewsletterSubmit}>
+                      <div className="mb-3">
+                        <label htmlFor="nl-name" className="form-label">Name</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-lg"
+                          name="name"
+                          id="nl-name"
+                          placeholder="Name"
+                          value={newsletterName}
+                          onChange={(e) => setNewsletterName(e.target.value)}
+                          maxLength={100}
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="nl-email" className="form-label">Email *</label>
+                        <input
+                          type="email"
+                          className="form-control form-control-lg"
+                          name="email"
+                          id="nl-email"
+                          placeholder="abc@mail.com"
+                          value={newsletterEmail}
+                          onChange={(e) => setNewsletterEmail(e.target.value)}
+                          required
+                          aria-required="true"
+                        />
+                      </div>
+                      <div className="d-grid gap-2">
+                        <button type="submit" className="btn btn-dark btn-lg" disabled={newsletterState === 'loading'}>
+                          {newsletterState === 'loading' ? 'Subscribing…' : 'Subscribe'}
+                        </button>
+                      </div>
+                      {newsletterError && (
+                        <p className="mt-3 mb-0 text-danger fw-semibold" role="alert">{newsletterError}</p>
+                      )}
+                    </form>
+                  )}
                 </div>
               </div>
             </div>

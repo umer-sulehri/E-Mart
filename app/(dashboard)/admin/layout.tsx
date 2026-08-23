@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
+import { signOut } from '@/lib/auth/signOut';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { AccessibilityControls } from '@/components/common/AccessibilityControls';
 import {
@@ -36,6 +37,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 function getPageTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
+  if (pathname === '/admin/products/new') return 'Add Product';
   if (pathname.startsWith('/admin/products/')) return 'Edit Product';
   return 'Admin';
 }
@@ -58,7 +60,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [isAuthenticated, user, router]);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
+    await signOut();
     logout();
     router.push('/');
   }, [logout, router]);

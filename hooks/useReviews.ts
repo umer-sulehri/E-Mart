@@ -29,8 +29,11 @@ export function useCreateReview(productSlug: string) {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['reviews', productSlug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', productSlug] });
+      queryClient.invalidateQueries({ queryKey: ['recentReviews'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
   });
 }
 
@@ -39,6 +42,47 @@ export function useUserReviews() {
     queryKey: ['userReviews'],
     queryFn: () => apiFetch<{ reviews: ReviewWithProduct[] }>('/auth/reviews'),
     select: (data) => data.reviews,
+  });
+}
+
+export type RecentReview = Review & { productName?: string; productSlug?: string };
+
+export function useRecentReviews(limit = 20) {
+  return useQuery({
+    queryKey: ['recentReviews', limit],
+    queryFn: () => apiFetch<{ reviews: RecentReview[] }>(`/reviews?limit=${limit}`),
+    select: (data) => data.reviews,
+  });
+}
+
+export function useUpdateReview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, rating, comment }: { id: string; rating?: number; comment?: string }) =>
+      apiFetch<Review>(`/reviews/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ ...(rating !== undefined ? { rating } : {}), ...(comment !== undefined ? { comment } : {}) }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userReviews'] });
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['recentReviews'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
+export function useDeleteReview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ success: boolean }>(`/reviews/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userReviews'] });
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['recentReviews'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
   });
 }
 

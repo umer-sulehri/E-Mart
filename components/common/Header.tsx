@@ -34,7 +34,6 @@ export function Header() {
   const hydrated = useHydrated();
   const router = useRouter();
   const items = useCartStore((s) => s.items);
-  const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
   const cartTotal = useCartStore((s) => s.total());
   const itemCount = useCartStore((s) => s.itemCount());

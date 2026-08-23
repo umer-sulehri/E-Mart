@@ -8,4 +8,5 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 supabase/.temp/
+Frontend template/
 

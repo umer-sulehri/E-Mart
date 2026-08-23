@@ -2,13 +2,21 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useSellerOrders } from '@/hooks/useSeller';
-import { StatusBadge } from '@/components/ui/StatusBadge';
+import { useSellerOrders, useUpdateSellerOrderStatus, type SellerOrderStatus } from '@/hooks/useSeller';
 import { SearchIcon, EyeIcon, OrderIcon } from '@/components/icons';
 
 type FilterStatus = 'all' | string;
 
 const STATUS_OPTIONS = ['all', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+
+const NEXT_STATUS_OPTIONS: Record<string, SellerOrderStatus[]> = {
+  pending: ['confirmed', 'cancelled'],
+  confirmed: ['processing', 'cancelled'],
+  processing: ['shipped', 'cancelled'],
+  shipped: ['delivered'],
+  delivered: [],
+  cancelled: [],
+};
 
 export default function SellerOrdersPage() {
   const [filter, setFilter] = useState<FilterStatus>('all');
@@ -17,6 +25,8 @@ export default function SellerOrdersPage() {
   const perPage = 10;
 
   const { data: ordersData } = useSellerOrders(currentPage, perPage);
+  const updateStatus = useUpdateSellerOrderStatus();
+  const [statusError, setStatusError] = useState('');
   const orders = useMemo(() => ordersData?.orders ?? [], [ordersData]);
 
   const filtered = useMemo(() => {
@@ -79,6 +89,13 @@ export default function SellerOrdersPage() {
         ))}
       </div>
 
+      {/* Status update error */}
+      {statusError && (
+        <div className="rounded-xl p-4 text-sm font-medium" style={{ background: 'rgba(182,92,75,0.12)', color: 'var(--color-error)' }}>
+          {statusError}
+        </div>
+      )}
+
       {/* Orders Table */}
       {filtered.length === 0 ? (
         <div className="rounded-[16px] p-12 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
@@ -136,7 +153,41 @@ export default function SellerOrdersPage() {
                       Rs {order.total.toLocaleString()}
                     </td>
                     <td className="p-4">
-                      <StatusBadge status={order.status} />
+                      {NEXT_STATUS_OPTIONS[order.status]?.length ? (
+                        <select
+                          value={order.status}
+                          disabled={updateStatus.isPending}
+                          onChange={(e) => {
+                            const next = e.target.value as SellerOrderStatus;
+                            setStatusError('');
+                            updateStatus.mutate(
+                              { id: order.id, status: next },
+                              {
+                                onError: (err) =>
+                                  setStatusError(err instanceof Error ? err.message : 'Failed to update status.'),
+                              }
+                            );
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2"
+                          style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+                          aria-label={`Update status for order ${order.orderNumber}`}
+                        >
+                          <option value={order.status}>{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</option>
+                          {NEXT_STATUS_OPTIONS[order.status].map((s) => (
+                            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span
+                          className="px-2.5 py-1 rounded-full text-xs font-semibold"
+                          style={{
+                            background: order.status === 'delivered' ? 'rgba(110,139,94,0.15)' : 'rgba(182,92,75,0.15)',
+                            color: order.status === 'delivered' ? '#6E8B5E' : '#B65C4B',
+                          }}
+                        >
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                      )}
                     </td>
                     <td className="p-4">
                       <Link

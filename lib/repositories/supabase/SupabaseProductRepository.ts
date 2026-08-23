@@ -135,6 +135,9 @@ export class SupabaseProductRepository implements ProductRepository {
       if (filters.maxPrice !== undefined) {
         query = query.lte('price', filters.maxPrice);
       }
+      if (filters.minRating !== undefined) {
+        query = query.gte('rating', filters.minRating);
+      }
       if (filters.search) {
         const term = sanitizeSearchTerm(filters.search);
         if (term) {

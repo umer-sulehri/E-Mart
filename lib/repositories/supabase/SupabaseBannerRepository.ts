@@ -127,7 +127,7 @@ export class SupabaseBannerRepository implements BannerRepository {
     if (data.sortOrder !== undefined) patch.sort_order = data.sortOrder;
     if (data.isActive !== undefined) patch.is_active = data.isActive;
 
-    let supabase = await createClient();
+    const supabase = await createClient();
     let before: Record<string, unknown> | null = null;
     try {
       const res = await supabase.from('site_banners').update(patch).eq('id', id).select().single();

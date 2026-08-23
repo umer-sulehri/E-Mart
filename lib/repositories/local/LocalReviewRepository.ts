@@ -17,6 +17,12 @@ export class LocalReviewRepository implements ReviewRepository {
     return reviews.filter((r) => productIds.includes(r.productId));
   }
 
+  findRecent(limit: number = 20): (Review & { productName?: string; productSlug?: string })[] {
+    return [...reviews]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, limit);
+  }
+
   create(data: Omit<Review, 'id' | 'createdAt'>): Review {
     const review: Review = {
       ...data,
@@ -25,6 +31,13 @@ export class LocalReviewRepository implements ReviewRepository {
     };
     reviews.push(review);
     return review;
+  }
+
+  update(id: string, userId: string, data: { rating?: number; comment?: string }): Review | null {
+    const index = reviews.findIndex((r) => r.id === id && r.userId === userId);
+    if (index === -1) return null;
+    reviews[index] = { ...reviews[index], ...data };
+    return reviews[index];
   }
 
   delete(id: string): void {

@@ -56,6 +56,27 @@ export async function GET() {
       }
     }
 
+    // Build the last 12 months earnings series from order items.
+    const monthKeys: string[] = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i -= 1) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      monthKeys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+    const monthlyMap: Record<string, number> = {};
+    for (const key of monthKeys) monthlyMap[key] = 0;
+    for (const order of sellerOrders) {
+      if (order.status === 'cancelled') continue;
+      const key = String(order.createdAt).slice(0, 7);
+      if (!(key in monthlyMap)) continue;
+      for (const item of order.items) {
+        if (sellerProductIds.has(item.productId)) {
+          monthlyMap[key] += item.price * item.quantity;
+        }
+      }
+    }
+    const monthly = monthKeys.map((key) => ({ month: key, amount: Math.round(monthlyMap[key]) }));
+
     return NextResponse.json(
       {
         totalEarnings,
@@ -64,6 +85,7 @@ export async function GET() {
         totalOrders: sellerOrders.length,
         deliveredOrders: deliveredOrders.length,
         products: Object.values(earningsByProduct),
+        monthly,
       },
       { status: 200 }
     );

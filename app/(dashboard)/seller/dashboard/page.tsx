@@ -1,21 +1,55 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/authStore';
-import { useSellerProducts, useSellerEarnings } from '@/hooks/useSeller';
-import { ProductIcon, OrderIcon, StarIcon, PlusIcon, EditIcon, TrashIcon, EyeIcon, ArrowRightIcon } from '@/components/icons';
+import {
+  useSellerProducts,
+  useSellerEarnings,
+  useDeleteSellerProduct,
+  useSellerReviews,
+} from '@/hooks/useSeller';
+import { ProductIcon, OrderIcon, StarIcon, PlusIcon, EditIcon, TrashIcon, EyeIcon, ArrowRightIcon, CheckCircleIcon } from '@/components/icons';
 
 export default function SellerDashboardPage() {
   const user = useAuthStore((s) => s.user);
-  const { data: productsData } = useSellerProducts(1, 8);
+  const { data: productsData } = useSellerProducts(1, 50);
   const { data: earningsData } = useSellerEarnings();
+  const { data: reviewsData } = useSellerReviews(3);
+  const deleteProduct = useDeleteSellerProduct();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+
   const sellerProducts = productsData?.products ?? [];
-  const totalOrders = earningsData?.monthlyEarnings != null ? Math.round(earningsData.monthlyEarnings / 100) : 0;
+  const totalOrders = earningsData?.totalOrders ?? 0;
   const totalRevenue = earningsData?.totalEarnings ?? 0;
   const avgRating = sellerProducts.length > 0 ? (sellerProducts.reduce((sum, p) => sum + p.rating, 0) / sellerProducts.length) : 0;
 
-  const monthlySales = [3200, 4100, 3800, 5200, 6100, 5800, 7200, 8100, 7600, 9200, 8800, 10500];
-  const maxSales = Math.max(...monthlySales);
+  // Monthly earnings series from the API (falls back to flat line when empty).
+  const monthlySales = earningsData?.monthly?.length
+    ? earningsData.monthly.map((m) => m.amount)
+    : Array.from({ length: 12 }, () => 0);
+  const monthLabels = earningsData?.monthly?.length
+    ? earningsData.monthly.map((m) => {
+        const [y, mm] = m.month.split('-');
+        return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(mm) - 1] + (mm === '01' ? ` '${y.slice(2)}` : '');
+      })
+    : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const maxSales = Math.max(...monthlySales, 1);
+
+  const recentReviews = reviewsData?.reviews ?? [];
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeleteError('');
+    try {
+      await deleteProduct.mutateAsync(confirmDeleteId);
+      setConfirmDeleteId(null);
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : 'Failed to delete product.');
+      setConfirmDeleteId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -59,8 +93,8 @@ export default function SellerDashboardPage() {
         <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
           <h3 className="font-bold mb-4 pb-3" style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}>Monthly Sales</h3>
           <div className="flex items-end gap-1.5 h-40">
-            {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
-              <div key={m} className="flex-1 flex flex-col items-center gap-0.5">
+            {monthLabels.map((m, i) => (
+              <div key={`${m}-${i}`} className="flex-1 flex flex-col items-center gap-0.5">
                 <div className="w-full rounded-t-md transition-all duration-500" style={{ height: `${(monthlySales[i]/maxSales)*100}%`, background: `linear-gradient(180deg, var(--color-primary), var(--color-primary-dark))` }} />
                 <span className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>{m}</span>
               </div>
@@ -141,7 +175,12 @@ export default function SellerDashboardPage() {
                       <Link href={`/seller/products/${product.id}`} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60">
                         <EditIcon className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                       </Link>
-                      <button className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60">
+                      <button
+                        onClick={() => setConfirmDeleteId(product.id)}
+                        disabled={deleteProduct.isPending}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60"
+                        aria-label={`Delete ${product.name}`}
+                      >
                         <TrashIcon className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
                       </button>
                     </div>
@@ -160,20 +199,21 @@ export default function SellerDashboardPage() {
           <Link href="/seller/reviews" className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>View All →</Link>
         </div>
         <div className="space-y-3">
-          {[
-            { name: 'Ahmed', product: 'Wireless Mouse', rating: 5, comment: 'Great product! Works perfectly.', date: '2 days ago' },
-            { name: 'Sara', product: 'Notebook Set', rating: 4, comment: 'Good quality paper, fast delivery.', date: '5 days ago' },
-            { name: 'Ali', product: 'Protein Bar', rating: 5, comment: 'Amazing taste, will order again.', date: '1 week ago' },
-          ].map((review, i) => (
-            <div key={i} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', borderLeft: '4px solid var(--color-primary)' }}>
+          {recentReviews.length === 0 && (
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>No reviews yet. Reviews on your products will appear here.</p>
+          )}
+          {recentReviews.map((review) => (
+            <div key={review.id} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', borderLeft: '4px solid var(--color-primary)' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
-                    {review.name.charAt(0)}
+                    {review.userName?.charAt(0)?.toUpperCase() || '?'}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{review.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{review.date}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{review.userName}</p>
+                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                      {new Date(review.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-0.5">
@@ -182,14 +222,41 @@ export default function SellerDashboardPage() {
                   ))}
                 </div>
               </div>
-              <p className="text-xs mb-1" style={{ color: 'var(--color-text-secondary)' }}>
-                Product: <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(122,155,118,0.12)', color: 'var(--color-primary)' }}>{review.product}</span>
-              </p>
+              {review.productName && (
+                <p className="text-xs mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  Product: <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(122,155,118,0.12)', color: 'var(--color-primary)' }}>{review.productName}</span>
+                </p>
+              )}
               <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{review.comment}</p>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Delete confirmation modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50" onClick={() => setConfirmDeleteId(null)}>
+          <div className="w-full max-w-sm rounded-[16px] p-6 text-center shadow-xl" style={{ background: 'var(--color-bg)' }} onClick={(e) => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(182,92,75,0.12)' }}>
+              <TrashIcon className="w-8 h-8" style={{ color: 'var(--color-error)' }} />
+            </div>
+            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Delete product?</h3>
+            <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>This will permanently remove the product from your store.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDeleteId(null)} className="flex-1 py-3 rounded-xl text-sm font-semibold" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>Cancel</button>
+              <button onClick={handleConfirmDelete} disabled={deleteProduct.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'var(--color-error)' }}>
+                {deleteProduct.isPending ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteError && (
+        <div className="fixed bottom-6 right-6 z-[70] rounded-xl p-4 text-sm font-medium shadow-lg flex items-center gap-2" style={{ background: 'rgba(182,92,75,0.12)', color: 'var(--color-error)', border: '1px solid var(--color-error)' }}>
+          <CheckCircleIcon className="w-4 h-4" /> {deleteError}
+        </div>
+      )}
     </div>
   );
 }

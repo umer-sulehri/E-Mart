@@ -84,6 +84,57 @@ export class SupabaseReviewRepository implements ReviewRepository {
     }));
   }
 
+  async findRecent(limit: number = 20): Promise<(Review & { productName?: string; productSlug?: string })[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('product_reviews')
+      .select('*, profiles:user_id(name), products(name, slug)')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []).map((row) => ({
+      id: row.id as string,
+      userId: row.user_id as string,
+      userName: (row.profiles as { name: string } | null)?.name ?? 'Anonymous',
+      productId: row.product_id as string,
+      productName: (row.products as { name: string } | null)?.name,
+      productSlug: (row.products as { slug: string } | null)?.slug,
+      rating: row.rating as number,
+      comment: (row.comment as string) ?? '',
+      createdAt: row.created_at as string,
+    }));
+  }
+
+  async update(
+    id: string,
+    userId: string,
+    data: { rating?: number; comment?: string }
+  ): Promise<Review | null> {
+    const supabase = await createClient();
+    const patch: Record<string, unknown> = {};
+    if (data.rating !== undefined) patch.rating = data.rating;
+    if (data.comment !== undefined) patch.comment = data.comment;
+    if (Object.keys(patch).length === 0) return null;
+
+    const { data: row, error } = await supabase
+      .from('product_reviews')
+      .update(patch)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select('*, profiles:user_id(name)')
+      .single();
+    if (error) return null;
+    return {
+      id: row.id as string,
+      userId: row.user_id as string,
+      userName: (row.profiles as { name: string } | null)?.name ?? 'Anonymous',
+      productId: row.product_id as string,
+      rating: row.rating as number,
+      comment: (row.comment as string) ?? '',
+      createdAt: row.created_at as string,
+    };
+  }
+
   async delete(id: string): Promise<void> {
     const supabase = await createClient();
     const { error } = await supabase
