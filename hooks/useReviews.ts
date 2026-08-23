@@ -2,8 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/client';
 import { Review } from '@/lib/types';
 
-interface ReviewsResponse {
+export interface ProductReviewsResponse {
   reviews: Review[];
+  /** True when the signed-in user has purchased this product (server-verified). */
+  canReview: boolean;
 }
 
 export interface ReviewWithProduct extends Review {
@@ -15,8 +17,7 @@ export interface ReviewWithProduct extends Review {
 export function useProductReviews(productSlug: string) {
   return useQuery({
     queryKey: ['reviews', productSlug],
-    queryFn: () => apiFetch<ReviewsResponse>(`/products/${productSlug}/reviews`),
-    select: (data) => data.reviews,
+    queryFn: () => apiFetch<ProductReviewsResponse>(`/products/${productSlug}/reviews`),
     enabled: !!productSlug,
   });
 }

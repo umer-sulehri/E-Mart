@@ -2,19 +2,64 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api/client';
 import { Product } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
-import { StarIcon, ShoppingCartIcon, HeartIcon, TruckIcon, CheckCircleIcon } from '@/components/icons';
+import {
+  StarIcon,
+  ShoppingCartIcon,
+  HeartIcon,
+  TruckIcon,
+  CheckCircleIcon,
+  ShareIcon,
+  StoreIcon,
+  ArrowRightIcon,
+} from '@/components/icons';
 import { useCartStore } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
+import { useToast } from '@/components/ui/Toast';
+
+interface SellerOption {
+  id: string;
+  name: string;
+  storeName?: string;
+}
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
   const toggleWishlist = useWishlistStore((s) => s.toggleItem);
   const isWishlisted = useWishlistStore((s) => s.hasItem(product.id));
+  const toast = useToast();
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+
+  const { data: seller } = useQuery({
+    queryKey: ['sellers'],
+    queryFn: () => apiFetch<{ sellers: SellerOption[] }>('/sellers'),
+    select: (d) => d.sellers.find((s) => s.id === product.sellerId),
+    enabled: !!product.sellerId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const handleShare = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product.name, text: product.description.slice(0, 140), url });
+        return;
+      } catch {
+        // User dismissed the share sheet — fall through to clipboard.
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.showToast('Product link copied to clipboard.', 'success');
+    } catch {
+      toast.showToast('Could not copy the link.', 'error');
+    }
+  };
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) addItem(product);
@@ -141,7 +186,36 @@ export function ProductDetailClient({ product }: { product: Product }) {
               }`}>
               <HeartIcon className="w-5 h-5" filled={isWishlisted} />
             </button>
+            <button onClick={handleShare}
+              aria-label="Share this product"
+              className="w-12 h-12 flex items-center justify-center rounded-[10px] border-2 border-border text-text-secondary hover:border-primary/50 hover:text-primary transition-all">
+              <ShareIcon className="w-5 h-5" />
+            </button>
           </div>
+
+          {seller && (
+            <div className="bg-surface border border-border rounded-[12px] p-4 flex items-center justify-between gap-3 mt-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary-dark flex items-center justify-center flex-shrink-0">
+                  <StoreIcon className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-text-primary truncate">{seller.storeName || seller.name}</p>
+                  <p className="text-xs text-text-secondary inline-flex items-center gap-1">
+                    Verified Seller
+                    <CheckCircleIcon className="w-3.5 h-3.5 text-success" />
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={`/products?seller=${seller.id}`}
+                className="inline-flex items-center gap-1 text-sm font-semibold text-primary-dark hover:underline whitespace-nowrap"
+              >
+                View products
+                <ArrowRightIcon className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
 
           <div className="bg-surface border border-border rounded-[12px] p-4 flex flex-col gap-3 mt-2">
             <div className="flex items-center gap-3">

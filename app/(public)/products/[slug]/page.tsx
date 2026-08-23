@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useProduct, useProducts } from '@/hooks/useProducts';
 import { useProductReviews, useCreateReview } from '@/hooks/useReviews';
-import { StarIcon } from '@/components/icons';
+import { StarIcon, CheckCircleIcon } from '@/components/icons';
 import { ProductDetailClient } from '@/components/product/ProductDetailClient';
 import { useCartStore } from '@/lib/store/cartStore';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -23,7 +23,9 @@ function ProductDetailPageInner({ params }: { params: Promise<{ slug: string }> 
 
   const { data: product, isLoading, isError } = useProduct(slug);
   const { data: productsData } = useProducts({ category: product?.categoryId }, 1, 8);
-  const { data: reviews } = useProductReviews(slug);
+  const { data: reviewsData } = useProductReviews(slug);
+  const reviews = reviewsData?.reviews ?? [];
+  const canReview = reviewsData?.canReview ?? false;
   const createReview = useCreateReview(slug);
   const { isAuthenticated } = useAuthStore();
 
@@ -105,6 +107,11 @@ function ProductDetailPageInner({ params }: { params: Promise<{ slug: string }> 
           {!isAuthenticated ? (
             <p className="text-sm text-text-secondary">
               Please <Link href="/login" className="font-semibold text-primary-dark hover:underline">log in</Link> to submit a review.
+            </p>
+          ) : !canReview ? (
+            <p className="text-sm text-text-secondary">
+              Only customers who have purchased this product can leave a review. Reviews are verified
+              against your order history to keep feedback authentic.
             </p>
           ) : (
             <form onSubmit={handleSubmitReview} className="space-y-4">
@@ -189,7 +196,15 @@ function ProductDetailPageInner({ params }: { params: Promise<{ slug: string }> 
                       {review.userName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-text-primary">{review.userName}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-text-primary">{review.userName}</p>
+                        {review.verified && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full">
+                            <CheckCircleIcon className="w-3 h-3" />
+                            Verified Purchase
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1">
                         {[1, 2, 3, 4, 5].map((s) => (
                           <StarIcon key={s} className="w-3 h-3 text-warning" filled={s <= review.rating} />

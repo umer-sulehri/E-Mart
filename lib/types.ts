@@ -87,6 +87,8 @@ export interface Review {
   rating: number;
   comment: string;
   createdAt: string;
+  /** True when the reviewer has an order containing this product. */
+  verified?: boolean;
 }
 
 export interface ProductFilters {

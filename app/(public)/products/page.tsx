@@ -64,6 +64,7 @@ function ProductsContent() {
     setSyncedParams(searchParams);
     setSelectedCategory(searchParams.get('category') || null);
     setSearchQuery(searchParams.get('search') || '');
+    setSellerId(searchParams.get('seller') || '');
   }
 
   const filters: ProductFilters = useMemo(() => ({

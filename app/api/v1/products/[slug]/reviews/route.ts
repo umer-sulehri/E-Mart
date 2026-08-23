@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProductRepository, ReviewRepository } from '@/lib/repositories/index';
 import { getSession } from '@/lib/auth/getSession';
+import { getPurchaserIds } from '@/lib/reviews/purchaseVerification';
 
 export async function GET(
   _request: NextRequest,
@@ -11,8 +12,20 @@ export async function GET(
   if (!product) {
     return NextResponse.json({ error: 'Product not found' }, { status: 404 });
   }
-  const reviews = await ReviewRepository.findByProduct(product.id);
-  return NextResponse.json({ reviews }, { status: 200 });
+
+  const [reviews, purchaserIds, user] = await Promise.all([
+    ReviewRepository.findByProduct(product.id),
+    getPurchaserIds(product.id),
+    getSession().catch(() => null),
+  ]);
+
+  return NextResponse.json(
+    {
+      reviews: reviews.map((review) => ({ ...review, verified: purchaserIds.has(review.userId) })),
+      canReview: !!user && purchaserIds.has(user.id),
+    },
+    { status: 200 },
+  );
 }
 
 export async function POST(
@@ -28,6 +41,14 @@ export async function POST(
   const product = await ProductRepository.findBySlug(slug);
   if (!product) {
     return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+  }
+
+  const purchaserIds = await getPurchaserIds(product.id);
+  if (!purchaserIds.has(user.id)) {
+    return NextResponse.json(
+      { error: 'Only customers who have purchased this product can review it.' },
+      { status: 403 },
+    );
   }
 
   const body = await request.json();
@@ -47,5 +68,5 @@ export async function POST(
     comment: body.comment,
   });
 
-  return NextResponse.json({ review }, { status: 201 });
+  return NextResponse.json({ review: { ...review, verified: true } }, { status: 201 });
 }
