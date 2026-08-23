@@ -39,7 +39,18 @@ export function ProductCard({ product }: { product: Product }) {
       </button>
       <figure>
         <Link href={`/products/${product.slug}`} title={product.name}>
-          <img src={product.images[0] || '/images/product-thumb-1.png'} className="tab-image" alt={product.name} />
+          <img
+            src={product.images[0] || '/images/product-thumb-1.png'}
+            className="tab-image"
+            alt={product.name}
+            loading="lazy"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (img.dataset.fallback) return;
+              img.dataset.fallback = '1';
+              img.src = '/images/product-thumb-1.png';
+            }}
+          />
         </Link>
       </figure>
       <h3>{product.name}</h3>

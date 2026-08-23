@@ -36,10 +36,6 @@ function ArrowRightSvg() {
   );
 }
 
-const categoryIcons: Record<string, string> = {
-  default: '/images/icon-vegetables-broccoli.png',
-};
-
 export default function HomePage() {
   const [trendingTab, setTrendingTab] = useState<string>('all');
   const [newsletterName, setNewsletterName] = useState('');
@@ -138,7 +134,6 @@ export default function HomePage() {
                         </div>
                       </SwiperSlide>
                     ))}
-                    <div className="swiper-pagination" />
                   </Swiper>
                 </div>
 
@@ -194,7 +189,7 @@ export default function HomePage() {
             <div className="col-md-12 d-flex flex-wrap gap-4 justify-content-start justify-content-lg-between">
               {categories.map((category) => (
                 <Link key={category.id} href={`/categories/${category.slug}`} className="nav-link category-item">
-                  <img src={categoryIcons[category.slug] ?? categoryIcons.default} alt={category.name} />
+                  <span className="category-icon" role="img" aria-label={category.name}>{category.icon}</span>
                   <h3 className="category-title">{category.name}</h3>
                 </Link>
               ))}
@@ -222,7 +217,18 @@ export default function HomePage() {
                 <div className="card mb-3 p-3 rounded-4 shadow border-0 h-100">
                   <div className="row g-0 align-items-center">
                     <div className="col-md-4">
-                      <img src={product.images[0] || '/images/product-thumb-11.jpg'} className="img-fluid rounded" alt={product.name} />
+                      <img
+                        src={product.images[0] || '/images/product-thumb-11.jpg'}
+                        className="img-fluid rounded"
+                        alt={product.name}
+                        loading="lazy"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          if (img.dataset.fallback) return;
+                          img.dataset.fallback = '1';
+                          img.src = '/images/product-thumb-11.jpg';
+                        }}
+                      />
                     </div>
                     <div className="col-md-8">
                       <div className="card-body py-0">
@@ -368,7 +374,7 @@ export default function HomePage() {
                           className="form-control form-control-lg"
                           name="name"
                           id="nl-name"
-                          placeholder="Name"
+                          placeholder="Your name"
                           value={newsletterName}
                           onChange={(e) => setNewsletterName(e.target.value)}
                           maxLength={100}
@@ -381,7 +387,7 @@ export default function HomePage() {
                           className="form-control form-control-lg"
                           name="email"
                           id="nl-email"
-                          placeholder="abc@mail.com"
+                          placeholder="you@example.com"
                           value={newsletterEmail}
                           onChange={(e) => setNewsletterEmail(e.target.value)}
                           required
@@ -469,7 +475,18 @@ export default function HomePage() {
                   <article className="post-item card border-0 shadow-sm p-3 h-100">
                     <div className="image-holder zoom-effect">
                       <Link href={`/blog/${post.slug}`}>
-                        <img src={post.coverImage} alt="post" className="card-img-top" />
+                        <img
+                          src={post.coverImage}
+                          alt={post.title}
+                          className="card-img-top"
+                          loading="lazy"
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            if (img.dataset.fallback) return;
+                            img.dataset.fallback = '1';
+                            img.src = '/images/post-thumb-1.jpg';
+                          }}
+                        />
                       </Link>
                     </div>
                     <div className="card-body">

@@ -27,4 +27,65 @@ svg:not([class]) {
 .product-item figure img.tab-image {
   width: auto;
   max-width: 100%;
+  object-fit: contain;
+}
+
+/* ---------- Section headings ---------- */
+.section-title {
+  font-size: clamp(1.6rem, 2.5vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Category tiles ----------
+   The homepage renders .category-item outside of .category-carousel,
+   so these rules are intentionally unscoped. */
+.category-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  min-width: 128px;
+  padding: 24px 20px;
+  background: #ffffff;
+  border: 1px solid #f4f4f4;
+  border-radius: 16px;
+  box-shadow: 0 5px 22px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  transition: box-shadow 0.3s ease-out, transform 0.3s ease-out;
+}
+.category-item:hover {
+  transform: translate3d(0, -8px, 0);
+  box-shadow: 0 21px 44px rgba(0, 0, 0, 0.08);
+}
+.category-item .category-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--color-surface-alt, #f9f9f9);
+  font-size: 34px;
+  line-height: 1;
+}
+.category-item .category-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.35;
+  color: #222222;
+}
+
+/* ---------- Product card polish ---------- */
+/* Keep stock label and rating on one line with breathing room */
+.product-item .qty {
+  display: inline-block;
+}
+.product-item .rating {
+  margin-left: 12px;
+}
+.product-item figure img.tab-image {
+  max-height: 210px;
 }
