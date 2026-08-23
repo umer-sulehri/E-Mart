@@ -31,7 +31,12 @@ export interface OrderItemPayload {
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { address: string; paymentMethod: string; items: OrderItemPayload[] }) =>
+    mutationFn: (data: {
+      address: string;
+      paymentMethod: string;
+      items: OrderItemPayload[];
+      couponCode?: string | null;
+    }) =>
       apiFetch<{ order: Order }>('/orders', {
         method: 'POST',
         body: JSON.stringify(data),

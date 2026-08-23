@@ -1,21 +1,38 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/lib/store/cartStore';
-import { useHydrated } from '@/hooks/useHydrated';
+import { useCartTotals } from '@/hooks/useCartTotals';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { PlusIcon, MinusIcon, TrashIcon, ShoppingCartIcon } from '@/components/icons';
+import {
+  PlusIcon,
+  MinusIcon,
+  TrashIcon,
+  ShoppingCartIcon,
+  TagIcon,
+} from '@/components/icons';
 
 export default function CartPage() {
-  const hydrated = useHydrated();
-  const items = useCartStore((s) => s.items);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
-  const total = hydrated ? items.reduce((sum, i) => sum + i.product.price * i.quantity, 0) : 0;
-  const itemCount = hydrated ? items.reduce((sum, i) => sum + i.quantity, 0) : 0;
+  const {
+    items,
+    hydrated,
+    itemCount,
+    settings,
+    couponCode,
+    couponValid,
+    couponError,
+    isValidatingCoupon,
+    applyCoupon,
+    removeCoupon,
+    totals,
+  } = useCartTotals();
+  const [couponInput, setCouponInput] = useState('');
 
-  if (items.length === 0) {
+  if (hydrated && items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
         <div className="w-24 h-24 mx-auto mb-6 bg-surface rounded-full flex items-center justify-center">
@@ -29,6 +46,17 @@ export default function CartPage() {
       </div>
     );
   }
+
+  const handleApplyCoupon = () => {
+    if (!couponInput.trim()) return;
+    applyCoupon.mutate(couponInput.trim(), {
+      onSuccess: (result) => {
+        if (result.valid) setCouponInput('');
+      },
+    });
+  };
+
+  const amountToFreeShipping = Math.max(0, settings.freeShippingThreshold - (totals.subtotal - totals.discount));
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -80,13 +108,19 @@ export default function CartPage() {
                         <PlusIcon className="w-4 h-4" />
                       </button>
                     </div>
-                    <button
-                      onClick={() => removeItem(item.productId)}
-                      aria-label={`Remove ${item.product.name} from cart`}
-                      className="min-w-[48px] min-h-[48px] flex items-center justify-center text-error hover:bg-error/10 rounded-full transition-colors"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
+                    <div className="flex flex-col items-end gap-1">
+                      {/* Line subtotal */}
+                      <span className="text-sm font-bold text-text-primary whitespace-nowrap">
+                        Rs {(item.product.price * item.quantity).toLocaleString()}
+                      </span>
+                      <button
+                        onClick={() => removeItem(item.productId)}
+                        aria-label={`Remove ${item.product.name} from cart`}
+                        className="min-w-[48px] min-h-[48px] flex items-center justify-center text-error hover:bg-error/10 rounded-full transition-colors"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -98,18 +132,82 @@ export default function CartPage() {
         <div className="lg:col-span-1">
           <Card className="p-6 sticky top-24">
             <h2 className="text-lg font-bold text-text-primary mb-4">Order Summary</h2>
+
+            {/* Coupon */}
+            {couponCode && couponValid ? (
+              <div className="flex items-center justify-between bg-success/10 rounded-[10px] px-3 py-2 mb-3">
+                <span className="flex items-center gap-2 text-sm font-semibold text-success">
+                  <TagIcon className="w-4 h-4" /> {couponCode}
+                </span>
+                <button
+                  onClick={removeCoupon}
+                  className="text-xs font-semibold text-error hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="mb-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    placeholder="Coupon code"
+                    aria-label="Coupon code"
+                    maxLength={50}
+                    className="flex-1 min-w-0 px-3 py-2 text-sm rounded-[10px] border border-border bg-bg focus:outline-none focus:ring-2"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={handleApplyCoupon}
+                    disabled={!couponInput.trim() || applyCoupon.isPending}
+                  >
+                    Apply
+                  </Button>
+                </div>
+                {(couponError || applyCoupon.isError) && (
+                  <p className="text-xs text-error mt-1" role="alert">
+                    {couponError ?? 'Could not apply that coupon.'}
+                  </p>
+                )}
+                {isValidatingCoupon && (
+                  <p className="text-xs text-text-secondary mt-1">Checking coupon…</p>
+                )}
+              </div>
+            )}
+
             <div className="flex flex-col gap-3 text-sm">
               <div className="flex justify-between text-text-secondary">
                 <span>Subtotal ({itemCount} items)</span>
-                <span>Rs {total.toLocaleString()}</span>
+                <span>Rs {totals.subtotal.toLocaleString()}</span>
               </div>
+              {totals.discount > 0 && (
+                <div className="flex justify-between text-success font-medium">
+                  <span>Coupon discount</span>
+                  <span>- Rs {totals.discount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between text-text-secondary">
                 <span>Delivery</span>
-                <span className="text-success font-semibold">Free</span>
+                {totals.shipping === 0 ? (
+                  <span className="text-success font-semibold">Free</span>
+                ) : (
+                  <span>Rs {totals.shipping.toLocaleString()}</span>
+                )}
+              </div>
+              {amountToFreeShipping > 0 && (
+                <p className="text-xs text-text-secondary -mt-1">
+                  Add Rs {amountToFreeShipping.toLocaleString()} more for free delivery.
+                </p>
+              )}
+              <div className="flex justify-between text-text-secondary">
+                <span>Tax{settings.taxRate > 0 ? ` (${Math.round(settings.taxRate * 100)}%)` : ''}</span>
+                <span>Rs {totals.tax.toLocaleString()}</span>
               </div>
               <div className="border-t border-border pt-3 flex justify-between">
                 <span className="text-base font-bold text-text-primary">Total</span>
-                <span className="text-base font-bold text-text-primary">Rs {total.toLocaleString()}</span>
+                <span className="text-base font-bold text-text-primary">Rs {totals.total.toLocaleString()}</span>
               </div>
             </div>
             <Link href="/checkout" className="block">

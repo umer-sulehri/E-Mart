@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/lib/store/cartStore';
+import { useCartTotals } from '@/hooks/useCartTotals';
 import { useCreateOrder, useInitiatePayment } from '@/hooks/useOrders';
 import { PaymentMethods, PaymentProvider } from '@/components/checkout/PaymentMethods';
 import { Button } from '@/components/ui/Button';
@@ -26,8 +27,13 @@ export function CheckoutFlow() {
   const [error, setError] = useState('');
   const [placedOrderNumber, setPlacedOrderNumber] = useState('');
   const items = useCartStore((s) => s.items);
-  const total = useCartStore((s) => s.total());
+  const couponCode = useCartStore((s) => s.couponCode);
   const clearCart = useCartStore((s) => s.clearCart);
+  const {
+    totals,
+    settings,
+    couponValid,
+  } = useCartTotals();
   const createOrder = useCreateOrder();
   const initiatePayment = useInitiatePayment();
 
@@ -78,7 +84,7 @@ export function CheckoutFlow() {
     }));
 
     createOrder.mutate(
-      { address: fullAddress, paymentMethod, items: orderItems },
+      { address: fullAddress, paymentMethod, items: orderItems, couponCode },
       {
         onSuccess: async ({ order }) => {
           setPlacedOrderNumber(order.orderNumber);
@@ -189,9 +195,29 @@ export function CheckoutFlow() {
                   <span className="text-text-primary font-medium">PKR {(item.product.price * item.quantity).toLocaleString()}</span>
                 </div>
               ))}
+              {totals.discount > 0 && couponValid && (
+                <div className="flex justify-between text-sm text-success font-medium">
+                  <span>Coupon discount</span>
+                  <span>- PKR {totals.discount.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Delivery</span>
+                {totals.shipping === 0 ? (
+                  <span className="text-success font-semibold">Free</span>
+                ) : (
+                  <span className="text-text-primary font-medium">PKR {totals.shipping.toLocaleString()}</span>
+                )}
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">
+                  Tax{settings.taxRate > 0 ? ` (${Math.round(settings.taxRate * 100)}%)` : ''}
+                </span>
+                <span className="text-text-primary font-medium">PKR {totals.tax.toLocaleString()}</span>
+              </div>
               <div className="border-t border-border pt-2 mt-2 flex justify-between">
                 <span className="font-semibold text-text-primary">Total</span>
-                <span className="font-bold text-primary-dark">PKR {total.toLocaleString()}</span>
+                <span className="font-bold text-primary-dark">PKR {totals.total.toLocaleString()}</span>
               </div>
             </div>
           </div>

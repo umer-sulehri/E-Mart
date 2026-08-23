@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OrderRepository, ProductRepository, CartRepository } from '@/lib/repositories/index';
 import { getSession } from '@/lib/auth/getSession';
 import { notifyNewOrder } from '@/lib/notifications/dispatch';
+import { getStoreSettings, computeTotals } from '@/lib/settings/storeSettings';
+import { validateCoupon } from '@/lib/coupons/couponService';
 
 export async function GET() {
   const user = await getSession();
@@ -51,13 +53,32 @@ export async function POST(request: NextRequest) {
     total += product.price * qty;
   }
 
+  // Server-authoritative totals: subtotal -> coupon discount -> shipping -> tax.
+  const settings = await getStoreSettings();
+  const couponCode =
+    typeof body.couponCode === 'string' && body.couponCode.trim()
+      ? body.couponCode.trim().toUpperCase()
+      : undefined;
+  let discount = 0;
+  if (couponCode) {
+    const validation = await validateCoupon(couponCode, total);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: `Coupon rejected: ${validation.reason ?? 'not applicable'}` },
+        { status: 400 }
+      );
+    }
+    discount = validation.discount;
+  }
+  const totals = computeTotals(total, settings, discount);
+
   try {
     const order = await OrderRepository.create({
       userId: user.id,
       items: orderItems,
       address: body.address,
       paymentMethod: body.paymentMethod,
-      total,
+      total: totals.total,
     });
 
     await CartRepository.clear(user.id);
