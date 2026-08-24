@@ -111,28 +111,6 @@ export function renderPaymentConfirmation(params: {
   return { subject: `Payment confirmed for order ${params.orderNumber}`, html };
 }
 
-export function renderPasswordReset(params: { name: string; code: string }): EmailTemplateResult {
-  const html = layout(
-    'Password Reset',
-    `<h2 style="margin:0 0 8px;color:#1a2b1a;">Password reset requested</h2>
-     <p>Hi ${escapeHtml(params.name)}, use the verification code below to reset your password:</p>
-     <p style="font-size:28px;font-weight:800;letter-spacing:8px;background:#f4f5f0;padding:16px;text-align:center;border-radius:10px;">${escapeHtml(params.code)}</p>
-     <p style="color:#6b7269;">This code expires in 30 minutes. If you did not request this, you can safely ignore this email.</p>`
-  );
-  return { subject: 'Reset your E-Mart password', html };
-}
-
-export function renderOtpEmail(params: { name?: string; code: string }): EmailTemplateResult {
-  const html = layout(
-    'Email Verification',
-    `<h2 style="margin:0 0 8px;color:#1a2b1a;">Verify your email</h2>
-     <p>Hi ${params.name ? escapeHtml(params.name) : 'there'}, use the verification code below to complete sign-up:</p>
-     <p style="font-size:28px;font-weight:800;letter-spacing:8px;background:#f4f5f0;padding:16px;text-align:center;border-radius:10px;">${escapeHtml(params.code)}</p>
-     <p style="color:#6b7269;">This code expires in 15 minutes. If you did not request this, you can safely ignore this email.</p>`
-  );
-  return { subject: 'Your E-Mart verification code', html };
-}
-
 export function renderRefundProcessed(params: { orderNumber: string; amount: number }): EmailTemplateResult {
   const html = layout(
     'Refund Processed',

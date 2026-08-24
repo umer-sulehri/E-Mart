@@ -70,6 +70,20 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
+    // Unverified address is a distinct, recoverable state — don't burn a
+    // login attempt on it and let the client offer a resend action.
+    if (
+      (error as { code?: string } | null)?.code === 'email_not_confirmed' ||
+      /not confirmed|confirm your email/i.test(error?.message ?? '')
+    ) {
+      return NextResponse.json(
+        {
+          error: 'Please verify your email address before logging in. Check your inbox for the verification link.',
+          code: 'email_not_confirmed',
+        },
+        { status: 403 }
+      );
+    }
     registerFailedAttempt(attemptKey);
     const remaining = Math.max(0, MAX_ATTEMPTS - (attemptMap.get(attemptKey)?.count ?? 0));
     return NextResponse.json(
@@ -88,12 +102,13 @@ export async function POST(request: NextRequest) {
   let user = await UserRepository.findById(data.user.id);
   if (!user) {
     const meta = (data.user.user_metadata ?? {}) as Record<string, string>;
+    const role = meta.role === 'seller' || meta.userType === 'seller' ? 'seller' : 'buyer';
     try {
       user = await UserRepository.create({
         name: meta.name || meta.full_name || email.split('@')[0],
         email,
         phone: meta.phone ?? '',
-        role: 'buyer',
+        role,
       });
     } catch {
       const fallback: User = {
@@ -101,7 +116,7 @@ export async function POST(request: NextRequest) {
         name: meta.name || email.split('@')[0],
         email,
         phone: meta.phone ?? '',
-        role: 'buyer',
+        role,
         createdAt: data.user.created_at ?? new Date().toISOString(),
       };
       return NextResponse.json({ user: fallback }, { status: 200 });

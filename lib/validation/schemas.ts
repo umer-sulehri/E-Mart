@@ -15,10 +15,6 @@ export const LoginSchema = z.object({
   message: 'Either phone or email is required',
 });
 
-export const OtpVerifySchema = z.object({
-  code: z.string().length(6, 'OTP must be 6 digits'),
-});
-
 /** Pakistan mobile number: 03XX-XXXXXXX or +92-3XX-XXXXXXX (separator optional). */
 export const pkPhoneRegex = /^(?:\+92[-\s]?|0)3\d{2}[-\s]?\d{7}$/;
 
@@ -30,26 +26,21 @@ export const strongPasswordSchema = z
   .regex(/[a-z]/, 'Password must contain a lowercase letter')
   .regex(/[0-9]/, 'Password must contain a number');
 
-export const otpRequestSchema = z.object({
-  identifier: z.string().min(1, 'Phone or email is required'),
-});
-
-/**
- * Registration pre-verification request: personal data is held server-side
- * (keyed to the pending OTP) so credentials never round-trip through
- * browser storage.
- */
-export const registrationOtpSchema = otpRequestSchema.extend({
+/** Registration payload — verification itself is handled by Supabase email. */
+export const registerSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters').max(80),
+  email: z.string().trim().email('Invalid email address').max(200),
   password: strongPasswordSchema,
   userType: z.enum(['customer', 'seller']).default('customer'),
   phone: z.string().regex(pkPhoneRegex, 'Enter a valid Pakistani mobile number (e.g. +92-300-1234567)').optional(),
 });
 
-export const otpVerifySchema = z.object({
-  identifier: z.string().min(1, 'Identifier is required'),
-  code: z.string().length(6, 'OTP must be 6 digits'),
-  purpose: z.enum(['register', 'reset']).optional(),
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email('Invalid email address').max(200),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().trim().email('Invalid email address').max(200),
 });
 
 export const loginCredentialsSchema = z.object({
@@ -211,16 +202,6 @@ export const createBlogPostSchema = z.object({
 
 export const updateBlogPostSchema = createBlogPostSchema.partial().extend({
   isPublished: z.boolean().optional(),
-});
-
-export const forgotPasswordSchema = z.object({
-  identifier: z.string().min(1, 'Phone or email is required'),
-});
-
-export const resetPasswordSchema = z.object({
-  identifier: z.string().min(1, 'Identifier is required'),
-  code: z.string().length(6, 'OTP must be 6 digits'),
-  newPassword: strongPasswordSchema,
 });
 
 export const changePasswordSchema = z.object({

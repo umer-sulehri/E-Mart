@@ -21,6 +21,10 @@ export default function AdminSettingsPage() {
   const [shippingFee, setShippingFee] = useState('200');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState('2000');
   const [commissionRate, setCommissionRate] = useState('10');
+  const [contactPhone, setContactPhone] = useState('+92 300 0000000');
+  const [contactEmail, setContactEmail] = useState('support@e-mart.app');
+  const [contactAddress, setContactAddress] = useState('Lahore, Pakistan');
+  const [supportHours, setSupportHours] = useState('Monday – Saturday, 9am – 9pm (PKT)');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [autoApproveProducts, setAutoApproveProducts] = useState(false);
@@ -54,6 +58,10 @@ export default function AdminSettingsPage() {
           if (s.shippingFee !== undefined) setShippingFee(String(s.shippingFee));
           if (s.freeShippingThreshold !== undefined) setFreeShippingThreshold(String(s.freeShippingThreshold));
           if (s.commissionRate !== undefined) setCommissionRate(String(Math.round(s.commissionRate * 100)));
+          if (s.contactPhone !== undefined) setContactPhone(s.contactPhone);
+          if (s.contactEmail !== undefined) setContactEmail(s.contactEmail);
+          if (s.contactAddress !== undefined) setContactAddress(s.contactAddress);
+          if (s.supportHours !== undefined) setSupportHours(s.supportHours);
           if (s.emailNotifications !== undefined) setEmailNotifications(s.emailNotifications);
           if (s.smsNotifications !== undefined) setSmsNotifications(s.smsNotifications);
           if (s.autoApproveProducts !== undefined) setAutoApproveProducts(s.autoApproveProducts);
@@ -79,6 +87,10 @@ export default function AdminSettingsPage() {
           shippingFee: Number(shippingFee),
           freeShippingThreshold: Number(freeShippingThreshold),
           commissionRate: Number(commissionRate) / 100,
+          contactPhone,
+          contactEmail,
+          contactAddress,
+          supportHours,
           emailNotifications,
           smsNotifications,
           autoApproveProducts,
@@ -90,7 +102,7 @@ export default function AdminSettingsPage() {
     } finally {
       setSaving(false);
     }
-  }, [platformName, supportEmail, defaultCurrency, taxRate, shippingFee, freeShippingThreshold, commissionRate, emailNotifications, smsNotifications, autoApproveProducts, maintenanceMode]);
+  }, [platformName, supportEmail, defaultCurrency, taxRate, shippingFee, freeShippingThreshold, commissionRate, contactPhone, contactEmail, contactAddress, supportHours, emailNotifications, smsNotifications, autoApproveProducts, maintenanceMode]);
 
   const handleMove = async (id: string, direction: -1 | 1) => {
     setLinksError('');
@@ -310,6 +322,42 @@ export default function AdminSettingsPage() {
             <span style={{ display: 'block', fontSize: '12px', marginTop: '4px', color: 'var(--color-text-secondary)' }}>
               Platform share deducted from seller earnings on delivered orders
             </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Information */}
+      <div
+        style={{
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '16px',
+          marginBottom: '20px',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ padding: '16px 20px', borderBottom: '2px solid var(--color-primary)', fontWeight: 700, fontSize: '16px' }}>
+          Contact Information
+        </div>
+        <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>Phone Number</label>
+            <input style={inputStyle} type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} />
+            <span style={{ display: 'block', fontSize: '12px', marginTop: '4px', color: 'var(--color-text-secondary)' }}>
+              Shown on the contact page and in the footer
+            </span>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>Support Email</label>
+            <input style={inputStyle} type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>Office Address</label>
+            <input style={inputStyle} value={contactAddress} onChange={e => setContactAddress(e.target.value)} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>Support Hours</label>
+            <input style={inputStyle} value={supportHours} onChange={e => setSupportHours(e.target.value)} />
           </div>
         </div>
       </div>

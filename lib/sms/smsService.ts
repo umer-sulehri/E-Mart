@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isSupabaseConfigured } from '@/lib/supabase/optional';
 
@@ -6,7 +5,6 @@ export type SmsTemplate =
   | 'order_confirmation'
   | 'order_shipped'
   | 'delivery_alert'
-  | 'otp'
   | 'promotional';
 
 export interface SendSmsParams {
@@ -112,7 +110,3 @@ export async function sendSms(params: SendSmsParams): Promise<SendSmsResult> {
   }
 }
 
-/** Generates a cryptographically random 6-digit OTP. */
-export function generateOtp(): string {
-  return String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
-}

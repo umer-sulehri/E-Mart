@@ -7,6 +7,10 @@ export interface StoreSettings {
   freeShippingThreshold: number; // subtotal at/above which shipping is free
   commissionRate: number; // platform cut of seller sales, e.g. 0.1 for 10%
   autoApproveProducts: boolean; // skip admin moderation for new seller products
+  contactPhone: string; // shown on the contact page and footer
+  contactEmail: string; // customer-facing support address
+  contactAddress: string; // physical/registered office line
+  supportHours: string; // e.g. "Monday – Saturday, 9am – 9pm (PKT)"
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -15,6 +19,10 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   freeShippingThreshold: 2000,
   commissionRate: 0.1,
   autoApproveProducts: false,
+  contactPhone: '+92 300 0000000',
+  contactEmail: 'support@e-mart.app',
+  contactAddress: 'Lahore, Pakistan',
+  supportHours: 'Monday – Saturday, 9am – 9pm (PKT)',
 };
 
 /**

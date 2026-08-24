@@ -236,25 +236,28 @@ export default function CouponsManagementPage() {
                               : 'bg-error/10 text-error border-error'
                           }`}
                           aria-label={coupon.isActive ? 'Deactivate coupon' : 'Activate coupon'}
+                          title={coupon.isActive ? 'Click to deactivate' : 'Click to activate'}
                         >
                           {coupon.isActive ? 'Active' : 'Inactive'}
                         </button>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => openEdit(coupon)}
-                            className="flex h-12 w-12 items-center justify-center rounded-[8px] text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
+                            className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
                             aria-label={`Edit ${coupon.code}`}
                           >
-                            <EditIcon className="h-5 w-5" />
+                            <EditIcon className="h-4 w-4" />
+                            Edit
                           </button>
                           <button
                             onClick={() => setDeleteTarget(coupon)}
-                            className="flex h-12 w-12 items-center justify-center rounded-[8px] text-text-secondary hover:bg-error/10 hover:text-error transition-colors"
+                            className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-error/10 hover:text-error transition-colors"
                             aria-label={`Delete ${coupon.code}`}
                           >
-                            <TrashIcon className="h-5 w-5" />
+                            <TrashIcon className="h-4 w-4" />
+                            Delete
                           </button>
                         </div>
                       </td>

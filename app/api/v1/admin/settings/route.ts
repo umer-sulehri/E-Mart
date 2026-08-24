@@ -9,6 +9,10 @@ const patchSchema = z.object({
   freeShippingThreshold: z.number().min(0).optional(),
   commissionRate: z.number().min(0).max(0.9).optional(),
   autoApproveProducts: z.boolean().optional(),
+  contactPhone: z.string().trim().min(3).max(30).optional(),
+  contactEmail: z.string().trim().email().max(200).optional(),
+  contactAddress: z.string().trim().min(2).max(300).optional(),
+  supportHours: z.string().trim().min(2).max(120).optional(),
 });
 
 export async function GET() {

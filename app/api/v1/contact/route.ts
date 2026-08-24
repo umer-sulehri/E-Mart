@@ -20,6 +20,39 @@ const sendMap = new Map<string, SendEntry>();
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_SENDS = 5;
 
+/**
+ * Formspree acts as a delivery backstop so messages reach the site owner
+ * even when no Resend credentials are configured. Override with the
+ * CONTACT_FORMSPREE_ENDPOINT env var if the form changes.
+ */
+const FORMSPREE_ENDPOINT =
+  process.env.CONTACT_FORMSPREE_ENDPOINT || 'https://formspree.io/f/mzepqqee';
+
+async function forwardToFormspree(payload: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<boolean> {
+  try {
+    const res = await fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        _subject: `[E-Mart Contact] ${payload.subject}`,
+        _replyto: payload.email,
+        name: payload.name,
+        email: payload.email,
+        message: payload.message,
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 function isThrottled(ip: string): boolean {
   const now = Date.now();
   const entry = sendMap.get(ip);
@@ -62,7 +95,12 @@ export async function POST(request: NextRequest) {
   }
 
   const { name, email, subject, message } = parsed.data;
+
+  // Delivery channels (either succeeding is enough for the message to land):
+  // 1. Resend email to CONTACT_EMAIL when credentials exist.
+  // 2. Formspree forwarding as a provider-independent backstop.
   const recipient = process.env.CONTACT_EMAIL ?? process.env.EMAIL_FROM;
+  let resendOk = false;
 
   if (recipient) {
     const html = `
@@ -79,13 +117,19 @@ export async function POST(request: NextRequest) {
       html,
       template: 'contact',
     });
-
-    if (!result.sent && result.reason !== 'Email service is not configured (set RESEND_API_KEY and EMAIL_FROM)') {
-      return NextResponse.json(
-        { error: 'Failed to send your message. Please try again later.' },
-        { status: 502 }
-      );
+    if (!result.sent) {
+      console.error('[contact] Resend delivery failed:', result.reason);
     }
+    resendOk = result.sent;
+  }
+
+  const formspreeOk = await forwardToFormspree({ name, email, subject, message });
+
+  if (!resendOk && !formspreeOk) {
+    return NextResponse.json(
+      { error: 'Failed to send your message. Please try again later.' },
+      { status: 502 }
+    );
   }
 
   return NextResponse.json({ success: true }, { status: 200 });

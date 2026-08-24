@@ -20,45 +20,28 @@ export function useLogin() {
   });
 }
 
-export function useRequestOtp() {
+export function useRegister() {
   return useMutation({
-    mutationFn: (
-      data:
-        | string
-        | {
-            identifier: string;
-            name: string;
-            password: string;
-            userType: 'customer' | 'seller';
-            phone?: string;
-          }
-    ) => {
-      const payload =
-        typeof data === 'string'
-          ? { identifier: data }
-          : data;
-      return apiFetch<{ message: string }>('/auth/otp/request', {
+    mutationFn: (data: {
+      name: string;
+      email: string;
+      password: string;
+      userType: 'customer' | 'seller';
+      phone?: string;
+    }) =>
+      apiFetch<{ verified?: boolean; verificationRequired?: boolean }>('/auth/register', {
         method: 'POST',
-        body: JSON.stringify(payload),
-      });
-    },
+        body: JSON.stringify(data),
+      }),
   });
 }
 
-export function useVerifyOtp() {
+export function useResendVerification() {
   return useMutation({
-    mutationFn: (data: {
-      identifier: string;
-      otp: string;
-      purpose?: 'register' | 'reset';
-    }) =>
-      apiFetch<{ user: User; token: string }>('/auth/otp/verify', {
+    mutationFn: (email: string) =>
+      apiFetch<{ success: boolean; message?: string }>('/auth/resend-verification', {
         method: 'POST',
-        body: JSON.stringify({
-          identifier: data.identifier,
-          code: data.otp,
-          purpose: data.purpose,
-        }),
+        body: JSON.stringify({ email }),
       }),
   });
 }

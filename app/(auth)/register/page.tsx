@@ -2,8 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useRequestOtp } from '@/hooks/useAuth';
+import { useRegister } from '@/hooks/useAuth';
 import { AuthLayout } from '@/components/common/AuthLayout';
 import { EyeIcon, EyeOffIcon, CheckIcon, CloseIcon } from '@/components/icons';
 
@@ -19,8 +18,11 @@ function PasswordRequirement({ label, met }: { label: string; met: boolean }) {
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mzepqqee';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const requestOtp = useRequestOtp();
+  const register = useRegister();
+  // Set after a successful sign-up: 'verify' = confirmation email sent,
+  // 'ready' = account active immediately (email confirmation disabled).
+  const [registered, setRegistered] = useState<null | 'verify' | 'ready'>(null);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -72,21 +74,16 @@ export default function RegisterPage() {
     }
 
     setErrors({});
-    requestOtp.mutate(
+    register.mutate(
       {
-        identifier: email.trim(),
         name: fullName.trim(),
+        email: email.trim(),
         password,
         userType,
         ...(phone.trim() ? { phone: phone.trim() } : {}),
       },
       {
-        onSuccess: () => {
-          // Only non-sensitive routing hints are kept client-side; the
-          // registration payload itself is held server-side with the OTP.
-          sessionStorage.setItem('otpIdentifier', email.trim());
-          sessionStorage.setItem('otpPurpose', 'register');
-
+        onSuccess: (res) => {
           // Notify the site owner of the new sign-up via Formspree.
           // Fire-and-forget: a Formspree outage must never block registration.
           fetch(FORMSPREE_ENDPOINT, {
@@ -101,14 +98,55 @@ export default function RegisterPage() {
             }),
           }).catch(() => undefined);
 
-          router.push('/otp-verify');
+          setRegisteredEmail(email.trim());
+          setRegistered(res.verified ? 'ready' : 'verify');
         },
         onError: (err) => {
-          setErrors({ general: err.message || 'Failed to send OTP. Please try again.' });
+          setErrors({ general: err.message || 'Failed to create your account. Please try again.' });
         },
       }
     );
   };
+
+  if (registered) {
+    return (
+      <AuthLayout title={registered === 'ready' ? 'Account Created!' : 'Check Your Email'} maxWidth="500px">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'rgba(110,139,94,0.15)' }}>
+            {registered === 'ready' ? (
+              <svg className="w-8 h-8" style={{ color: 'var(--color-success)' }} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+              </svg>
+            ) : (
+              <svg className="w-8 h-8" style={{ color: 'var(--color-primary-dark)' }} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+              </svg>
+            )}
+          </div>
+          {registered === 'verify' ? (
+            <>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+                We&apos;ve sent a verification link to <strong>{registeredEmail}</strong>.
+                Please open it and confirm your email address before logging in.
+              </p>
+              <Link href="/login" className="inline-block w-full py-3.5 rounded-[10px] text-base font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+                Go to Login
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+                Your account is ready. You can log in right away.
+              </p>
+              <Link href="/login" className="inline-block w-full py-3.5 rounded-[10px] text-base font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+                Login Now
+              </Link>
+            </>
+          )}
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout title="Create Account" maxWidth="500px">
@@ -305,11 +343,11 @@ export default function RegisterPage() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={requestOtp.isPending}
+          disabled={register.isPending}
           className="w-full py-3.5 rounded-lg text-base font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
         >
-          {requestOtp.isPending ? (
+          {register.isPending ? (
             <span className="flex items-center justify-center gap-2">
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               Creating Account...

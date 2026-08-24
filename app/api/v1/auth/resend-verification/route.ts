@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { forgotPasswordSchema } from '@/lib/validation/schemas';
+import { resendVerificationSchema } from '@/lib/validation/schemas';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/supabase/optional';
 
 /**
- * Sends Supabase's native password-recovery email. The link lands the user
- * on /reset-password where a session is established and a new password can
- * be set. The response is intentionally identical whether or not the email
- * exists, to prevent account enumeration.
+ * Re-sends Supabase's "Confirm your email" message for sign-ups that have
+ * not been verified yet. Always responds generically so the endpoint cannot
+ * be used to probe which addresses are registered.
  */
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -18,7 +17,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = forgotPasswordSchema.safeParse(body);
+  const parsed = resendVerificationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
@@ -26,15 +25,17 @@ export async function POST(request: NextRequest) {
   const origin = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
   const supabase = await createClient();
   try {
-    await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-      redirectTo: `${origin}/reset-password`,
+    await supabase.auth.resend({
+      type: 'signup',
+      email: parsed.data.email,
+      options: { emailRedirectTo: `${origin}/login` },
     });
   } catch {
-    // Swallow delivery errors — response stays generic either way.
+    // Ignore — generic response below keeps the flow non-enumerable.
   }
 
   return NextResponse.json(
-    { success: true, message: 'If an account exists for that address, a password reset link has been sent.' },
+    { success: true, message: 'If that address needs verification, a new email has been sent.' },
     { status: 200 }
   );
 }

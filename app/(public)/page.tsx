@@ -2,31 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination } from 'swiper/modules';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
-import { useBanners } from '@/hooks/useBanners';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
 import { ProductCard } from '@/components/site/ProductCard';
-import type { Banner, Product } from '@/lib/types';
-
-const fallbackHeroSlides = [
-  {
-    id: 'hero-1',
-    slot: 'hero' as const,
-    title: 'Fresh Smoothie & Summer Juice',
-    subtitle: '100% natural',
-    description: 'Freshly pressed juices and smoothies delivered to your door every morning.',
-    imageUrl: '/images/product-thumb-1.png',
-    ctaLabel: 'Shop Now',
-    ctaHref: '/products',
-    sortOrder: 0,
-    isActive: true,
-    createdAt: '',
-    updatedAt: '',
-  },
-];
+import type { Product } from '@/lib/types';
 
 function ArrowRightSvg() {
   return (
@@ -76,16 +56,11 @@ export default function HomePage() {
   const { data: allProductsData } = useProducts({}, 1, 20);
   const { data: newestData } = useProducts({ sort: 'newest' }, 1, 12);
   const { data: categoriesData } = useCategories();
-  const { data: bannersData } = useBanners();
   const { data: blogPostsData } = useBlogPosts();
 
   const allProducts: Product[] = allProductsData?.products ?? [];
   const newestProducts: Product[] = newestData?.products ?? [];
   const categories = categoriesData ?? [];
-  const banners: Banner[] = (bannersData ?? []).length > 0 ? bannersData! : fallbackHeroSlides;
-  const heroSlides = banners.filter((b) => b.slot === 'hero');
-  const promoSmall = banners.find((b) => b.slot === 'promo-small');
-  const promoWide = banners.find((b) => b.slot === 'promo-wide');
   const blogPosts = (blogPostsData ?? []).slice(0, 3);
 
   const trendingTabs = [
@@ -104,74 +79,6 @@ export default function HomePage() {
 
   return (
     <>
-      {/* ================= Hero banner blocks ================= */}
-      <section className="py-3" style={{ backgroundImage: "url('/images/background-pattern.jpg')", backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }}>
-        <div className="container-fluid">
-          <div className="row">
-            <div className="col-md-12">
-              <div className="banner-blocks">
-                <div className="banner-ad large bg-info block-1">
-                  <Swiper
-                    className="main-swiper"
-                    modules={[Pagination]}
-                    speed={500}
-                    pagination={{ clickable: true }}
-                  >
-                    {(heroSlides.length > 0 ? heroSlides : fallbackHeroSlides).map((slide) => (
-                      <SwiperSlide key={slide.id}>
-                        <div className="row banner-content p-5">
-                          <div className="content-wrapper col-md-7">
-                            <div className="categories my-3">{slide.subtitle ?? '100% natural'}</div>
-                            <h3 className="banner-title">{slide.title}</h3>
-                            <p>{slide.description}</p>
-                            <Link href={slide.ctaHref ?? '/products'} className="btn btn-outline-dark btn-lg text-uppercase fs-6 rounded-1 px-4 py-3 mt-3">
-                              {slide.ctaLabel ?? 'Shop Collection'}
-                            </Link>
-                          </div>
-                          <div className="img-wrapper col-md-5">
-                            {slide.imageUrl && <img src={slide.imageUrl} className="img-fluid" alt={slide.title} />}
-                          </div>
-                        </div>
-                      </SwiperSlide>
-                    ))}
-                  </Swiper>
-                </div>
-
-                <div
-                  className="banner-ad bg-success-subtle block-2"
-                  style={{ background: "url('/images/ad-image-1.png') no-repeat", backgroundPosition: 'right bottom' }}
-                >
-                  <div className="row banner-content p-5">
-                    <div className="content-wrapper col-md-7">
-                      <div className="categories sale mb-3 pb-3">{promoSmall?.badgeText ?? '20% off'}</div>
-                      <h3 className="banner-title">{promoSmall?.title ?? 'Fruits & Vegetables'}</h3>
-                      <Link href={promoSmall?.ctaHref ?? '/categories'} className="d-flex align-items-center nav-link">
-                        {promoSmall?.ctaLabel ?? 'Shop Collection'} <ArrowRightSvg />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className="banner-ad bg-danger block-3"
-                  style={{ background: "url('/images/ad-image-2.png') no-repeat", backgroundPosition: 'right bottom' }}
-                >
-                  <div className="row banner-content p-5">
-                    <div className="content-wrapper col-md-7">
-                      <div className="categories sale mb-3 pb-3">{promoWide?.badgeText ?? '15% off'}</div>
-                      <h3 className="item-title">{promoWide?.title ?? 'Baked Products'}</h3>
-                      <Link href={promoWide?.ctaHref ?? '/products?search=bakery'} className="d-flex align-items-center nav-link">
-                        {promoWide?.ctaLabel ?? 'Shop Collection'} <ArrowRightSvg />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ================= Categories ================= */}
       <section className="py-5 overflow-hidden">
         <div className="container-fluid">

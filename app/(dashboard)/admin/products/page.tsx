@@ -290,47 +290,52 @@ export default function ProductsManagementPage() {
                             : '—'}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             {(product.status ?? 'active') !== 'active' && (
                               <button
                                 onClick={() => handleModerate(product, 'active')}
                                 disabled={moderateProduct.isPending}
-                                className="flex h-12 w-12 items-center justify-center rounded-[8px] text-success hover:bg-success/10 transition-colors disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-success hover:bg-success/10 transition-colors disabled:opacity-50"
                                 aria-label="Approve product"
                               >
-                                <CheckCircleIcon className="h-5 w-5" />
+                                <CheckCircleIcon className="h-4 w-4" />
+                                Approve
                               </button>
                             )}
                             {product.status !== 'rejected' && (
                               <button
                                 onClick={() => handleModerate(product, 'rejected')}
                                 disabled={moderateProduct.isPending}
-                                className="flex h-12 w-12 items-center justify-center rounded-[8px] text-error hover:bg-error/10 transition-colors disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-error hover:bg-error/10 transition-colors disabled:opacity-50"
                                 aria-label="Reject product"
                               >
-                                <XCircleIcon className="h-5 w-5" />
+                                <XCircleIcon className="h-4 w-4" />
+                                Reject
                               </button>
                             )}
                             <button
                               onClick={() => handleView(product)}
-                              className="flex h-12 w-12 items-center justify-center rounded-[8px] text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
+                              className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
                               aria-label="View product"
                             >
-                              <EyeIcon className="h-5 w-5" />
+                              <EyeIcon className="h-4 w-4" />
+                              View
                             </button>
                             <button
                               onClick={() => handleEdit(product)}
-                              className="flex h-12 w-12 items-center justify-center rounded-[8px] text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
+                              className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
                               aria-label="Edit product"
                             >
-                              <EditIcon className="h-5 w-5" />
+                              <EditIcon className="h-4 w-4" />
+                              Edit
                             </button>
                             <button
                               onClick={() => handleDelete(product)}
-                              className="flex h-12 w-12 items-center justify-center rounded-[8px] text-text-secondary hover:bg-error/10 hover:text-error transition-colors"
+                              className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-error/10 hover:text-error transition-colors"
                               aria-label="Delete product"
                             >
-                              <TrashIcon className="h-5 w-5" />
+                              <TrashIcon className="h-4 w-4" />
+                              Delete
                             </button>
                           </div>
                         </td>

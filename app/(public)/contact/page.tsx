@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePublicSettings } from '@/hooks/useSettings';
 
 const inputStyle = {
   background: 'var(--color-surface)',
@@ -9,6 +10,11 @@ const inputStyle = {
 };
 
 export default function ContactPage() {
+  const { data: settings } = usePublicSettings();
+  const phone = settings?.contactPhone || '+92 300 0000000';
+  const email = settings?.contactEmail || 'support@e-mart.app';
+  const address = settings?.contactAddress || 'Lahore, Pakistan';
+  const hours = settings?.supportHours || 'Monday – Saturday, 9am – 9pm (PKT)';
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '', company: '' });
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState('');
@@ -137,16 +143,26 @@ export default function ContactPage() {
           <div className="row g-4">
             <div className="col-md-4">
               <h5>Support Hours</h5>
-              <p className="text-body-secondary mb-0">Monday – Saturday, 9am – 9pm (PKT)</p>
+              <p className="text-body-secondary mb-0">{hours}</p>
             </div>
             <div className="col-md-4">
               <h5>Phone</h5>
-              <p className="text-body-secondary mb-0">+92 300 000 0000</p>
+              <p className="text-body-secondary mb-0">
+                <a href={`tel:${phone.replace(/[^+\d]/g, '')}`} className="text-decoration-none text-body-secondary">{phone}</a>
+              </p>
             </div>
             <div className="col-md-4">
               <h5>Email</h5>
-              <p className="text-body-secondary mb-0">support@e-mart.app</p>
+              <p className="text-body-secondary mb-0">
+                <a href={`mailto:${email}`} className="text-decoration-none text-body-secondary">{email}</a>
+              </p>
             </div>
+            {address && (
+              <div className="col-md-4">
+                <h5>Address</h5>
+                <p className="text-body-secondary mb-0">{address}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

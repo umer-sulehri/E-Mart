@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useLogin } from '@/hooks/useAuth';
+import { useLogin, useResendVerification } from '@/hooks/useAuth';
 import { useAuthStore } from '@/lib/store/authStore';
 import { AuthLayout } from '@/components/common/AuthLayout';
 import { EyeIcon, EyeOffIcon } from '@/components/icons';
@@ -12,12 +12,15 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const loginMutation = useLogin();
+  const resendVerification = useResendVerification();
   const setAuth = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +33,7 @@ function LoginForm() {
       return;
     }
     setError('');
+    setNeedsVerification(false);
     loginMutation.mutate(
       { email: email.trim(), password, rememberMe },
       {
@@ -47,10 +51,23 @@ function LoginForm() {
           }
         },
         onError: (err) => {
+          if (/verify your email/i.test(err.message)) setNeedsVerification(true);
           setError(err.message || 'Invalid email or password. Please try again.');
         },
       }
     );
+  };
+
+  const handleResend = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setError('');
+    try {
+      await resendVerification.mutateAsync(email.trim());
+      setNeedsVerification(false);
+      setResendSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to resend the verification email.');
+    }
   };
 
   return (
@@ -68,6 +85,23 @@ function LoginForm() {
         </div>
       )}
 
+      {needsVerification && (
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={resendVerification.isPending}
+          className="mb-5 w-full py-2.5 rounded-[10px] text-sm font-semibold transition-colors disabled:opacity-60"
+          style={{ border: '1px solid var(--color-primary)', color: 'var(--color-primary-dark)', background: 'var(--color-surface)' }}
+        >
+          {resendVerification.isPending ? 'Sending…' : 'Resend verification email'}
+        </button>
+      )}
+      {resendSent && (
+        <p className="mb-5 text-center text-sm font-medium" style={{ color: 'var(--color-success)' }} role="status">
+          Verification email sent — please check your inbox.
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {/* Email */}
         <div>
@@ -77,7 +111,7 @@ function LoginForm() {
           <input
             type="email"
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(''); }}
+            onChange={(e) => { setEmail(e.target.value); setError(''); setResendSent(false); }}
             placeholder="Enter your email"
             className="w-full px-4 py-3.5 rounded-[10px] text-[15px] transition-all duration-300 bg-white focus:outline-none"
             style={{ border: '2px solid var(--color-border)' }}

@@ -6,11 +6,9 @@ export type EmailTemplate =
   | 'order_shipped'
   | 'order_delivered'
   | 'payment_confirmation'
-  | 'password_reset'
   | 'refund_processed'
   | 'review_reminder'
   | 'promotional'
-  | 'email_verification'
   | 'contact';
 
 export interface SendEmailParams {

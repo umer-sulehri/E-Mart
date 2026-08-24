@@ -17,10 +17,6 @@ export function renderDeliveryAlertSms(data: OrderSmsData): string {
   return `E-Mart: Your order ${data.orderNumber} is out for delivery today. Please keep your phone reachable.`;
 }
 
-export function renderOtpSms(code: string): string {
-  return `E-Mart: Your verification code is ${code}. It expires in 10 minutes. Do not share it with anyone.`;
-}
-
 export function renderPromotionalSms(message: string): string {
   return `E-Mart: ${message} Reply STOP to opt out.`;
 }
@@ -33,8 +29,6 @@ export function getSmsTemplate(template: SmsTemplate, data?: OrderSmsData & { co
       return data ? renderOrderShippedSms(data) : '';
     case 'delivery_alert':
       return data ? renderDeliveryAlertSms(data) : '';
-    case 'otp':
-      return data?.code ? renderOtpSms(data.code) : '';
     case 'promotional':
       return data?.message ? renderPromotionalSms(data.message) : '';
   }
