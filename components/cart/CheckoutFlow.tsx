@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -235,7 +235,7 @@ export function CheckoutFlow() {
                         : 'var(--color-border)',
                     background:
                       !useNewAddress && selectedAddressId === saved.id
-                        ? 'rgba(255,196,63,0.06)'
+                        ? 'rgba(217,176,140,0.06)'
                         : 'transparent',
                   }}
                 >
@@ -257,7 +257,7 @@ export function CheckoutFlow() {
                     </span>
                     <span className="block text-xs text-text-secondary">
                       {saved.street}, {saved.city}, {saved.state} {saved.zip}, {saved.country}
-                      {saved.phone ? ` · ${saved.phone}` : ''}
+                      {saved.phone ? ` Â· ${saved.phone}` : ''}
                     </span>
                   </span>
                 </label>
@@ -408,3 +408,4 @@ function fullAddressPreview(address: AddressForm): string {
     .filter(Boolean)
     .join(', ');
 }
+

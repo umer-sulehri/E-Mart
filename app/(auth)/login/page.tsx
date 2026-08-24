@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
@@ -93,12 +93,12 @@ function LoginForm() {
           className="mb-5 w-full py-2.5 rounded-[10px] text-sm font-semibold transition-colors disabled:opacity-60"
           style={{ border: '1px solid var(--color-primary)', color: 'var(--color-primary-dark)', background: 'var(--color-surface)' }}
         >
-          {resendVerification.isPending ? 'Sending…' : 'Resend verification email'}
+          {resendVerification.isPending ? 'Sendingâ€¦' : 'Resend verification email'}
         </button>
       )}
       {resendSent && (
         <p className="mb-5 text-center text-sm font-medium" style={{ color: 'var(--color-success)' }} role="status">
-          Verification email sent — please check your inbox.
+          Verification email sent â€” please check your inbox.
         </p>
       )}
 
@@ -115,7 +115,7 @@ function LoginForm() {
             placeholder="Enter your email"
             className="w-full px-4 py-3.5 rounded-[10px] text-[15px] transition-all duration-300 bg-white focus:outline-none"
             style={{ border: '2px solid var(--color-border)' }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(217,176,140,0.2)'; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
             autoComplete="email"
           />
@@ -134,7 +134,7 @@ function LoginForm() {
               placeholder="Enter your password"
               className="w-full px-4 pr-14 py-3.5 rounded-[10px] text-[15px] transition-all duration-300 bg-white focus:outline-none"
               style={{ border: '2px solid var(--color-border)' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(217,176,140,0.2)'; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
               autoComplete="current-password"
             />
@@ -143,7 +143,7 @@ function LoginForm() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300 hover:scale-110"
               style={{ color: 'var(--color-text-secondary)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-primary)'; e.currentTarget.style.background = 'rgba(255,196,63,0.1)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-primary)'; e.currentTarget.style.background = 'rgba(217,176,140,0.1)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; e.currentTarget.style.background = 'transparent'; }}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
@@ -223,3 +223,4 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+

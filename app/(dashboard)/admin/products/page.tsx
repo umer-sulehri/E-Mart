@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { Fragment, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -224,9 +224,6 @@ export default function ProductsManagementPage() {
                   <th className="px-6 py-4 text-left text-sm font-semibold">
                     Created
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Actions
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -247,7 +244,8 @@ export default function ProductsManagementPage() {
                     const stock = product.stock ?? 0;
                     const stockStatus = getStockStatus(stock);
                     return (
-                      <tr key={product.id} className="hover:bg-surface-alt transition-colors">
+                      <Fragment key={product.id}>
+                      <tr className="hover:bg-surface-alt transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-[8px]">
@@ -289,16 +287,21 @@ export default function ProductsManagementPage() {
                             ? new Date(product.createdAt).toLocaleDateString()
                             : '—'}
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap items-center gap-1.5">
+                      </tr>
+                      <tr className="border-t border-border/60 bg-surface-alt/50">
+                        <td colSpan={6} className="px-6 py-3">
+                          <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
+                            <span className="mr-2 text-[11px] font-semibold uppercase tracking-wide text-text-secondary/70">
+                              Actions
+                            </span>
                             {(product.status ?? 'active') !== 'active' && (
                               <button
                                 onClick={() => handleModerate(product, 'active')}
                                 disabled={moderateProduct.isPending}
-                                className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-success hover:bg-success/10 transition-colors disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-success/30 px-3.5 py-1.5 text-xs font-semibold text-success transition-all hover:bg-success hover:text-white disabled:opacity-50"
                                 aria-label="Approve product"
                               >
-                                <CheckCircleIcon className="h-4 w-4" />
+                                <CheckCircleIcon className="h-3.5 w-3.5" />
                                 Approve
                               </button>
                             )}
@@ -306,40 +309,41 @@ export default function ProductsManagementPage() {
                               <button
                                 onClick={() => handleModerate(product, 'rejected')}
                                 disabled={moderateProduct.isPending}
-                                className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-error hover:bg-error/10 transition-colors disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-error/30 px-3.5 py-1.5 text-xs font-semibold text-error transition-all hover:bg-error hover:text-white disabled:opacity-50"
                                 aria-label="Reject product"
                               >
-                                <XCircleIcon className="h-4 w-4" />
+                                <XCircleIcon className="h-3.5 w-3.5" />
                                 Reject
                               </button>
                             )}
                             <button
                               onClick={() => handleView(product)}
-                              className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold text-text-secondary transition-all hover:border-primary-dark/40 hover:bg-primary/10 hover:text-primary-dark"
                               aria-label="View product"
                             >
-                              <EyeIcon className="h-4 w-4" />
+                              <EyeIcon className="h-3.5 w-3.5" />
                               View
                             </button>
                             <button
                               onClick={() => handleEdit(product)}
-                              className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold text-text-secondary transition-all hover:border-primary-dark/40 hover:bg-primary/10 hover:text-primary-dark"
                               aria-label="Edit product"
                             >
-                              <EditIcon className="h-4 w-4" />
+                              <EditIcon className="h-3.5 w-3.5" />
                               Edit
                             </button>
                             <button
                               onClick={() => handleDelete(product)}
-                              className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-error/10 hover:text-error transition-colors"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold text-text-secondary transition-all hover:border-error/40 hover:bg-error/10 hover:text-error"
                               aria-label="Delete product"
                             >
-                              <TrashIcon className="h-4 w-4" />
+                              <TrashIcon className="h-3.5 w-3.5" />
                               Delete
                             </button>
                           </div>
                         </td>
                       </tr>
+                      </Fragment>
                     );
                   })
                 )}

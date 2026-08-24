@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -152,8 +152,8 @@ export default function SellerAddProductPage() {
         <div className="rounded-xl p-4 flex items-center gap-2" style={{ background: 'rgba(110,139,94,0.15)', color: '#6E8B5E' }}>
           <CheckCircleIcon className="w-5 h-5" />
           {moderationStatus === 'pending'
-            ? 'Product submitted for review. It will appear in the store once approved. Redirecting…'
-            : 'Product added successfully! Redirecting…'}
+            ? 'Product submitted for review. It will appear in the store once approved. Redirectingâ€¦'
+            : 'Product added successfully! Redirectingâ€¦'}
         </div>
       )}
 
@@ -176,7 +176,7 @@ export default function SellerAddProductPage() {
               <label className="block mb-1.5 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Category *</label>
               <select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}>
                 <option value="">Select category</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.parentId ? `— ${c.name}` : c.name}</option>)}
+                {categories.map(c => <option key={c.id} value={c.id}>{c.parentId ? `â€” ${c.name}` : c.name}</option>)}
               </select>
             </div>
             <div>
@@ -205,7 +205,7 @@ export default function SellerAddProductPage() {
               </div>
             </div>
             {autoDiscount > 0 && (
-              <div className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: 'rgba(255,196,63,0.15)', color: 'var(--color-primary-dark)' }}>
+              <div className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: 'rgba(217,176,140,0.15)', color: 'var(--color-primary-dark)' }}>
                 Auto-calculated discount: {autoDiscount}% off
               </div>
             )}
@@ -213,7 +213,7 @@ export default function SellerAddProductPage() {
               <label className="block mb-1.5 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Stock Quantity *</label>
               <input type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} placeholder="0" className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }} />
               <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                Shoppers see “{Number.parseInt(form.stock, 10) > 10 ? 'Available' : Number.parseInt(form.stock, 10) > 0 ? 'Limited stock' : 'Out of stock'}” based on this quantity.
+                Shoppers see â€œ{Number.parseInt(form.stock, 10) > 10 ? 'Available' : Number.parseInt(form.stock, 10) > 0 ? 'Limited stock' : 'Out of stock'}â€ based on this quantity.
               </p>
             </div>
           </div>
@@ -247,14 +247,14 @@ export default function SellerAddProductPage() {
                 value={form.imageUrlInput}
                 onChange={e => setForm({ ...form, imageUrlInput: e.target.value })}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddImage(); } }}
-                placeholder="Paste an image URL, e.g. https://…/photo.jpg"
+                placeholder="Paste an image URL, e.g. https://â€¦/photo.jpg"
                 className="mt-3 w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2"
                 style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
                 aria-label="Image URL"
               />
               <label className="mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:opacity-80" style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}>
                 <PlusIcon className="w-4 h-4" />
-                {upload.isPending ? 'Uploading…' : 'Upload from device'}
+                {upload.isPending ? 'Uploadingâ€¦' : 'Upload from device'}
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -275,13 +275,15 @@ export default function SellerAddProductPage() {
           <button onClick={() => { setError(''); setStep(step - 1); }} disabled={createProduct.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold disabled:opacity-50" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>Previous</button>
         )}
         {step < steps.length ? (
-          <button onClick={handleNext} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>Next Step</button>
+          <button onClick={handleNext} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>Next Step</button>
         ) : (
-          <button onClick={handleSubmit} disabled={createProduct.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
-            {createProduct.isPending ? 'Saving…' : 'Add Product'}
+          <button onClick={handleSubmit} disabled={createProduct.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
+            {createProduct.isPending ? 'Savingâ€¦' : 'Add Product'}
           </button>
         )}
       </div>
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -121,7 +121,7 @@ export default function UserOrdersPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="h-[40px] px-4 rounded-full text-sm font-semibold bg-primary text-text-inverse hover:bg-primary-dark disabled:opacity-40 transition-colors"
+              className="h-[40px] px-4 rounded-full text-sm font-semibold bg-primary text-text-inverse hover:bg-primary-hover disabled:opacity-40 transition-colors"
             >
               Next
             </button>
@@ -131,3 +131,4 @@ export default function UserOrdersPage() {
     </div>
   );
 }
+

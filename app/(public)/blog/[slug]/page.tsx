@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { use, useState } from 'react';
 import Link from 'next/link';
@@ -29,7 +29,7 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
         setTimeout(() => setShareState('idle'), 2500);
       }
     } catch {
-      // User dismissed the share sheet — not an error worth surfacing.
+      // User dismissed the share sheet â€” not an error worth surfacing.
       setShareState((s) => (s === 'copied' ? s : 'idle'));
     }
   };
@@ -63,7 +63,7 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
         <p className="text-text-secondary mb-6">The blog post you are looking for does not exist or has been removed.</p>
         <Link
           href="/blog"
-          className="inline-flex items-center justify-center h-[48px] px-6 bg-primary text-text-inverse font-semibold rounded-[12px] hover:bg-primary-dark transition-colors"
+          className="inline-flex items-center justify-center h-[48px] px-6 bg-primary text-text-inverse font-semibold rounded-[12px] hover:bg-primary-hover transition-colors"
         >
           <ArrowLeftIcon className="w-5 h-5 mr-2" /> Back to Blog
         </Link>
@@ -175,3 +175,4 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
     </div>
   );
 }
+

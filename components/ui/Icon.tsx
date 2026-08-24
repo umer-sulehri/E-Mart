@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+﻿import { ReactNode } from 'react';
 
 interface IconProps {
   children: ReactNode;
@@ -40,7 +40,7 @@ export function IconButton({ children, label, onClick, size = 'md', variant = 'g
 
   const variants: Record<string, string> = {
     ghost: 'hover:bg-surface text-text-primary',
-    primary: 'bg-primary text-text-inverse hover:bg-primary-dark',
+    primary: 'bg-primary text-text-inverse hover:bg-primary-hover',
     secondary: 'bg-secondary text-text-primary hover:opacity-90',
   };
 
@@ -59,3 +59,4 @@ export function IconButton({ children, label, onClick, size = 'md', variant = 'g
     </button>
   );
 }
+

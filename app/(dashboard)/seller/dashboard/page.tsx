@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -54,7 +54,7 @@ export default function SellerDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white mb-1">Seller Dashboard</h1>
@@ -95,7 +95,7 @@ export default function SellerDashboardPage() {
           <div className="flex items-end gap-1.5 h-40">
             {monthLabels.map((m, i) => (
               <div key={`${m}-${i}`} className="flex-1 flex flex-col items-center gap-0.5">
-                <div className="w-full rounded-t-md transition-all duration-500" style={{ height: `${(monthlySales[i]/maxSales)*100}%`, background: `linear-gradient(180deg, var(--color-primary), var(--color-primary-dark))` }} />
+                <div className="w-full rounded-t-md transition-all duration-500" style={{ height: `${(monthlySales[i]/maxSales)*100}%`, background: `linear-gradient(180deg, #6B4E35, #3B2A1A)` }} />
                 <span className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>{m}</span>
               </div>
             ))}
@@ -105,7 +105,7 @@ export default function SellerDashboardPage() {
         <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
           <h3 className="font-bold mb-4 pb-3" style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}>Seller Profile</h3>
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
               {user?.name?.charAt(0)?.toUpperCase() || 'S'}
             </div>
             <div>
@@ -117,7 +117,7 @@ export default function SellerDashboardPage() {
             {[
               { label: 'Phone', value: user?.phone || 'N/A' },
               { label: 'Products', value: `${sellerProducts.length} listed` },
-              { label: 'Rating', value: `${avgRating} ★` },
+              { label: 'Rating', value: `${avgRating} â˜…` },
               { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A' },
             ].map(item => (
               <div key={item.label} className="flex justify-between py-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
@@ -126,7 +126,7 @@ export default function SellerDashboardPage() {
               </div>
             ))}
           </div>
-          <Link href="/seller/profile" className="block mt-4 py-2.5 rounded-xl text-sm font-semibold text-center text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>Edit Profile</Link>
+          <Link href="/seller/profile" className="block mt-4 py-2.5 rounded-xl text-sm font-semibold text-center text-white" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>Edit Profile</Link>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ export default function SellerDashboardPage() {
       <div className="rounded-[16px] overflow-hidden" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <div className="p-5 flex items-center justify-between" style={{ borderBottom: '2px solid var(--color-primary)' }}>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>My Products</h3>
-          <Link href="/seller/products" className="text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>View All →</Link>
+          <Link href="/seller/products" className="text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>View All â†’</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -199,7 +199,7 @@ export default function SellerDashboardPage() {
       <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <div className="flex items-center justify-between mb-4 pb-3" style={{ borderBottom: '2px solid var(--color-primary)' }}>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>Recent Reviews</h3>
-          <Link href="/seller/reviews" className="text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>View All →</Link>
+          <Link href="/seller/reviews" className="text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>View All â†’</Link>
         </div>
         <div className="space-y-3">
           {recentReviews.length === 0 && (
@@ -209,7 +209,7 @@ export default function SellerDashboardPage() {
             <div key={review.id} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', borderLeft: '4px solid var(--color-primary)' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
                     {review.userName?.charAt(0)?.toUpperCase() || '?'}
                   </div>
                   <div>
@@ -227,7 +227,7 @@ export default function SellerDashboardPage() {
               </div>
               {review.productName && (
                 <p className="text-xs mb-1" style={{ color: 'var(--color-text-secondary)' }}>
-                  Product: <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(255,196,63,0.15)', color: 'var(--color-primary-dark)' }}>{review.productName}</span>
+                  Product: <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(217,176,140,0.15)', color: 'var(--color-primary-dark)' }}>{review.productName}</span>
                 </p>
               )}
               <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{review.comment}</p>
@@ -248,7 +248,7 @@ export default function SellerDashboardPage() {
             <div className="flex gap-3">
               <button onClick={() => setConfirmDeleteId(null)} className="flex-1 py-3 rounded-xl text-sm font-semibold" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>Cancel</button>
               <button onClick={handleConfirmDelete} disabled={deleteProduct.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'var(--color-error)' }}>
-                {deleteProduct.isPending ? 'Deleting…' : 'Delete'}
+                {deleteProduct.isPending ? 'Deletingâ€¦' : 'Delete'}
               </button>
             </div>
           </div>
@@ -263,3 +263,5 @@ export default function SellerDashboardPage() {
     </div>
   );
 }
+
+

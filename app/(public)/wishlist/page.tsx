@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo } from 'react';
 import Link from 'next/link';
@@ -39,7 +39,7 @@ export default function WishlistPage() {
         <Link
           href="/products"
           className="inline-block px-8 py-3 rounded-full text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-1"
-          style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
+          style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}
         >
           Browse Products
         </Link>
@@ -172,7 +172,7 @@ export default function WishlistPage() {
                 <Link
                   href={`/products/${product.slug}`}
                   className="flex-1 py-3 rounded-xl text-sm font-semibold text-center text-white transition-all duration-300 hover:-translate-y-0.5"
-                  style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
+                  style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}
                 >
                   View
                 </Link>
@@ -184,3 +184,4 @@ export default function WishlistPage() {
     </div>
   );
 }
+

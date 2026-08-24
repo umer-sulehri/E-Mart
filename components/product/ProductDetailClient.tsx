@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -50,7 +50,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
         await navigator.share({ title: product.name, text: product.description.slice(0, 140), url });
         return;
       } catch {
-        // User dismissed the share sheet — fall through to clipboard.
+        // User dismissed the share sheet â€” fall through to clipboard.
       }
     }
     try {
@@ -97,7 +97,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
           <div className="relative aspect-square bg-surface rounded-[16px] border border-border overflow-hidden">
             <img src={images[activeImage]} alt={product.name} className="w-full h-full object-cover" />
             {discount > 0 && (
-              <span className="absolute top-3 left-3 bg-error text-text-inverse text-sm font-bold px-3 py-1 rounded-full">
+              <span className="absolute top-3 left-3 bg-error text-white text-sm font-bold px-3 py-1 rounded-full">
                 -{discount}%
               </span>
             )}
@@ -252,3 +252,4 @@ export function ProductDetailClient({ product }: { product: Product }) {
     </div>
   );
 }
+

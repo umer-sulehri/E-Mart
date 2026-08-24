@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useOrders } from '@/hooks/useOrders';
@@ -23,7 +23,7 @@ export default function UserDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="rounded-[16px] p-8" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-8" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">Welcome back, {displayName}!</h1>
         <p className="text-white/70">Manage your orders, wishlist, and more from your dashboard.</p>
       </div>
@@ -33,7 +33,7 @@ export default function UserDashboardPage() {
         {[
           { icon: OrderIcon, label: 'Total Orders', value: totalOrders, color: 'var(--color-primary)' },
           { icon: HeartIcon, label: 'Wishlist', value: wishlistCount || 0, color: '#B65C4B' },
-          { icon: StarIcon, label: 'Reviews', value: userReviews?.length ?? '—', color: '#C9902E' },
+          { icon: StarIcon, label: 'Reviews', value: userReviews?.length ?? 'â€”', color: '#C9902E' },
         ].map(stat => (
           <div key={stat.label} className="rounded-[14px] p-5 text-center transition-all duration-300 hover:-translate-y-1" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
             <stat.icon className="w-8 h-8 mx-auto mb-2" style={{ color: stat.color }} />
@@ -47,11 +47,11 @@ export default function UserDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
         <div className="rounded-[16px] p-6 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
-          <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+          <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl font-bold text-white" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
             {displayName.charAt(0).toUpperCase()}
           </div>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>{displayName}</h3>
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold mt-1" style={{ background: 'rgba(255,196,63,0.18)', color: 'var(--color-primary-dark)' }}>{authUser?.role ? authUser.role.charAt(0).toUpperCase() + authUser.role.slice(1) : 'Buyer'}</span>
+          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold mt-1" style={{ background: 'rgba(217,176,140,0.18)', color: 'var(--color-primary-dark)' }}>{authUser?.role ? authUser.role.charAt(0).toUpperCase() + authUser.role.slice(1) : 'Buyer'}</span>
           <div className="space-y-2 mt-4 text-left">
             {[
               { label: 'Email', value: authUser?.email || 'N/A' },
@@ -63,7 +63,7 @@ export default function UserDashboardPage() {
               </div>
             ))}
           </div>
-          <Link href="/user/profile" className="block mt-4 py-2.5 rounded-xl text-sm font-semibold text-center text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>Edit Profile</Link>
+          <Link href="/user/profile" className="block mt-4 py-2.5 rounded-xl text-sm font-semibold text-center text-white" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>Edit Profile</Link>
         </div>
 
         {/* Quick Actions */}
@@ -103,7 +103,7 @@ export default function UserDashboardPage() {
       <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <div className="flex items-center justify-between mb-4 pb-3" style={{ borderBottom: '2px solid var(--color-primary)' }}>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>Recent Orders</h3>
-          <Link href="/user/orders" className="text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>View All →</Link>
+          <Link href="/user/orders" className="text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>View All â†’</Link>
         </div>
         <div className="flex flex-col gap-3">
           {recentOrders.length === 0 ? (
@@ -117,7 +117,7 @@ export default function UserDashboardPage() {
               <div>
                 <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>#{order.orderNumber}</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                  {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} · {order.items.length} items
+                  {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} Â· {order.items.length} items
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -131,3 +131,5 @@ export default function UserDashboardPage() {
     </div>
   );
 }
+
+

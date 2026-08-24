@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -66,7 +66,7 @@ export default function BlogPage() {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search articles…"
+            placeholder="Search articlesâ€¦"
             aria-label="Search articles"
             className="w-full h-[48px] pl-11 pr-10 rounded-[12px] bg-surface border border-border text-text-primary text-sm focus:outline-none focus:border-primary transition-colors"
           />
@@ -123,7 +123,7 @@ export default function BlogPage() {
       {!isLoading && posts.length === 0 && (
         <div className="text-center py-16 border border-dashed border-border rounded-[16px]">
           <p className="text-text-secondary text-lg">No articles have been published yet.</p>
-          <p className="text-text-secondary text-sm mt-1">Check back soon — fresh content is on the way.</p>
+          <p className="text-text-secondary text-sm mt-1">Check back soon â€” fresh content is on the way.</p>
         </div>
       )}
 
@@ -131,12 +131,12 @@ export default function BlogPage() {
         <div className="text-center py-16 border border-dashed border-border rounded-[16px]">
           <p className="text-text-primary font-semibold text-lg mb-1">No matching articles</p>
           <p className="text-text-secondary text-sm mb-5">
-            Nothing found for “{query.trim()}”
+            Nothing found for â€œ{query.trim()}â€
             {activeCategory !== 'All' ? <> in <strong>{activeCategory}</strong></> : null}.
           </p>
           <button
             onClick={clearFilters}
-            className="inline-flex items-center justify-center h-[48px] px-6 bg-primary text-text-inverse font-semibold rounded-[12px] hover:bg-primary-dark transition-colors"
+            className="inline-flex items-center justify-center h-[48px] px-6 bg-primary text-text-inverse font-semibold rounded-[12px] hover:bg-primary-hover transition-colors"
           >
             Clear filters
           </button>
@@ -214,3 +214,4 @@ export default function BlogPage() {
     </div>
   );
 }
+

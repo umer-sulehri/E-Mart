@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -24,7 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Wishlist Button - top right corner */}
       <button
         onClick={(e) => { e.preventDefault(); toggleItem(product.id); }}
-        className="absolute top-3 right-3 min-w-[48px] min-h-[48px] flex items-center justify-center bg-surface/90 border border-border rounded-full hover:bg-error hover:border-error hover:text-text-inverse transition-all duration-200 z-30"
+        className="absolute top-3 right-3 min-w-[48px] min-h-[48px] flex items-center justify-center bg-surface/90 border border-border rounded-full hover:bg-error hover:border-error hover:text-white transition-all duration-200 z-30"
         aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
       >
         <HeartIcon
@@ -97,7 +97,7 @@ export function ProductCard({ product }: ProductCardProps) {
             className={`min-h-[48px] px-4 py-1.5 rounded-[12px] transition-all duration-200 ${
               outOfStock
                 ? 'bg-surface-alt text-text-secondary cursor-not-allowed'
-                : 'bg-primary text-text-inverse hover:bg-primary-dark active:scale-95'
+                : 'bg-primary text-text-inverse hover:bg-primary-hover active:scale-95'
             }`}
           >
             Add to Cart
@@ -107,3 +107,5 @@ export function ProductCard({ product }: ProductCardProps) {
     </div>
   );
 }
+
+

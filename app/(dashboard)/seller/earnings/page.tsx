@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -82,7 +82,7 @@ export default function SellerEarningsPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white mb-1">Earnings</h1>
@@ -99,8 +99,8 @@ export default function SellerEarningsPage() {
         {[
           { icon: ArrowRightIcon, label: 'Gross Earnings', value: `Rs ${(earningsData?.totalEarnings ?? 0).toLocaleString()}`, color: 'var(--color-primary)' },
           { icon: ChartBarIcon, label: 'This Month', value: `Rs ${thisMonth.toLocaleString()}`, color: '#C97B5A' },
-          { icon: OrderIcon, label: 'Net (after 10% fee)', value: summary ? `Rs ${summary.netEarnings.toLocaleString()}` : '—', color: '#C9902E' },
-          { icon: CheckCircleIcon, label: 'Available for Payout', value: summary ? `Rs ${summary.availableForPayout.toLocaleString()}` : '—', color: '#6E8B5E' },
+          { icon: OrderIcon, label: 'Net (after 10% fee)', value: summary ? `Rs ${summary.netEarnings.toLocaleString()}` : 'â€”', color: '#C9902E' },
+          { icon: CheckCircleIcon, label: 'Available for Payout', value: summary ? `Rs ${summary.availableForPayout.toLocaleString()}` : 'â€”', color: '#6E8B5E' },
         ].map(stat => (
           <div key={stat.label} className="rounded-[14px] p-5 transition-all duration-300 hover:-translate-y-1" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center gap-3">
@@ -108,7 +108,7 @@ export default function SellerEarningsPage() {
                 <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
               </div>
               <div>
-                <p className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>{isLoading ? '…' : stat.value}</p>
+                <p className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>{isLoading ? 'â€¦' : stat.value}</p>
                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{stat.label}</p>
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function SellerEarningsPage() {
                   className="w-full rounded-t-md transition-all duration-500"
                   style={{
                     height: `${Math.max((item.amount / maxAmount) * 100, item.amount > 0 ? 4 : 1)}%`,
-                    background: `linear-gradient(180deg, var(--color-primary), var(--color-primary-dark))`,
+                    background: `linear-gradient(180deg, #6B4E35, #3B2A1A)`,
                   }}
                 />
                 <span className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>{formatMonth(item.month)}</span>
@@ -149,7 +149,7 @@ export default function SellerEarningsPage() {
         <h3 className="font-bold mb-4 pb-3" style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}>Request a Payout</h3>
         {summary && (
           <p className="mb-4 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            Available balance: <strong style={{ color: 'var(--color-text-primary)' }}>Rs {summary.availableForPayout.toLocaleString()}</strong> · Minimum payout Rs 5,000 · Commission withheld: Rs {summary.commission.toLocaleString()}
+            Available balance: <strong style={{ color: 'var(--color-text-primary)' }}>Rs {summary.availableForPayout.toLocaleString()}</strong> Â· Minimum payout Rs 5,000 Â· Commission withheld: Rs {summary.commission.toLocaleString()}
           </p>
         )}
         <div className="flex flex-wrap gap-3 items-end">
@@ -184,9 +184,9 @@ export default function SellerEarningsPage() {
             onClick={handleRequestPayout}
             disabled={requesting}
             className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
+            style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}
           >
-            <WalletIcon className="w-4 h-4" /> {requesting ? 'Requesting…' : 'Request Payout'}
+            <WalletIcon className="w-4 h-4" /> {requesting ? 'Requestingâ€¦' : 'Request Payout'}
           </button>
         </div>
         {payoutMessage && (
@@ -275,3 +275,5 @@ export default function SellerEarningsPage() {
     </div>
   );
 }
+
+

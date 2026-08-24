@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { GearIcon, CheckCircleIcon, PlusIcon, EditIcon, TrashIcon } from '@/components/icons';
@@ -24,7 +24,7 @@ export default function AdminSettingsPage() {
   const [contactPhone, setContactPhone] = useState('+92 300 0000000');
   const [contactEmail, setContactEmail] = useState('support@e-mart.app');
   const [contactAddress, setContactAddress] = useState('Lahore, Pakistan');
-  const [supportHours, setSupportHours] = useState('Monday – Saturday, 9am – 9pm (PKT)');
+  const [supportHours, setSupportHours] = useState('Monday â€“ Saturday, 9am â€“ 9pm (PKT)');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [autoApproveProducts, setAutoApproveProducts] = useState(false);
@@ -240,7 +240,7 @@ export default function AdminSettingsPage() {
       {/* Header */}
       <div
         style={{
-          background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
+          background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)',
           borderRadius: '16px',
           padding: '28px 32px',
           marginBottom: '24px',
@@ -441,7 +441,7 @@ export default function AdminSettingsPage() {
       {/* SECTION 2: Follow Us Links */}
       <div
         style={{
-          background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
+          background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)',
           borderRadius: '16px',
           padding: '28px 32px',
           marginBottom: '24px',
@@ -587,7 +587,7 @@ export default function AdminSettingsPage() {
             {socialLinks.length === 0 ? (
               <tr>
                 <td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-                  {linksLoading ? 'Loading links…' : 'No social links yet. Add one to show it in the footer.'}
+                  {linksLoading ? 'Loading linksâ€¦' : 'No social links yet. Add one to show it in the footer.'}
                 </td>
               </tr>
             ) : (
@@ -684,7 +684,7 @@ export default function AdminSettingsPage() {
                           }}
                           aria-label="Move up"
                         >
-                          ▲
+                          â–²
                         </button>
                         <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: 600 }}>{link.sortOrder}</span>
                         <button
@@ -705,7 +705,7 @@ export default function AdminSettingsPage() {
                           }}
                           aria-label="Move down"
                         >
-                          ▼
+                          â–¼
                         </button>
                       </div>
                     </td>
@@ -850,3 +850,4 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+

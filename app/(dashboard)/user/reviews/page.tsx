@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import { useUserReviews, useCreateReview, useUpdateReview, useDeleteReview, type ReviewWithProduct } from '@/hooks/useReviews';
@@ -113,7 +113,7 @@ export default function UserReviewsPage() {
           comment: comment.trim(),
           slug: target.slug,
         });
-        toast.showToast('Review submitted — thank you!', 'success');
+        toast.showToast('Review submitted â€” thank you!', 'success');
       }
       setShowWriteReview(false);
       setEditReview(null);
@@ -125,7 +125,7 @@ export default function UserReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">My Reviews</h1>
         <p className="text-white/70">Manage your product reviews.</p>
       </div>
@@ -170,7 +170,7 @@ export default function UserReviewsPage() {
             <div key={review.id} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', borderLeft: '4px solid var(--color-primary)' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(255,196,63,0.12)', color: 'var(--color-primary)' }}>{review.productName}</span>
+                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(217,176,140,0.12)', color: 'var(--color-primary)' }}>{review.productName}</span>
                   <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -224,7 +224,7 @@ export default function UserReviewsPage() {
                 className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--color-primary)' }}
               >
-                {createReview.isPending || updateReview.isPending ? 'Saving…' : editReview ? 'Update' : 'Submit'}
+                {createReview.isPending || updateReview.isPending ? 'Savingâ€¦' : editReview ? 'Update' : 'Submit'}
               </button>
             </div>
           </div>
@@ -233,3 +233,5 @@ export default function UserReviewsPage() {
     </div>
   );
 }
+
+

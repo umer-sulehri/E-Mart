@@ -101,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
             <button
               onClick={() => setMobileOpen(false)}
-              className="min-w-[48px] min-h-[48px] rounded-xl flex items-center justify-center lg:hidden text-text-inverse/60 hover:text-text-inverse"
+              className="min-w-[48px] min-h-[48px] rounded-xl flex items-center justify-center lg:hidden text-white/60 hover:text-text-inverse"
               aria-label="Close sidebar"
             >
               <CloseIcon className="w-5 h-5" />
@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Collapse toggle (desktop) */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="hidden lg:flex w-full items-center justify-center mb-4 py-2 rounded-xl text-text-inverse/40 hover:text-text-inverse/80 transition-colors"
+            className="hidden lg:flex w-full items-center justify-center mb-4 py-2 rounded-xl text-white/40 hover:text-white/80 transition-colors"
             aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             <MenuIcon className="w-5 h-5" />
@@ -130,7 +130,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       onClick={() => setMobileOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
                         ${sidebarOpen || mobileOpen ? '' : 'justify-center'}
-                        ${isActive ? 'bg-primary text-text-inverse' : 'text-text-inverse/60 hover:text-text-inverse hover:bg-white/10'}`}
+                        ${isActive ? 'bg-primary text-text-inverse' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                       title={!(sidebarOpen || mobileOpen) ? item.label : undefined}
                     >
                       <span className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-white/20' : ''}`}>
@@ -151,7 +151,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="pt-4 border-t border-white/10">
             <button
               onClick={() => setConfirmLogout(true)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-text-inverse/40 hover:text-text-inverse/80 hover:bg-white/10 transition-all w-full ${sidebarOpen || mobileOpen ? '' : 'justify-center'}`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/10 transition-all w-full ${sidebarOpen || mobileOpen ? '' : 'justify-center'}`}
               title={!(sidebarOpen || mobileOpen) ? 'Logout' : undefined}
             >
               <LogoutIcon className="w-5 h-5 flex-shrink-0" />
@@ -255,7 +255,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <p className="text-sm text-text-secondary mb-6">You will be redirected to the homepage.</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmLogout(false)} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-surface text-text-secondary border border-border">Cancel</button>
-              <button onClick={handleLogout} className="flex-1 py-3 rounded-xl text-sm font-semibold text-text-inverse bg-error">Sign Out</button>
+              <button onClick={handleLogout} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-error">Sign Out</button>
             </div>
           </div>
         </div>
@@ -263,5 +263,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
+
 
 

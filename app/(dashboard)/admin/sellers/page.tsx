@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -107,7 +107,7 @@ export default function SellersManagementPage() {
               const initial = seller.name.charAt(0).toUpperCase();
               const joinedDate = seller.createdAt
                 ? new Date(seller.createdAt).toLocaleDateString()
-                : '—';
+                : 'â€”';
               const mockProducts = (seller.id.charCodeAt(0) % 30) + 1;
               const mockOrders = (seller.id.charCodeAt(0) % 120) + 5;
 
@@ -125,7 +125,7 @@ export default function SellersManagementPage() {
                     <div
                       className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold"
                       style={{
-                        background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
+                        background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)',
                         color: '#fff',
                       }}
                     >
@@ -240,3 +240,4 @@ export default function SellersManagementPage() {
     </div>
   );
 }
+

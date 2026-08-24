@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useToast } from '@/components/ui/Toast';
@@ -96,7 +96,7 @@ export default function AddressesPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">My Addresses</h1>
         <p className="text-white/70">Manage your shipping addresses.</p>
       </div>
@@ -124,7 +124,7 @@ export default function AddressesPage() {
           </div>
         </div>
         <div className="flex gap-3 mt-4">
-          <button onClick={handleSave} disabled={saving} className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+          <button onClick={handleSave} disabled={saving} className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
             {saving ? 'Saving...' : editing ? 'Update Address' : 'Add Address'}
           </button>
           {editing && <button onClick={resetForm} className="px-6 py-3 rounded-full text-sm font-semibold border border-border hover:bg-surface-alt transition-colors" style={{ color: 'var(--color-text-primary)' }}>Cancel</button>}
@@ -139,7 +139,7 @@ export default function AddressesPage() {
         ) : (
           <div className="space-y-3">
             {addresses.map(addr => (
-              <div key={addr.id} className="p-4 rounded-xl border" style={{ borderColor: addr.isDefault ? 'var(--color-primary)' : 'var(--color-border)', background: addr.isDefault ? 'rgba(255,196,63,0.05)' : 'var(--color-bg)' }}>
+              <div key={addr.id} className="p-4 rounded-xl border" style={{ borderColor: addr.isDefault ? 'var(--color-primary)' : 'var(--color-border)', background: addr.isDefault ? 'rgba(217,176,140,0.05)' : 'var(--color-bg)' }}>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -172,3 +172,5 @@ export default function AddressesPage() {
     </div>
   );
 }
+
+

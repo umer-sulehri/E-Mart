@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -88,7 +88,7 @@ function ProductDetailPageInner({ params }: { params: Promise<{ slug: string }> 
         <h1 className="text-2xl font-bold text-text-primary mb-3">Product Not Found</h1>
         <p className="text-text-secondary mb-6">The product you are looking for does not exist or has been removed.</p>
         <Link href="/products">
-          <span className="inline-flex items-center justify-center h-[48px] px-6 bg-primary text-text-inverse font-semibold rounded-[10px] hover:bg-primary-dark transition-colors">
+          <span className="inline-flex items-center justify-center h-[48px] px-6 bg-primary text-text-inverse font-semibold rounded-[10px] hover:bg-primary-hover transition-colors">
             Browse All Products
           </span>
         </Link>
@@ -163,7 +163,7 @@ function ProductDetailPageInner({ params }: { params: Promise<{ slug: string }> 
                 type="submit"
                 disabled={createReview.isPending}
                 className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
+                style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}
               >
                 {createReview.isPending ? 'Submitting...' : 'Submit Review'}
               </button>
@@ -219,7 +219,7 @@ function ProductDetailPageInner({ params }: { params: Promise<{ slug: string }> 
                   {review.sellerReply && (
                     <div className="mt-3 p-3 rounded-xl" style={{ background: 'var(--color-surface-alt)', borderLeft: '3px solid var(--color-primary)' }}>
                       <p className="text-xs font-bold mb-1 text-primary-dark">
-                        Store reply{review.repliedAt ? ` · ${new Date(review.repliedAt).toLocaleDateString()}` : ''}
+                        Store reply{review.repliedAt ? ` Â· ${new Date(review.repliedAt).toLocaleDateString()}` : ''}
                       </p>
                       <p className="text-sm text-text-secondary">{review.sellerReply}</p>
                     </div>
@@ -255,7 +255,7 @@ function RelatedCard({ product }: { product: Product }) {
         <div className="relative aspect-[4/3] bg-surface-alt overflow-hidden">
           <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
           {product.originalPrice && (
-            <span className="absolute top-2 left-2 bg-error text-text-inverse text-xs font-bold px-2 py-1 rounded-full">
+            <span className="absolute top-2 left-2 bg-error text-white text-xs font-bold px-2 py-1 rounded-full">
               -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
             </span>
           )}
@@ -275,10 +275,13 @@ function RelatedCard({ product }: { product: Product }) {
             <span className="text-xs text-text-secondary line-through">Rs {product.originalPrice.toLocaleString()}</span>
           )}
         </div>
-        <button onClick={() => addItem(product)} className="mt-auto w-full min-h-[48px] flex items-center justify-center gap-2 bg-primary text-text-inverse text-sm font-semibold rounded-[10px] hover:bg-primary-dark transition-colors">
+        <button onClick={() => addItem(product)} className="mt-auto w-full min-h-[48px] flex items-center justify-center gap-2 bg-primary text-text-inverse text-sm font-semibold rounded-[10px] hover:bg-primary-hover transition-colors">
           Add to Cart
         </button>
       </div>
     </div>
   );
 }
+
+
+

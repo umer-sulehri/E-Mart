@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -52,7 +52,7 @@ export default function SellerProductsPage() {
           <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>My Products</h1>
           <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{filtered.length} products</p>
         </div>
-        <Link href="/seller/products/new" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+        <Link href="/seller/products/new" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
           <PlusIcon className="w-4 h-4" /> Add New Product
         </Link>
       </div>
@@ -188,7 +188,7 @@ export default function SellerProductsPage() {
             <div className="flex gap-3">
               <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 rounded-xl text-sm font-semibold" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>Cancel</button>
               <button onClick={handleDelete} disabled={deleteProduct.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60" style={{ background: 'var(--color-error)' }}>
-                {deleteProduct.isPending ? 'Deleting…' : 'Delete'}
+                {deleteProduct.isPending ? 'Deletingâ€¦' : 'Delete'}
               </button>
             </div>
           </div>
@@ -197,3 +197,4 @@ export default function SellerProductsPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -149,13 +149,13 @@ export default function SellerEditProductPage({ params }: { params: Promise<{ id
 
       {!product && !error && (
         <div className="rounded-[16px] p-10 text-center text-sm" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }}>
-          Loading product…
+          Loading productâ€¦
         </div>
       )}
 
       {product && !error && saved && (
         <div className="rounded-xl p-4 flex items-center gap-2" style={{ background: 'rgba(110,139,94,0.15)', color: '#6E8B5E' }}>
-          <CheckCircleIcon className="w-5 h-5" /> Product updated successfully! Redirecting…
+          <CheckCircleIcon className="w-5 h-5" /> Product updated successfully! Redirectingâ€¦
         </div>
       )}
 
@@ -193,7 +193,7 @@ export default function SellerEditProductPage({ params }: { params: Promise<{ id
                   <label className="block mb-1.5 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Category</label>
                   <select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}>
                     <option value="">Keep current category</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.parentId ? `— ${c.name}` : c.name}</option>)}
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.parentId ? `â€” ${c.name}` : c.name}</option>)}
                   </select>
                 </div>
               </div>
@@ -239,7 +239,7 @@ export default function SellerEditProductPage({ params }: { params: Promise<{ id
             />
             <label className="mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:opacity-80" style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}>
               <PlusIcon className="w-4 h-4" />
-              {upload.isPending ? 'Uploading…' : 'Upload from device'}
+              {upload.isPending ? 'Uploadingâ€¦' : 'Upload from device'}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -258,10 +258,10 @@ export default function SellerEditProductPage({ params }: { params: Promise<{ id
               className="px-6 py-3 rounded-xl text-sm font-semibold disabled:opacity-50"
               style={{ background: 'rgba(182,92,75,0.12)', color: 'var(--color-error)', border: '1px solid var(--color-error)' }}
             >
-              {deleteProduct.isPending ? 'Deleting…' : 'Delete'}
+              {deleteProduct.isPending ? 'Deletingâ€¦' : 'Delete'}
             </button>
-            <button onClick={handleSave} disabled={updateProduct.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
-              {updateProduct.isPending ? 'Saving…' : 'Save Changes'}
+            <button onClick={handleSave} disabled={updateProduct.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
+              {updateProduct.isPending ? 'Savingâ€¦' : 'Save Changes'}
             </button>
           </div>
         </>
@@ -269,3 +269,4 @@ export default function SellerEditProductPage({ params }: { params: Promise<{ id
     </div>
   );
 }
+

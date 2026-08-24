@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
@@ -35,7 +35,7 @@ function persistReadIds(ids: string[]) {
   try {
     window.localStorage.setItem(READ_KEY, JSON.stringify(ids));
   } catch {
-    // storage unavailable — read state stays in memory only
+    // storage unavailable â€” read state stays in memory only
   }
   emitReadChange();
 }
@@ -206,7 +206,7 @@ export default function NotificationsPage() {
       {/* Notification list */}
       {isLoading ? (
         <p className="py-8 text-center text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-          Loading notifications…
+          Loading notificationsâ€¦
         </p>
       ) : notifications.length === 0 ? (
         <div
@@ -242,7 +242,7 @@ export default function NotificationsPage() {
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: isRead ? 'var(--color-surface-alt)' : 'rgba(255,196,63,0.15)',
+                    background: isRead ? 'var(--color-surface-alt)' : 'rgba(217,176,140,0.15)',
                     color: isRead ? 'var(--color-text-secondary)' : 'var(--color-primary)',
                   }}
                 >
@@ -287,7 +287,7 @@ export default function NotificationsPage() {
             Notification Preferences
           </h3>
           {updatePreferences.isPending && (
-            <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Saving…</span>
+            <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Savingâ€¦</span>
           )}
           {updatePreferences.isError && (
             <span className="text-xs font-semibold" style={{ color: 'var(--color-error)' }}>Save failed</span>
@@ -325,9 +325,10 @@ export default function NotificationsPage() {
             />
           </div>
         ) : (
-          <p className="py-4 text-sm" style={{ color: 'var(--color-text-secondary)' }}>Loading preferences…</p>
+          <p className="py-4 text-sm" style={{ color: 'var(--color-text-secondary)' }}>Loading preferencesâ€¦</p>
         )}
       </div>
     </div>
   );
 }
+

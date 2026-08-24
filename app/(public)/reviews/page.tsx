@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -90,7 +90,7 @@ export default function ReviewsPage() {
             <Link
               href="/login"
               className="inline-block px-8 py-3 rounded-[10px] text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5"
-              style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
+              style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}
             >
               Sign In
             </Link>
@@ -119,7 +119,7 @@ export default function ReviewsPage() {
                 className="w-full px-4 py-3 rounded-[10px] text-sm bg-white focus:outline-none"
                 style={{ border: '2px solid var(--color-border)', color: 'var(--color-text-primary)' }}
               >
-                <option value="">Select a product…</option>
+                <option value="">Select a productâ€¦</option>
                 {productList.map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -190,9 +190,9 @@ export default function ReviewsPage() {
               type="submit"
               disabled={rating === 0 || !reviewText.trim() || !productId || createReview.isPending}
               className="w-full py-3.5 rounded-[10px] text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}
+              style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}
             >
-              {createReview.isPending ? 'Submitting…' : 'Submit Review'}
+              {createReview.isPending ? 'Submittingâ€¦' : 'Submit Review'}
             </button>
           </form>
         )}
@@ -211,7 +211,7 @@ export default function ReviewsPage() {
         </h2>
 
         {isLoading && (
-          <p className="py-8 text-center" style={{ color: 'var(--color-text-secondary)' }}>Loading reviews…</p>
+          <p className="py-8 text-center" style={{ color: 'var(--color-text-secondary)' }}>Loading reviewsâ€¦</p>
         )}
 
         {!isLoading && reviewList.length === 0 && (
@@ -232,7 +232,7 @@ export default function ReviewsPage() {
               <div
                 className="w-[60px] h-[60px] rounded-full flex-shrink-0 flex items-center justify-center text-lg font-bold"
                 style={{
-                  background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
+                  background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)',
                   color: 'white',
                 }}
               >
@@ -282,3 +282,4 @@ export default function ReviewsPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useAdminStats, useAdminAnalytics } from '@/hooks/useAdmin';
@@ -43,10 +43,10 @@ export default function AdminDashboardPage() {
   const { data: ordersData, isLoading: ordersLoading } = useAdminOrders(1, 10);
 
   const statsMap: Record<string, string | number> = {
-    users: stats?.totalUsers ?? '—',
-    products: stats?.totalProducts ?? '—',
-    orders: stats?.totalOrders ?? '—',
-    revenue: stats?.totalRevenue != null ? formatCurrency(stats.totalRevenue) : '—',
+    users: stats?.totalUsers ?? 'â€”',
+    products: stats?.totalProducts ?? 'â€”',
+    orders: stats?.totalOrders ?? 'â€”',
+    revenue: stats?.totalRevenue != null ? formatCurrency(stats.totalRevenue) : 'â€”',
   };
 
   const recentOrders = ordersData?.orders ?? [];
@@ -59,21 +59,21 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* ── Page Header ── */}
+      {/* â”€â”€ Page Header â”€â”€ */}
       <div
         className="rounded-[16px] p-8"
         style={{
-          background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
-          boxShadow: '0 10px 25px rgba(255,196,63,0.3)',
+          background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)',
+          boxShadow: '0 10px 25px rgba(217,176,140,0.3)',
         }}
       >
-        <h1 className="text-3xl font-bold text-text-inverse mb-1">Admin Dashboard</h1>
-        <p className="text-text-inverse/70">
-          Overview of your marketplace — users, products, orders and revenue.
+        <h1 className="text-3xl font-bold text-white mb-1">Admin Dashboard</h1>
+        <p className="text-white/70">
+          Overview of your marketplace â€” users, products, orders and revenue.
         </p>
       </div>
 
-      {/* ── Stat Cards ── */}
+      {/* â”€â”€ Stat Cards â”€â”€ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {STAT_CONFIGS.map(({ key, label, icon: Icon, color, trend }) => {
           const isPositive = trend >= 0;
@@ -92,21 +92,21 @@ export default function AdminDashboardPage() {
                 <span className="text-sm text-text-secondary">{label}</span>
               </div>
               <p className="text-3xl font-bold text-text-primary">
-                {statsLoading && key !== 'revenue' ? '—' : statsMap[key]}
+                {statsLoading && key !== 'revenue' ? 'â€”' : statsMap[key]}
               </p>
               <span
                 className={`inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
                   isPositive ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
                 }`}
               >
-                {isPositive ? '↑' : '↓'} {Math.abs(trend)}%
+                {isPositive ? 'â†‘' : 'â†“'} {Math.abs(trend)}%
               </span>
             </div>
           );
         })}
       </div>
 
-      {/* ── Chart + Quick Actions ── */}
+      {/* â”€â”€ Chart + Quick Actions â”€â”€ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Bar Chart */}
         <div className="lg:col-span-2 rounded-[16px] bg-surface border border-border p-6">
@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
           >
             <h3 className="font-bold text-text-primary">Orders &amp; Revenue Trend</h3>
             <span className="text-xs text-text-secondary">
-              Last 30 days{analytics ? ` · Today: ${analytics.ordersToday} orders (${formatCurrency(analytics.revenueToday)})` : ''}
+              Last 30 days{analytics ? ` Â· Today: ${analytics.ordersToday} orders (${formatCurrency(analytics.revenueToday)})` : ''}
             </span>
           </div>
           <div className="h-72">
@@ -251,7 +251,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* ── Reports + Low Stock ── */}
+      {/* â”€â”€ Reports + Low Stock â”€â”€ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-[16px] bg-surface border border-border p-6">
           <h3 className="font-bold text-text-primary mb-4">Export Reports</h3>
@@ -277,7 +277,7 @@ export default function AdminDashboardPage() {
         <div className="rounded-[16px] bg-surface border border-border p-6">
           <h3 className="font-bold text-text-primary mb-4">Low Stock Alerts</h3>
           {!analytics ? (
-            <p className="text-sm text-text-secondary">Loading…</p>
+            <p className="text-sm text-text-secondary">Loadingâ€¦</p>
           ) : analytics.lowStockProducts.length === 0 ? (
             <p className="text-sm text-text-secondary">All products are well stocked.</p>
           ) : (
@@ -299,7 +299,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* ── Recent Orders Table ── */}
+      {/* â”€â”€ Recent Orders Table â”€â”€ */}
       <div className="rounded-[16px] bg-surface border border-border overflow-hidden">
         <div
           className="p-5 flex items-center justify-between"
@@ -311,7 +311,7 @@ export default function AdminDashboardPage() {
             className="text-sm font-semibold min-h-[48px] min-w-[48px] inline-flex items-center px-3 py-2 rounded-xl transition-colors hover:bg-primary/10"
             style={{ color: 'var(--color-primary)' }}
           >
-            View all →
+            View all â†’
           </Link>
         </div>
 
@@ -333,7 +333,7 @@ export default function AdminDashboardPage() {
               {ordersLoading ? (
                 <tr>
                   <td colSpan={5} className="px-5 py-10 text-center text-text-secondary">
-                    Loading recent orders…
+                    Loading recent ordersâ€¦
                   </td>
                 </tr>
               ) : recentOrders.length === 0 ? (
@@ -377,3 +377,6 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+
+

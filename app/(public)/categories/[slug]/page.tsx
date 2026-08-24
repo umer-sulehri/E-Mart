@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -19,7 +19,7 @@ function CategoryPageInner({ params }: { params: Promise<{ slug: string }> }) {
   const { data: categories = [], isLoading: catsLoading } = useCategories();
 
   // Search both top-level categories AND their children by slug.
-  // Plain derivation — React Compiler handles memoization.
+  // Plain derivation â€” React Compiler handles memoization.
   let category: Category | undefined;
   if (slug) {
     category = categories.find((c) => c.slug === slug);
@@ -150,7 +150,7 @@ function CategoryPageInner({ params }: { params: Promise<{ slug: string }> }) {
                   <div className="relative aspect-[4/3] bg-surface-alt">
                     <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
                     {product.originalPrice && (
-                      <span className="absolute top-2 left-2 bg-error text-text-inverse text-xs font-bold px-2 py-1 rounded-full">
+                      <span className="absolute top-2 left-2 bg-error text-white text-xs font-bold px-2 py-1 rounded-full">
                         -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
                       </span>
                     )}
@@ -179,3 +179,4 @@ function CategoryPageInner({ params }: { params: Promise<{ slug: string }> }) {
     </div>
   );
 }
+

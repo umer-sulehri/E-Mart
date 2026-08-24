@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { ReactNode, ButtonHTMLAttributes } from 'react';
 
@@ -20,11 +20,11 @@ export function Button({
     'inline-flex items-center justify-center font-semibold rounded-[12px] transition-all duration-200 min-h-[48px] min-w-[48px] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
   const variants: Record<string, string> = {
-    primary: 'bg-primary text-text-inverse hover:bg-primary-dark focus-visible:outline-primary',
+    primary: 'bg-primary text-text-inverse hover:bg-primary-hover focus-visible:outline-primary',
     secondary: 'bg-secondary text-text-primary hover:opacity-90',
     outline: 'border-2 border-border text-text-primary bg-transparent hover:bg-surface',
     ghost: 'text-text-primary hover:bg-surface',
-    danger: 'bg-error text-text-inverse hover:opacity-90',
+    danger: 'bg-error text-white hover:opacity-90',
   };
 
   const sizes: Record<string, string> = {
@@ -43,3 +43,5 @@ export function Button({
     </button>
   );
 }
+
+

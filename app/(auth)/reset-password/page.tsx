@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -29,7 +29,7 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // The recovery event fires asynchronously after client init — guard
+  // The recovery event fires asynchronously after client init â€” guard
   // against marking the link invalid before it has had a chance to arrive.
   const settled = useRef(false);
 
@@ -83,7 +83,7 @@ export default function ResetPasswordPage() {
     return (
       <AuthLayout title="Reset Password" maxWidth="500px">
         <p className="text-center text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-          Verifying your reset link…
+          Verifying your reset linkâ€¦
         </p>
       </AuthLayout>
     );
@@ -140,7 +140,7 @@ export default function ResetPasswordPage() {
               placeholder="Enter new password"
               className="w-full px-4 pr-12 py-3.5 rounded-[10px] text-[15px] transition-all duration-300 bg-white focus:outline-none"
               style={{ border: '2px solid var(--color-border)' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(217,176,140,0.2)'; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
               autoComplete="new-password"
             />
@@ -172,7 +172,7 @@ export default function ResetPasswordPage() {
             placeholder="Confirm new password"
             className="w-full px-4 py-3.5 rounded-[10px] text-[15px] transition-all duration-300 bg-white focus:outline-none"
             style={{ border: '2px solid var(--color-border)' }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(217,176,140,0.2)'; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
             autoComplete="new-password"
           />
@@ -189,3 +189,4 @@ export default function ResetPasswordPage() {
     </AuthLayout>
   );
 }
+

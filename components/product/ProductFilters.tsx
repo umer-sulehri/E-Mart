@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useCategories } from '@/hooks/useCategories';
@@ -33,7 +33,7 @@ function AccordionSection({ title, defaultOpen = true, children }: { title: stri
       >
         {title}
         <span className={`transform transition-transform ${open ? 'rotate-180' : ''}`}>
-          ▾
+          â–¾
         </span>
       </button>
       {open && <div className="px-4 pb-4">{children}</div>}
@@ -100,7 +100,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
               min={0}
               aria-label="Minimum price"
             />
-            <span className="text-text-secondary">–</span>
+            <span className="text-text-secondary">â€“</span>
             <input
               type="number"
               value={filters.priceRange[1]}
@@ -183,7 +183,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
             <div className="sticky bottom-0 bg-bg border-t border-border p-4">
               <button
                 onClick={() => setMobileOpen(false)}
-                className="w-full h-[48px] bg-primary text-text-inverse rounded-[12px] font-semibold hover:bg-primary-dark transition-colors"
+                className="w-full h-[48px] bg-primary text-text-inverse rounded-[12px] font-semibold hover:bg-primary-hover transition-colors"
               >
                 Apply Filters
               </button>
@@ -194,3 +194,4 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
     </>
   );
 }
+

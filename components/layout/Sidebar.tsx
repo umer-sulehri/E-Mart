@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -52,7 +52,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
 
       <aside
         className={`fixed top-0 left-0 z-50 h-screen pt-[72px] transition-all duration-300 ease-in-out ${collapsed ? 'w-[72px]' : 'w-[260px]'} max-lg:translate-x-0`}
-        style={{ background: 'linear-gradient(180deg, var(--color-primary-dark) 0%, #0d0a08 50%, var(--color-primary-dark) 100%)', borderRight: '1px solid rgba(255,196,63,0.15)' }}
+        style={{ background: 'linear-gradient(180deg, var(--color-primary-dark) 0%, #0d0a08 50%, var(--color-primary-dark) 100%)', borderRight: '1px solid rgba(217,176,140,0.15)' }}
       >
         <div className="h-full overflow-y-auto px-3 py-4">
           {!collapsed && (
@@ -81,7 +81,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${collapsed ? 'justify-center' : ''}`}
                     style={{
                       color: isActive ? 'var(--color-primary)' : 'rgba(255,255,255,0.6)',
-                      background: isActive ? 'rgba(255,196,63,0.12)' : 'transparent',
+                      background: isActive ? 'rgba(217,176,140,0.12)' : 'transparent',
                     }}
                     title={collapsed ? item.label : undefined}
                   >
@@ -111,3 +111,4 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
     </>
   );
 }
+

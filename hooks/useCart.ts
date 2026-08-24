@@ -31,7 +31,7 @@ export function useUpdateCartQuantity() {
   return useMutation({
     mutationFn: (data: { id: string; quantity: number }) =>
       apiFetch<CartItem>(`/cart/items/${data.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify({ quantity: data.quantity }),
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),

@@ -5,16 +5,18 @@
   --color-surface: #F8F8F8;
   --color-surface-alt: #F9F9F9;
   --color-border: #DBDBDB;
-  --color-primary: #FFC43F;
-  --color-primary-dark: #6B4800;
-  --color-secondary: #FFF9EB;
+  --color-primary: #D9B08C;
+  --color-primary-hover: #C99E71;
+  --color-primary-dark: #4A3423;
+  --color-secondary: #F6EBDD;
   --color-accent: #FFC43F;
   --color-success: #198754;
   --color-warning: #FFC43F;
   --color-error: #DC3545;
   --color-text-primary: #222222;
   --color-text-secondary: #727272;
-  --color-text-inverse: #FFFFFF;
+  /* Dark espresso — legible on nude/primary surfaces */
+  --color-text-inverse: #3B2A1A;
 
   /* Kept for dashboard pages which use Tailwind utilities */
   --font-sans: var(--font-open-sans), 'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -47,7 +49,7 @@
 .high-contrast {
   --color-text-primary: #000000;
   --color-border: #555555;
-  --color-primary-dark: #3E2A00;
+  --color-primary-dark: #2E2013;
 }
 
 html {
@@ -151,13 +153,13 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 .emart-gradient {
-  background: linear-gradient(135deg, #FFC43F, #E09E00);
+  background: linear-gradient(135deg, #E5C4A3, #C99E71);
 }
 .emart-gradient-light {
-  background: linear-gradient(135deg, #FFF9EB, #FFC43F);
+  background: linear-gradient(135deg, #F6EBDD, #E5C4A3);
 }
 .emart-gradient-dark {
-  background: linear-gradient(135deg, #E09E00, #6B4800);
+  background: linear-gradient(135deg, #C99E71, #4A3423);
 }
 .emart-card-shadow {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);

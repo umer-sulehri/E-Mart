@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 interface GlassCubeLogoProps {
   size?: number;
@@ -16,12 +16,12 @@ export function GlassCubeLogo({ size = 50, className = '' }: GlassCubeLogoProps)
           className="w-full h-full relative"
           style={{ transformStyle: 'preserve-3d', animation: 'cubeSpin 8s infinite linear' }}
         >
-          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', transform: `translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: 'white' }}>E</div>
-          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, var(--color-primary-dark), var(--color-primary))', transform: `rotateY(180deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: '#FFF9EB' }}>M</div>
-          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, #FFF9EB, var(--color-primary))', transform: `rotateY(90deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: 'var(--color-primary-dark)' }}>A</div>
-          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, var(--color-primary-dark), #FFF9EB)', transform: `rotateY(-90deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: 'var(--color-primary)' }}>R</div>
-          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, var(--color-primary), #FFF9EB)', transform: `rotateX(90deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: 'var(--color-primary-dark)' }}>T</div>
-          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, var(--color-primary-dark), var(--color-primary))', transform: `rotateX(-90deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: '#FFF9EB' }}>●</div>
+          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', transform: `translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: 'white' }}>E</div>
+          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, var(--color-primary-dark), var(--color-primary))', transform: `rotateY(180deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: '#F6EBDD' }}>M</div>
+          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, #F6EBDD, var(--color-primary))', transform: `rotateY(90deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: 'var(--color-primary-dark)' }}>A</div>
+          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, var(--color-primary-dark), #F6EBDD)', transform: `rotateY(-90deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: 'var(--color-primary)' }}>R</div>
+          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, var(--color-primary), #F6EBDD)', transform: `rotateX(90deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: 'var(--color-primary-dark)' }}>T</div>
+          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-black/20" style={{ background: 'linear-gradient(135deg, var(--color-primary-dark), var(--color-primary))', transform: `rotateX(-90deg) translateZ(${half}px)`, fontSize, fontWeight: 'bold', color: '#F6EBDD' }}>â—</div>
         </div>
       </div>
 
@@ -37,3 +37,5 @@ export function GlassCubeLogo({ size = 50, className = '' }: GlassCubeLogoProps)
     </div>
   );
 }
+
+

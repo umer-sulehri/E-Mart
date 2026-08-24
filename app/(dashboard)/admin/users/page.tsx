@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -373,7 +373,7 @@ export default function AdminUsersPage() {
                             height: '40px',
                             borderRadius: '50%',
                             background:
-                              'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
+                              'linear-gradient(135deg, #6B4E35, #3B2A1A)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -405,7 +405,7 @@ export default function AdminUsersPage() {
                         color: 'var(--color-text-primary)',
                       }}
                     >
-                      {(user.email as string) ?? '—'}
+                      {(user.email as string) ?? 'â€”'}
                     </td>
 
                     {/* Role Badge */}
@@ -671,7 +671,7 @@ export default function AdminUsersPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {[
                 { label: 'Name', value: viewUser.name as string },
-                { label: 'Email', value: (viewUser.email as string) ?? '—' },
+                { label: 'Email', value: (viewUser.email as string) ?? 'â€”' },
                 { label: 'Phone', value: viewUser.phone as string },
                 {
                   label: 'Role',
@@ -906,7 +906,7 @@ export default function AdminUsersPage() {
                     opacity: updateUser.isPending ? 0.6 : 1,
                   }}
                 >
-                  {updateUser.isPending ? 'Saving…' : 'Save Changes'}
+                  {updateUser.isPending ? 'Savingâ€¦' : 'Save Changes'}
                 </button>
               </div>
             </form>
@@ -1014,7 +1014,7 @@ export default function AdminUsersPage() {
                   opacity: deleteUser.id === currentUser?.id || deleteUser.role === 'admin' ? 0.5 : 1,
                 }}
               >
-                {deleteUserMutation.isPending ? 'Blocking…' : 'Delete'}
+                {deleteUserMutation.isPending ? 'Blockingâ€¦' : 'Delete'}
               </button>
             </div>
           </div>
@@ -1023,3 +1023,4 @@ export default function AdminUsersPage() {
     </div>
   );
 }
+

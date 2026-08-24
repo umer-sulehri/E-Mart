@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import { useSellerOrders, useUpdateSellerOrderStatus, type SellerOrderStatus } from '@/hooks/useSeller';
@@ -72,7 +72,7 @@ export default function SellerOrdersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">My Orders</h1>
         <p className="text-white/70">Track and manage your store orders.</p>
       </div>
@@ -119,7 +119,7 @@ export default function SellerOrdersPage() {
       {/* Orders Table */}
       {filtered.length === 0 ? (
         <div className="rounded-[16px] p-12 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
-          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(255,196,63,0.12)' }}>
+          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(217,176,140,0.12)' }}>
             <OrderIcon className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
           </div>
           <p className="text-lg font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>No orders found</p>
@@ -261,7 +261,7 @@ export default function SellerOrdersPage() {
         </div>
       )}
 
-      {/* Ship Modal — collect tracking number */}
+      {/* Ship Modal â€” collect tracking number */}
       {shipTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShipTarget(null)}>
           <div className="w-full max-w-md rounded-[16px] p-6" style={{ background: 'var(--color-bg)' }} onClick={e => e.stopPropagation()}>
@@ -288,8 +288,8 @@ export default function SellerOrdersPage() {
             />
             <div className="flex gap-3 mt-6">
               <button onClick={() => { setShipTarget(null); setTrackingInput(''); }} className="flex-1 py-3 rounded-xl text-sm font-semibold" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>Cancel</button>
-              <button onClick={confirmShip} disabled={updateStatus.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
-                {updateStatus.isPending ? 'Saving…' : 'Mark as Shipped'}
+              <button onClick={confirmShip} disabled={updateStatus.isPending} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
+                {updateStatus.isPending ? 'Savingâ€¦' : 'Mark as Shipped'}
               </button>
             </div>
           </div>
@@ -332,7 +332,7 @@ export default function SellerOrdersPage() {
                   <img src={item.productImage} alt={item.productName} className="w-10 h-10 rounded-lg object-cover" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{item.productName}</p>
-                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Qty {item.quantity} × Rs {item.price.toLocaleString()}</p>
+                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Qty {item.quantity} Ã— Rs {item.price.toLocaleString()}</p>
                   </div>
                   <PackageIcon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-border)' }} />
                 </div>
@@ -348,3 +348,5 @@ export default function SellerOrdersPage() {
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -45,7 +45,7 @@ export default function UserWishlistPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">My Wishlist</h1>
         <p className="text-white/70">{wishlistProducts.length} saved items</p>
       </div>
@@ -81,7 +81,7 @@ export default function UserWishlistPage() {
                 <p className="text-xs mb-3" style={{ color: 'var(--color-text-secondary)' }}>{item.product.category?.name}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold" style={{ color: 'var(--color-primary)' }}>Rs {item.product.price.toLocaleString()}</span>
-                  <button onClick={() => handleAddToCart(item.product)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+                  <button onClick={() => handleAddToCart(item.product)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
                     <ShoppingCartIcon className="w-3.5 h-3.5" /> Add to Cart
                   </button>
                 </div>
@@ -93,3 +93,5 @@ export default function UserWishlistPage() {
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
       <form onSubmit={handleRequest} className="flex flex-col gap-5">
         <div>
           <label className="block mb-2 font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>Email Address</label>
-          <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(''); }} placeholder="Enter your registered email" className="w-full px-4 py-3.5 rounded-[10px] text-[15px] transition-all duration-300 bg-white focus:outline-none" style={{ border: '2px solid var(--color-border)' }} onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }} autoComplete="email" />
+          <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(''); }} placeholder="Enter your registered email" className="w-full px-4 py-3.5 rounded-[10px] text-[15px] transition-all duration-300 bg-white focus:outline-none" style={{ border: '2px solid var(--color-border)' }} onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(217,176,140,0.2)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }} autoComplete="email" />
         </div>
         <button type="submit" disabled={loading} className="w-full py-3.5 rounded-[10px] text-base font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5 mt-2.5 disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
           {loading ? (
@@ -78,3 +78,4 @@ export default function ForgotPasswordPage() {
     </AuthLayout>
   );
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -40,7 +40,7 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="space-y-6 max-w-lg">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">Change Password</h1>
         <p className="text-white/70">Update your account password.</p>
       </div>
@@ -72,15 +72,17 @@ export default function ChangePasswordPage() {
             <label className="block mb-1.5 text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Confirm New Password</label>
             <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={inputClass} style={inputStyle} required />
           </div>
-          <button type="submit" disabled={saving} className="w-full py-3 rounded-full text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+          <button type="submit" disabled={saving} className="w-full py-3 rounded-full text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
             {saving ? 'Saving...' : 'Change Password'}
           </button>
         </form>
       </div>
 
       <Link href="/user/profile" className="block text-center text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>
-        ← Back to Profile
+        â† Back to Profile
       </Link>
     </div>
   );
 }
+
+

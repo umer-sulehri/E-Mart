@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -39,7 +39,7 @@ export default function UserProfilePage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">My Profile</h1>
         <p className="text-white/70">Manage your account information.</p>
       </div>
@@ -58,13 +58,13 @@ export default function UserProfilePage() {
 
       <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <div className="flex items-center gap-6 mb-6">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+          <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
             {profile.name.charAt(0).toUpperCase() || 'U'}
           </div>
           <div>
             <p className="font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>{profile.name}</p>
             <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{profile.email}</p>
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold mt-2" style={{ background: 'rgba(255,196,63,0.15)', color: 'var(--color-primary)' }}>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Buyer'}</span>
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold mt-2" style={{ background: 'rgba(217,176,140,0.15)', color: 'var(--color-primary)' }}>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Buyer'}</span>
           </div>
         </div>
       </div>
@@ -92,3 +92,5 @@ export default function UserProfilePage() {
     </div>
   );
 }
+
+

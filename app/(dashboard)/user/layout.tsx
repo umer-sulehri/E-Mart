@@ -227,7 +227,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
               <button
                 onClick={handleLogout}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold"
-                style={{ background: 'var(--color-error)', color: 'var(--color-text-inverse)' }}
+                style={{ background: 'var(--color-error)', color: '#FFFFFF' }}
               >
                 Sign Out
               </button>
@@ -238,5 +238,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     </div>
   );
 }
+
 
 

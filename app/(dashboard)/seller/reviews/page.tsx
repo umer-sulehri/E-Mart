@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useSellerReviews, type ReviewWithProduct } from '@/hooks/useReviews';
@@ -51,7 +51,7 @@ export default function SellerReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)', boxShadow: '0 10px 25px rgba(217,176,140,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">Reviews</h1>
         <p className="text-white/70">Manage and respond to customer reviews.</p>
       </div>
@@ -71,7 +71,7 @@ export default function SellerReviewsPage() {
         </div>
         <div className="rounded-[14px] p-5 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
           <p className="text-3xl font-bold" style={{ color: '#6E8B5E' }}>{reviews.filter((r) => r.rating >= 4).length}</p>
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Positive (4-5★)</p>
+          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Positive (4-5â˜…)</p>
         </div>
       </div>
 
@@ -104,7 +104,7 @@ export default function SellerReviewsPage() {
           <div key={review.id} className="rounded-[14px] p-5" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)', borderLeft: '4px solid var(--color-primary)' }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))' }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #6B4E35, #3B2A1A)' }}>
                   {review.userName?.charAt(0) ?? '?'}
                 </div>
                 <div>
@@ -118,13 +118,13 @@ export default function SellerReviewsPage() {
                 ))}
               </div>
             </div>
-            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-2" style={{ background: 'rgba(255,196,63,0.15)', color: 'var(--color-primary-dark)' }}>{review.productName}</span>
+            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-2" style={{ background: 'rgba(217,176,140,0.15)', color: 'var(--color-primary-dark)' }}>{review.productName}</span>
             <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{review.comment}</p>
 
             {review.sellerReply && replyTarget !== review.id && (
-              <div className="mt-3 p-3 rounded-xl text-sm" style={{ background: 'rgba(255,196,63,0.1)', borderLeft: '3px solid var(--color-primary)' }}>
+              <div className="mt-3 p-3 rounded-xl text-sm" style={{ background: 'rgba(217,176,140,0.1)', borderLeft: '3px solid var(--color-primary)' }}>
                 <p className="text-xs font-bold mb-1" style={{ color: 'var(--color-primary-dark)' }}>
-                  Your reply{review.repliedAt ? ` · ${new Date(review.repliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                  Your reply{review.repliedAt ? ` Â· ${new Date(review.repliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
                 </p>
                 <p style={{ color: 'var(--color-text-secondary)' }}>{review.sellerReply}</p>
               </div>
@@ -136,7 +136,7 @@ export default function SellerReviewsPage() {
                   rows={3}
                   value={replyText}
                   onChange={e => { setReplyText(e.target.value); setReplyError(''); }}
-                  placeholder="Respond publicly to this customer…"
+                  placeholder="Respond publicly to this customerâ€¦"
                   maxLength={1000}
                   className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 resize-vertical"
                   style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
@@ -148,7 +148,7 @@ export default function SellerReviewsPage() {
                 <div className="flex gap-2 mt-2">
                   <button onClick={() => { setReplyTarget(null); setReplyError(''); }} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-secondary)' }}>Cancel</button>
                   <button onClick={submitReply} disabled={replyMutation.isPending} className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: 'var(--color-primary)' }}>
-                    {replyMutation.isPending ? 'Saving…' : 'Publish Reply'}
+                    {replyMutation.isPending ? 'Savingâ€¦' : 'Publish Reply'}
                   </button>
                 </div>
               </div>
@@ -163,3 +163,5 @@ export default function SellerReviewsPage() {
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback, useRef } from 'react';
 import { MicrophoneIcon } from '@/components/icons';
@@ -66,7 +66,7 @@ export function VoiceSearch({ onResult }: VoiceSearchProps) {
       aria-label="Voice search"
       className={`inline-flex items-center justify-center min-w-[48px] min-h-[48px] rounded-full transition-all duration-200 ${
         isListening
-          ? 'bg-error text-text-inverse animate-pulse'
+          ? 'bg-error text-white animate-pulse'
           : 'text-text-secondary hover:text-text-primary hover:bg-surface-alt'
       }`}
     >
@@ -74,3 +74,4 @@ export function VoiceSearch({ onResult }: VoiceSearchProps) {
     </button>
   );
 }
+
