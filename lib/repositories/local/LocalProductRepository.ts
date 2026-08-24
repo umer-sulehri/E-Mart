@@ -109,6 +109,11 @@ export class LocalProductRepository implements ProductRepository {
       }
     }
 
+    // Deterministic default ordering: newest first.
+    if (!filters?.sort) {
+      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
     const total = result.length;
     const p = page ?? 1;
     const l = limit ?? 20;

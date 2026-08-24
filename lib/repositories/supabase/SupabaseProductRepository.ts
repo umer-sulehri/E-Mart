@@ -188,6 +188,13 @@ export class SupabaseProductRepository implements ProductRepository {
       }
     }
 
+    // Deterministic default ordering: newest first. Without this, rows come
+    // back in arbitrary order and freshly created products can fall outside
+    // the requested page window.
+    if (!filters?.sort) {
+      query = query.order('created_at', { ascending: false, nullsFirst: false });
+    }
+
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     const { data, count, error } = await query.range(from, to);

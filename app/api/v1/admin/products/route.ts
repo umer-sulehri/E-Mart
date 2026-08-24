@@ -3,7 +3,7 @@ import { ProductRepository } from '@/lib/repositories/index';
 import { productCreateSchema } from '@/lib/validation/schemas';
 import { requireAdmin } from '@/lib/auth/requireAdmin';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
   } catch (e) {
@@ -11,7 +11,11 @@ export async function GET() {
     return NextResponse.json({ error: msg }, { status: msg === 'Unauthorized' ? 401 : 403 });
   }
 
-  const result = await ProductRepository.findAll({ status: 'all' });
+  const { searchParams } = request.nextUrl;
+  const page = Math.max(1, Number(searchParams.get('page')) || 1);
+  const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 20));
+
+  const result = await ProductRepository.findAll({ status: 'all' }, page, limit);
   return NextResponse.json(result, { status: 200 });
 }
 
