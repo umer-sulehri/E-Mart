@@ -1771,8 +1771,51 @@ coupons, settings, tracking numbers, seller replies and moderation status requir
 - Product gallery hover-zoom
 - Invoice PDF download / print receipt buttons
 - Review photo upload + report-abuse flow
-- Order status notification emails
+- ~~Order status notification emails~~ → **DONE** — `lib/notifications/dispatch.ts` sends confirmation/shipped/delivered mail + in-app notifications on every status transition (`dispatchOrderStatusNotifications`, `notifyNewOrder`)
 - Manual cross-browser/device QA pass (checklist above)
+
+---
+
+## EXTERNAL AUDIT CROSS-CHECK — AUGUST 24, 2026
+
+A third-party "comprehensive audit prompt" was submitted claiming ~276–369 hours of
+missing work across 6 areas. It was **cross-checked against the codebase line-by-line**
+rather than taken at face value. Result: it is overwhelmingly inaccurate — it describes
+features that exist and work, and prescribes patterns that are outdated or actively
+unsafe for this stack.
+
+### Claim-by-claim verdicts
+
+| Audit claim | Verdict | Evidence |
+| --- | --- | --- |
+| "No authentication exists; build register/login/reset from scratch" | ❌ False | `app/(auth)/{register,login,forgot-password,reset-password}` + `/api/v1/auth/*` routes; Supabase-native email verification, lockout (5/15 min), sliding sessions (30 min / 30-day remember), role redirects. See `docs/AUTH_FORMSPREE_GUIDE.md`. |
+| "Email verification via Formspree sending OTP codes" | ❌ Rejected | Formspree is a **form backend**, not transactional email — it cannot deliver mail to arbitrary recipients. Verification runs through Supabase Auth (link-based). Formspree is correctly used only for contact-form delivery + registration notices. |
+| "Implement bcrypt + custom JWT sessions" | ❌ Rejected | Reinventing auth on top of Supabase would *remove* security (no MFA foundation, manual token lifecycle, password handling liability). Supabase Auth (GoTrue) already provides bcrypt-hashed credentials, JWT rotation, and PKCE flows. |
+| "Role selection dropdown at registration (Customer/Seller/Admin)" | ❌ Rejected — security hole | Self-selected admin = privilege escalation by design. Roles are assigned server-side (`register` route forces buyer/seller; admin only via DB/`scripts/create-admin.mjs`). |
+| "No cart page / quantity updates / coupon application" | ❌ False | `app/(public)/cart`, `components/cart/{CartDrawer,CartItem}`, coupon validation + server-authoritative totals (`useCartTotals`, orders API re-validates). |
+| "Checkout missing address/payment/review steps" | ❌ False | `components/cart/CheckoutFlow.tsx` + `components/checkout/PaymentMethods.tsx`: address picker, payment method selection (COD/card/EasyPaisa), review step, success + easypaisa-confirm pages. |
+| "Product listing lacks search/filter/sort/pagination" | ❌ False | `/api/v1/products` supports `search, category, brand?, price range, rating, sellerId, inStock, ids, sort, page, limit` server-side; UI in `components/product/ProductFilters.tsx` + `ProductList.tsx`. |
+| "No product detail/gallery/reviews" | ❌ False | `ProductDetail(Client).tsx`, `ProductGallery.tsx`; reviews with verified-purchase gating (server-enforced via `getPurchaserIds()`), helpful votes, seller replies. |
+| "Admin dashboard missing entirely" | ❌ False | `/admin/{dashboard,products,orders,coupons,banners,blog,categories,sellers,users,translations,settings}` all exist with moderation workflow, commission setting, dynamic settings. |
+| "Seller dashboard missing entirely" | ❌ False | `/seller/{dashboard,products,orders,earnings,profile,reviews}` — tracking numbers, image uploads, payout math w/ commission, review replies. |
+| "Buyer dashboard missing entirely" | ❌ False | `/user/{dashboard,orders,orders/[id],wishlist,reviews,addresses,profile,change-password,notifications}` incl. order tracking timeline. |
+| "Order confirmation emails not sent" | ❌ False | `lib/notifications/dispatch.ts` renders + sends confirmation/shipped/delivered emails and in-app notifications on every status change. |
+| "Blog pages broken/incomplete" | ❌ False | Rebuilt in `7f4485f`: search, category filters, featured hero, skeletons, working share (Web Share API + clipboard fallback), related posts, markdown-lite renderer. |
+| "Footer/social links are dead placeholders" | ❌ False | Social links CRUD via `/api/v1/social-links` + `useSocialLinks`; footer consumes live data plus dynamic contact info (phone/email/address/hours). |
+| "Navigation links point nowhere" | ❌ False | Dead-link sweep completed in earlier batches; every nav/footer item routes to a real page (see route inventory). |
+
+### Genuinely valid points retained (already tracked above)
+The only items in the external audit that match reality were **already on our backlog**:
+product variants, gallery hover-zoom, invoice/print receipt, review photo upload,
+manual cross-browser QA. Nothing new was surfaced by it.
+
+### Process note
+This audit appears to have been generated without inspecting the repository
+(no file paths cited, features asserted missing that ship in `app/(dashboard)/*`,
+recommendations contradicting the stack's own auth provider). Lesson applied:
+external audits are treated as *hypotheses* and verified against source before
+any remediation effort is spent. The original in-repo audit above (Part 1–6 +
+remediation log) remains the authoritative record.
 
 ---
 
