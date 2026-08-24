@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ error: msg }, { status: msg === 'Unauthorized' ? 401 : 403 });
   }
 
-  const result = await ProductRepository.findAll();
+  const result = await ProductRepository.findAll({ status: 'all' });
   return NextResponse.json(result, { status: 200 });
 }
 

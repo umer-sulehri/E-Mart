@@ -7,6 +7,8 @@ const patchSchema = z.object({
   taxRate: z.number().min(0).max(1).optional(),
   shippingFee: z.number().min(0).optional(),
   freeShippingThreshold: z.number().min(0).optional(),
+  commissionRate: z.number().min(0).max(0.9).optional(),
+  autoApproveProducts: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -51,7 +53,6 @@ function defaultAdminShape() {
     defaultCurrency: 'PKR',
     emailNotifications: true,
     smsNotifications: true,
-    autoApproveProducts: false,
     maintenanceMode: false,
     ...DEFAULT_SETTINGS,
   };

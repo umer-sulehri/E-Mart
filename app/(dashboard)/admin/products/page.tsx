@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
-import { useAdminProducts, useDeleteProduct } from '@/hooks/useAdmin';
+import { useAdminProducts, useDeleteProduct, useModerateProduct } from '@/hooks/useAdmin';
 import { useCategories } from '@/hooks/useCategories';
-import { PlusIcon, EyeIcon, EditIcon, TrashIcon } from '@/components/icons';
+import { PlusIcon, EyeIcon, EditIcon, TrashIcon, CheckCircleIcon, XCircleIcon } from '@/components/icons';
 import type { Product } from '@/lib/types';
 
 export default function ProductsManagementPage() {
@@ -16,6 +16,7 @@ export default function ProductsManagementPage() {
 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -30,6 +31,7 @@ export default function ProductsManagementPage() {
   const totalCount = adminData?.total;
 
   const deleteProduct = useDeleteProduct();
+  const moderateProduct = useModerateProduct();
 
   const filteredProducts = useMemo(() => {
     let result: Product[] = products || [];
@@ -40,14 +42,42 @@ export default function ProductsManagementPage() {
     if (categoryFilter) {
       result = result.filter((p) => p.category?.id === categoryFilter || p.categoryId === categoryFilter);
     }
+    if (statusFilter) {
+      result = result.filter((p) => (p.status ?? 'active') === statusFilter);
+    }
     return result;
-  }, [products, search, categoryFilter]);
+  }, [products, search, categoryFilter, statusFilter]);
   const totalPages = Math.ceil((totalCount || 0) / itemsPerPage);
 
   const getStockStatus = (stock: number) => {
     if (stock === 0) return { label: 'Out of Stock', color: 'bg-error text-error' };
     if (stock <= 20) return { label: 'Low Stock', color: 'bg-warning text-warning' };
     return { label: 'In Stock', color: 'bg-success text-success' };
+  };
+
+  const getModerationStatus = (product: Product) => {
+    const status = product.status ?? 'active';
+    switch (status) {
+      case 'pending':
+        return { label: 'Pending Review', color: 'bg-warning/10 text-warning border border-warning' };
+      case 'rejected':
+        return { label: 'Rejected', color: 'bg-error/10 text-error border border-error' };
+      default:
+        return { label: 'Active', color: 'bg-success/10 text-success border border-success' };
+    }
+  };
+
+  const handleModerate = async (product: Product, status: 'active' | 'rejected') => {
+    try {
+      await moderateProduct.mutateAsync({ id: product.id, status });
+      showToast(
+        status === 'active' ? `"${product.name}" approved and live` : `"${product.name}" rejected`,
+        status === 'active' ? 'success' : 'info',
+      );
+      setSelectedProduct((prev) => (prev && prev.id === product.id ? { ...prev, status } : prev));
+    } catch {
+      showToast('Failed to update product status', 'error');
+    }
   };
 
   const handleView = (product: Product) => {
@@ -151,6 +181,22 @@ export default function ProductsManagementPage() {
                 ))}
               </select>
             </div>
+            <div className="sm:w-48">
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="h-[48px] w-full rounded-[10px] border border-border bg-surface px-4 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                aria-label="Filter by moderation status"
+              >
+                <option value="">All Statuses</option>
+                <option value="pending">Pending Review</option>
+                <option value="active">Active</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
           </div>
         </Card>
 
@@ -173,6 +219,9 @@ export default function ProductsManagementPage() {
                     Stock
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
                     Created
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
@@ -183,13 +232,13 @@ export default function ProductsManagementPage() {
               <tbody className="divide-y divide-border">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-text-secondary">
+                    <td colSpan={7} className="px-6 py-12 text-center text-text-secondary">
                       Loading products...
                     </td>
                   </tr>
                 ) : filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-text-secondary">
+                    <td colSpan={7} className="px-6 py-12 text-center text-text-secondary">
                       No products found.
                     </td>
                   </tr>
@@ -225,6 +274,16 @@ export default function ProductsManagementPage() {
                             <span className="ml-1 text-text-secondary">({stock})</span>
                           </span>
                         </td>
+                        <td className="px-6 py-4">
+                          {(() => {
+                            const mod = getModerationStatus(product);
+                            return (
+                              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${mod.color}`}>
+                                {mod.label}
+                              </span>
+                            );
+                          })()}
+                        </td>
                         <td className="px-6 py-4 text-sm text-text-secondary">
                           {product.createdAt
                             ? new Date(product.createdAt).toLocaleDateString()
@@ -232,6 +291,26 @@ export default function ProductsManagementPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-1">
+                            {(product.status ?? 'active') !== 'active' && (
+                              <button
+                                onClick={() => handleModerate(product, 'active')}
+                                disabled={moderateProduct.isPending}
+                                className="flex h-12 w-12 items-center justify-center rounded-[8px] text-success hover:bg-success/10 transition-colors disabled:opacity-50"
+                                aria-label="Approve product"
+                              >
+                                <CheckCircleIcon className="h-5 w-5" />
+                              </button>
+                            )}
+                            {product.status !== 'rejected' && (
+                              <button
+                                onClick={() => handleModerate(product, 'rejected')}
+                                disabled={moderateProduct.isPending}
+                                className="flex h-12 w-12 items-center justify-center rounded-[8px] text-error hover:bg-error/10 transition-colors disabled:opacity-50"
+                                aria-label="Reject product"
+                              >
+                                <XCircleIcon className="h-5 w-5" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleView(product)}
                               className="flex h-12 w-12 items-center justify-center rounded-[8px] text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"

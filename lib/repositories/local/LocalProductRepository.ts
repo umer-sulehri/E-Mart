@@ -8,6 +8,14 @@ export class LocalProductRepository implements ProductRepository {
   findAll(filters?: ProductFilters, page?: number, limit?: number): { products: Product[]; total: number } {
     let result = [...products];
 
+    const requested = filters?.status;
+    const statusFilter = requested
+      ? (requested === 'all' ? null : requested)
+      : (filters?.sellerId || filters?.ids ? null : 'active');
+    if (statusFilter) {
+      result = result.filter((p) => (p.status ?? 'active') === statusFilter);
+    }
+
     if (filters) {
       if (filters.ids?.length) {
         const idSet = new Set(filters.ids);

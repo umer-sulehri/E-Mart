@@ -34,6 +34,7 @@ interface ProductRow {
   tags: string[];
   is_featured: boolean;
   is_new: boolean;
+  status?: string;
   created_at: string;
   seller_id?: string;
   categories?: CategoryRow;
@@ -91,7 +92,16 @@ function mapRow(row: ProductRow): Product {  const category: Category = row.cate
     isNew: row.is_new,
     createdAt: row.created_at,
     sellerId: row.seller_id,
+    status: row.status ?? 'active',
   };
+}
+
+/** Moderation default for catalog queries: unscoped public reads only see approved products. */
+function resolveStatusFilter(filters?: ProductFilters): string | null {
+  const requested = filters?.status;
+  if (requested) return requested === 'all' ? null : requested; // 'all' = admin view
+  if (filters?.sellerId || filters?.ids) return null; // scoped views see everything
+  return 'active';
 }
 
 function sanitizeSearchTerm(term: string): string {
@@ -105,6 +115,11 @@ export class SupabaseProductRepository implements ProductRepository {
     let query = supabase
       .from('products')
       .select('*, categories(*), product_images(image_url, sort_order)', { count: 'exact' });
+
+    const statusFilter = resolveStatusFilter(filters);
+    if (statusFilter) {
+      query = query.eq('status', statusFilter);
+    }
 
     if (filters) {
       if (filters.ids?.length) {
@@ -223,6 +238,7 @@ export class SupabaseProductRepository implements ProductRepository {
       tags: data.tags,
       is_featured: data.isFeatured,
       is_new: data.isNew,
+      status: data.status ?? 'active',
       seller_id: data.sellerId,
     };
   }
@@ -318,6 +334,7 @@ export class SupabaseProductRepository implements ProductRepository {
     if (rest.tags !== undefined) updatePayload.tags = rest.tags;
     if (rest.isFeatured !== undefined) updatePayload.is_featured = rest.isFeatured;
     if (rest.isNew !== undefined) updatePayload.is_new = rest.isNew;
+    if (rest.status !== undefined) updatePayload.status = rest.status;
 
     let writeClient: ProductClient = scoped;
 

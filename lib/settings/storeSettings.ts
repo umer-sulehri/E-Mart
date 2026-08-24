@@ -5,12 +5,16 @@ export interface StoreSettings {
   taxRate: number; // e.g. 0.05 for 5%
   shippingFee: number; // flat PKR
   freeShippingThreshold: number; // subtotal at/above which shipping is free
+  commissionRate: number; // platform cut of seller sales, e.g. 0.1 for 10%
+  autoApproveProducts: boolean; // skip admin moderation for new seller products
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
   taxRate: 0,
   shippingFee: 150,
   freeShippingThreshold: 2000,
+  commissionRate: 0.1,
+  autoApproveProducts: false,
 };
 
 /**
@@ -28,8 +32,9 @@ async function readDbSettings(): Promise<Partial<StoreSettings>> {
     const result: Partial<StoreSettings> = {};
     for (const row of data) {
       const key = row.key as keyof StoreSettings;
-      if (key in DEFAULT_SETTINGS && typeof row.value === 'number') {
-        result[key] = row.value;
+      const value = row.value as unknown;
+      if (key in DEFAULT_SETTINGS && typeof value === typeof DEFAULT_SETTINGS[key]) {
+        result[key] = value as never;
       }
     }
     return result;

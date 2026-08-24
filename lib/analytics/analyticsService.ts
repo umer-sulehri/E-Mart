@@ -50,7 +50,7 @@ export async function getDashboardMetrics(days = 30): Promise<DashboardMetrics> 
   return cache.wrap(`analytics:dashboard:${days}`, async () => {
     const [orders, productsResult, customers] = await Promise.all([
       OrderRepository.findAll(),
-      ProductRepository.findAll({}, 1, 1000),
+      ProductRepository.findAll({ status: 'all' }, 1, 1000),
       UserRepository.findAll(),
     ]);
     const products: Product[] = productsResult.products;
@@ -134,7 +134,7 @@ export async function buildSalesReport(from?: string, to?: string): Promise<stri
 }
 
 export async function buildProductsReport(): Promise<string> {
-  const { products } = await ProductRepository.findAll({}, 1, 5000);
+  const { products } = await ProductRepository.findAll({ status: 'all' }, 1, 5000);
   return toCsv(
     ['name', 'price', 'stock', 'rating', 'review_count', 'status'],
     products.map((p) => [p.name, p.price, p.stock, p.rating, p.reviewCount, p.status])

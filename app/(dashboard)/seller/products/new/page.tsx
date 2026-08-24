@@ -14,6 +14,7 @@ export default function SellerAddProductPage() {
   const createProduct = useCreateSellerProduct();
   const [step, setStep] = useState(1);
   const [saved, setSaved] = useState(false);
+  const [moderationStatus, setModerationStatus] = useState<'active' | 'pending'>('active');
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     name: '', tags: '', categoryId: '', description: '',
@@ -117,7 +118,8 @@ export default function SellerAddProductPage() {
     };
 
     try {
-      await createProduct.mutateAsync(body);
+      const created = await createProduct.mutateAsync(body) as { moderationStatus?: 'active' | 'pending' };
+      setModerationStatus(created?.moderationStatus === 'pending' ? 'pending' : 'active');
       setSaved(true);
       setTimeout(() => router.push('/seller/products'), 1200);
     } catch (e) {
@@ -148,7 +150,10 @@ export default function SellerAddProductPage() {
 
       {saved && (
         <div className="rounded-xl p-4 flex items-center gap-2" style={{ background: 'rgba(110,139,94,0.15)', color: '#6E8B5E' }}>
-          <CheckCircleIcon className="w-5 h-5" /> Product added successfully! Redirecting…
+          <CheckCircleIcon className="w-5 h-5" />
+          {moderationStatus === 'pending'
+            ? 'Product submitted for review. It will appear in the store once approved. Redirecting…'
+            : 'Product added successfully! Redirecting…'}
         </div>
       )}
 

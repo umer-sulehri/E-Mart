@@ -11,7 +11,7 @@ export async function GET() {
   }
 
   const [productsResult, orders, users] = await Promise.all([
-    ProductRepository.findAll(),
+    ProductRepository.findAll({ status: 'all' }),
     OrderRepository.findAll(),
     UserRepository.findAll(),
   ]);

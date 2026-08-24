@@ -62,6 +62,21 @@ export function useDeleteProduct() {
   });
 }
 
+export function useModerateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { id: string; status: 'active' | 'rejected' }) =>
+      apiFetch<Product>(`/admin/products/${data.id}/moderation`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: data.status }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
 export function useAdminUsers(page = 1, limit = 20) {
   return useQuery({
     queryKey: ['adminUsers', page],

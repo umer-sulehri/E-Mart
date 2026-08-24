@@ -1,6 +1,8 @@
 import { ProductRepository, OrderRepository } from '@/lib/repositories/index';
 import { getOptionalSupabase } from '@/lib/supabase/optional';
+import { getStoreSettings } from '@/lib/settings/storeSettings';
 
+/** Fallback when settings cannot be loaded; effective rate comes from store settings. */
 export const PLATFORM_COMMISSION_RATE = 0.1;
 export const MIN_PAYOUT_AMOUNT = 5000;
 
@@ -72,14 +74,17 @@ async function getDeliveredNetEarnings(sellerId: string): Promise<number> {
       }
     }
   }
-  return gross - gross * PLATFORM_COMMISSION_RATE;
+  const { commissionRate } = await getStoreSettings();
+  return gross - gross * commissionRate;
 }
 
 export async function getEarningsSummary(sellerId: string): Promise<EarningsSummary> {
-  const [netEarnings, payouts] = await Promise.all([
+  const [netEarnings, payouts, settings] = await Promise.all([
     getDeliveredNetEarnings(sellerId),
     getPayouts(sellerId),
+    getStoreSettings(),
   ]);
+  const rate = settings.commissionRate;
 
   const withdrawn = payouts
     .filter((p) => p.status === 'paid')
@@ -89,8 +94,8 @@ export async function getEarningsSummary(sellerId: string): Promise<EarningsSumm
     .reduce((sum, p) => sum + p.amount, 0);
 
   return {
-    grossEarnings: Math.round(netEarnings / (1 - PLATFORM_COMMISSION_RATE)),
-    commission: Math.round(netEarnings / (1 - PLATFORM_COMMISSION_RATE) - netEarnings),
+    grossEarnings: Math.round(netEarnings / (1 - rate)),
+    commission: Math.round(netEarnings / (1 - rate) - netEarnings),
     netEarnings: Math.round(netEarnings),
     withdrawn: Math.round(withdrawn),
     pendingWithdrawal: Math.round(pendingWithdrawal),

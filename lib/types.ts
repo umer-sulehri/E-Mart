@@ -105,6 +105,7 @@ export interface ProductFilters {
   minRating?: number;
   sellerId?: string;
   inStock?: boolean;
+  status?: string;
   ids?: string[];
 }
 

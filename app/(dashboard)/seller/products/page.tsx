@@ -89,6 +89,16 @@ export default function SellerProductsPage() {
                       <div>
                         <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{product.name}</p>
                         <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{product.category?.name}</p>
+                        {product.status === 'pending' && (
+                          <span className="mt-1 inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold" style={{ background: 'rgba(201,144,46,0.15)', color: '#C9902E' }}>
+                            Pending review
+                          </span>
+                        )}
+                        {product.status === 'rejected' && (
+                          <span className="mt-1 inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold" style={{ background: 'rgba(182,92,75,0.15)', color: '#B65C4B' }}>
+                            Rejected
+                          </span>
+                        )}
                       </div>
                     </div>
                   </td>

@@ -20,6 +20,7 @@ export default function AdminSettingsPage() {
   const [taxRate, setTaxRate] = useState('5');
   const [shippingFee, setShippingFee] = useState('200');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState('2000');
+  const [commissionRate, setCommissionRate] = useState('10');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [autoApproveProducts, setAutoApproveProducts] = useState(false);
@@ -52,6 +53,7 @@ export default function AdminSettingsPage() {
           if (s.taxRate !== undefined) setTaxRate(String(s.taxRate));
           if (s.shippingFee !== undefined) setShippingFee(String(s.shippingFee));
           if (s.freeShippingThreshold !== undefined) setFreeShippingThreshold(String(s.freeShippingThreshold));
+          if (s.commissionRate !== undefined) setCommissionRate(String(Math.round(s.commissionRate * 100)));
           if (s.emailNotifications !== undefined) setEmailNotifications(s.emailNotifications);
           if (s.smsNotifications !== undefined) setSmsNotifications(s.smsNotifications);
           if (s.autoApproveProducts !== undefined) setAutoApproveProducts(s.autoApproveProducts);
@@ -76,6 +78,7 @@ export default function AdminSettingsPage() {
           taxRate: Number(taxRate),
           shippingFee: Number(shippingFee),
           freeShippingThreshold: Number(freeShippingThreshold),
+          commissionRate: Number(commissionRate) / 100,
           emailNotifications,
           smsNotifications,
           autoApproveProducts,
@@ -87,7 +90,7 @@ export default function AdminSettingsPage() {
     } finally {
       setSaving(false);
     }
-  }, [platformName, supportEmail, defaultCurrency, taxRate, shippingFee, freeShippingThreshold, emailNotifications, smsNotifications, autoApproveProducts, maintenanceMode]);
+  }, [platformName, supportEmail, defaultCurrency, taxRate, shippingFee, freeShippingThreshold, commissionRate, emailNotifications, smsNotifications, autoApproveProducts, maintenanceMode]);
 
   const handleMove = async (id: string, direction: -1 | 1) => {
     setLinksError('');
@@ -292,6 +295,21 @@ export default function AdminSettingsPage() {
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>Tax Rate (%)</label>
             <input style={inputStyle} type="number" min="0" max="100" value={taxRate} onChange={e => setTaxRate(e.target.value)} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>Seller Commission (%)</label>
+            <input
+              style={inputStyle}
+              type="number"
+              min="0"
+              max="90"
+              step="0.5"
+              value={commissionRate}
+              onChange={e => setCommissionRate(e.target.value)}
+            />
+            <span style={{ display: 'block', fontSize: '12px', marginTop: '4px', color: 'var(--color-text-secondary)' }}>
+              Platform share deducted from seller earnings on delivered orders
+            </span>
           </div>
         </div>
       </div>
