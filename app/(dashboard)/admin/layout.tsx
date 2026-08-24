@@ -10,7 +10,7 @@ import { AccessibilityControls } from '@/components/common/AccessibilityControls
 import {
   HomeIcon, PackageIcon, OrderIcon, UsersIcon, GlobeIcon, GearIcon,
   MenuIcon, CloseIcon, SearchIcon, ChevronDownIcon, LogoutIcon, ShieldIcon,
-  ClipboardListIcon,
+  ClipboardListIcon, TagIcon,
 } from '@/components/icons';
 
 const NAV_ITEMS = [
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { label: 'Products', href: '/admin/products', icon: PackageIcon },
   { label: 'Categories', href: '/admin/categories', icon: ClipboardListIcon },
   { label: 'Orders', href: '/admin/orders', icon: OrderIcon },
+  { label: 'Coupons', href: '/admin/coupons', icon: TagIcon },
   { label: 'Users', href: '/admin/users', icon: UsersIcon },
   { label: 'Sellers', href: '/admin/sellers', icon: ShieldIcon },
   { label: 'Translations', href: '/admin/translations', icon: GlobeIcon },
@@ -29,6 +30,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/products': 'Products',
   '/admin/categories': 'Categories',
   '/admin/orders': 'Orders',
+  '/admin/coupons': 'Coupons',
   '/admin/users': 'Users',
   '/admin/sellers': 'Sellers',
   '/admin/translations': 'Translations',

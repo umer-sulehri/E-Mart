@@ -23,18 +23,44 @@ svg:not([class]) {
   vertical-align: middle;
 }
 
-/* Template product/blog images keep natural sizing */
-.product-item figure img.tab-image {
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
-}
-
 /* ---------- Section headings ---------- */
 .section-title {
   font-size: clamp(1.6rem, 2.5vw, 2.4rem);
   font-weight: 700;
   letter-spacing: 0.01em;
+}
+
+/* ---------- Product card polish ---------- */
+/* Uniform image box: every card reserves the same square area regardless of
+   the source picture's aspect ratio, so grid rows stay aligned. */
+.product-item figure img.tab-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  max-height: none;
+}
+.product-item figure {
+  overflow: hidden;
+}
+
+/* Keep stock label and rating on one line with breathing room */
+.product-item .qty {
+  display: inline-block;
+}
+.product-item .rating {
+  margin-left: 12px;
+}
+/* Clamp product names to two lines so the price/quantity rows stay aligned
+   across cards even when titles have very different lengths. */
+.product-item h3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 50px; /* 2 × 25px template line-height */
 }
 
 /* ---------- Category tiles ----------
@@ -85,7 +111,4 @@ svg:not([class]) {
 }
 .product-item .rating {
   margin-left: 12px;
-}
-.product-item figure img.tab-image {
-  max-height: 210px;
 }

@@ -24,7 +24,7 @@ export function AuthLayout({ children, title, maxWidth = '420px' }: AuthLayoutPr
           <GlassCubeLogo size={50} />
           <div className="text-left">
             <h1 className="text-2xl font-bold tracking-widest" style={{ color: 'var(--color-text-primary)' }}>E-MART</h1>
-            <p className="text-[9px] tracking-[3px] font-medium uppercase opacity-70" style={{ color: 'var(--color-text-primary)' }}>ELECTRONIC HUB</p>
+            <p className="text-[9px] tracking-[3px] font-medium uppercase opacity-70" style={{ color: 'var(--color-text-primary)' }}>ONLINE MARKETPLACE</p>
           </div>
         </div>
 

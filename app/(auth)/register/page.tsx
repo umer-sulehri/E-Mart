@@ -16,6 +16,8 @@ function PasswordRequirement({ label, met }: { label: string; met: boolean }) {
   );
 }
 
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mzepqqee';
+
 export default function RegisterPage() {
   const router = useRouter();
   const requestOtp = useRequestOtp();
@@ -84,6 +86,21 @@ export default function RegisterPage() {
           // registration payload itself is held server-side with the OTP.
           sessionStorage.setItem('otpIdentifier', email.trim());
           sessionStorage.setItem('otpPurpose', 'register');
+
+          // Notify the site owner of the new sign-up via Formspree.
+          // Fire-and-forget: a Formspree outage must never block registration.
+          fetch(FORMSPREE_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({
+              _subject: `New E-Mart registration: ${fullName.trim()}`,
+              name: fullName.trim(),
+              email: email.trim(),
+              phone: phone.trim() || '—',
+              role: userType,
+            }),
+          }).catch(() => undefined);
+
           router.push('/otp-verify');
         },
         onError: (err) => {
