@@ -217,7 +217,7 @@ export default function AddProductPage() {
                     />
                   </div>
                   {form.originalPrice && Number(form.originalPrice) > Number(form.price) && (
-                    <p className="text-sm font-medium text-primary">
+                    <p className="text-sm font-medium text-primary-dark">
                       Discount: {Math.round(((Number(form.originalPrice) - Number(form.price)) / Number(form.originalPrice)) * 100)}% off
                     </p>
                   )}
@@ -316,7 +316,7 @@ export default function AddProductPage() {
             <Button
               type="submit"
               disabled={createProduct.isPending}
-              className="rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-primary disabled:opacity-50"
+                  className="rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-text-inverse disabled:opacity-50"
             >
               {createProduct.isPending ? 'Creating…' : 'Create Product'}
             </Button>

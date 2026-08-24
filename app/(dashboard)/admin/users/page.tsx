@@ -481,65 +481,43 @@ export default function AdminUsersPage() {
 
                     {/* Actions */}
                     <td style={{ padding: '16px' }}>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <button
                           onClick={() => setViewUser(user)}
                           title="View"
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '8px',
-                            border: '1px solid var(--color-border)',
-                            background: 'var(--color-surface)',
-                            color: 'var(--color-text-secondary)',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
+                          className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
+                          style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer' }}
                         >
-                          <EyeIcon style={{ width: '18px', height: '18px' }} />
+                          <EyeIcon style={{ width: '14px', height: '14px' }} />
+                          View
                         </button>
                         <button
                           onClick={() => openEditModal(user)}
                           title="Edit"
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '8px',
-                            border: '1px solid var(--color-border)',
-                            background: 'var(--color-surface)',
-                            color: 'var(--color-text-secondary)',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
+                          className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
+                          style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer' }}
                         >
-                          <EditIcon style={{ width: '18px', height: '18px' }} />
+                          <EditIcon style={{ width: '14px', height: '14px' }} />
+                          Edit
                         </button>
                         <button
                           onClick={() => handleBlockToggle(user)}
                           title={user.isBlocked ? 'Unblock' : 'Block'}
                           disabled={blockUser.isPending || unblockUser.isPending}
+                          className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-50"
                           style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '8px',
                             border: '1px solid var(--color-border)',
+                            cursor: 'pointer',
                             background: user.isBlocked
                               ? 'rgba(34, 197, 94, 0.1)'
                               : 'rgba(239, 68, 68, 0.1)',
                             color: user.isBlocked
                               ? 'var(--color-success, #22c55e)'
                               : 'var(--color-error)',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
                           }}
                         >
-                          <BlockIcon style={{ width: '18px', height: '18px' }} />
+                          <BlockIcon style={{ width: '14px', height: '14px' }} />
+                          {user.isBlocked ? 'Unblock' : 'Block'}
                         </button>
                         <button
                           onClick={() => setDeleteUser(user)}
@@ -551,10 +529,8 @@ export default function AdminUsersPage() {
                                 ? 'Admin accounts cannot be deleted'
                                 : 'Delete (blocks the user)'
                           }
+                          className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold transition-colors"
                           style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '8px',
                             border: '1px solid var(--color-border)',
                             background: 'var(--color-surface)',
                             color:
@@ -562,12 +538,10 @@ export default function AdminUsersPage() {
                                 ? 'var(--color-border)'
                                 : 'var(--color-error)',
                             cursor: user.id === currentUser?.id || user.role === 'admin' ? 'not-allowed' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
                           }}
                         >
-                          <TrashIcon style={{ width: '18px', height: '18px' }} />
+                          <TrashIcon style={{ width: '14px', height: '14px' }} />
+                          Delete
                         </button>
                       </div>
                     </td>

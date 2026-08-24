@@ -205,7 +205,7 @@ export default function SellerAddProductPage() {
               </div>
             </div>
             {autoDiscount > 0 && (
-              <div className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: 'rgba(122,155,118,0.12)', color: 'var(--color-primary)' }}>
+              <div className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: 'rgba(255,196,63,0.15)', color: 'var(--color-primary-dark)' }}>
                 Auto-calculated discount: {autoDiscount}% off
               </div>
             )}

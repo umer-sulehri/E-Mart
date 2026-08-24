@@ -54,7 +54,7 @@ export default function SellerDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(122,155,118,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white mb-1">Seller Dashboard</h1>
@@ -69,7 +69,7 @@ export default function SellerDashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: ProductIcon, label: 'Total Products', value: sellerProducts.length, color: 'var(--color-primary)' },
+          { icon: ProductIcon, label: 'Total Products', value: sellerProducts.length, color: 'var(--color-primary-dark)' },
           { icon: OrderIcon, label: 'Total Orders', value: totalOrders, color: '#6E8B5E' },
           { icon: StarIcon, label: 'Avg Rating', value: avgRating.toFixed(1), color: '#C9902E' },
           { icon: ArrowRightIcon, label: 'Revenue', value: `Rs ${totalRevenue.toLocaleString()}`, color: '#C97B5A' },
@@ -134,7 +134,7 @@ export default function SellerDashboardPage() {
       <div className="rounded-[16px] overflow-hidden" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <div className="p-5 flex items-center justify-between" style={{ borderBottom: '2px solid var(--color-primary)' }}>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>My Products</h3>
-          <Link href="/seller/products" className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>View All →</Link>
+          <Link href="/seller/products" className="text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>View All →</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -168,20 +168,23 @@ export default function SellerDashboardPage() {
                     </div>
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center gap-1">
-                      <Link href={`/products/${product.slug}`} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60">
-                        <EyeIcon className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Link href={`/products/${product.slug}`} className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors" aria-label={`View ${product.name}`}>
+                        <EyeIcon className="w-4 h-4" />
+                        View
                       </Link>
-                      <Link href={`/seller/products/${product.id}`} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60">
-                        <EditIcon className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                      <Link href={`/seller/products/${product.id}`} className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors" aria-label={`Edit ${product.name}`}>
+                        <EditIcon className="w-4 h-4" />
+                        Edit
                       </Link>
                       <button
                         onClick={() => setConfirmDeleteId(product.id)}
                         disabled={deleteProduct.isPending}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60"
+                        className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-error hover:bg-error/10 transition-colors disabled:opacity-50"
                         aria-label={`Delete ${product.name}`}
                       >
-                        <TrashIcon className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
+                        <TrashIcon className="w-4 h-4" />
+                        Delete
                       </button>
                     </div>
                   </td>
@@ -196,7 +199,7 @@ export default function SellerDashboardPage() {
       <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <div className="flex items-center justify-between mb-4 pb-3" style={{ borderBottom: '2px solid var(--color-primary)' }}>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>Recent Reviews</h3>
-          <Link href="/seller/reviews" className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>View All →</Link>
+          <Link href="/seller/reviews" className="text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>View All →</Link>
         </div>
         <div className="space-y-3">
           {recentReviews.length === 0 && (
@@ -224,7 +227,7 @@ export default function SellerDashboardPage() {
               </div>
               {review.productName && (
                 <p className="text-xs mb-1" style={{ color: 'var(--color-text-secondary)' }}>
-                  Product: <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(122,155,118,0.12)', color: 'var(--color-primary)' }}>{review.productName}</span>
+                  Product: <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(255,196,63,0.15)', color: 'var(--color-primary-dark)' }}>{review.productName}</span>
                 </p>
               )}
               <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{review.comment}</p>

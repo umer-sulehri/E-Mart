@@ -73,7 +73,7 @@ export default function SellerProfilePage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(122,155,118,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">Store Profile</h1>
         <p className="text-white/70">Manage your seller and store information.</p>
       </div>
@@ -87,7 +87,7 @@ export default function SellerProfilePage() {
           <div>
             <p className="font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>{profile.storeName || profile.name}</p>
             <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{profile.email}</p>
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold mt-2" style={{ background: 'rgba(122,155,118,0.15)', color: 'var(--color-primary)' }}>Seller</span>
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold mt-2" style={{ background: 'rgba(255,196,63,0.18)', color: 'var(--color-primary-dark)' }}>Seller</span>
           </div>
         </div>
       </div>

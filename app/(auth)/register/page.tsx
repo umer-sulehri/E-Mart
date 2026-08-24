@@ -169,7 +169,7 @@ export default function RegisterPage() {
             placeholder="Ahmed Khan"
             className="w-full px-4 py-3 rounded-lg text-sm transition-all duration-300 bg-white focus:outline-none"
             style={{ border: errors.fullName ? '2px solid var(--color-error)' : '1px solid var(--color-border)' }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(122,155,118,0.2)'; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = errors.fullName ? 'var(--color-error)' : 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
           />
           {errors.fullName && <p className="text-xs text-[var(--color-error)] mt-1">{errors.fullName}</p>}
@@ -187,7 +187,7 @@ export default function RegisterPage() {
             placeholder="you@example.com"
             className="w-full px-4 py-3 rounded-lg text-sm transition-all duration-300 bg-white focus:outline-none"
             style={{ border: errors.email ? '2px solid var(--color-error)' : '1px solid var(--color-border)' }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(122,155,118,0.2)'; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = errors.email ? 'var(--color-error)' : 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
           />
           {errors.email && <p className="text-xs text-[var(--color-error)] mt-1">{errors.email}</p>}
@@ -206,7 +206,7 @@ export default function RegisterPage() {
               placeholder="Create a password"
               className="w-full px-4 pr-12 py-3 rounded-lg text-sm transition-all duration-300 bg-white focus:outline-none"
               style={{ border: errors.password ? '2px solid var(--color-error)' : '1px solid var(--color-border)' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(122,155,118,0.2)'; }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = errors.password ? 'var(--color-error)' : 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
             />
             <button
@@ -252,7 +252,7 @@ export default function RegisterPage() {
               placeholder="Confirm your password"
               className="w-full px-4 pr-12 py-3 rounded-lg text-sm transition-all duration-300 bg-white focus:outline-none"
               style={{ border: errors.confirmPassword ? '2px solid var(--color-error)' : '1px solid var(--color-border)' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(122,155,118,0.2)'; }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = errors.confirmPassword ? 'var(--color-error)' : 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
             />
             <button
@@ -308,7 +308,7 @@ export default function RegisterPage() {
             placeholder="e.g., +92-300-1234567"
             className="w-full px-4 py-3 rounded-lg text-sm transition-all duration-300 bg-white focus:outline-none"
             style={{ border: errors.phone ? '2px solid var(--color-error)' : '1px solid var(--color-border)' }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(122,155,118,0.2)'; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,196,63,0.2)'; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = errors.phone ? 'var(--color-error)' : 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}
           />
           {errors.phone && <p className="text-xs text-[var(--color-error)] mt-1">{errors.phone}</p>}

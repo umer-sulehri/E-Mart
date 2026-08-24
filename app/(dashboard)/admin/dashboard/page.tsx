@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
         className="rounded-[16px] p-8"
         style={{
           background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
-          boxShadow: '0 10px 25px rgba(122,155,118,0.3)',
+          boxShadow: '0 10px 25px rgba(255,196,63,0.3)',
         }}
       >
         <h1 className="text-3xl font-bold text-text-inverse mb-1">Admin Dashboard</h1>

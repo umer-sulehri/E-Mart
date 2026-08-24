@@ -108,20 +108,22 @@ export default function AdminCategoriesPage() {
                     <td className="p-4" style={{ color: 'var(--color-text-secondary)' }}>{cat.slug}</td>
                     <td className="p-4" style={{ color: 'var(--color-text-secondary)' }}>{cat.children?.length ?? 0}</td>
                     <td className="p-4">
-                      <div className="flex items-center gap-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <button
                           onClick={() => { setEditCat(cat); setEditName(cat.name); setEditSlug(cat.slug); }}
-                          className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60"
+                          className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors"
                           aria-label={`Edit ${cat.name}`}
                         >
-                          <EditIcon className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                          <EditIcon className="w-4 h-4" />
+                          Edit
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(cat.id)}
-                          className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60"
+                          className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-error hover:bg-error/10 transition-colors"
                           aria-label={`Delete ${cat.name}`}
                         >
-                          <TrashIcon className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
+                          <TrashIcon className="w-4 h-4" />
+                          Delete
                         </button>
                       </div>
                     </td>

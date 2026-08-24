@@ -117,15 +117,18 @@ export default function SellerProductsPage() {
                     </div>
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => setViewProduct(product)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60">
-                        <EyeIcon className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button onClick={() => setViewProduct(product)} className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors" aria-label={`View ${product.name}`}>
+                        <EyeIcon className="w-4 h-4" />
+                        View
                       </button>
-                      <Link href={`/seller/products/${product.id}`} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60">
-                        <EditIcon className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                      <Link href={`/seller/products/${product.id}`} className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-text-secondary hover:bg-surface-alt hover:text-text-primary transition-colors" aria-label={`Edit ${product.name}`}>
+                        <EditIcon className="w-4 h-4" />
+                        Edit
                       </Link>
-                      <button onClick={() => setDeleteConfirm(product)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/60" aria-label={`Delete ${product.name}`}>
-                        <TrashIcon className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
+                      <button onClick={() => setDeleteConfirm(product)} className="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold text-error hover:bg-error/10 transition-colors disabled:opacity-50" disabled={deleteProduct?.isPending} aria-label={`Delete ${product.name}`}>
+                        <TrashIcon className="w-4 h-4" />
+                        Delete
                       </button>
                     </div>
                   </td>
@@ -158,7 +161,7 @@ export default function SellerProductsPage() {
               <div>
                 <h3 className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>{viewProduct.name}</h3>
                 <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{viewProduct.category?.name}</p>
-                <p className="text-2xl font-bold mt-2" style={{ color: 'var(--color-primary)' }}>Rs {viewProduct.price.toLocaleString()}</p>
+                <p className="text-2xl font-bold mt-2" style={{ color: 'var(--color-primary-dark)' }}>Rs {viewProduct.price.toLocaleString()}</p>
                 <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>Stock: {viewProduct.stock}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <StarIcon className="w-4 h-4" style={{ color: '#C9902E' }} filled />

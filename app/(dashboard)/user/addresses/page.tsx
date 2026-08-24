@@ -96,7 +96,7 @@ export default function AddressesPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(122,155,118,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">My Addresses</h1>
         <p className="text-white/70">Manage your shipping addresses.</p>
       </div>
@@ -139,7 +139,7 @@ export default function AddressesPage() {
         ) : (
           <div className="space-y-3">
             {addresses.map(addr => (
-              <div key={addr.id} className="p-4 rounded-xl border" style={{ borderColor: addr.isDefault ? 'var(--color-primary)' : 'var(--color-border)', background: addr.isDefault ? 'rgba(122,155,118,0.05)' : 'var(--color-bg)' }}>
+              <div key={addr.id} className="p-4 rounded-xl border" style={{ borderColor: addr.isDefault ? 'var(--color-primary)' : 'var(--color-border)', background: addr.isDefault ? 'rgba(255,196,63,0.05)' : 'var(--color-bg)' }}>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">

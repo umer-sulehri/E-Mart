@@ -30,7 +30,7 @@ export default function Topbar({ sidebarCollapsed, onToggleSidebar }: { sidebarC
       style={{
         marginLeft: sidebarCollapsed ? 72 : 260,
         background: 'linear-gradient(180deg, var(--color-primary-dark) 0%, #0d0a08 100%)',
-        borderBottom: '1px solid rgba(122,155,118,0.15)',
+        borderBottom: '1px solid rgba(255,196,63,0.15)',
       }}
     >
       <div className="flex items-center gap-3">
@@ -56,14 +56,14 @@ export default function Topbar({ sidebarCollapsed, onToggleSidebar }: { sidebarC
           {notifOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
-              <div className="absolute right-0 mt-2 w-80 rounded-2xl overflow-hidden z-50" style={{ background: 'var(--color-primary-dark)', border: '1px solid rgba(122,155,118,0.2)', boxShadow: '0 25px 50px rgba(0,0,0,0.1)' }}>
+              <div className="absolute right-0 mt-2 w-80 rounded-2xl overflow-hidden z-50" style={{ background: 'var(--color-primary-dark)', border: '1px solid rgba(255,196,63,0.2)', boxShadow: '0 25px 50px rgba(0,0,0,0.1)' }}>
                 <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                   <span className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>Notifications</span>
                   <button onClick={() => setNotifOpen(false)}><CloseIcon className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.4)' }} /></button>
                 </div>
                 {notifications.map(n => (
                   <div key={n.id} className="p-3 flex gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(122,155,118,0.15)' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,196,63,0.15)' }}>
                       <BellIcon className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                     </div>
                     <div>
@@ -89,7 +89,7 @@ export default function Topbar({ sidebarCollapsed, onToggleSidebar }: { sidebarC
           {userOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setUserOpen(false)} />
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl overflow-hidden z-50" style={{ background: 'var(--color-primary-dark)', border: '1px solid rgba(122,155,118,0.2)', boxShadow: '0 25px 50px rgba(0,0,0,0.1)' }}>
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl overflow-hidden z-50" style={{ background: 'var(--color-primary-dark)', border: '1px solid rgba(255,196,63,0.2)', boxShadow: '0 25px 50px rgba(0,0,0,0.1)' }}>
                 <div className="p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                   <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.9)' }}>{user?.name || 'User'}</p>
                   <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{user?.email || ''}</p>
@@ -109,7 +109,7 @@ export default function Topbar({ sidebarCollapsed, onToggleSidebar }: { sidebarC
       {/* Logout Confirmation */}
       {confirmLogout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setConfirmLogout(false)}>
-          <div className="w-full max-w-sm rounded-[16px] p-6 text-center" style={{ background: 'var(--color-primary-dark)', border: '1px solid rgba(122,155,118,0.2)' }} onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-sm rounded-[16px] p-6 text-center" style={{ background: 'var(--color-primary-dark)', border: '1px solid rgba(255,196,63,0.2)' }} onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold mb-2" style={{ color: 'rgba(255,255,255,0.9)' }}>Sign out?</h3>
             <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>You will be redirected to the homepage.</p>
             <div className="flex gap-3">

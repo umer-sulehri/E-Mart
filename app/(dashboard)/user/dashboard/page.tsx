@@ -23,7 +23,7 @@ export default function UserDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="rounded-[16px] p-8" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(122,155,118,0.3)' }}>
+      <div className="rounded-[16px] p-8" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">Welcome back, {displayName}!</h1>
         <p className="text-white/70">Manage your orders, wishlist, and more from your dashboard.</p>
       </div>
@@ -51,7 +51,7 @@ export default function UserDashboardPage() {
             {displayName.charAt(0).toUpperCase()}
           </div>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>{displayName}</h3>
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold mt-1" style={{ background: 'rgba(122,155,118,0.15)', color: 'var(--color-primary)' }}>{authUser?.role ? authUser.role.charAt(0).toUpperCase() + authUser.role.slice(1) : 'Buyer'}</span>
+          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold mt-1" style={{ background: 'rgba(255,196,63,0.18)', color: 'var(--color-primary-dark)' }}>{authUser?.role ? authUser.role.charAt(0).toUpperCase() + authUser.role.slice(1) : 'Buyer'}</span>
           <div className="space-y-2 mt-4 text-left">
             {[
               { label: 'Email', value: authUser?.email || 'N/A' },
@@ -71,7 +71,7 @@ export default function UserDashboardPage() {
           <h3 className="font-bold mb-4 pb-3" style={{ color: 'var(--color-text-primary)', borderBottom: '2px solid var(--color-primary)' }}>Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: ShoppingCartIcon, label: 'Browse Products', desc: 'Find something new', href: '/products', color: 'var(--color-primary)' },
+              { icon: ShoppingCartIcon, label: 'Browse Products', desc: 'Find something new', href: '/products', color: '#E09E00' },
               { icon: HeartIcon, label: 'My Wishlist', desc: `${wishlistCount} saved items`, href: '/wishlist', color: '#B65C4B' },
               { icon: OrderIcon, label: 'Order History', desc: 'Track your orders', href: '/user/orders', color: '#6E8B5E' },
               { icon: StarIcon, label: 'Write Reviews', desc: 'Share your experience', href: '/reviews', color: '#C9902E' },
@@ -103,7 +103,7 @@ export default function UserDashboardPage() {
       <div className="rounded-[16px] p-6" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
         <div className="flex items-center justify-between mb-4 pb-3" style={{ borderBottom: '2px solid var(--color-primary)' }}>
           <h3 className="font-bold" style={{ color: 'var(--color-text-primary)' }}>Recent Orders</h3>
-          <Link href="/user/orders" className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>View All →</Link>
+          <Link href="/user/orders" className="text-sm font-semibold" style={{ color: 'var(--color-primary-dark)' }}>View All →</Link>
         </div>
         <div className="flex flex-col gap-3">
           {recentOrders.length === 0 ? (

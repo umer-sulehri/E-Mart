@@ -163,7 +163,7 @@ export default function CouponsManagementPage() {
           </div>
           <Button
             onClick={openCreate}
-            className="flex items-center gap-2 rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-primary"
+            className="flex items-center gap-2 rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-text-inverse"
           >
             <PlusIcon className="h-5 w-5" />
             New Coupon
@@ -369,7 +369,7 @@ export default function CouponsManagementPage() {
                 <Button
                   type="submit"
                   disabled={createCoupon.isPending || updateCoupon.isPending}
-                  className="rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-primary disabled:opacity-50"
+                  className="rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-text-inverse disabled:opacity-50"
                 >
                   {editingId ? 'Save Changes' : 'Create Coupon'}
                 </Button>

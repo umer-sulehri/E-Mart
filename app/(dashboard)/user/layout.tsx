@@ -74,7 +74,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       >
         <div className="px-5 pt-6 pb-4">
           <Link href="/user/dashboard" className="flex items-center gap-2">
-            <span className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>E-Mart</span>
+            <span className="text-xl font-bold" style={{ color: 'var(--color-primary-dark)' }}>E-Mart</span>
           </Link>
         </div>
 
@@ -155,7 +155,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         style={{ background: 'var(--color-bg)', borderBottom: '1px solid var(--color-border)' }}
       >
         <div className="flex items-center gap-3">
-          <Link href="/user/dashboard" className="text-lg font-bold" style={{ color: 'var(--color-primary)' }}>
+          <Link href="/user/dashboard" className="text-lg font-bold" style={{ color: 'var(--color-primary-dark)' }}>
             E-Mart
           </Link>
         </div>

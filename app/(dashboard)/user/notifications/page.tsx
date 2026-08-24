@@ -194,7 +194,7 @@ export default function NotificationsPage() {
             className="px-4 py-2 rounded-xl text-sm font-semibold transition-colors duration-200"
             style={{
               background: 'var(--color-surface)',
-              color: 'var(--color-primary)',
+              color: 'var(--color-primary-dark)',
               border: '1px solid var(--color-border)',
             }}
           >
@@ -242,7 +242,7 @@ export default function NotificationsPage() {
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: isRead ? 'var(--color-surface-alt)' : 'rgba(122,155,118,0.15)',
+                    background: isRead ? 'var(--color-surface-alt)' : 'rgba(255,196,63,0.15)',
                     color: isRead ? 'var(--color-text-secondary)' : 'var(--color-primary)',
                   }}
                 >

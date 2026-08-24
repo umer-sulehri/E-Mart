@@ -5,9 +5,9 @@
   --color-surface: #F8F8F8;
   --color-surface-alt: #F9F9F9;
   --color-border: #DBDBDB;
-  --color-primary: #6995B1;
-  --color-primary-dark: #4A7A96;
-  --color-secondary: #EEF1F3;
+  --color-primary: #FFC43F;
+  --color-primary-dark: #6B4800;
+  --color-secondary: #FFF9EB;
   --color-accent: #FFC43F;
   --color-success: #198754;
   --color-warning: #FFC43F;
@@ -47,7 +47,7 @@
 .high-contrast {
   --color-text-primary: #000000;
   --color-border: #555555;
-  --color-primary-dark: #2C4A5C;
+  --color-primary-dark: #3E2A00;
 }
 
 html {
@@ -151,13 +151,13 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 .emart-gradient {
-  background: linear-gradient(135deg, #6995B1, #4A7A96);
+  background: linear-gradient(135deg, #FFC43F, #E09E00);
 }
 .emart-gradient-light {
-  background: linear-gradient(135deg, #EEF1F3, #6995B1);
+  background: linear-gradient(135deg, #FFF9EB, #FFC43F);
 }
 .emart-gradient-dark {
-  background: linear-gradient(135deg, #4A7A96, #22333D);
+  background: linear-gradient(135deg, #E09E00, #6B4800);
 }
 .emart-card-shadow {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);

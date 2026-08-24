@@ -142,7 +142,7 @@ export default function ProductsManagementPage() {
             </p>
           </div>
           <Link href="/admin/products/new">
-            <Button className="flex items-center gap-2 rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-primary">
+            <Button className="flex items-center gap-2 rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-text-inverse">
               <PlusIcon className="h-5 w-5" />
               Add Product
             </Button>
@@ -486,7 +486,7 @@ export default function ProductsManagementPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-primary"
+                  className="rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-text-inverse"
                 >
                   Save Changes
                 </Button>

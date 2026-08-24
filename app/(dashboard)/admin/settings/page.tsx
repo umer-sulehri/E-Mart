@@ -761,6 +761,7 @@ export default function AdminSettingsPage() {
                               aria-label={`Edit ${link.label}`}
                             >
                               <EditIcon className="w-4 h-4" />
+                              Edit
                             </button>
                             <button
                               onClick={() => setDeleteConfirmId(link.id)}
@@ -776,6 +777,7 @@ export default function AdminSettingsPage() {
                               aria-label={`Delete ${link.label}`}
                             >
                               <TrashIcon className="w-4 h-4" />
+                              Delete
                             </button>
                           </>
                         )}

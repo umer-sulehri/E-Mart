@@ -51,7 +51,7 @@ export default function SellerReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(122,155,118,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">Reviews</h1>
         <p className="text-white/70">Manage and respond to customer reviews.</p>
       </div>
@@ -118,12 +118,12 @@ export default function SellerReviewsPage() {
                 ))}
               </div>
             </div>
-            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-2" style={{ background: 'rgba(122,155,118,0.12)', color: 'var(--color-primary)' }}>{review.productName}</span>
+            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold mb-2" style={{ background: 'rgba(255,196,63,0.15)', color: 'var(--color-primary-dark)' }}>{review.productName}</span>
             <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{review.comment}</p>
 
             {review.sellerReply && replyTarget !== review.id && (
-              <div className="mt-3 p-3 rounded-xl text-sm" style={{ background: 'rgba(122,155,118,0.08)', borderLeft: '3px solid var(--color-primary)' }}>
-                <p className="text-xs font-bold mb-1" style={{ color: 'var(--color-primary)' }}>
+              <div className="mt-3 p-3 rounded-xl text-sm" style={{ background: 'rgba(255,196,63,0.1)', borderLeft: '3px solid var(--color-primary)' }}>
+                <p className="text-xs font-bold mb-1" style={{ color: 'var(--color-primary-dark)' }}>
                   Your reply{review.repliedAt ? ` · ${new Date(review.repliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
                 </p>
                 <p style={{ color: 'var(--color-text-secondary)' }}>{review.sellerReply}</p>

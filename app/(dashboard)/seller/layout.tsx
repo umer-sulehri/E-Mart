@@ -78,7 +78,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
         className={`fixed top-0 left-0 z-50 h-screen transition-all duration-300 ease-in-out
           ${mobileOpen ? 'w-[260px] translate-x-0' : sidebarOpen ? 'w-[260px] max-lg:-translate-x-full' : 'w-[72px] max-lg:-translate-x-full'}
           lg:translate-x-0`}
-        style={{ background: 'linear-gradient(180deg, var(--color-primary-dark) 0%, #2A4428 50%, var(--color-primary-dark) 100%)' }}
+        style={{ background: 'linear-gradient(180deg, var(--color-primary-dark) 0%, #241C0C 50%, var(--color-primary-dark) 100%)' }}
       >
         <div className="h-full overflow-y-auto scrollbar-hide px-3 py-4 flex flex-col">
           {/* Logo + close (mobile) */}

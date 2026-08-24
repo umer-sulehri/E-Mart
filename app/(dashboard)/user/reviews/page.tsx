@@ -125,7 +125,7 @@ export default function UserReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(122,155,118,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">My Reviews</h1>
         <p className="text-white/70">Manage your product reviews.</p>
       </div>
@@ -170,7 +170,7 @@ export default function UserReviewsPage() {
             <div key={review.id} className="rounded-xl p-4" style={{ background: 'var(--color-bg)', borderLeft: '4px solid var(--color-primary)' }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(122,155,118,0.12)', color: 'var(--color-primary)' }}>{review.productName}</span>
+                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(255,196,63,0.12)', color: 'var(--color-primary)' }}>{review.productName}</span>
                   <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center gap-1">

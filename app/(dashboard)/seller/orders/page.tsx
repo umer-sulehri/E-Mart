@@ -72,7 +72,7 @@ export default function SellerOrdersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(122,155,118,0.3)' }}>
+      <div className="rounded-[16px] p-6" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', boxShadow: '0 10px 25px rgba(255,196,63,0.3)' }}>
         <h1 className="text-3xl font-bold text-white mb-1">My Orders</h1>
         <p className="text-white/70">Track and manage your store orders.</p>
       </div>
@@ -119,7 +119,7 @@ export default function SellerOrdersPage() {
       {/* Orders Table */}
       {filtered.length === 0 ? (
         <div className="rounded-[16px] p-12 text-center" style={{ background: 'var(--color-surface)', boxShadow: '0 10px 25px rgba(0,0,0,0.06)' }}>
-          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(122,155,118,0.12)' }}>
+          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(255,196,63,0.12)' }}>
             <OrderIcon className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
           </div>
           <p className="text-lg font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>No orders found</p>
@@ -318,7 +318,7 @@ export default function SellerOrdersPage() {
               {viewOrder.trackingNumber && (
                 <>
                   <p style={{ color: 'var(--color-text-secondary)' }}>Tracking</p>
-                  <p className="font-semibold inline-flex items-center gap-1" style={{ color: 'var(--color-primary)' }}>
+                  <p className="font-semibold inline-flex items-center gap-1" style={{ color: 'var(--color-primary-dark)' }}>
                     <TruckIcon className="w-4 h-4" /> {viewOrder.trackingNumber}
                   </p>
                 </>

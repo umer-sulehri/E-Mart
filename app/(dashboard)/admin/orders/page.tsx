@@ -105,7 +105,7 @@ export default function AdminOrdersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-primary text-primary text-left">
+                <tr className="bg-primary-dark text-primary text-left">
                   <th className="px-4 py-3 font-semibold">Order #</th>
                   <th className="px-4 py-3 font-semibold">Buyer</th>
                   <th className="px-4 py-3 font-semibold">Items</th>
@@ -168,7 +168,7 @@ export default function AdminOrdersPage() {
                                   }
                                   className={`w-full text-left px-4 py-3 min-h-[48px] text-sm transition-colors ${
                                     order.status === s
-                                      ? 'bg-primary/10 text-primary font-semibold'
+                                      ? 'bg-primary/10 text-primary-dark font-semibold'
                                       : 'text-text-primary hover:bg-surface-alt'
                                   }`}
                                 >

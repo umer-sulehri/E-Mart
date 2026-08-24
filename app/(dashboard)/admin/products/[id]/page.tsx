@@ -120,7 +120,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <p className="mt-2 text-text-secondary">The product may not exist or an error occurred.</p>
             <Button
               onClick={() => router.push('/admin/products')}
-              className="mt-6 rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-primary"
+              className="mt-6 rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-text-inverse"
             >
               Back to Products
             </Button>
@@ -216,7 +216,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-sm text-text-secondary">Current Price</span>
-                  <p className="font-medium text-primary">${(product?.price ?? 0).toFixed(2)}</p>
+                  <p className="font-medium text-primary-dark">${(product?.price ?? 0).toFixed(2)}</p>
                 </div>
                 <div>
                   <span className="text-sm text-text-secondary">Stock</span>
@@ -327,7 +327,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 <Button
                   type="submit"
                   disabled={updateProduct.isPending}
-                  className="rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-primary disabled:opacity-50"
+                  className="rounded-[12px] min-h-[48px] min-w-[48px] bg-primary px-6 text-text-inverse disabled:opacity-50"
                 >
                   {updateProduct.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>

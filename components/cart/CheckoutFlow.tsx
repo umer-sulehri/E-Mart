@@ -235,7 +235,7 @@ export function CheckoutFlow() {
                         : 'var(--color-border)',
                     background:
                       !useNewAddress && selectedAddressId === saved.id
-                        ? 'rgba(122,155,118,0.06)'
+                        ? 'rgba(255,196,63,0.06)'
                         : 'transparent',
                   }}
                 >
