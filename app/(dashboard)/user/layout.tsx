@@ -1,9 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
+import { useHydratedAuth } from '@/hooks/useHydratedAuth';
 import { signOut } from '@/lib/auth/signOut';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { AccessibilityControls } from '@/components/common/AccessibilityControls';
@@ -47,11 +48,13 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuthStore();
+  const hydrated = useHydratedAuth();
   const [confirmLogout, setConfirmLogout] = useState(false);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!isAuthenticated) router.push('/login');
-  }, [isAuthenticated, router]);
+  }, [hydrated, isAuthenticated, router]);
 
   const handleLogout = async () => {
     await signOut();
@@ -60,7 +63,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     setConfirmLogout(false);
   };
 
-  if (!isAuthenticated) return null;
+  if (!hydrated || !isAuthenticated) return null;
 
   const pageTitle = getPageTitle(pathname);
   const displayName = user?.name || 'there';
@@ -235,3 +238,5 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     </div>
   );
 }
+
+
