@@ -182,17 +182,17 @@ export default function SellersManagementPage() {
                   {/* Status + Joined */}
                   <div className="mb-4 flex items-center justify-between">
                     <span
-                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
-                      style={{
-                        background: seller.isBlocked ? 'var(--color-error)' : 'var(--color-success)',
-                        color: '#fff',
-                      }}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                        seller.isBlocked
+                          ? 'bg-error/10 text-error'
+                          : 'bg-success/10 text-success'
+                      }`}
                     >
-                      {seller.isBlocked ? (
-                        <BlockIcon className="h-3.5 w-3.5" />
-                      ) : (
-                        <CheckCircleIcon className="h-3.5 w-3.5" />
-                      )}
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          seller.isBlocked ? 'bg-error' : 'bg-success'
+                        }`}
+                      />
                       {seller.isBlocked ? 'Blocked' : 'Active'}
                     </span>
                     <span style={{ color: 'var(--color-text-secondary)' }} className="text-xs">
@@ -205,35 +205,30 @@ export default function SellersManagementPage() {
                     <button
                       onClick={() => handleToggleBlock(seller)}
                       disabled={blockUser.isPending || unblockUser.isPending}
-                      className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[10px] text-sm font-medium transition-colors disabled:opacity-50"
-                      style={{
-                        background: seller.isBlocked ? 'var(--color-success)' : 'var(--color-error)',
-                        color: '#fff',
-                      }}
+                      className={`flex h-11 flex-1 items-center justify-center gap-2 rounded-[10px] border text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none ${
+                        seller.isBlocked
+                          ? 'border-success/30 bg-success/10 text-success hover:bg-success hover:text-white'
+                          : 'border-error/30 bg-error/5 text-error hover:bg-error hover:text-white'
+                      }`}
                     >
                       {seller.isBlocked ? (
                         <>
                           <CheckCircleIcon className="h-4 w-4" />
-                          Approve
+                          Approve Seller
                         </>
                       ) : (
                         <>
                           <BlockIcon className="h-4 w-4" />
-                          Suspend
+                          Suspend Seller
                         </>
                       )}
                     </button>
                     <Link
                       href="/admin/products"
-                      className="flex h-12 min-w-[48px] items-center justify-center gap-2 rounded-[10px] px-4 text-sm font-medium transition-colors"
-                      style={{
-                        background: 'var(--color-surface)',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-text-primary)',
-                      }}
+                      className="flex h-11 min-w-[48px] items-center justify-center gap-2 rounded-[10px] border border-border bg-surface px-4 text-sm font-semibold text-text-primary transition-all duration-200 hover:border-primary/50 hover:bg-surface-alt"
                     >
                       <EyeIcon className="h-4 w-4" />
-                      View Products
+                      Products
                     </Link>
                   </div>
                 </div>
