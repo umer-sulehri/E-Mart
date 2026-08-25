@@ -95,7 +95,7 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
             Please log in to write a review.
           </p>
           <a
-            href="/account/login"
+            href="/login"
             className="text-sm font-medium text-primary hover:underline"
           >
             Login to review

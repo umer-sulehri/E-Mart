@@ -79,7 +79,7 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
               </span>
             </Link>
             {orderId && (
-              <Link href="/account/orders">
+              <Link href="/dashboard/orders">
                 <span className="inline-flex items-center gap-2 rounded-xl border border-muted-200 bg-white px-6 py-3 text-sm font-semibold text-secondary-800 transition-colors hover:bg-muted-50">
                   <FileText size={16} />
                   View My Orders
