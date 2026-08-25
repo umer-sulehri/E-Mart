@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordInput) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch('/api/v1/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -41,11 +41,12 @@ export default function ForgotPasswordPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to send reset link');
+        throw new Error(result.error || 'Failed to send reset link');
       }
 
       setSentEmail(data.email);
       setIsEmailSent(true);
+      toast.success('Check your email for the reset link!');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Something went wrong');
     } finally {

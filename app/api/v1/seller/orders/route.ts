@@ -1,0 +1,106 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "seller" && profile?.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
+    const { data: vendor } = await supabase
+      .from("vendors")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!vendor) {
+      return NextResponse.json(
+        { success: false, error: "Seller profile not found" },
+        { status: 404 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const status = searchParams.get("status");
+    const offset = (page - 1) * limit;
+
+    const { data: productIds } = await supabase
+      .from("products")
+      .select("id")
+      .eq("vendor_id", vendor.id);
+
+    const ids = (productIds || []).map((p) => p.id);
+
+    if (ids.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        meta: { currentPage: 1, totalPages: 0, totalItems: 0, itemsPerPage: limit, hasNextPage: false, hasPreviousPage: false },
+      });
+    }
+
+    let query = supabase
+      .from("orders")
+      .select("*, order_items!inner(product_id, product_name, quantity, unit_price, total_price, products!inner(vendor_id)), profiles!inner(first_name, last_name, email)", { count: "exact" })
+      .in("order_items.product_id", ids);
+
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    query = query.order("created_at", { ascending: false });
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: orders, error, count } = await query;
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: orders || [],
+      meta: {
+        currentPage: page,
+        totalPages: Math.ceil((count || 0) / limit),
+        totalItems: count || 0,
+        itemsPerPage: limit,
+        hasNextPage: page * limit < (count || 0),
+        hasPreviousPage: page > 1,
+      },
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

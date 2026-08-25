@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,8 +12,10 @@ import { useAuthStore } from '@/store';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
   const { login } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,21 +36,21 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginInput) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ email: data.email, password: data.password }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Login failed');
+        throw new Error(result.error || 'Login failed');
       }
 
       login(result.data.user);
       toast.success('Welcome back!');
-      router.push('/');
+      router.push(redirectTo);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Something went wrong');
     } finally {
@@ -144,5 +146,13 @@ export default function LoginPage() {
         </Link>
       </p>
     </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

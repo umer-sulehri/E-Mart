@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Plus,
@@ -208,7 +209,7 @@ export default function SellerProductsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted-100">
-                          <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                          <Image src={product.image} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
                         </div>
                         <span className="font-medium text-secondary-800">{product.name}</span>
                       </div>

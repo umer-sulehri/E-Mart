@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Eye, ChevronLeft, ChevronRight, Package, RefreshCw } from 'lucide-react';
 import { formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
@@ -160,7 +161,7 @@ export default function SellerOrdersPage() {
                               key={i}
                               className="h-7 w-7 overflow-hidden rounded-full border-2 border-white bg-muted-100"
                             >
-                              <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                              <Image src={item.image} alt={item.name} width={48} height={48} className="h-full w-full object-cover" />
                             </div>
                           ))}
                         </div>

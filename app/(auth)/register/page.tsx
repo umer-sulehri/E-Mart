@@ -57,20 +57,27 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterInput) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          firstName: data.firstName,
+          lastName: data.lastName,
+        }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Registration failed');
+        throw new Error(result.error || 'Registration failed');
       }
 
-      toast.success('Account created successfully! Please login.');
-      router.push('/login');
+      toast.success('Account created! Check your email for verification.');
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Something went wrong');
     } finally {

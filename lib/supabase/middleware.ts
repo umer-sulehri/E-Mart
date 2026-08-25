@@ -27,7 +27,27 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile) {
+      supabaseResponse.cookies.set("sb-user-role", profile.role, {
+        path: "/",
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60,
+      });
+    }
+  } else {
+    supabaseResponse.cookies.delete("sb-user-role");
+  }
 
   return supabaseResponse;
 }

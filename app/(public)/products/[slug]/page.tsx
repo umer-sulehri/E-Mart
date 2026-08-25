@@ -12,6 +12,7 @@ import {
   getRelatedProducts,
 } from '@/lib/mock/product-detail';
 import { calculateDiscount } from '@/lib/utils';
+import { generateProductMetadata } from '@/lib/seo';
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -32,17 +33,13 @@ export async function generateMetadata({
     return { title: 'Product Not Found' };
   }
 
-  return {
-    title: product.name,
-    description:
-      product.shortDescription || product.description.slice(0, 160),
-    openGraph: {
-      title: product.name,
-      description:
-        product.shortDescription || product.description.slice(0, 160),
-      images: product.images?.[0] ? [{ url: product.images[0] }] : [],
-    },
-  };
+  return generateProductMetadata({
+    name: product.name,
+    shortDescription: product.shortDescription,
+    description: product.description,
+    images: product.images,
+    slug: product.slug,
+  });
 }
 
 export default async function ProductDetailPage({

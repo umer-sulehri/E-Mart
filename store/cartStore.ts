@@ -6,6 +6,7 @@ interface CartState {
   items: CartItem[];
   couponCode: string | null;
   discount: number;
+  isLoading: boolean;
 
   addItem: (item: CartItem) => void;
   removeItem: (productId: string) => void;
@@ -13,6 +14,11 @@ interface CartState {
   clearCart: () => void;
   applyCoupon: (code: string, discount: number) => void;
   removeCoupon: () => void;
+
+  syncWithServer: () => Promise<void>;
+  addToServer: (productId: string, quantity: number) => Promise<void>;
+  removeFromServer: (cartItemId: string) => Promise<void>;
+  updateOnServer: (cartItemId: string, quantity: number) => Promise<void>;
 
   subtotal: () => number;
   taxAmount: () => number;
@@ -31,6 +37,7 @@ export const useCartStore = create<CartState>()(
       items: [],
       couponCode: null,
       discount: 0,
+      isLoading: false,
 
       addItem: (item) =>
         set((state) => {
@@ -77,6 +84,70 @@ export const useCartStore = create<CartState>()(
         set({ couponCode: code, discount }),
 
       removeCoupon: () => set({ couponCode: null, discount: 0 }),
+
+      syncWithServer: async () => {
+        set({ isLoading: true });
+        try {
+          const res = await fetch('/api/v1/cart/items');
+          if (!res.ok) throw new Error('Failed to fetch cart');
+          const data = await res.json();
+          if (data.success && data.data) {
+            const serverItems: CartItem[] = data.data.map((item: any) => ({
+              id: item.id,
+              productId: item.product_id,
+              name: item.product?.name || 'Product',
+              slug: item.product?.slug || '',
+              image: item.product?.images?.[0] || '/images/product-thumb-1.png',
+              unitPrice: item.product?.sale_price || item.product?.price || 0,
+              quantity: item.quantity,
+              totalPrice: (item.product?.sale_price || item.product?.price || 0) * item.quantity,
+              stock: item.product?.stock_quantity || 0,
+            }));
+            set({ items: serverItems });
+          }
+        } catch {
+          // Keep local cart on failure
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      addToServer: async (productId, quantity) => {
+        try {
+          const res = await fetch('/api/v1/cart/items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId, quantity }),
+          });
+          if (res.ok) {
+            await get().syncWithServer();
+          }
+        } catch {
+          // Silently fail - local cart already updated
+        }
+      },
+
+      removeFromServer: async (cartItemId) => {
+        try {
+          await fetch(`/api/v1/cart/items/${cartItemId}`, {
+            method: 'DELETE',
+          });
+        } catch {
+          // Silently fail
+        }
+      },
+
+      updateOnServer: async (cartItemId, quantity) => {
+        try {
+          await fetch(`/api/v1/cart/items/${cartItemId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity }),
+          });
+        } catch {
+          // Silently fail
+        }
+      },
 
       subtotal: () =>
         get().items.reduce((sum, item) => sum + item.totalPrice, 0),

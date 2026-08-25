@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   DollarSign,
   Package,
@@ -178,9 +179,11 @@ export default function SellerDashboardPage() {
                   {index + 1}
                 </span>
                 <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted-100">
-                  <img
+                  <Image
                     src={product.image}
                     alt={product.name}
+                    width={60}
+                    height={60}
                     className="h-full w-full object-cover"
                   />
                 </div>

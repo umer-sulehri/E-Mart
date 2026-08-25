@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Camera, Upload, Save, Store, Building2, CreditCard } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import Button from '@/components/ui/Button';
@@ -128,9 +129,11 @@ export default function SellerProfilePage() {
               className="group flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-muted-200 transition-colors hover:border-primary"
             >
               {logoPreview || form.storeLogo ? (
-                <img
+                <Image
                   src={logoPreview || form.storeLogo}
                   alt="Store Logo"
+                  width={120}
+                  height={120}
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -159,10 +162,13 @@ export default function SellerProfilePage() {
               className="group flex h-32 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-muted-200 transition-colors hover:border-primary"
             >
               {bannerPreview || form.storeBanner ? (
-                <img
+                <Image
                   src={bannerPreview || form.storeBanner}
                   alt="Store Banner"
+                  width={600}
+                  height={150}
                   className="h-full w-full object-cover"
+                  style={{ objectFit: 'cover' }}
                 />
               ) : (
                 <div className="text-center">

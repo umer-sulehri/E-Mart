@@ -1,5 +1,17 @@
+import { type Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Terms & Conditions',
+  description:
+    'Review the E-Mart terms and conditions governing your use of our online grocery store, including orders, payments, shipping, returns, and account policies.',
+  openGraph: {
+    title: 'Terms & Conditions | E-Mart',
+    description:
+      'Review the E-Mart terms and conditions governing your use of our online grocery store, including orders, payments, shipping, returns, and account policies.',
+  },
+};
 
 const sections = [
   { id: 'acceptance', label: 'Acceptance of Terms' },

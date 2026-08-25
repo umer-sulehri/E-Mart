@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { Upload, X, Image as ImageIcon, Star } from 'lucide-react';
 import { CATEGORIES } from '@/lib/constants';
 import Button from '@/components/ui/Button';
@@ -300,9 +301,11 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
               key={index}
               className="group relative overflow-hidden rounded-lg border-2 border-dashed border-muted-200"
             >
-              <img
+              <Image
                 src={img.preview}
                 alt={img.alt}
+                width={120}
+                height={120}
                 className="h-40 w-full object-cover"
               />
               <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">

@@ -14,6 +14,7 @@ import {
   X,
   Upload,
 } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { CATEGORIES } from '@/lib/constants';
 import Badge from '@/components/ui/Badge';
@@ -199,13 +200,12 @@ export default function AdminCategoriesPage() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-50">
-                  <img
+                  <Image
                     src={cat.thumbnail}
                     alt={cat.name}
+                    width={80}
+                    height={80}
                     className="h-10 w-10 rounded object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
                   />
                 </div>
                 <div>

@@ -1,0 +1,186 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { slugify } from "@/lib/utils";
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+
+    const { data: categories, error } = await supabase
+      .from("categories")
+      .select("*, subcategories(*)")
+      .order("display_order", { ascending: true });
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: categories || [] });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { name, description, imageUrl, parentId, displayOrder } = body;
+
+    if (!name) {
+      return NextResponse.json(
+        { success: false, error: "Category name is required" },
+        { status: 400 }
+      );
+    }
+
+    const slug = slugify(name);
+
+    const { data: category, error } = await supabase
+      .from("categories")
+      .insert({
+        name,
+        slug,
+        description,
+        image_url: imageUrl,
+        parent_id: parentId,
+        display_order: displayOrder || 0,
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, data: category, message: "Category created successfully" },
+      { status: 201 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { categories } = body;
+
+    if (!Array.isArray(categories)) {
+      return NextResponse.json(
+        { success: false, error: "categories array is required" },
+        { status: 400 }
+      );
+    }
+
+    for (let i = 0; i < categories.length; i++) {
+      const cat = categories[i];
+      await supabase
+        .from("categories")
+        .update({ display_order: i })
+        .eq("id", cat.id);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Category order updated successfully",
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
