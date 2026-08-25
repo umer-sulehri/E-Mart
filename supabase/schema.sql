@@ -342,6 +342,60 @@ CREATE TABLE contact_submissions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ============================================
+-- SOCIAL LINKS
+-- ============================================
+CREATE TABLE social_links (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  platform VARCHAR(50) NOT NULL,
+  url TEXT NOT NULL,
+  icon VARCHAR(50),
+  is_active BOOLEAN DEFAULT true,
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- SEARCH HISTORY
+-- ============================================
+CREATE TABLE search_history (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  query TEXT NOT NULL,
+  results_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- SELLER PAYOUTS
+-- ============================================
+CREATE TABLE seller_payouts (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  seller_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  amount DECIMAL(10,2) NOT NULL,
+  method VARCHAR(50) NOT NULL,
+  account_details JSONB NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+  notes TEXT,
+  processed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- TRANSLATIONS
+-- ============================================
+CREATE TABLE translations (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  key VARCHAR(255) NOT NULL,
+  locale VARCHAR(10) NOT NULL DEFAULT 'en',
+  value TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(key, locale)
+);
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -448,6 +502,22 @@ CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
 -- newsletter_subscribers
 CREATE INDEX idx_newsletter_email ON newsletter_subscribers(email);
 
+-- social_links
+CREATE INDEX idx_social_links_is_active ON social_links(is_active);
+CREATE INDEX idx_social_links_display_order ON social_links(display_order);
+
+-- search_history
+CREATE INDEX idx_search_history_user_id ON search_history(user_id);
+CREATE INDEX idx_search_history_created_at ON search_history(created_at DESC);
+
+-- seller_payouts
+CREATE INDEX idx_seller_payouts_seller_id ON seller_payouts(seller_id);
+CREATE INDEX idx_seller_payouts_status ON seller_payouts(status);
+
+-- translations
+CREATE INDEX idx_translations_key ON translations(key);
+CREATE INDEX idx_translations_locale ON translations(locale);
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
@@ -472,6 +542,10 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE social_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE search_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE seller_payouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translations ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- RLS POLICIES: profiles
@@ -871,6 +945,82 @@ CREATE POLICY "Admins can manage contact submissions"
   );
 
 -- ============================================================
+-- RLS POLICIES: social_links
+-- ============================================================
+
+CREATE POLICY "Active social links are viewable by everyone"
+  ON social_links FOR SELECT
+  USING (is_active = true);
+
+CREATE POLICY "Admins can view all social links"
+  ON social_links FOR SELECT
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+CREATE POLICY "Admins can manage social links"
+  ON social_links FOR ALL
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ============================================================
+-- RLS POLICIES: search_history
+-- ============================================================
+
+CREATE POLICY "Users can view own search history"
+  ON search_history FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own search history"
+  ON search_history FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all search history"
+  ON search_history FOR SELECT
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ============================================================
+-- RLS POLICIES: seller_payouts
+-- ============================================================
+
+CREATE POLICY "Sellers can view own payouts"
+  ON seller_payouts FOR SELECT
+  USING (auth.uid() = seller_id);
+
+CREATE POLICY "Sellers can create own payouts"
+  ON seller_payouts FOR INSERT
+  WITH CHECK (auth.uid() = seller_id);
+
+CREATE POLICY "Admins can view all payouts"
+  ON seller_payouts FOR SELECT
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+CREATE POLICY "Admins can manage all payouts"
+  ON seller_payouts FOR ALL
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ============================================================
+-- RLS POLICIES: translations
+-- ============================================================
+
+CREATE POLICY "Translations are viewable by everyone"
+  ON translations FOR SELECT
+  USING (true);
+
+CREATE POLICY "Admins can manage translations"
+  ON translations FOR ALL
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ============================================================
 -- TRIGGER FUNCTIONS
 -- ============================================================
 
@@ -938,6 +1088,18 @@ CREATE TRIGGER update_blog_comments_updated_at
 
 CREATE TRIGGER update_settings_updated_at
   BEFORE UPDATE ON settings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_social_links_updated_at
+  BEFORE UPDATE ON social_links
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_seller_payouts_updated_at
+  BEFORE UPDATE ON seller_payouts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_translations_updated_at
+  BEFORE UPDATE ON translations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================
