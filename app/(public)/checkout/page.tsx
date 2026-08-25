@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
   ChevronRight,
   ChevronLeft,
@@ -16,6 +17,7 @@ import {
   Shield,
   Lock,
   ShoppingBag,
+  Loader2,
 } from 'lucide-react';
 import { z } from 'zod';
 import { useCartStore } from '@/store/cartStore';
@@ -452,6 +454,7 @@ function ReviewStep({
   shippingData,
   paymentData,
   errors,
+  orderError,
   onChange,
   onBack,
   goToShipping,
@@ -460,6 +463,7 @@ function ReviewStep({
   shippingData: ShippingFormData;
   paymentData: PaymentFormData;
   errors: Record<string, string>;
+  orderError: string | null;
   onChange: (value: boolean) => void;
   onBack: () => void;
   goToShipping: () => void;
@@ -622,6 +626,12 @@ function ReviewStep({
         <p className="text-xs text-danger">{errors.acceptTerms}</p>
       )}
 
+      {orderError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {orderError}
+        </div>
+      )}
+
       <div className="flex justify-between pt-2">
         <Button variant="ghost" size="lg" onClick={onBack}>
           <ChevronLeft size={16} />
@@ -637,9 +647,12 @@ function ReviewStep({
 // ──────────────────────────────────────────
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const items = useCartStore((s) => s.items);
+  const clearCart = useCartStore((s) => s.clearCart);
   const [currentStep, setCurrentStep] = useState(0);
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const [shippingData, setShippingData] = useState<ShippingFormData>({
     firstName: '',
@@ -707,17 +720,152 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     const result = reviewSchema.safeParse({ acceptTerms: termsAccepted });
     const errs = fieldErrors(result);
     setReviewErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      setPlaceOrderLoading(true);
-      // Simulate order placement
-      setTimeout(() => {
-        setPlaceOrderLoading(false);
-        window.location.href = '/checkout/success';
-      }, 2000);
+    if (Object.keys(errs).length > 0) return;
+
+    setPlaceOrderLoading(true);
+    setOrderError(null);
+
+    try {
+      // Step 1: Save shipping address
+      const addressRes = await fetch('/api/v1/addresses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: shippingData.firstName,
+          lastName: shippingData.lastName,
+          email: shippingData.email,
+          phone: shippingData.phone,
+          addressLine1: shippingData.addressLine1,
+          addressLine2: shippingData.addressLine2,
+          city: shippingData.city,
+          state: shippingData.state,
+          postalCode: shippingData.postalCode,
+          country: shippingData.country,
+        }),
+      });
+
+      const addressResult = await addressRes.json();
+      if (!addressResult.success) {
+        throw new Error(addressResult.error || 'Failed to save shipping address');
+      }
+
+      const shippingAddressId = addressResult.data.id;
+
+      // Step 2: Create order
+      const paymentMethodMap: Record<string, string> = {
+        easypaisa: 'easypaisa',
+        jazzcash: 'jazzcash',
+        card: 'stripe',
+        cod: 'cod',
+      };
+
+      const orderRes = await fetch('/api/v1/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shippingAddressId,
+          paymentMethod: paymentMethodMap[paymentData.method] || 'cod',
+        }),
+      });
+
+      const orderResult = await orderRes.json();
+      if (!orderResult.success) {
+        throw new Error(orderResult.error || 'Failed to create order');
+      }
+
+      const order = orderResult.data;
+      const orderId = order.id;
+      const orderTotal = order.total;
+
+      // Step 3: Initiate payment based on method
+      switch (paymentData.method) {
+        case 'easypaisa': {
+          const epRes = await fetch('/api/v1/payments/easypaisa/initiate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId,
+              mobileNumber: (paymentData.easypaisaAccount || shippingData.phone).replace(/[-\s]/g, ''),
+              amount: orderTotal,
+            }),
+          });
+          const epResult = await epRes.json();
+          if (!epResult.success) throw new Error(epResult.error || 'Easypaisa payment initiation failed');
+          clearCart();
+          if (epResult.data?.paymentUrl) {
+            window.location.href = epResult.data.paymentUrl;
+          } else {
+            router.push(`/checkout/success?orderId=${order.order_number}`);
+          }
+          return;
+        }
+
+        case 'jazzcash': {
+          const jcRes = await fetch('/api/v1/payments/jazzcash/initiate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId,
+              mobileNumber: (paymentData.jazzcashMobile || shippingData.phone).replace(/[-\s]/g, ''),
+              amount: orderTotal,
+            }),
+          });
+          const jcResult = await jcRes.json();
+          if (!jcResult.success) throw new Error(jcResult.error || 'JazzCash payment initiation failed');
+          clearCart();
+          if (jcResult.data?.redirectUrl) {
+            window.location.href = jcResult.data.redirectUrl;
+          } else {
+            router.push(`/checkout/success?orderId=${order.order_number}`);
+          }
+          return;
+        }
+
+        case 'card': {
+          const stripeRes = await fetch('/api/v1/payments/stripe/initiate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId,
+              successUrl: `${window.location.origin}/checkout/success?orderId=${order.order_number}`,
+              cancelUrl: `${window.location.origin}/checkout`,
+            }),
+          });
+          const stripeResult = await stripeRes.json();
+          if (!stripeResult.success) throw new Error(stripeResult.error || 'Stripe payment initiation failed');
+          clearCart();
+          if (stripeResult.data?.url) {
+            window.location.href = stripeResult.data.url;
+          } else {
+            router.push(`/checkout/success?orderId=${order.order_number}`);
+          }
+          return;
+        }
+
+        case 'cod': {
+          const codRes = await fetch('/api/v1/payments/cod', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId }),
+          });
+          const codResult = await codRes.json();
+          if (!codResult.success) throw new Error(codResult.error || 'COD confirmation failed');
+          clearCart();
+          router.push(`/checkout/success?orderId=${order.order_number}`);
+          return;
+        }
+
+        default:
+          throw new Error('Invalid payment method');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+      setOrderError(message);
+      setPlaceOrderLoading(false);
     }
   };
 
@@ -835,6 +983,7 @@ export default function CheckoutPage() {
                     shippingData={shippingData}
                     paymentData={paymentData}
                     errors={reviewErrors}
+                    orderError={orderError}
                     onChange={(val) => {
                       setTermsAccepted(val);
                       setReviewErrors((prev) => {

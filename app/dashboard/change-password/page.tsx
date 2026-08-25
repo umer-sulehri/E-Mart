@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff, Check, ArrowLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
@@ -26,10 +27,10 @@ export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const strength = useMemo(() => {
     return requirements.filter((r) => r.test(newPassword)).length;
@@ -43,6 +44,33 @@ export default function ChangePasswordPage() {
 
   const passwordsMatch =
     confirmPassword.length > 0 && newPassword === confirmPassword;
+
+  const handleUpdate = async () => {
+    if (!currentPassword || strength < 3 || !passwordsMatch) return;
+
+    try {
+      setLoading(true);
+      const res = await fetch('/api/v1/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success('Password updated successfully');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error(data.error || 'Failed to update password');
+      }
+    } catch {
+      toast.error('Failed to update password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -61,7 +89,6 @@ export default function ChangePasswordPage() {
         </p>
 
         <div className="mt-6 space-y-5">
-          {/* Current Password */}
           <div className="relative">
             <label className="mb-1.5 block text-sm font-medium text-secondary-800">
               Current Password
@@ -88,7 +115,6 @@ export default function ChangePasswordPage() {
             </div>
           </div>
 
-          {/* New Password */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-secondary-800">
               New Password
@@ -114,7 +140,6 @@ export default function ChangePasswordPage() {
               </button>
             </div>
 
-            {/* Strength bar */}
             {newPassword.length > 0 && (
               <div className="mt-3">
                 <div className="mb-1 flex items-center justify-between">
@@ -141,7 +166,6 @@ export default function ChangePasswordPage() {
               </div>
             )}
 
-            {/* Requirements */}
             <div className="mt-3 space-y-1.5">
               {requirements.map((req) => {
                 const met = req.test(newPassword);
@@ -169,7 +193,6 @@ export default function ChangePasswordPage() {
             </div>
           </div>
 
-          {/* Confirm Password */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-secondary-800">
               Confirm New Password
@@ -210,15 +233,16 @@ export default function ChangePasswordPage() {
           </div>
         </div>
 
-        {/* Actions */}
         <div className="mt-6 flex gap-3">
           <Button
             variant="primary"
+            loading={loading}
             disabled={
               !currentPassword ||
               strength < 3 ||
               !passwordsMatch
             }
+            onClick={handleUpdate}
           >
             Update Password
           </Button>

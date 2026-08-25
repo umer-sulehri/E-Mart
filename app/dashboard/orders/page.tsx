@@ -1,131 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Eye, Truck, Package } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useAuthStore } from '@/store/authStore';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Skeleton from '@/components/ui/Skeleton';
 import { formatPrice, formatDate, cn } from '@/lib/utils';
+import type { Order, OrderItem } from '@/types';
 
-type FilterStatus = 'all' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+type FilterStatus = 'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
 const tabs: { label: string; value: FilterStatus }[] = [
   { label: 'All', value: 'all' },
+  { label: 'Pending', value: 'pending' },
   { label: 'Processing', value: 'processing' },
   { label: 'Shipped', value: 'shipped' },
   { label: 'Delivered', value: 'delivered' },
   { label: 'Cancelled', value: 'cancelled' },
-];
-
-interface OrderItem {
-  name: string;
-  image: string;
-}
-
-interface MockOrder {
-  id: string;
-  orderNumber: string;
-  date: string;
-  status: string;
-  items: OrderItem[];
-  total: number;
-}
-
-const mockOrders: MockOrder[] = [
-  {
-    id: 'EM-2026-10482',
-    orderNumber: 'EM-2026-10482',
-    date: '2026-08-20',
-    status: 'delivered',
-    items: [
-      { name: 'Organic Bananas', image: '/images/products/banana.jpg' },
-      { name: 'Fresh Milk 1L', image: '/images/products/milk.jpg' },
-      { name: 'Brown Eggs 12pc', image: '/images/products/eggs.jpg' },
-    ],
-    total: 4850,
-  },
-  {
-    id: 'EM-2026-10471',
-    orderNumber: 'EM-2026-10471',
-    date: '2026-08-18',
-    status: 'shipped',
-    items: [
-      { name: 'Chicken Breast 1kg', image: '/images/products/chicken.jpg' },
-      { name: 'Basmati Rice 5kg', image: '/images/products/rice.jpg' },
-      { name: 'Olive Oil 500ml', image: '/images/products/oil.jpg' },
-    ],
-    total: 8920,
-  },
-  {
-    id: 'EM-2026-10459',
-    orderNumber: 'EM-2026-10459',
-    date: '2026-08-15',
-    status: 'processing',
-    items: [
-      { name: 'Greek Yogurt 500g', image: '/images/products/yogurt.jpg' },
-      { name: 'Multigrain Bread', image: '/images/products/bread.jpg' },
-    ],
-    total: 3200,
-  },
-  {
-    id: 'EM-2026-10445',
-    orderNumber: 'EM-2026-10445',
-    date: '2026-08-12',
-    status: 'delivered',
-    items: [
-      { name: 'Atlantic Salmon 500g', image: '/images/products/salmon.jpg' },
-      { name: 'Avocados 4pc', image: '/images/products/avocado.jpg' },
-      { name: 'Baby Spinach 250g', image: '/images/products/spinach.jpg' },
-    ],
-    total: 12340,
-  },
-  {
-    id: 'EM-2026-10430',
-    orderNumber: 'EM-2026-10430',
-    date: '2026-08-08',
-    status: 'cancelled',
-    items: [
-      { name: 'Protein Bar Pack', image: '/images/products/protein-bar.jpg' },
-      { name: 'Almond Milk 1L', image: '/images/products/almond-milk.jpg' },
-    ],
-    total: 1950,
-  },
-  {
-    id: 'EM-2026-10418',
-    orderNumber: 'EM-2026-10418',
-    date: '2026-08-05',
-    status: 'delivered',
-    items: [
-      { name: 'Mangoes 3kg', image: '/images/products/mango.jpg' },
-      { name: 'Tomato Ketchup', image: '/images/products/ketchup.jpg' },
-      { name: 'Pasta Penne 500g', image: '/images/products/pasta.jpg' },
-    ],
-    total: 5670,
-  },
-  {
-    id: 'EM-2026-10405',
-    orderNumber: 'EM-2026-10405',
-    date: '2026-08-01',
-    status: 'shipped',
-    items: [
-      { name: 'Walnuts 250g', image: '/images/products/walnuts.jpg' },
-      { name: 'Green Tea 25 bags', image: '/images/products/green-tea.jpg' },
-    ],
-    total: 2840,
-  },
-  {
-    id: 'EM-2026-10392',
-    orderNumber: 'EM-2026-10392',
-    date: '2026-07-28',
-    status: 'processing',
-    items: [
-      { name: 'Canned Tuna 400g', image: '/images/products/tuna.jpg' },
-      { name: 'Quinoa 500g', image: '/images/products/quinoa.jpg' },
-      { name: 'Honey 500ml', image: '/images/products/honey.jpg' },
-    ],
-    total: 6190,
-  },
 ];
 
 const statusVariant: Record<string, 'success' | 'warning' | 'primary' | 'danger'> = {
@@ -133,37 +29,82 @@ const statusVariant: Record<string, 'success' | 'warning' | 'primary' | 'danger'
   processing: 'warning',
   shipped: 'primary',
   cancelled: 'danger',
+  pending: 'warning',
+  confirmed: 'primary',
+  out_for_delivery: 'primary',
+  returned: 'danger',
+  refunded: 'warning',
 };
 
 export default function OrdersPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<FilterStatus>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const perPage = 5;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const perPage = 10;
 
-  const filtered =
-    activeTab === 'all'
-      ? mockOrders
-      : mockOrders.filter((o) => o.status === activeTab);
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: perPage.toString(),
+        });
+        if (activeTab !== 'all') {
+          params.set('status', activeTab);
+        }
 
-  const totalPages = Math.ceil(filtered.length / perPage);
-  const paginatedOrders = filtered.slice(
-    (currentPage - 1) * perPage,
-    currentPage * perPage
-  );
+        const res = await fetch(`/api/v1/orders?${params.toString()}`);
+        if (res.status === 401) {
+          router.push('/login');
+          return;
+        }
+        const data = await res.json();
+        if (data.success) {
+          setOrders(data.data || []);
+          setTotalPages(data.meta?.totalPages || 1);
+          setTotalItems(data.meta?.totalItems || 0);
+        } else {
+          toast.error(data.error || 'Failed to load orders');
+        }
+      } catch {
+        toast.error('Failed to load orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [currentPage, activeTab, router, isAuthenticated]);
+
+  const handleTabChange = (tab: FilterStatus) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
+  const getOrderItems = (order: Order): OrderItem[] => {
+    return (order as unknown as { order_items?: OrderItem[] }).order_items || order.items || [];
+  };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-secondary-800">My Orders</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-secondary-800">My Orders</h2>
+        {!loading && totalItems > 0 && (
+          <p className="text-sm text-muted-500">{totalItems} order{totalItems !== 1 ? 's' : ''}</p>
+        )}
+      </div>
 
-      {/* Filter Tabs */}
       <div className="flex flex-wrap gap-2 rounded-xl bg-white p-2 shadow-sm">
         {tabs.map((tab) => (
           <button
             key={tab.value}
-            onClick={() => {
-              setActiveTab(tab.value);
-              setCurrentPage(1);
-            }}
+            onClick={() => handleTabChange(tab.value)}
             className={cn(
               'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
               activeTab === tab.value
@@ -176,8 +117,32 @@ export default function OrdersPage() {
         ))}
       </div>
 
-      {/* Orders */}
-      {paginatedOrders.length === 0 ? (
+      {loading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-xl bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <Skeleton variant="text" width={150} />
+                  <Skeleton variant="text" width={100} />
+                </div>
+                <Skeleton variant="text" width={80} />
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Skeleton variant="rectangle" width={56} height={56} />
+                <Skeleton variant="rectangle" width={56} height={56} />
+                <Skeleton variant="rectangle" width={56} height={56} />
+              </div>
+              <div className="mt-4 border-t border-muted-100 pt-4">
+                <div className="flex items-center justify-between">
+                  <Skeleton variant="text" width={120} />
+                  <Skeleton variant="text" width={140} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : orders.length === 0 ? (
         <div className="rounded-xl bg-white p-12 text-center shadow-sm">
           <Package className="mx-auto h-12 w-12 text-muted-300" />
           <p className="mt-4 text-lg font-semibold text-secondary-800">
@@ -196,70 +161,71 @@ export default function OrdersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {paginatedOrders.map((order) => (
-            <div
-              key={order.id}
-              className="rounded-xl bg-white p-5 shadow-sm"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-secondary-800">
-                    {order.orderNumber}
-                  </p>
-                  <p className="text-sm text-muted-500">
-                    {formatDate(order.date)}
-                  </p>
-                </div>
-                <Badge variant={statusVariant[order.status]}>
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </Badge>
-              </div>
-
-              {/* Product thumbnails */}
-              <div className="mt-4 flex items-center gap-2">
-                {order.items.slice(0, 3).map((item, i) => (
-                  <div
-                    key={i}
-                    className="relative h-14 w-14 overflow-hidden rounded-lg border border-muted-200 bg-muted-50"
-                  >
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+          {orders.map((order) => {
+            const items = getOrderItems(order);
+            return (
+              <div
+                key={order.id}
+                className="rounded-xl bg-white p-5 shadow-sm"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-secondary-800">
+                      {order.orderNumber}
+                    </p>
+                    <p className="text-sm text-muted-500">
+                      {formatDate(order.createdAt)}
+                    </p>
                   </div>
-                ))}
-                {order.items.length > 3 && (
-                  <span className="text-sm text-muted-500">
-                    +{order.items.length - 3} more
-                  </span>
-                )}
-              </div>
+                  <Badge variant={statusVariant[order.status] ?? 'warning'}>
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1).replace(/_/g, ' ')}
+                  </Badge>
+                </div>
 
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-muted-100 pt-4">
-                <p className="font-bold text-secondary-800">
-                  {formatPrice(order.total)}
-                </p>
-                <div className="flex gap-2">
-                  <Link href={`/dashboard/orders/${order.id}`}>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4" />
-                      View Details
-                    </Button>
-                  </Link>
-                  {order.status === 'shipped' && (
-                    <Button variant="ghost" size="sm">
-                      <Truck className="h-4 w-4" />
-                      Track
-                    </Button>
+                <div className="mt-4 flex items-center gap-2">
+                  {items.slice(0, 3).map((item, i) => (
+                    <div
+                      key={item.id || i}
+                      className="relative h-14 w-14 overflow-hidden rounded-lg border border-muted-200 bg-muted-50"
+                    >
+                      <Image
+                        src={item.productImage || '/images/placeholder.png'}
+                        alt={item.productName}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                  {items.length > 3 && (
+                    <span className="text-sm text-muted-500">
+                      +{items.length - 3} more
+                    </span>
                   )}
                 </div>
-              </div>
-            </div>
-          ))}
 
-          {/* Pagination */}
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-muted-100 pt-4">
+                  <p className="font-bold text-secondary-800">
+                    {formatPrice(order.total)}
+                  </p>
+                  <div className="flex gap-2">
+                    <Link href={`/dashboard/orders/${order.id}`}>
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4" />
+                        View Details
+                      </Button>
+                    </Link>
+                    {order.status === 'shipped' && (
+                      <Button variant="ghost" size="sm">
+                        <Truck className="h-4 w-4" />
+                        Track
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (

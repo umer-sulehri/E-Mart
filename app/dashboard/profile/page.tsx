@@ -1,31 +1,115 @@
 'use client';
 
-import { useState } from 'react';
-import { Camera, User, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Camera, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
+import Skeleton from '@/components/ui/Skeleton';
 
 export default function ProfilePage() {
-  const { user, updateUser } = useAuthStore();
+  const { user, setUser, updateUser } = useAuthStore();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [firstName, setFirstName] = useState(user?.firstName ?? 'Ahmed');
-  const [lastName, setLastName] = useState(user?.lastName ?? 'Khan');
-  const [phone, setPhone] = useState(user?.phone ?? '+92 300 1234567');
-  const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth ?? '');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/v1/auth/me');
+        if (res.status === 401) {
+          router.push('/login');
+          return;
+        }
+        const data = await res.json();
+        if (data.success) {
+          setUser(data.data);
+          setFirstName(data.data.firstName || '');
+          setLastName(data.data.lastName || '');
+          setPhone(data.data.phone || '');
+          setDateOfBirth(data.data.dateOfBirth || '');
+        }
+      } catch {
+        toast.error('Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [router, setUser]);
 
   const initials = `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
 
-  const handleSave = () => {
-    updateUser({ firstName, lastName, phone, dateOfBirth });
+  const handleSave = async () => {
+    if (!firstName || !lastName) {
+      toast.error('First and last name are required');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const res = await fetch('/api/v1/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, lastName, phone, dateOfBirth }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        updateUser({ firstName, lastName, phone, dateOfBirth });
+        toast.success('Profile updated successfully');
+      } else {
+        toast.error(data.error || 'Failed to update profile');
+      }
+    } catch {
+      toast.error('Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton variant="text" width={180} height={28} />
+        <div className="rounded-xl bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-6">
+            <Skeleton variant="circle" width={96} height={96} />
+            <div className="space-y-2">
+              <Skeleton variant="text" width={150} height={20} />
+              <Skeleton variant="text" width={200} />
+              <Skeleton variant="text" width={120} />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl bg-white p-6 shadow-sm">
+          <Skeleton variant="text" width={180} height={24} className="mb-4" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Skeleton variant="rectangle" height={44} />
+            <Skeleton variant="rectangle" height={44} />
+            <Skeleton variant="rectangle" height={44} />
+            <Skeleton variant="rectangle" height={44} />
+          </div>
+          <Skeleton variant="rectangle" height={36} className="mt-6 w-32" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-secondary-800">Profile Settings</h2>
 
-      {/* Avatar */}
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="flex items-center gap-6">
           <div className="relative">
@@ -41,7 +125,7 @@ export default function ProfilePage() {
               {firstName} {lastName}
             </p>
             <p className="text-sm text-muted-500">
-              {user?.email ?? 'ahmed@example.com'}
+              {user?.email ?? ''}
             </p>
             <Button variant="ghost" size="sm" className="mt-2">
               <Camera className="h-4 w-4" />
@@ -51,7 +135,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Form */}
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <h3 className="mb-4 font-bold text-secondary-800">Personal Information</h3>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -75,7 +158,7 @@ export default function ProfilePage() {
               <input
                 type="email"
                 disabled
-                value={user?.email ?? 'ahmed@example.com'}
+                value={user?.email ?? ''}
                 className="w-full rounded-lg border border-muted-200 bg-muted-50 px-3.5 py-2.5 text-sm text-muted-600"
               />
               <Badge variant="success">Verified</Badge>
@@ -95,13 +178,12 @@ export default function ProfilePage() {
           />
         </div>
         <div className="mt-6">
-          <Button variant="primary" onClick={handleSave}>
+          <Button variant="primary" onClick={handleSave} loading={saving}>
             Save Changes
           </Button>
         </div>
       </div>
 
-      {/* Danger zone */}
       <div className="rounded-xl border border-danger-200 bg-white p-6 shadow-sm">
         <h3 className="font-bold text-secondary-800">Danger Zone</h3>
         <p className="mt-1 text-sm text-muted-500">
