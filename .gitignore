@@ -12,3 +12,6 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# Stale lockfile from removed Next.js app
+package-lock.json
