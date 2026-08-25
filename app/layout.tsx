@@ -70,6 +70,7 @@ export const metadata: Metadata = {
     shortcut: '/images/logo.png',
     apple: '/images/logo.png',
   },
+  manifest: '/manifest.json',
   robots: {
     index: true,
     follow: true,

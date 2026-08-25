@@ -3,6 +3,8 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartSidebar from '@/components/cart/CartSidebar';
+import BackToTop from '@/components/ui/BackToTop';
+import CookieConsent from '@/components/ui/CookieConsent';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +13,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <main className="flex-1">{children}</main>
       <Footer />
       <CartSidebar />
+      <BackToTop />
+      <CookieConsent />
     </div>
   );
 }

@@ -216,6 +216,9 @@ export default function Footer() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-12 py-5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-white/60">
             <p>&copy; 2024-2026 E-Mart. All rights reserved. Design by TemplatesJungle</p>
+            <p className="text-center text-xs text-white/40 mt-2">
+              We Accept: Easypaisa | JazzCash | Stripe | Cash on Delivery
+            </p>
           </div>
         </div>
       </div>

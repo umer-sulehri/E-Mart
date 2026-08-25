@@ -1,0 +1,22 @@
+{
+  "name": "E-Mart - Organic Grocery Store",
+  "short_name": "E-Mart",
+  "description": "Fresh organic groceries delivered to your doorstep",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6BB252",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
