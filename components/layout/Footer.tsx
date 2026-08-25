@@ -1,6 +1,10 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
 import { Facebook, Twitter, Youtube, Instagram } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const organicLinks = [
   { label: 'About Us', href: '/about' },
@@ -31,6 +35,41 @@ const socialLinks = [
 ];
 
 export default function Footer() {
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email.trim()) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/v1/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Subscription failed');
+      }
+
+      toast.success('Thanks for subscribing!');
+      setEmail('');
+    } catch (err: any) {
+      toast.error(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <footer className="bg-secondary text-white pt-16 pb-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-12">
@@ -122,20 +161,23 @@ export default function Footer() {
             </p>
             <form
               className="flex"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSubscribe}
               aria-label="Newsletter signup"
             >
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
                 className="flex-1 rounded-l bg-white/10 border border-white/20 px-4 py-2.5 text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-white/40"
                 aria-label="Email Address"
               />
               <button
                 type="submit"
-                className="rounded-r bg-secondary-800 px-6 py-2.5 text-sm font-medium text-white hover:bg-secondary-800/80 transition-colors"
+                disabled={isSubmitting}
+                className="rounded-r bg-secondary-800 px-6 py-2.5 text-sm font-medium text-white hover:bg-secondary-800/80 transition-colors disabled:pointer-events-none disabled:opacity-50"
               >
-                Subscribe
+                {isSubmitting ? 'Submitting...' : 'Subscribe'}
               </button>
             </form>
           </div>

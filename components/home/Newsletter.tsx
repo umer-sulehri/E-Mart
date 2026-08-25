@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import toast from "react-hot-toast";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import toast from 'react-hot-toast';
+import { cn } from '@/lib/utils';
 
 export interface NewsletterProps {
   className?: string;
@@ -10,40 +10,51 @@ export interface NewsletterProps {
 
 const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
   ({ className }, ref) => {
-    const [name, setName] = React.useState("");
-    const [email, setEmail] = React.useState("");
+    const [name, setName] = React.useState('');
+    const [email, setEmail] = React.useState('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
 
       if (!name.trim() || !email.trim()) {
-        toast.error("Please fill in all fields");
+        toast.error('Please fill in all fields');
         return;
       }
 
       setIsSubmitting(true);
 
       try {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        toast.success("Thank you for subscribing! Check your email for the 25% discount code.");
-        setName("");
-        setEmail("");
-      } catch {
-        toast.error("Something went wrong. Please try again.");
+        const res = await fetch('/api/v1/newsletter/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        const json = await res.json();
+
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Subscription failed');
+        }
+
+        toast.success('Thanks for subscribing!');
+        setName('');
+        setEmail('');
+      } catch (err: any) {
+        toast.error(err.message || 'Something went wrong. Please try again.');
       } finally {
         setIsSubmitting(false);
       }
     };
 
     return (
-      <section ref={ref} className={cn("py-3", className)}>
+      <section ref={ref} className={cn('py-3', className)}>
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
           <div
             className="relative overflow-hidden rounded-lg bg-secondary py-5 text-light"
             style={{
               background: "url('/images/banner-newsletter.jpg') no-repeat",
-              backgroundSize: "cover",
+              backgroundSize: 'cover',
             }}
           >
             <div className="absolute inset-0 bg-secondary/90" />
@@ -97,7 +108,7 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
                         disabled={isSubmitting}
                         className="w-full rounded-none bg-dark px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-secondary-700 disabled:pointer-events-none disabled:opacity-50"
                       >
-                        {isSubmitting ? "Submitting..." : "Submit"}
+                        {isSubmitting ? 'Submitting...' : 'Submit'}
                       </button>
                     </div>
                   </form>
@@ -111,6 +122,6 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
   }
 );
 
-Newsletter.displayName = "Newsletter";
+Newsletter.displayName = 'Newsletter';
 
 export default Newsletter;

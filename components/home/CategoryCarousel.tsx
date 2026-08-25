@@ -8,7 +8,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
-const categories = [
+const defaultCategories = [
   { id: 1, name: "Fruits & Veges", image: "/images/category-thumb-1.jpg", slug: "fruits-veges" },
   { id: 2, name: "Breads & Sweets", image: "/images/category-thumb-2.jpg", slug: "breads-sweets" },
   { id: 3, name: "Fruits & Veges", image: "/images/category-thumb-3.jpg", slug: "fruits-veges-2" },
@@ -19,7 +19,19 @@ const categories = [
   { id: 8, name: "Breads & Sweets", image: "/images/category-thumb-8.jpg", slug: "breads-sweets-2" },
 ];
 
-const CategoryCarousel = () => {
+export interface CategoryItem {
+  id: string | number;
+  name: string;
+  slug: string;
+  image: string;
+}
+
+interface CategoryCarouselProps {
+  categories?: CategoryItem[];
+}
+
+const CategoryCarousel = ({ categories: propCategories }: CategoryCarouselProps = {}) => {
+  const categories = propCategories || defaultCategories;
   const swiperPrevRef = React.useRef<HTMLButtonElement>(null);
   const swiperNextRef = React.useRef<HTMLButtonElement>(null);
 
@@ -77,7 +89,7 @@ const CategoryCarousel = () => {
           {categories.map((category) => (
             <SwiperSlide key={category.id}>
               <Link
-                href={`/categories/${category.slug}`}
+                href={`/products?category=${category.slug}`}
                 className="block rounded-lg bg-white p-3 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
               >
                 <div className="relative mx-auto h-24 w-24 overflow-hidden rounded-full md:h-28 md:w-28">

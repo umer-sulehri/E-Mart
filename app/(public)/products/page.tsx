@@ -1,14 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
-import {
-  bestSellingProducts,
-  featuredProducts,
-  popularProducts,
-  newArrivals,
-} from '@/lib/mock/products';
 import type { Product } from '@/components/product/ProductCard';
 import ProductFilters, {
   type FilterState,
@@ -17,10 +11,22 @@ import ProductGrid from '@/components/product/ProductGrid';
 import Pagination from '@/components/product/Pagination';
 import SortDropdown, { type SortValue } from '@/components/product/SortDropdown';
 import SectionHeader from '@/components/ui/SectionHeader';
+import {
+  api,
+  apiProductToCardProduct,
+  type ApiProduct,
+  type ApiListResponse,
+} from '@/lib/api';
+import {
+  bestSellingProducts,
+  featuredProducts,
+  popularProducts,
+  newArrivals,
+} from '@/lib/mock/products';
 
 const ITEMS_PER_PAGE = 15;
 
-const allProducts: Product[] = (() => {
+const allMockProducts: Product[] = (() => {
   const map = new Map<string, Product>();
   for (const p of [
     ...bestSellingProducts,
@@ -66,9 +72,10 @@ export default function ProductsPage() {
 function ProductsContent() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get('q') ?? '';
+  const initialCategory = searchParams.get('category') ?? '';
 
   const [filters, setFilters] = useState<FilterState>({
-    categories: [],
+    categories: initialCategory ? [initialCategory] : [],
     minPrice: '',
     maxPrice: '',
     minRating: 0,
@@ -77,58 +84,127 @@ function ProductsContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [useApi, setUseApi] = useState(true);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [filters, sort, initialSearch]);
 
-  const filteredProducts = useMemo(() => {
-    let result = allProducts;
+  useEffect(() => {
+    let cancelled = false;
 
-    if (initialSearch.trim()) {
-      const query = initialSearch.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.slug.toLowerCase().includes(query)
-      );
-    }
+    async function fetchProducts() {
+      if (!useApi) {
+        // Fallback to client-side filtering with mock data
+        let result = allMockProducts;
 
-    if (filters.categories.length > 0) {
-      result = result.filter(() => {
-        return true;
-      });
-    }
+        if (initialSearch.trim()) {
+          const query = initialSearch.toLowerCase();
+          result = result.filter(
+            (p) =>
+              p.name.toLowerCase().includes(query) ||
+              p.slug.toLowerCase().includes(query)
+          );
+        }
 
-    if (filters.minPrice !== '') {
-      const min = parseFloat(filters.minPrice);
-      if (!isNaN(min)) {
-        result = result.filter(
-          (p) => (p.discountPrice ?? p.price) >= min
+        if (filters.minPrice !== '') {
+          const min = parseFloat(filters.minPrice);
+          if (!isNaN(min)) {
+            result = result.filter(
+              (p) => (p.discountPrice ?? p.price) >= min
+            );
+          }
+        }
+
+        if (filters.maxPrice !== '') {
+          const max = parseFloat(filters.maxPrice);
+          if (!isNaN(max)) {
+            result = result.filter(
+              (p) => (p.discountPrice ?? p.price) <= max
+            );
+          }
+        }
+
+        if (filters.minRating > 0) {
+          result = result.filter((p) => p.rating >= filters.minRating);
+        }
+
+        const sorted = sortProducts(result, sort);
+        const total = Math.ceil(sorted.length / ITEMS_PER_PAGE);
+        const paginated = sorted.slice(
+          (currentPage - 1) * ITEMS_PER_PAGE,
+          currentPage * ITEMS_PER_PAGE
         );
+
+        if (!cancelled) {
+          setProducts(paginated);
+          setTotalItems(sorted.length);
+          setTotalPages(total);
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const params: Record<string, string> = {
+          page: String(currentPage),
+          limit: String(ITEMS_PER_PAGE),
+          sort: sort === 'popularity' ? 'popular' : sort,
+          status: 'active',
+        };
+
+        if (initialSearch.trim()) {
+          params.search = initialSearch.trim();
+        }
+
+        if (filters.categories.length > 0) {
+          params.category = filters.categories[0];
+        } else if (initialCategory) {
+          params.category = initialCategory;
+        }
+
+        if (filters.minPrice !== '') {
+          params.minPrice = filters.minPrice;
+        }
+
+        if (filters.maxPrice !== '') {
+          params.maxPrice = filters.maxPrice;
+        }
+
+        const res = await api.products.list(params) as ApiListResponse<ApiProduct>;
+
+        if (cancelled) return;
+
+        if (res.success && res.data?.length) {
+          setProducts(
+            res.data.map(apiProductToCardProduct)
+          );
+          if (res.meta) {
+            setTotalItems(res.meta.totalItems);
+            setTotalPages(res.meta.totalPages);
+          }
+          setLoading(false);
+        } else {
+          // API returned no data — fall back to mock
+          setUseApi(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setUseApi(false);
+        }
       }
     }
 
-    if (filters.maxPrice !== '') {
-      const max = parseFloat(filters.maxPrice);
-      if (!isNaN(max)) {
-        result = result.filter(
-          (p) => (p.discountPrice ?? p.price) <= max
-        );
-      }
-    }
-
-    if (filters.minRating > 0) {
-      result = result.filter((p) => p.rating >= filters.minRating);
-    }
-
-    return sortProducts(result, sort);
-  }, [filters, sort, initialSearch]);
-
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+    fetchProducts();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, sort, initialSearch, initialCategory, filters, useApi]);
 
   const filtersSidebar = (
     <ProductFilters filters={filters} onFilterChange={setFilters} />
@@ -143,9 +219,9 @@ function ProductsContent() {
           <p className="text-sm text-muted-500">
             Showing{' '}
             <span className="font-medium text-secondary-800">
-              {filteredProducts.length}
+              {totalItems}
             </span>{' '}
-            {filteredProducts.length === 1 ? 'result' : 'results'}
+            {totalItems === 1 ? 'result' : 'results'}
             {initialSearch && (
               <span>
                 {' '}
@@ -201,12 +277,28 @@ function ProductsContent() {
 
           {/* Main content */}
           <div className="min-w-0 flex-1">
-            <ProductGrid products={paginatedProducts} />
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+            {loading ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="rounded-2xl bg-white p-3 text-center shadow-sm">
+                      <div className="mx-auto h-[210px] w-[210px] rounded-lg bg-muted-100" />
+                      <div className="mt-3 mx-auto h-4 w-3/4 rounded bg-muted-100" />
+                      <div className="mt-2 mx-auto h-3 w-1/2 rounded bg-muted-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <ProductGrid products={products} />
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>

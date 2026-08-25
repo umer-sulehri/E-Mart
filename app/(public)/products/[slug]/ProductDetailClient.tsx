@@ -7,6 +7,7 @@ import StarRating from '@/components/ui/StarRating';
 import QuantitySelector from '@/components/ui/QuantitySelector';
 import Button from '@/components/ui/Button';
 import { formatPrice, cn } from '@/lib/utils';
+import { useCartStore } from '@/store/cartStore';
 import type { Product } from '@/types';
 
 export interface ProductDetailClientProps {
@@ -22,18 +23,57 @@ export default function ProductDetailClient({
 }: ProductDetailClientProps) {
   const [quantity, setQuantity] = React.useState(1);
   const [isWishlisted, setIsWishlisted] = React.useState(false);
+  const [wishlistLoading, setWishlistLoading] = React.useState(false);
+  const addItem = useCartStore((s) => s.addItem);
+  const addToServer = useCartStore((s) => s.addToServer);
 
   const handleAddToCart = () => {
+    const price = hasDiscount ? product.discountPrice! : product.price;
+
+    addItem({
+      id: `cart-${product.id}-${Date.now()}`,
+      productId: product.id,
+      product,
+      quantity,
+      unitPrice: price,
+      totalPrice: price * quantity,
+      addedAt: new Date().toISOString(),
+    });
+
+    addToServer(product.id, quantity);
+
     toast.success(`${product.name} added to cart!`);
   };
 
-  const handleWishlist = () => {
-    setIsWishlisted((prev) => !prev);
-    toast[isWishlisted ? 'dismiss' : 'success'](
-      isWishlisted
-        ? `${product.name} removed from wishlist`
-        : `${product.name} added to wishlist!`
-    );
+  const handleWishlist = async () => {
+    if (wishlistLoading) return;
+
+    const newState = !isWishlisted;
+    setIsWishlisted(newState);
+    setWishlistLoading(true);
+
+    try {
+      const res = await fetch('/api/v1/wishlist', {
+        method: newState ? 'POST' : 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Wishlist request failed');
+      }
+
+      toast[newState ? 'success' : 'success'](
+        newState
+          ? `${product.name} added to wishlist!`
+          : `${product.name} removed from wishlist`
+      );
+    } catch {
+      setIsWishlisted(!newState);
+      toast.error('Failed to update wishlist');
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   const handleShare = () => {
@@ -75,7 +115,6 @@ export default function ProductDetailClient({
             document
               .getElementById('tab-reviews')
               ?.scrollIntoView({ behavior: 'smooth' });
-            // Activate reviews tab
             document.querySelectorAll('.tab-btn').forEach((btn) => {
               btn.classList.remove('border-primary', 'text-primary', 'font-semibold');
               btn.classList.add('border-transparent', 'text-muted-600', 'font-medium');
@@ -150,6 +189,7 @@ export default function ProductDetailClient({
           variant={isWishlisted ? 'danger' : 'outline'}
           size="lg"
           onClick={handleWishlist}
+          disabled={wishlistLoading}
           className={cn(isWishlisted && 'bg-danger-50')}
         >
           <Heart size={18} className={cn(isWishlisted && 'fill-current')} />

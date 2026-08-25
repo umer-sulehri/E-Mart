@@ -6,16 +6,146 @@ import ProductGallery from '@/components/product/ProductGallery';
 import ProductCarousel from '@/components/product/ProductCarousel';
 import ProductTabs from '@/components/product/ProductTabs';
 import ProductDetailClient from './ProductDetailClient';
+import { calculateDiscount } from '@/lib/utils';
+import { generateProductMetadata } from '@/lib/seo';
+import { apiProductToCardProduct } from '@/lib/api';
 import {
   getProductBySlug,
   getAllProductSlugs,
   getRelatedProducts,
 } from '@/lib/mock/product-detail';
-import { calculateDiscount } from '@/lib/utils';
-import { generateProductMetadata } from '@/lib/seo';
+import type { Product } from '@/types';
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
+}
+
+async function fetchProductBySlug(slug: string): Promise<Product | null> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/v1/products/${slug}`,
+      { cache: 'no-store' }
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json.success || !json.data) return null;
+
+    const p = json.data;
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      description: p.description || '',
+      shortDescription: p.short_description,
+      price: p.price,
+      discountPrice: p.sale_price,
+      stockQuantity: p.stock_quantity ?? 0,
+      sku: p.sku || '',
+      category: p.categories
+        ? {
+            id: p.categories.id || '',
+            name: p.categories.name,
+            slug: p.categories.slug,
+            isActive: true,
+            displayOrder: 0,
+            createdAt: '',
+            updatedAt: '',
+          }
+        : p.category
+          ? {
+              id: p.category.id || '',
+              name: p.category.name,
+              slug: p.category.slug,
+              isActive: true,
+              displayOrder: 0,
+              createdAt: '',
+              updatedAt: '',
+            }
+          : { id: '', name: '', slug: '', isActive: true, displayOrder: 0, createdAt: '', updatedAt: '' },
+      categoryId: p.categories?.id || p.category?.id || '',
+      brand: p.brands
+        ? {
+            id: p.brands.id || '',
+            name: p.brands.name,
+            slug: p.brands.slug,
+            isActive: true,
+            createdAt: '',
+            updatedAt: '',
+          }
+        : p.brand
+          ? {
+              id: p.brand.id || '',
+              name: p.brand.name,
+              slug: p.brand.slug,
+              isActive: true,
+              createdAt: '',
+              updatedAt: '',
+            }
+          : undefined,
+      brandId: p.brands?.id || p.brand?.id,
+      rating: p.averageRating ?? p.rating ?? 0,
+      reviewCount: p.reviewCount ?? 0,
+      isActive: p.is_active ?? true,
+      isFeatured: p.is_featured ?? false,
+      isNew: p.is_new ?? false,
+      images: p.images || [],
+      specifications: p.specifications,
+      tags: p.tags,
+      weight: p.weight,
+      vendor: p.vendors
+        ? {
+            id: p.vendors.id || '',
+            name: p.vendors.name,
+            slug: p.vendors.slug,
+            contactEmail: '',
+            status: 'approved' as const,
+            userId: '',
+            rating: p.vendors.rating ?? 0,
+            totalSales: p.vendors.total_sales ?? 0,
+            commissionRate: 0,
+            createdAt: '',
+            updatedAt: '',
+          }
+        : p.vendor
+          ? {
+              id: p.vendor.id || '',
+              name: p.vendor.name,
+              slug: p.vendor.slug,
+              contactEmail: '',
+              status: 'approved' as const,
+              userId: '',
+              rating: p.vendor.rating ?? 0,
+              totalSales: p.vendor.total_sales ?? 0,
+              commissionRate: 0,
+              createdAt: '',
+              updatedAt: '',
+            }
+          : undefined,
+      vendorId: p.vendors?.id || p.vendor?.id,
+      createdAt: p.created_at || '',
+      updatedAt: p.updated_at || '',
+    } as Product;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchRelatedProducts(slug: string) {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/v1/products?limit=8&status=active`,
+      { cache: 'no-store' }
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    if (!json.success || !json.data) return [];
+    return (json.data as any[])
+      .filter((p: any) => p.slug !== slug)
+      .slice(0, 5)
+      .map(apiProductToCardProduct);
+  } catch {
+    return [];
+  }
 }
 
 export async function generateStaticParams() {
@@ -27,10 +157,18 @@ export async function generateMetadata({
   params,
 }: ProductDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
 
+  const product = await fetchProductBySlug(slug);
   if (!product) {
-    return { title: 'Product Not Found' };
+    const mock = getProductBySlug(slug);
+    if (!mock) return { title: 'Product Not Found' };
+    return generateProductMetadata({
+      name: mock.name,
+      shortDescription: mock.shortDescription,
+      description: mock.description,
+      images: mock.images,
+      slug: mock.slug,
+    });
   }
 
   return generateProductMetadata({
@@ -46,29 +184,38 @@ export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+
+  let product = await fetchProductBySlug(slug);
+
+  // Fallback to mock data if API unavailable
+  if (!product) {
+    product = (getProductBySlug(slug) as Product | undefined) ?? null;
+  }
 
   if (!product) {
     notFound();
   }
 
-  const relatedProducts = getRelatedProducts(slug);
+  let relatedProducts = await fetchRelatedProducts(slug);
+  if (relatedProducts.length === 0) {
+    const mockRelated = getRelatedProducts(slug);
+    relatedProducts = mockRelated.map((p) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: p.price,
+      discountPrice: p.discountPrice,
+      rating: p.rating,
+      reviewCount: p.reviewCount,
+      image: p.images[0] || '/images/product-1.jpg',
+    }));
+  }
+
   const hasDiscount =
     product.discountPrice != null && product.discountPrice < product.price;
   const discount = hasDiscount
     ? calculateDiscount(product.price, product.discountPrice!)
     : 0;
-
-  const carouselProducts = relatedProducts.map((p) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    price: p.price,
-    discountPrice: p.discountPrice,
-    rating: p.rating,
-    reviewCount: p.reviewCount,
-    image: p.images[0] || '/images/product-1.jpg',
-  }));
 
   return (
     <>
@@ -133,10 +280,10 @@ export default async function ProductDetailPage({
       </section>
 
       {/* Related Products */}
-      {carouselProducts.length > 0 && (
+      {relatedProducts.length > 0 && (
         <ProductCarousel
           title="Related Products"
-          products={carouselProducts}
+          products={relatedProducts}
           viewAllLink="/products"
         />
       )}

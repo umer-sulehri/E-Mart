@@ -1,9 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Preloader from '@/components/layout/Preloader';
 import HeroBanner from '@/components/home/HeroBanner';
-import CategoryCarousel from '@/components/home/CategoryCarousel';
+import CategoryCarousel, {
+  type CategoryItem,
+} from '@/components/home/CategoryCarousel';
 import BannerAds from '@/components/home/BannerAds';
 import ProductCarousel from '@/components/product/ProductCarousel';
 import Newsletter from '@/components/home/Newsletter';
@@ -13,21 +16,136 @@ import PopularTags from '@/components/home/PopularTags';
 import TestimonialSection from '@/components/home/TestimonialSection';
 import FeaturesStrip from '@/components/home/FeaturesStrip';
 import ProductCard from '@/components/product/ProductCard';
+import type { Product } from '@/components/product/ProductCard';
 import {
   bestSellingProducts,
   featuredProducts,
   popularProducts,
   newArrivals,
 } from '@/lib/mock/products';
+import {
+  api,
+  apiProductToCardProduct,
+  apiCategoryToCarouselCategory,
+  type ApiProduct,
+  type ApiCategory,
+  type ApiListResponse,
+} from '@/lib/api';
+
+function SkeletonGrid() {
+  return (
+    <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="col mb-4">
+          <div className="animate-pulse rounded-2xl bg-white p-3 text-center shadow-sm">
+            <div className="mx-auto h-[210px] w-[210px] rounded-lg bg-muted-100" />
+            <div className="mt-3 mx-auto h-4 w-3/4 rounded bg-muted-100" />
+            <div className="mt-2 mx-auto h-3 w-1/2 rounded bg-muted-100" />
+            <div className="mt-2 mx-auto h-4 w-1/3 rounded bg-muted-100" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SkeletonCarousel() {
+  return (
+    <div className="flex gap-6 overflow-hidden py-5">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="min-w-[200px] flex-shrink-0 animate-pulse">
+          <div className="rounded-2xl bg-white p-3 text-center shadow-sm">
+            <div className="mx-auto h-[210px] w-[210px] rounded-lg bg-muted-100" />
+            <div className="mt-3 mx-auto h-4 w-3/4 rounded bg-muted-100" />
+            <div className="mt-2 mx-auto h-3 w-1/2 rounded bg-muted-100" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function HomePage() {
+  const [bestSellers, setBestSellers] = useState<Product[]>(bestSellingProducts);
+  const [featured, setFeatured] = useState<Product[]>(featuredProducts);
+  const [popular, setPopular] = useState<Product[]>(popularProducts);
+  const [newArrivalsProducts, setNewArrivalsProducts] =
+    useState<Product[]>(newArrivals);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchData() {
+      try {
+        const [bestRes, featuredRes, popularRes, newRes, catRes] =
+          await Promise.allSettled([
+            api.products.list({ sort: 'popular', limit: '8', status: 'active' }),
+            api.products.list({ sort: 'rating', limit: '8', status: 'active' }),
+            api.products.list({ sort: 'popular', limit: '8', status: 'active' }),
+            api.products.list({ sort: 'newest', limit: '8', status: 'active' }),
+            api.categories.list(),
+          ]);
+
+        if (cancelled) return;
+
+        if (bestRes.status === 'fulfilled') {
+          const res = bestRes.value as ApiListResponse<ApiProduct>;
+          if (res.success && res.data?.length) {
+            setBestSellers(res.data.map(apiProductToCardProduct));
+          }
+        }
+
+        if (featuredRes.status === 'fulfilled') {
+          const res = featuredRes.value as ApiListResponse<ApiProduct>;
+          if (res.success && res.data?.length) {
+            setFeatured(res.data.map(apiProductToCardProduct));
+          }
+        }
+
+        if (popularRes.status === 'fulfilled') {
+          const res = popularRes.value as ApiListResponse<ApiProduct>;
+          if (res.success && res.data?.length) {
+            setPopular(res.data.map(apiProductToCardProduct));
+          }
+        }
+
+        if (newRes.status === 'fulfilled') {
+          const res = newRes.value as ApiListResponse<ApiProduct>;
+          if (res.success && res.data?.length) {
+            setNewArrivalsProducts(res.data.map(apiProductToCardProduct));
+          }
+        }
+
+        if (catRes.status === 'fulfilled') {
+          const res = catRes.value as ApiListResponse<ApiCategory>;
+          if (res.success && res.data?.length) {
+            setCategories(res.data.map(apiCategoryToCarouselCategory));
+          }
+        }
+      } catch {
+        // Fall back to mock data (already set as defaults)
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <>
       <Preloader />
       <HeroBanner />
-      <CategoryCarousel />
+      <CategoryCarousel
+        categories={categories.length > 0 ? categories : undefined}
+      />
 
-      {/* Best Selling Products - Static Grid */}
+      {/* Best Selling Products */}
       <section className="overflow-hidden py-5">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
           <div className="mb-4 flex flex-wrap items-center justify-between">
@@ -35,43 +153,59 @@ export default function HomePage() {
               Best selling products
             </h2>
             <Link
-              href="/shop"
+              href="/products?sort=popular"
               className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-500"
             >
               View All
             </Link>
           </div>
-          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5">
-            {bestSellingProducts.slice(0, 10).map((product) => (
-              <div key={product.id} className="col mb-4">
-                <ProductCard product={product} />
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <SkeletonGrid />
+          ) : (
+            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5">
+              {bestSellers.slice(0, 10).map((product) => (
+                <div key={product.id} className="col mb-4">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       <BannerAds />
 
-      <ProductCarousel
-        title="Featured products"
-        products={featuredProducts}
-        viewAllLink="/shop?featured=true"
-      />
+      {loading ? (
+        <SkeletonCarousel />
+      ) : (
+        <ProductCarousel
+          title="Featured products"
+          products={featured}
+          viewAllLink="/products?sort=rating"
+        />
+      )}
 
       <Newsletter />
 
-      <ProductCarousel
-        title="Most popular products"
-        products={popularProducts}
-        viewAllLink="/shop?sort=popularity"
-      />
+      {loading ? (
+        <SkeletonCarousel />
+      ) : (
+        <ProductCarousel
+          title="Most popular products"
+          products={popular}
+          viewAllLink="/products?sort=popular"
+        />
+      )}
 
-      <ProductCarousel
-        title="Just arrived"
-        products={newArrivals}
-        viewAllLink="/shop?sort=newest"
-      />
+      {loading ? (
+        <SkeletonCarousel />
+      ) : (
+        <ProductCarousel
+          title="Just arrived"
+          products={newArrivalsProducts}
+          viewAllLink="/products?sort=newest"
+        />
+      )}
 
       <BlogSection />
       <DownloadApp />

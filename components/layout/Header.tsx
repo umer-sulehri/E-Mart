@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
   Menu,
   Search,
@@ -10,6 +11,8 @@ import {
   Heart,
   ShoppingBag,
   ChevronDown,
+  Loader2,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
@@ -25,6 +28,176 @@ const pageLinks = [
   { label: 'Contact', href: '/contact' },
   { label: 'My Account', href: '/account' },
 ];
+
+interface Suggestion {
+  text: string;
+  type: 'category' | 'brand' | 'product';
+  slug: string;
+  imageUrl?: string;
+  price?: number;
+}
+
+function useDebounce(value: string, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
+function SearchBar({ className }: { className?: string }) {
+  const router = useRouter();
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const debouncedQuery = useDebounce(query, 300);
+
+  useEffect(() => {
+    if (debouncedQuery.trim().length < 2) {
+      setSuggestions([]);
+      setOpen(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+
+    fetch(`/api/v1/search/suggestions?q=${encodeURIComponent(debouncedQuery)}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (json.success) {
+          setSuggestions(json.data || []);
+          setOpen((json.data || []).length > 0);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setSuggestions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQuery]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const navigateTo = useCallback(
+    (q: string) => {
+      setOpen(false);
+      setQuery('');
+      router.push(`/shop?q=${encodeURIComponent(q)}`);
+    },
+    [router]
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) navigateTo(query.trim());
+  };
+
+  const typeIcon = (type: string) => {
+    switch (type) {
+      case 'category': return '📂';
+      case 'brand': return '🏷️';
+      default: return '🛒';
+    }
+  };
+
+  return (
+    <div ref={wrapperRef} className={cn('relative', className)}>
+      <form
+        className="flex flex-1 items-center"
+        onSubmit={handleSubmit}
+        role="search"
+      >
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (e.target.value.trim().length < 2) setOpen(false);
+          }}
+          onFocus={() => {
+            if (suggestions.length > 0) setOpen(true);
+          }}
+          placeholder="Search for more than 20,000 products"
+          className="flex-1 bg-transparent border-0 text-sm text-secondary placeholder:text-muted focus:outline-none px-3 py-1"
+          aria-label="Search products"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery('');
+              setSuggestions([]);
+              setOpen(false);
+            }}
+            className="p-1 text-muted hover:text-secondary transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+        <button
+          type="submit"
+          className="p-2 text-muted hover:text-secondary transition-colors"
+          aria-label="Search"
+        >
+          {loading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Search className="h-5 w-5" />
+          )}
+        </button>
+      </form>
+
+      {/* Suggestions Dropdown */}
+      {open && suggestions.length > 0 && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border border-muted-200 bg-white shadow-lg max-h-80 overflow-y-auto">
+          {suggestions.slice(0, 8).map((s, i) => (
+            <button
+              key={`${s.type}-${s.slug}-${i}`}
+              onClick={() => navigateTo(s.text)}
+              className="flex items-center gap-3 w-full px-4 py-3 text-left text-sm hover:bg-muted-50 transition-colors border-b border-muted-50 last:border-b-0"
+            >
+              <span className="text-base">{typeIcon(s.type)}</span>
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-secondary-800 font-medium">{s.text}</p>
+                <p className="text-xs text-muted-500 capitalize">{s.type}</p>
+              </div>
+              {s.price != null && (
+                <span className="text-xs font-semibold text-primary whitespace-nowrap">
+                  Rs. {s.price.toLocaleString()}
+                </span>
+              )}
+            </button>
+          ))}
+          <button
+            onClick={() => navigateTo(query.trim())}
+            className="w-full px-4 py-2.5 text-center text-xs font-medium text-primary hover:bg-muted-50 transition-colors"
+          >
+            View all results for &quot;{query}&quot;
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -81,25 +254,7 @@ export default function Header() {
                     <option>Chocolates</option>
                   </select>
                 </div>
-                <form
-                  className="flex flex-1 items-center"
-                  onSubmit={(e) => e.preventDefault()}
-                  role="search"
-                >
-                  <input
-                    type="text"
-                    placeholder="Search for more than 20,000 products"
-                    className="flex-1 bg-transparent border-0 text-sm text-secondary placeholder:text-muted focus:outline-none px-3 py-1"
-                    aria-label="Search products"
-                  />
-                  <button
-                    type="submit"
-                    className="p-2 text-muted hover:text-secondary transition-colors"
-                    aria-label="Search"
-                  >
-                    <Search className="h-5 w-5" />
-                  </button>
-                </form>
+                <SearchBar className="flex-1" />
               </div>
             </div>
 
@@ -176,25 +331,7 @@ export default function Header() {
 
             <div className="w-full sm:hidden">
               <div className="flex items-center bg-muted-50 rounded-full p-2">
-                <form
-                  className="flex flex-1 items-center"
-                  onSubmit={(e) => e.preventDefault()}
-                  role="search"
-                >
-                  <input
-                    type="text"
-                    placeholder="Search for more than 20,000 products"
-                    className="flex-1 bg-transparent border-0 text-sm text-secondary placeholder:text-muted focus:outline-none px-3 py-1"
-                    aria-label="Search products"
-                  />
-                  <button
-                    type="submit"
-                    className="p-2 text-muted hover:text-secondary transition-colors"
-                    aria-label="Search"
-                  >
-                    <Search className="h-5 w-5" />
-                  </button>
-                </form>
+                <SearchBar className="flex-1" />
               </div>
             </div>
           </div>

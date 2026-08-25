@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { ThumbsUp, ChevronDown, PenLine } from 'lucide-react';
+import { ThumbsUp, ChevronDown, PenLine, Loader2 } from 'lucide-react';
 import StarRating from '@/components/ui/StarRating';
 import Button from '@/components/ui/Button';
 import { formatDate, cn } from '@/lib/utils';
@@ -19,91 +19,103 @@ export interface Review {
   createdAt: string;
 }
 
-export type SortOption = 'recent' | 'helpful';
+export type SortOption = 'newest' | 'oldest' | 'highest' | 'lowest' | 'helpful';
 
 export interface ReviewListProps {
+  productSlug?: string;
   onWriteReview?: () => void;
+  onReviewCountChange?: (count: number) => void;
   className?: string;
 }
 
-const mockReviews: Review[] = [
-  {
-    id: 'r1',
-    userName: 'Sarah Johnson',
-    rating: 5,
-    title: 'Best quality I have ever tried!',
-    comment:
-      'These are hands down the best bananas I have purchased online. They arrived perfectly ripe and were bursting with flavor. My kids love them and we go through a bunch every week now. Will definitely be ordering again!',
-    helpfulCount: 24,
-    isVerifiedPurchase: true,
-    createdAt: '2024-06-10T08:30:00Z',
-  },
-  {
-    id: 'r2',
-    userName: 'Ahmed Khan',
-    rating: 4,
-    title: 'Good quality, fast delivery',
-    comment:
-      'The bananas were fresh and tasty. Delivery was quick and the packaging kept them safe during transit. One or two were slightly bruised but overall a great purchase. Recommended for anyone looking for fresh organic produce.',
-    helpfulCount: 18,
-    isVerifiedPurchase: true,
-    createdAt: '2024-06-08T14:20:00Z',
-  },
-  {
-    id: 'r3',
-    userName: 'Maria Garcia',
-    rating: 5,
-    title: 'Perfect for smoothies',
-    comment:
-      'I buy these every week for my morning smoothies. The natural sweetness is incredible and they blend perfectly. Much better than what I find at the local supermarket. The organic certification gives me peace of mind too.',
-    helpfulCount: 15,
-    isVerifiedPurchase: true,
-    createdAt: '2024-06-05T10:15:00Z',
-  },
-  {
-    id: 'r4',
-    userName: 'David Chen',
-    rating: 3,
-    title: 'Decent but arrived slightly underripe',
-    comment:
-      'The quality is good once they ripen, but they arrived a bit too green for my liking. Had to wait a couple of days before eating. Flavor is nice when fully ripe though. Might order again knowing I need to plan ahead.',
-    helpfulCount: 8,
-    isVerifiedPurchase: true,
-    createdAt: '2024-06-02T16:45:00Z',
-  },
-  {
-    id: 'r5',
-    userName: 'Fatima Ali',
-    rating: 5,
-    title: 'Kids absolutely love them!',
-    comment:
-      'My children are very picky about their fruit but they devour these bananas every time. Great value for organic produce and the convenience of home delivery is a game changer for our busy family. Highly recommended!',
-    helpfulCount: 31,
-    isVerifiedPurchase: true,
-    createdAt: '2024-05-28T09:00:00Z',
-  },
-];
+function ReviewSkeleton() {
+  return (
+    <div className="rounded-xl border border-muted-100 bg-white p-5 space-y-3">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-muted-200 animate-pulse" />
+          <div className="space-y-2">
+            <div className="h-4 w-28 bg-muted-200 rounded animate-pulse" />
+            <div className="h-3 w-20 bg-muted-100 rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="flex gap-0.5">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <div key={s} className="h-4 w-4 bg-muted-200 rounded animate-pulse" />
+          ))}
+        </div>
+      </div>
+      <div className="h-4 w-48 bg-muted-200 rounded animate-pulse" />
+      <div className="space-y-2">
+        <div className="h-3 w-full bg-muted-100 rounded animate-pulse" />
+        <div className="h-3 w-3/4 bg-muted-100 rounded animate-pulse" />
+      </div>
+    </div>
+  );
+}
 
 const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
-  ({ onWriteReview, className }, ref) => {
-    const [sortBy, setSortBy] = React.useState<SortOption>('recent');
+  ({ productSlug, onWriteReview, onReviewCountChange, className }, ref) => {
+    const [sortBy, setSortBy] = React.useState<SortOption>('newest');
     const [showSortDropdown, setShowSortDropdown] = React.useState(false);
-    const [helpfulClicked, setHelpfulClicked] = React.useState<Set<string>>(
-      new Set()
-    );
+    const [helpfulClicked, setHelpfulClicked] = React.useState<Set<string>>(new Set());
+    const [reviews, setReviews] = React.useState<Review[]>([]);
+    const [totalReviews, setTotalReviews] = React.useState(0);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState<string | null>(null);
 
-    const sortedReviews = React.useMemo(() => {
-      const sorted = [...mockReviews];
-      if (sortBy === 'helpful') {
-        sorted.sort((a, b) => b.helpfulCount - a.helpfulCount);
-      } else {
-        sorted.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+    const fetchReviews = React.useCallback(async () => {
+      if (!productSlug) {
+        setLoading(false);
+        return;
       }
-      return sorted;
-    }, [sortBy]);
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const sortParam = sortBy === 'helpful' ? 'newest' : sortBy;
+        const res = await fetch(
+          `/api/v1/products/${encodeURIComponent(productSlug)}/reviews?page=1&limit=20&sort=${sortParam}`
+        );
+        const json = await res.json();
+
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Failed to load reviews');
+        }
+
+        const fetched: Review[] = (json.data.reviews || []).map((r: any) => ({
+          id: r.id,
+          userName:
+            r.profiles
+              ? `${r.profiles.first_name || ''} ${r.profiles.last_name || ''}`.trim() || 'Anonymous'
+              : 'Anonymous',
+          userAvatar: r.profiles?.profile_image_url,
+          rating: r.rating,
+          title: r.title,
+          comment: r.comment,
+          helpfulCount: r.helpful_count || 0,
+          isVerifiedPurchase: r.is_verified_purchase || false,
+          createdAt: r.created_at,
+        }));
+
+        if (sortBy === 'helpful') {
+          fetched.sort((a, b) => b.helpfulCount - a.helpfulCount);
+        }
+
+        setReviews(fetched);
+        setTotalReviews(json.meta?.totalItems || fetched.length);
+        onReviewCountChange?.(json.meta?.totalItems || fetched.length);
+      } catch (err: any) {
+        setError(err.message || 'Something went wrong');
+      } finally {
+        setLoading(false);
+      }
+    }, [productSlug, sortBy, onReviewCountChange]);
+
+    React.useEffect(() => {
+      fetchReviews();
+    }, [fetchReviews]);
 
     const handleHelpful = (reviewId: string) => {
       setHelpfulClicked((prev) => {
@@ -117,14 +129,22 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
       });
     };
 
-    const sortLabel = sortBy === 'recent' ? 'Most Recent' : 'Most Helpful';
+    const sortLabel = (s: SortOption) => {
+      switch (s) {
+        case 'newest': return 'Most Recent';
+        case 'oldest': return 'Oldest First';
+        case 'highest': return 'Highest Rated';
+        case 'lowest': return 'Lowest Rated';
+        case 'helpful': return 'Most Helpful';
+      }
+    };
 
     return (
       <div ref={ref} className={cn('space-y-6', className)}>
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-heading text-lg font-bold text-secondary-800">
-            Customer Reviews ({mockReviews.length})
+            Customer Reviews ({loading ? '...' : totalReviews})
           </h3>
           <div className="flex items-center gap-3">
             {/* Sort Dropdown */}
@@ -133,7 +153,7 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
                 onClick={() => setShowSortDropdown(!showSortDropdown)}
                 className="flex items-center gap-2 rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 transition-colors hover:border-muted-300"
               >
-                {sortLabel}
+                {sortLabel(sortBy)}
                 <ChevronDown size={14} />
               </button>
               {showSortDropdown && (
@@ -143,121 +163,138 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
                     onClick={() => setShowSortDropdown(false)}
                   />
                   <div className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-lg border border-muted-200 bg-white shadow-lg">
-                    <button
-                      onClick={() => {
-                        setSortBy('recent');
-                        setShowSortDropdown(false);
-                      }}
-                      className={cn(
-                        'flex w-full items-center px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted-50',
-                        sortBy === 'recent' && 'font-medium text-primary'
-                      )}
-                    >
-                      Most Recent
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSortBy('helpful');
-                        setShowSortDropdown(false);
-                      }}
-                      className={cn(
-                        'flex w-full items-center px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted-50',
-                        sortBy === 'helpful' && 'font-medium text-primary'
-                      )}
-                    >
-                      Most Helpful
-                    </button>
+                    {(['newest', 'oldest', 'highest', 'lowest', 'helpful'] as SortOption[]).map(
+                      (option) => (
+                        <button
+                          key={option}
+                          onClick={() => {
+                            setSortBy(option);
+                            setShowSortDropdown(false);
+                          }}
+                          className={cn(
+                            'flex w-full items-center px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted-50',
+                            sortBy === option && 'font-medium text-primary'
+                          )}
+                        >
+                          {sortLabel(option)}
+                        </button>
+                      )
+                    )}
                   </div>
                 </>
               )}
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onWriteReview}
-            >
+            <Button variant="outline" size="sm" onClick={onWriteReview}>
               <PenLine size={14} />
               Write a Review
             </Button>
           </div>
         </div>
 
+        {/* Loading */}
+        {loading && (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <ReviewSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="rounded-xl border border-danger/20 bg-danger/5 p-6 text-center">
+            <p className="text-sm text-danger">{error}</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={fetchReviews}>
+              Try Again
+            </Button>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && !error && reviews.length === 0 && (
+          <div className="rounded-xl border border-muted-100 bg-white p-10 text-center">
+            <p className="text-sm text-muted-500">No reviews yet. Be the first to review!</p>
+          </div>
+        )}
+
         {/* Reviews */}
-        <div className="space-y-4">
-          {sortedReviews.map((review) => (
-            <div
-              key={review.id}
-              className="rounded-xl border border-muted-100 bg-white p-5"
-            >
-              {/* User Info */}
-              <div className="mb-3 flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-muted-200">
-                    {review.userAvatar ? (
-                      <Image
-                        src={review.userAvatar}
-                        alt={review.userName}
-                        fill
-                        className="object-cover"
-                        sizes="40px"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-sm font-bold text-muted-600">
-                        {review.userName
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-secondary-800">
-                        {review.userName}
-                      </span>
-                      {review.isVerifiedPurchase && (
-                        <span className="rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-medium text-success-700">
-                          Verified Purchase
-                        </span>
+        {!loading && !error && reviews.length > 0 && (
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <div
+                key={review.id}
+                className="rounded-xl border border-muted-100 bg-white p-5"
+              >
+                {/* User Info */}
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-muted-200">
+                      {review.userAvatar ? (
+                        <Image
+                          src={review.userAvatar}
+                          alt={review.userName}
+                          fill
+                          className="object-cover"
+                          sizes="40px"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-muted-600">
+                          {review.userName
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')}
+                        </div>
                       )}
                     </div>
-                    <span className="text-xs text-muted-500">
-                      {formatDate(review.createdAt)}
-                    </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-secondary-800">
+                          {review.userName}
+                        </span>
+                        {review.isVerifiedPurchase && (
+                          <span className="rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-medium text-success-700">
+                            Verified Purchase
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-500">
+                        {formatDate(review.createdAt)}
+                      </span>
+                    </div>
                   </div>
+                  <StarRating rating={review.rating} size="sm" />
                 </div>
-                <StarRating rating={review.rating} size="sm" />
-              </div>
 
-              {/* Review Content */}
-              {review.title && (
-                <h4 className="mb-1 text-sm font-bold text-secondary-800">
-                  {review.title}
-                </h4>
-              )}
-              <p className="text-sm leading-relaxed text-muted-700">
-                {review.comment}
-              </p>
+                {/* Review Content */}
+                {review.title && (
+                  <h4 className="mb-1 text-sm font-bold text-secondary-800">
+                    {review.title}
+                  </h4>
+                )}
+                <p className="text-sm leading-relaxed text-muted-700">
+                  {review.comment}
+                </p>
 
-              {/* Helpful Button */}
-              <div className="mt-4 flex items-center">
-                <button
-                  onClick={() => handleHelpful(review.id)}
-                  className={cn(
-                    'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
-                    helpfulClicked.has(review.id)
-                      ? 'bg-primary-100 text-primary'
-                      : 'bg-muted-50 text-muted-600 hover:bg-muted-100'
-                  )}
-                >
-                  <ThumbsUp size={12} />
-                  Helpful ({review.helpfulCount + (helpfulClicked.has(review.id) ? 1 : 0)})
-                </button>
+                {/* Helpful Button */}
+                <div className="mt-4 flex items-center">
+                  <button
+                    onClick={() => handleHelpful(review.id)}
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+                      helpfulClicked.has(review.id)
+                        ? 'bg-primary-100 text-primary'
+                        : 'bg-muted-50 text-muted-600 hover:bg-muted-100'
+                    )}
+                  >
+                    <ThumbsUp size={12} />
+                    Helpful ({review.helpfulCount + (helpfulClicked.has(review.id) ? 1 : 0)})
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }

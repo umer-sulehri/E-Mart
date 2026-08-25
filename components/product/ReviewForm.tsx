@@ -5,21 +5,24 @@ import { Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore';
 
 export interface ReviewFormProps {
+  productSlug?: string;
   productName?: string;
   onSuccess?: () => void;
   className?: string;
 }
 
 const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
-  ({ productName, onSuccess, className }, ref) => {
+  ({ productSlug, productName, onSuccess, className }, ref) => {
     const [rating, setRating] = React.useState(0);
     const [hoveredRating, setHoveredRating] = React.useState(0);
     const [title, setTitle] = React.useState('');
     const [comment, setComment] = React.useState('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [errors, setErrors] = React.useState<Record<string, string>>({});
+    const { isAuthenticated } = useAuthStore();
 
     const validate = (): boolean => {
       const newErrors: Record<string, string> = {};
@@ -42,27 +45,64 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
       e.preventDefault();
 
       if (!validate()) return;
+      if (!productSlug) {
+        toast.error('Unable to submit review');
+        return;
+      }
 
       setIsSubmitting(true);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        const res = await fetch(
+          `/api/v1/products/${encodeURIComponent(productSlug)}/reviews`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rating, title, comment }),
+          }
+        );
 
-      toast.success(
-        productName
-          ? `Review submitted for ${productName}! Thank you.`
-          : 'Review submitted successfully! Thank you.'
-      );
+        const json = await res.json();
 
-      setRating(0);
-      setTitle('');
-      setComment('');
-      setErrors({});
-      setIsSubmitting(false);
-      onSuccess?.();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Failed to submit review');
+        }
+
+        toast.success(
+          productName
+            ? `Review submitted for ${productName}! Thank you.`
+            : 'Review submitted successfully! Thank you.'
+        );
+
+        setRating(0);
+        setTitle('');
+        setComment('');
+        setErrors({});
+        onSuccess?.();
+      } catch (err: any) {
+        toast.error(err.message || 'Something went wrong. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
     };
 
     const displayRating = hoveredRating || rating;
+
+    if (!isAuthenticated) {
+      return (
+        <div className="rounded-xl border border-muted-100 bg-muted-50 p-6 text-center">
+          <p className="text-sm text-secondary-700 mb-3">
+            Please log in to write a review.
+          </p>
+          <a
+            href="/account/login"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Login to review
+          </a>
+        </div>
+      );
+    }
 
     return (
       <form

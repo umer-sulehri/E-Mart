@@ -10,7 +10,9 @@ import {
   ChevronRight,
   ChevronDown,
   Send,
+  Loader2,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
@@ -75,7 +77,7 @@ export default function ContactPageClient() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -90,11 +92,38 @@ export default function ContactPageClient() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      setSubmitted(true);
+    if (!validate()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/v1/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject,
+          message: formData.message,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to send message');
+      }
+
+      toast.success('Message sent successfully! We will get back to you soon.');
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      setErrors({});
+    } catch (err: any) {
+      toast.error(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -137,12 +166,6 @@ export default function ContactPageClient() {
                 Have a question or feedback? Fill out the form below and we&apos;ll get back to you
                 within 24 hours.
               </p>
-
-              {submitted && (
-                <div className="mb-6 rounded-lg bg-success-50 border border-success-200 p-4 text-sm text-success-700">
-                  Your message has been sent successfully! We&apos;ll get back to you soon.
-                </div>
-              )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-5 sm:grid-cols-2">
@@ -207,9 +230,24 @@ export default function ContactPageClient() {
                     <p className="mt-1.5 text-xs text-danger">{errors.message}</p>
                   )}
                 </div>
-                <Button type="submit" variant="primary" size="lg">
-                  <Send className="h-4 w-4" />
-                  Send Message
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  loading={isSubmitting}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Send Message
+                    </>
+                  )}
                 </Button>
               </form>
             </div>

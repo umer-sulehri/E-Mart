@@ -43,13 +43,27 @@ function SpecsTable({ specs }: { specs: Record<string, string> }) {
 
 export default function ProductTabs({ product }: ProductTabsProps) {
   const [activeTab, setActiveTab] = React.useState<TabId>('description');
+  const [reviewCount, setReviewCount] = React.useState(0);
+  const reviewFormRef = React.useRef<HTMLFormElement>(null);
+  const reviewListRef = React.useRef<HTMLDivElement>(null);
+
+  const handleReviewSuccess = () => {
+    reviewListRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const tabsWithCount = tabs.map((tab) => {
+    if (tab.id === 'reviews') {
+      return { ...tab, label: `Reviews (${reviewCount})` };
+    }
+    return tab;
+  });
 
   return (
     <div className="space-y-6">
       {/* Tab Headers */}
       <div className="border-b border-muted-200">
         <div className="flex gap-0" role="tablist">
-          {tabs.map((tab) => (
+          {tabsWithCount.map((tab) => (
             <button
               key={tab.id}
               role="tab"
@@ -108,9 +122,22 @@ export default function ProductTabs({ product }: ProductTabsProps) {
 
       {activeTab === 'reviews' && (
         <div>
-          <ReviewList />
+          <ReviewList
+            ref={reviewListRef}
+            productSlug={product.slug}
+            onReviewCountChange={setReviewCount}
+            onWriteReview={() => {
+              setActiveTab('reviews');
+              reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
           <div className="mt-8 border-t border-muted-100 pt-8">
-            <ReviewForm productName={product.name} />
+            <ReviewForm
+              ref={reviewFormRef}
+              productSlug={product.slug}
+              productName={product.name}
+              onSuccess={handleReviewSuccess}
+            />
           </div>
         </div>
       )}
