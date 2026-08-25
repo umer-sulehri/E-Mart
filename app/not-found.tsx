@@ -1,9 +1,11 @@
 import Link from 'next/link';
-import { Home, ShoppingCart, Phone } from 'lucide-react';
+import { Home, ShoppingCart, BookOpen, Tag, Phone } from 'lucide-react';
 
 const suggestedLinks = [
   { label: 'Home', href: '/', icon: Home },
-  { label: 'Products', href: '/shop', icon: ShoppingCart },
+  { label: 'Products', href: '/products', icon: ShoppingCart },
+  { label: 'Blog', href: '/blog', icon: BookOpen },
+  { label: 'Categories', href: '/categories', icon: Tag },
   { label: 'Contact Us', href: '/contact', icon: Phone },
 ];
 
@@ -16,6 +18,7 @@ export default function NotFound() {
       </h1>
       <p className="mt-3 max-w-md text-sm text-secondary-600">
         The page you&apos;re looking for doesn&apos;t exist or has been moved.
+        Let&apos;s get you back on track.
       </p>
 
       <Link
