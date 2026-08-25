@@ -49,7 +49,7 @@ const HeroBanner = () => {
             </p>
             <div className="mt-3 flex gap-3">
               <Link
-                href="/shop"
+                href="/products"
                 className="mt-3 rounded-full bg-primary px-6 py-3 text-sm font-bold uppercase text-white hover:bg-primary-500"
               >
                 Start Shopping

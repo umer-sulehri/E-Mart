@@ -30,6 +30,23 @@ export const api = {
   search: {
     suggestions: (q: string) =>
       fetchAPI(`/search/suggestions?q=${encodeURIComponent(q)}`),
+    trending: () => fetchAPI('/search/trending'),
+    history: () => fetchAPI('/search/history'),
+    saveHistory: (query: string) =>
+      fetchAPI('/search/history', {
+        method: 'POST',
+        body: JSON.stringify({ query }),
+      }),
+  },
+  banners: {
+    list: () => fetchAPI('/banners'),
+  },
+  blog: {
+    list: (params?: Record<string, string>) =>
+      fetchAPI(`/blog-posts?${new URLSearchParams(params || {})}`),
+  },
+  socialLinks: {
+    list: () => fetchAPI('/social-links'),
   },
 };
 
@@ -91,6 +108,40 @@ export interface ApiListResponse<T> {
 export interface ApiSingleResponse<T> {
   success: boolean;
   data: T;
+}
+
+export interface ApiBanner {
+  id: string;
+  title: string;
+  subtitle?: string;
+  image_url: string;
+  link_url?: string;
+  is_active: boolean;
+  position: string;
+  priority: number;
+}
+
+export interface ApiBlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content?: string;
+  cover_image?: string;
+  category?: string;
+  author?: string;
+  published_at?: string;
+  created_at: string;
+  view_count?: number;
+}
+
+export interface ApiSocialLink {
+  id: string;
+  platform: string;
+  url: string;
+  icon?: string;
+  is_active: boolean;
+  display_order: number;
 }
 
 export function apiProductToCardProduct(p: ApiProduct) {

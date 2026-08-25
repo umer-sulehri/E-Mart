@@ -278,7 +278,7 @@ export default function AboutPage() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="/shop"
+              href="/products"
               className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-bold text-secondary-800 transition-colors hover:bg-muted-100"
             >
               Start Shopping

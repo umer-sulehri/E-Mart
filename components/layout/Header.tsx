@@ -20,8 +20,7 @@ import MobileNav from './MobileNav';
 
 const pageLinks = [
   { label: 'About', href: '/about' },
-  { label: 'Shop', href: '/shop' },
-  { label: 'Single Product', href: '/shop/product-slug' },
+  { label: 'Shop', href: '/products' },
   { label: 'Cart', href: '/cart' },
   { label: 'Checkout', href: '/checkout' },
   { label: 'Blog', href: '/blog' },
@@ -100,14 +99,22 @@ function SearchBar({ className }: { className?: string }) {
     (q: string) => {
       setOpen(false);
       setQuery('');
-      router.push(`/shop?q=${encodeURIComponent(q)}`);
+      router.push(`/products?q=${encodeURIComponent(q)}`);
     },
     [router]
   );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) navigateTo(query.trim());
+    if (query.trim()) {
+      // Save search history (fire-and-forget)
+      fetch('/api/v1/search/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query.trim() }),
+      }).catch(() => {});
+      navigateTo(query.trim());
+    }
   };
 
   const typeIcon = (type: string) => {
@@ -202,8 +209,20 @@ function SearchBar({ className }: { className?: string }) {
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [pagesOpen, setPagesOpen] = useState(false);
+  const [categories, setCategories] = useState<{ name: string; slug: string }[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const itemCount = useCartStore((s) => s.itemCount());
+
+  useEffect(() => {
+    fetch('/api/v1/categories')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setCategories(json.data.map((c: { name: string; slug: string }) => ({ name: c.name, slug: c.slug })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -247,11 +266,16 @@ export default function Header() {
                   <select
                     className="bg-transparent border-0 text-sm text-secondary focus:outline-none cursor-pointer py-1 px-2"
                     aria-label="Select category"
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        window.location.href = `/products?category=${e.target.value}`;
+                      }
+                    }}
                   >
-                    <option>All Categories</option>
-                    <option>Groceries</option>
-                    <option>Drinks</option>
-                    <option>Chocolates</option>
+                    <option value="">All Categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat.slug} value={cat.slug}>{cat.name}</option>
+                    ))}
                   </select>
                 </div>
                 <SearchBar className="flex-1" />

@@ -2,41 +2,69 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
-import { Facebook, Twitter, Youtube, Instagram } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Facebook, Twitter, Youtube, Instagram, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const organicLinks = [
   { label: 'About Us', href: '/about' },
-  { label: 'Shop', href: '/shop' },
+  { label: 'Shop', href: '/products' },
   { label: 'Blog', href: '/blog' },
   { label: 'Contact', href: '/contact' },
 ];
 
 const quickLinks = [
-  { label: 'Categories', href: '/shop' },
-  { label: 'New Arrivals', href: '/shop?sort=newest' },
-  { label: 'Best Sellers', href: '/shop?sort=bestselling' },
-  { label: 'Sale', href: '/shop?sale=true' },
+  { label: 'Categories', href: '/products' },
+  { label: 'New Arrivals', href: '/products?sort=newest' },
+  { label: 'Best Sellers', href: '/products?sort=popular' },
+  { label: 'Sale', href: '/products?sale=true' },
 ];
 
 const customerServiceLinks = [
   { label: 'My Account', href: '/account' },
-  { label: 'Order Tracking', href: '/account/orders' },
-  { label: 'Returns', href: '/returns' },
+  { label: 'Order Tracking', href: '/dashboard/orders' },
+  { label: 'Returns', href: '/faq' },
   { label: 'FAQ', href: '/faq' },
 ];
 
-const socialLinks = [
+const fallbackSocialLinks = [
   { label: 'Facebook', icon: Facebook, href: '#' },
   { label: 'Twitter', icon: Twitter, href: '#' },
   { label: 'YouTube', icon: Youtube, href: '#' },
   { label: 'Instagram', icon: Instagram, href: '#' },
 ];
 
+const platformIconMap: Record<string, React.ElementType> = {
+  facebook: Facebook,
+  twitter: Twitter,
+  youtube: Youtube,
+  instagram: Instagram,
+  whatsapp: MessageCircle,
+};
+
 export default function Footer() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [socialLinksData, setSocialLinksData] = useState<{ platform: string; url: string; icon?: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/v1/social-links')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setSocialLinksData(json.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const displaySocialLinks = socialLinksData.length > 0
+    ? socialLinksData.map((link) => ({
+        label: link.platform,
+        icon: platformIconMap[link.platform.toLowerCase()] || Facebook,
+        href: link.url,
+      }))
+    : fallbackSocialLinks;
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +114,7 @@ export default function Footer() {
               />
             </Link>
             <div className="flex items-center gap-2 mt-4">
-              {socialLinks.map((social) => {
+              {displaySocialLinks.map((social) => {
                 const Icon = social.icon;
                 return (
                   <a
@@ -187,7 +215,7 @@ export default function Footer() {
       <div className="border-t border-white/10 mt-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-12 py-5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-white/60">
-            <p>&copy; 2024 E-Mart. All rights reserved. Design by TemplatesJungle</p>
+            <p>&copy; 2024-2026 E-Mart. All rights reserved. Design by TemplatesJungle</p>
           </div>
         </div>
       </div>

@@ -26,7 +26,7 @@ const BannerAds = React.forwardRef<HTMLDivElement, BannerAdsProps>(
                   </h3>
                   <p className="mt-1 text-white">Discounts up to 30%</p>
                   <Link
-                    href="/shop"
+                    href="/products?sort=sale"
                     className="btn-link text-white mt-3 inline-block"
                   >
                     Shop Now
@@ -49,7 +49,7 @@ const BannerAds = React.forwardRef<HTMLDivElement, BannerAdsProps>(
                   </h3>
                   <p className="mt-1 text-white">Discounts up to 50%</p>
                   <Link
-                    href="/shop"
+                    href="/products?sort=sale"
                     className="btn-link text-white mt-3 inline-block"
                   >
                     Shop Now
@@ -72,7 +72,7 @@ const BannerAds = React.forwardRef<HTMLDivElement, BannerAdsProps>(
                   </h3>
                   <p className="mt-1 text-white">Discounts up to 40%</p>
                   <Link
-                    href="/shop"
+                    href="/products?sort=sale"
                     className="btn-link text-white mt-3 inline-block"
                   >
                     Shop Now

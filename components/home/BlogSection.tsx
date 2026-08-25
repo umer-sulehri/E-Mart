@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, Tag, ArrowRight, User } from 'lucide-react';
@@ -19,7 +19,7 @@ interface BlogPost {
   slug: string;
 }
 
-const blogPosts: BlogPost[] = [
+const fallbackBlogPosts: BlogPost[] = [
   {
     id: 1,
     thumbnail: '/images/post-thumbnail-1.jpg',
@@ -60,6 +60,36 @@ const blogPosts: BlogPost[] = [
 
 const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
   ({ className }, ref) => {
+    const [blogPosts, setBlogPosts] = useState<BlogPost[]>(fallbackBlogPosts);
+
+    useEffect(() => {
+      fetch('/api/v1/blog-posts?limit=3')
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            const mapped = json.data.map((post: any, i: number) => ({
+              id: i,
+              thumbnail: post.cover_image || `/images/post-thumbnail-${(i % 3) + 1}.jpg`,
+              category: post.category || 'General',
+              title: post.title,
+              excerpt: post.excerpt || '',
+              authorName: post.author || 'Admin',
+              authorAvatar: `/images/reviewer-${(i % 3) + 1}.jpg`,
+              date: post.published_at
+                ? new Date(post.published_at).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                : 'N/A',
+              slug: post.slug,
+            }));
+            setBlogPosts(mapped);
+          }
+        })
+        .catch(() => {});
+    }, []);
+
     return (
       <section ref={ref} className={cn('pb-4', className)}>
         <SectionHeader
