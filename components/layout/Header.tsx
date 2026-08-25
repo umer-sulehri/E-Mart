@@ -237,7 +237,7 @@ export default function Header() {
   return (
     <>
       <header>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-12">
+        <div className="container-fluid px-4 sm:px-6 lg:px-12">
           <div className="flex flex-wrap items-center justify-between py-3 border-b border-muted-200 gap-4">
 
             <div className="flex items-center gap-3">
@@ -261,7 +261,7 @@ export default function Header() {
             </div>
 
             <div className="order-last lg:order-none w-full lg:w-auto flex-1 max-w-xl mx-auto hidden sm:block">
-              <div className="flex items-center bg-muted-50 rounded-full p-2">
+              <div className="flex items-center bg-muted-50 rounded-2xl p-2">
                 <div className="hidden md:block border-r border-muted-300 pr-2">
                   <select
                     className="bg-transparent border-0 text-sm text-secondary focus:outline-none cursor-pointer py-1 px-2"
@@ -283,7 +283,7 @@ export default function Header() {
             </div>
 
             <nav
-              className="hidden lg:flex items-center gap-5 xl:gap-8 text-sm font-bold uppercase tracking-wider text-secondary"
+              className="hidden lg:flex items-center gap-5 xl:gap-8 text-sm font-bold uppercase text-dark"
               aria-label="Main navigation"
             >
               <Link href="/" className="hover:text-primary transition-colors">
@@ -322,39 +322,45 @@ export default function Header() {
               </div>
             </nav>
 
-            <div className="flex items-center gap-3 sm:gap-5 justify-end">
-              <Link
-                href="/account"
-                className="p-2 hover:text-primary transition-colors"
-                aria-label="My Account"
-              >
-                <User className="h-6 w-6" />
-              </Link>
-              <Link
-                href="/wishlist"
-                className="p-2 hover:text-primary transition-colors"
-                aria-label="Wishlist"
-              >
-                <Heart className="h-6 w-6" />
-              </Link>
-              <button
-                className="p-2 hover:text-primary transition-colors relative"
-                aria-label={`Shopping bag, ${itemCount} items`}
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent('toggle-cart'));
-                }}
-              >
-                <ShoppingBag className="h-6 w-6" />
-                {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
-                    {itemCount > 99 ? '99+' : itemCount}
-                  </span>
-                )}
-              </button>
-            </div>
+            <ul className="flex items-center gap-5 justify-end m-0 list-none">
+              <li>
+                <Link
+                  href="/account"
+                  className="p-2 hover:text-primary transition-colors"
+                  aria-label="My Account"
+                >
+                  <User className="h-6 w-6" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/wishlist"
+                  className="p-2 hover:text-primary transition-colors"
+                  aria-label="Wishlist"
+                >
+                  <Heart className="h-6 w-6" />
+                </Link>
+              </li>
+              <li>
+                <button
+                  className="p-2 hover:text-primary transition-colors relative"
+                  aria-label={`Shopping bag, ${itemCount} items`}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('toggle-cart'));
+                  }}
+                >
+                  <ShoppingBag className="h-6 w-6" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+                      {itemCount > 99 ? '99+' : itemCount}
+                    </span>
+                  )}
+                </button>
+              </li>
+            </ul>
 
             <div className="w-full sm:hidden">
-              <div className="flex items-center bg-muted-50 rounded-full p-2">
+              <div className="flex items-center bg-muted-50 rounded-2xl p-2">
                 <SearchBar className="flex-1" />
               </div>
             </div>

@@ -9,16 +9,14 @@ const DownloadApp = React.forwardRef<HTMLDivElement, { className?: string }>(
     return (
       <section ref={ref} className={cn('py-4', className)}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-2xl bg-warning">
+          <div className="overflow-hidden rounded-[3rem] bg-warning pt-5">
             <div className="flex flex-col items-center gap-8 px-8 py-12 md:flex-row md:justify-center md:gap-12 md:py-16 lg:gap-20">
               <div className="flex flex-col items-center text-center md:items-start md:text-left">
                 <h2 className="mb-3 text-3xl font-bold text-secondary-800 md:text-4xl">
-                  Save Big with our App
+                  Download Organic App
                 </h2>
                 <p className="mb-6 max-w-sm text-sm leading-relaxed text-secondary-700">
-                  Online orders made easy, fast and reliable. Download our app
-                  and enjoy exclusive deals and discounts on your favorite organic
-                  products.
+                  Online Orders made easy, fast and reliable.
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <a href="#" title="Download on the App Store" className="block transition-transform hover:scale-105">

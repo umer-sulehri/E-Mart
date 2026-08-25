@@ -12,7 +12,8 @@ const config: Config = {
       colors: {
         primary: {
           DEFAULT: '#6BB252',
-          50: '#f0f9ec',
+          50: '#FFF9EB',
+          hover: '#f7a422',
           100: '#ddf2d6',
           200: '#bde7b0',
           300: '#94d67f',
@@ -89,18 +90,21 @@ const config: Config = {
           900: '#454545',
         },
         dark: '#222222',
-        border: '#e4e4e4',
+        border: '#F7F7F7',
       },
       fontFamily: {
-        heading: ['Nunito', 'sans-serif'],
+        heading: ['Inter', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
         sans: ['Inter', 'sans-serif'],
+      },
+      maxWidth: {
+        organic: '1600px',
       },
       container: {
         center: true,
         padding: {
-          DEFAULT: '1rem',
-          sm: '2rem',
+          DEFAULT: '3rem',
+          sm: '3rem',
           lg: '3rem',
           xl: '3rem',
           '2xl': '3rem',

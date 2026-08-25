@@ -91,7 +91,7 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
     }, []);
 
     return (
-      <section ref={ref} className={cn('pb-4', className)}>
+      <section ref={ref} id="latest-blog" className={cn('pb-4', className)}>
         <SectionHeader
           title="Our Recent Blog"
           viewAllLink="/blog"
@@ -101,7 +101,7 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
           {blogPosts.map((post) => (
             <article
               key={post.id}
-              className="group overflow-hidden rounded-xl border-0 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md"
+              className="group overflow-hidden rounded-[0.375rem] border-0 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md"
             >
               <div className="relative aspect-[16/10] overflow-hidden">
                 <Link href={`/blog/${post.slug}`}>
@@ -115,8 +115,8 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
                 </Link>
               </div>
 
-              <div className="p-5">
-                <div className="mb-3 flex flex-wrap items-center gap-3 text-xs uppercase tracking-wide text-muted-500">
+              <div className="card-body p-3">
+                <div className="post-meta flex text-uppercase gap-3 my-2 items-center">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" />
                     {post.date}

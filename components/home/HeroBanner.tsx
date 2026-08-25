@@ -34,6 +34,7 @@ const features = [
 const HeroBanner = () => {
   return (
     <section
+      id="hero-banner"
       className="bg-cover bg-no-repeat"
       style={{ backgroundImage: "url('/images/banner-1.jpg')" }}
     >
@@ -44,19 +45,19 @@ const HeroBanner = () => {
               <span className="font-bold text-primary">Organic</span> Foods at
               your <span className="font-bold">Doorsteps</span>
             </h2>
-            <p className="mt-4 text-xl text-secondary-800">
+            <p className="mt-4 text-2xl text-secondary-800">
               Dignissim massa diam elementum.
             </p>
             <div className="mt-3 flex gap-3">
               <Link
                 href="/products"
-                className="mt-3 rounded-full bg-primary px-6 py-3 text-sm font-bold uppercase text-white hover:bg-primary-500"
+                className="mt-3 rounded-full bg-primary px-4 py-3 text-sm font-bold uppercase text-white hover:bg-primary-hover"
               >
                 Start Shopping
               </Link>
               <Link
                 href="/register"
-                className="mt-3 rounded-full bg-secondary-800 px-6 py-3 text-sm font-bold uppercase text-white hover:bg-secondary-900"
+                className="mt-3 rounded-full bg-secondary-800 px-4 py-3 text-sm font-bold uppercase text-white hover:bg-secondary-900"
               >
                 Join Now
               </Link>
@@ -65,7 +66,7 @@ const HeroBanner = () => {
             <div className="my-5 grid grid-cols-3 gap-4">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-dark">
-                  <p className="mb-0 text-3xl font-bold leading-tight">
+                  <p className="mb-0 text-5xl font-bold leading-tight">
                     {stat.value}
                   </p>
                   <p className="mb-0 text-xs uppercase leading-tight">
@@ -77,7 +78,7 @@ const HeroBanner = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-0 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-0 sm:grid-cols-3 lg:grid-cols-3">
           {features.map((feature) => (
             <div key={feature.title} className="col">
               <div

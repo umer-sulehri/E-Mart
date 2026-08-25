@@ -10,6 +10,7 @@
   body {
     @apply font-body text-muted antialiased;
     letter-spacing: 0.03em;
+    line-height: 2;
   }
 
   h1,
@@ -199,6 +200,11 @@
   /* Rating Stars */
   .rating-stars {
     @apply inline-flex items-center gap-0.5;
+  }
+
+  /* Widget Title (footer headings) */
+  .widget-title {
+    @apply font-heading font-bold text-dark;
   }
 }
 
