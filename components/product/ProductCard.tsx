@@ -1,0 +1,121 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { ShoppingCart, Heart } from "lucide-react";
+import StarRating from "@/components/ui/StarRating";
+import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
+
+export interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  discountPrice?: number;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  badge?: string;
+}
+
+export interface ProductCardProps {
+  product: Product;
+  className?: string;
+}
+
+const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
+  ({ product, className }, ref) => {
+    const [quantity, setQuantity] = React.useState(1);
+    const discount = product.discountPrice
+      ? calculateDiscount(product.price, product.discountPrice)
+      : 0;
+
+    return (
+      <div ref={ref} className={cn("group", className)}>
+        <div className="rounded-2xl bg-white p-3 text-center shadow-sm transition-shadow hover:shadow-md">
+          <figure className="flex items-center justify-center">
+            <Link href={`/products/${product.slug}`} title={product.name}>
+              <Image
+                src={product.image}
+                alt={product.name}
+                width={210}
+                height={210}
+                className="max-h-[210px] w-auto object-contain"
+              />
+            </Link>
+          </figure>
+
+          <div className="flex flex-col items-center">
+            <h3 className="text-sm font-normal text-secondary-800">
+              {product.name}
+            </h3>
+
+            <div className="mt-1">
+              <StarRating
+                rating={product.rating}
+                size="sm"
+                reviewCount={product.reviewCount}
+              />
+            </div>
+
+            <div className="mt-1 flex items-center justify-center gap-2">
+              {product.discountPrice && (
+                <del className="text-sm text-muted-500">
+                  {formatPrice(product.price)}
+                </del>
+              )}
+              <span className="text-sm font-semibold text-secondary-800">
+                {product.discountPrice
+                  ? formatPrice(product.discountPrice)
+                  : formatPrice(product.price)}
+              </span>
+              {discount > 0 && (
+                <span className="rounded-none border border-muted-200 bg-white px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
+                  {discount}% OFF
+                </span>
+              )}
+              {product.badge && (
+                <span className="rounded-none border border-muted-200 bg-white px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
+                  {product.badge}
+                </span>
+              )}
+            </div>
+
+            <div className="w-full p-3 pb-0 pt-0 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="mt-2 flex items-center gap-1">
+                <div className="w-3/12">
+                  <input
+                    type="number"
+                    name="quantity"
+                    value={quantity}
+                    onChange={(e) =>
+                      setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                    }
+                    min={1}
+                    className="w-full rounded border border-muted-200 p-2 text-sm"
+                  />
+                </div>
+                <div className="w-7/12">
+                  <button className="flex w-full items-center justify-center gap-2 rounded bg-primary p-2 text-xs text-white hover:bg-primary-500">
+                    <ShoppingCart size={16} />
+                    Add to Cart
+                  </button>
+                </div>
+                <div className="w-2/12">
+                  <button className="flex w-full items-center justify-center rounded border border-secondary-800 p-2 text-secondary-800 hover:bg-secondary-50">
+                    <Heart size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+ProductCard.displayName = "ProductCard";
+
+export default ProductCard;
