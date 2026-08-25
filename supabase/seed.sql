@@ -100,3 +100,59 @@ ON CONFLICT (slug) DO NOTHING;
 -- Then update the role:
 --   UPDATE profiles SET role = 'admin' WHERE email = 'admin@emart.pk';
 -- ============================================================
+
+-- ============================================================
+-- SEED SOCIAL LINKS
+-- ============================================================
+
+INSERT INTO social_links (platform, url, icon, is_active, display_order) VALUES
+  ('facebook', 'https://facebook.com/emart', 'facebook', true, 1),
+  ('twitter', 'https://twitter.com/emart', 'twitter', true, 2),
+  ('instagram', 'https://instagram.com/emart', 'instagram', true, 3),
+  ('youtube', 'https://youtube.com/emart', 'youtube', true, 4),
+  ('whatsapp', 'https://wa.me/923001234567', 'message-circle', true, 5)
+ON CONFLICT DO NOTHING;
+
+-- ============================================================
+-- SEED TRANSLATIONS
+-- ============================================================
+
+INSERT INTO translations (key, locale, value) VALUES
+  ('common.home', 'en', 'Home'),
+  ('common.products', 'en', 'Products'),
+  ('common.categories', 'en', 'Categories'),
+  ('common.blog', 'en', 'Blog'),
+  ('common.about', 'en', 'About Us'),
+  ('common.contact', 'en', 'Contact'),
+  ('common.cart', 'en', 'Cart'),
+  ('common.checkout', 'en', 'Checkout'),
+  ('common.search', 'en', 'Search'),
+  ('common.login', 'en', 'Login'),
+  ('common.register', 'en', 'Register'),
+  ('common.profile', 'en', 'Profile'),
+  ('common.orders', 'en', 'Orders'),
+  ('common.wishlist', 'en', 'Wishlist'),
+  ('common.logout', 'en', 'Logout'),
+  ('common.add_to_cart', 'en', 'Add to Cart'),
+  ('common.buy_now', 'en', 'Buy Now'),
+  ('common.out_of_stock', 'en', 'Out of Stock'),
+  ('common.in_stock', 'en', 'In Stock'),
+  ('common.free_shipping', 'en', 'Free Shipping'),
+  ('home.hero_title', 'en', 'Fresh Groceries Delivered'),
+  ('home.hero_subtitle', 'en', 'Quality organic products at your doorstep'),
+  ('home.shop_now', 'en', 'Shop Now'),
+  ('home.best_sellers', 'en', 'Best Sellers'),
+  ('home.featured_products', 'en', 'Featured Products'),
+  ('home.new_arrivals', 'en', 'New Arrivals'),
+  ('common.view_all', 'en', 'View All'),
+  ('common.no_results', 'en', 'No results found'),
+  ('common.loading', 'en', 'Loading...'),
+  ('common.save', 'en', 'Save'),
+  ('common.cancel', 'en', 'Cancel'),
+  ('common.delete', 'en', 'Delete'),
+  ('common.edit', 'en', 'Edit'),
+  ('common.submit', 'en', 'Submit'),
+  ('common.back', 'en', 'Back'),
+  ('common.next', 'en', 'Next'),
+  ('common.previous', 'en', 'Previous')
+ON CONFLICT (key, locale) DO NOTHING;
