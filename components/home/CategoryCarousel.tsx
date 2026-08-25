@@ -39,7 +39,7 @@ const CategoryCarousel = ({ categories: propCategories }: CategoryCarouselProps 
     <section id="categories" className="overflow-hidden py-5">
       <div className="container mx-auto px-4">
         <div className="mb-5 flex flex-wrap items-center justify-between">
-          <h2 className="font-heading text-2xl font-bold text-secondary-800 md:text-3xl">
+          <h2 className="font-heading text-2xl font-bold uppercase tracking-wide text-secondary-800 md:text-3xl">
             Category
           </h2>
           <div className="flex items-center">

@@ -17,7 +17,7 @@ const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
         ref={ref}
         className={cn("mb-6 flex items-center justify-between", className)}
       >
-        <h2 className="font-heading text-2xl font-bold text-secondary-800 md:text-3xl">
+        <h2 className="font-heading text-2xl font-bold uppercase tracking-wide text-secondary-800 md:text-3xl">
           {title}
         </h2>
         <div className="flex items-center gap-3">

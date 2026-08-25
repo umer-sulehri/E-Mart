@@ -38,8 +38,9 @@ const PopularTags = React.forwardRef<HTMLDivElement, { className?: string }>(
   ({ className }, ref) => {
     return (
       <section ref={ref} className={cn('py-4', className)}>
-        <h2 className="my-4 text-2xl font-bold text-dark">People are also looking for</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="container mx-auto">
+          <h2 className="my-4 text-2xl font-bold uppercase tracking-wide text-dark">People are also looking for</h2>
+          <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
             <Link
               key={tag.slug}
@@ -49,6 +50,7 @@ const PopularTags = React.forwardRef<HTMLDivElement, { className?: string }>(
               {tag.label}
             </Link>
           ))}
+        </div>
         </div>
       </section>
     );

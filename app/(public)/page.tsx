@@ -34,9 +34,9 @@ import {
 
 function SkeletonGrid() {
   return (
-    <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="col mb-4">
+        <div key={i} className="mb-4">
           <div className="animate-pulse rounded-2xl bg-white p-3 text-center shadow-sm">
             <div className="mx-auto h-[210px] w-[210px] rounded-lg bg-muted-100" />
             <div className="mt-3 mx-auto h-4 w-3/4 rounded bg-muted-100" />
@@ -146,10 +146,10 @@ export default function HomePage() {
       />
 
       {/* Best Selling Products */}
-      <section className="overflow-hidden py-5">
-        <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
+      <section id="best-selling" className="overflow-hidden py-5">
+        <div className="container mx-auto">
           <div className="mb-4 flex flex-wrap items-center justify-between">
-            <h2 className="font-heading text-2xl font-bold text-secondary-800 md:text-3xl">
+            <h2 className="font-heading text-2xl font-bold uppercase tracking-wide text-secondary-800 md:text-3xl">
               Best selling products
             </h2>
             <Link
@@ -162,9 +162,9 @@ export default function HomePage() {
           {loading ? (
             <SkeletonGrid />
           ) : (
-            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {bestSellers.slice(0, 10).map((product) => (
-                <div key={product.id} className="col mb-4">
+                <div key={product.id} className="mb-4">
                   <ProductCard product={product} />
                 </div>
               ))}

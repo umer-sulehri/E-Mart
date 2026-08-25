@@ -47,8 +47,9 @@ const TestimonialSection = React.forwardRef<
 >(({ className }, ref) => {
   return (
     <section ref={ref} className={cn('py-4', className)}>
-      <SectionHeader title="What Our Customers Say" />
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="container mx-auto">
+        <SectionHeader title="What Our Customers Say" />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {testimonials.map((testimonial) => (
           <div
             key={testimonial.id}
@@ -65,7 +66,7 @@ const TestimonialSection = React.forwardRef<
                 />
               </div>
               <div>
-                <h4 className="text-base font-semibold text-secondary-800">
+                <h4 className="font-heading text-base font-semibold text-secondary-800">
                   {testimonial.name}
                 </h4>
                 <StarRating rating={testimonial.rating} size="sm" />
@@ -76,6 +77,7 @@ const TestimonialSection = React.forwardRef<
             </p>
           </div>
         ))}
+      </div>
       </div>
     </section>
   );

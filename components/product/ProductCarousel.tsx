@@ -28,9 +28,9 @@ const ProductCarousel = React.forwardRef<HTMLDivElement, ProductCarouselProps>(
 
     return (
       <section ref={ref} className={cn("overflow-hidden py-5", className)}>
-        <div className="container mx-auto max-w-[1320px] overflow-hidden px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto overflow-hidden">
           <div className="mb-4 flex flex-wrap items-center justify-between">
-            <h2 className="font-heading text-2xl font-bold text-secondary-800 md:text-3xl">
+            <h2 className="font-heading text-2xl font-bold uppercase tracking-wide text-secondary-800 md:text-3xl">
               {title}
             </h2>
 

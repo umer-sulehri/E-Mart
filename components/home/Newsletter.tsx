@@ -73,12 +73,12 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
                 <div className="w-full p-3 md:w-5/12">
                   <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                      <label htmlFor="name" className="form-label sr-only">
+                      <label htmlFor="name" className="sr-only">
                         Name
                       </label>
                       <input
                         type="text"
-                        className="form-control w-full rounded-none border-0 bg-white p-3 text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full rounded-none border-0 bg-white p-3 text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2 focus:ring-primary"
                         name="name"
                         id="name"
                         placeholder="Name"
@@ -87,12 +87,12 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
                       />
                     </div>
                     <div className="mb-3">
-                      <label htmlFor="email" className="form-label sr-only">
+                      <label htmlFor="email" className="sr-only">
                         Email
                       </label>
                       <input
                         type="email"
-                        className="form-control w-full rounded-none border-0 bg-white p-3 text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full rounded-none border-0 bg-white p-3 text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2 focus:ring-primary"
                         name="email"
                         id="email"
                         placeholder="Email Address"
@@ -100,7 +100,7 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
                         onChange={(e) => setEmail(e.target.value)}
                       />
                     </div>
-                    <div className="d-grid gap-2">
+                    <div className="gap-2">
                       <button
                         type="submit"
                         disabled={isSubmitting}

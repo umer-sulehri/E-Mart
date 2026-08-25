@@ -92,12 +92,13 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
 
     return (
       <section ref={ref} id="latest-blog" className={cn('pb-4', className)}>
-        <SectionHeader
-          title="Our Recent Blog"
-          viewAllLink="/blog"
-          viewAllText="View All"
-        />
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="container mx-auto">
+          <SectionHeader
+            title="Our Recent Blog"
+            viewAllLink="/blog"
+            viewAllText="View All"
+          />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {blogPosts.map((post) => (
             <article
               key={post.id}
@@ -116,7 +117,7 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
               </div>
 
               <div className="card-body p-3">
-                <div className="post-meta flex text-uppercase gap-3 my-2 items-center">
+                <div className="post-meta flex uppercase gap-3 my-2 items-center">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" />
                     {post.date}
@@ -163,6 +164,7 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
               </div>
             </article>
           ))}
+        </div>
         </div>
       </section>
     );
