@@ -1,12 +1,11 @@
 import { type Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ChevronRight, Home } from 'lucide-react';
 import ProductGallery from '@/components/product/ProductGallery';
 import ProductCarousel from '@/components/product/ProductCarousel';
 import ProductTabs from '@/components/product/ProductTabs';
 import ProductDetailClient from './ProductDetailClient';
-import { calculateDiscount } from '@/lib/utils';
+import Breadcrumb from '@/components/ui/Breadcrumb';
+import { calculateDiscount, formatPrice } from '@/lib/utils';
 import { generateProductMetadata } from '@/lib/seo';
 import { apiProductToCardProduct } from '@/lib/api';
 import {
@@ -219,36 +218,58 @@ export default async function ProductDetailPage({
 
   return (
     <>
+      {/* Schema.org JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: product.name,
+            description:
+              product.shortDescription || product.description?.slice(0, 500),
+            image: product.images?.[0]
+              ? `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}${product.images[0]}`
+              : undefined,
+            sku: product.sku || undefined,
+            brand: product.brand
+              ? { '@type': 'Brand', name: product.brand.name }
+              : undefined,
+            offers: {
+              '@type': 'Offer',
+              priceCurrency: 'PKR',
+              price: product.discountPrice ?? product.price,
+              availability:
+                product.stockQuantity > 0
+                  ? 'https://schema.org/InStock'
+                  : 'https://schema.org/OutOfStock',
+              url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}/products/${product.slug}`,
+            },
+            aggregateRating:
+              product.rating > 0
+                ? {
+                    '@type': 'AggregateRating',
+                    ratingValue: product.rating,
+                    reviewCount: product.reviewCount,
+                  }
+                : undefined,
+          }),
+        }}
+      />
+
       {/* Breadcrumb */}
       <section className="border-b border-muted-100 bg-white py-4">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
-          <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-600">
-            <Link
-              href="/"
-              className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary"
-            >
-              <Home size={14} />
-              Home
-            </Link>
-            <ChevronRight size={12} className="text-muted-400" />
-            <Link
-              href="/products"
-              className="text-muted-600 transition-colors hover:text-primary"
-            >
-              Products
-            </Link>
-            <ChevronRight size={12} className="text-muted-400" />
-            <Link
-              href={`/products?category=${product.category.slug}`}
-              className="text-muted-600 transition-colors hover:text-primary"
-            >
-              {product.category.name}
-            </Link>
-            <ChevronRight size={12} className="text-muted-400" />
-            <span className="font-medium text-secondary-800">
-              {product.name}
-            </span>
-          </nav>
+          <Breadcrumb
+            items={[
+              { label: 'Products', href: '/products' },
+              {
+                label: product.category.name,
+                href: `/products?category=${product.category.slug}`,
+              },
+              { label: product.name },
+            ]}
+          />
         </div>
       </section>
 

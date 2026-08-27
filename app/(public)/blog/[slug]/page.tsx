@@ -3,8 +3,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import {
-  ChevronRight,
-  Home,
   Clock,
   User,
   Tag,
@@ -17,6 +15,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import SectionHeader from '@/components/ui/SectionHeader';
+import Breadcrumb from '@/components/ui/Breadcrumb';
 
 interface BlogPost {
   id: string;
@@ -164,22 +163,13 @@ export default async function BlogDetailPage({
       {/* Breadcrumb */}
       <section className="border-b border-muted-100 bg-white py-4">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
-          <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-600">
-            <Link href="/" className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary">
-              <Home size={14} />
-              Home
-            </Link>
-            <ChevronRight size={12} className="text-muted-400" />
-            <Link href="/blog" className="text-muted-600 transition-colors hover:text-primary">
-              Blog
-            </Link>
-            <ChevronRight size={12} className="text-muted-400" />
-            <Link href={`/blog?category=${post.categorySlug}`} className="text-muted-600 transition-colors hover:text-primary">
-              {post.category}
-            </Link>
-            <ChevronRight size={12} className="text-muted-400" />
-            <span className="font-medium text-secondary-800">{post.title}</span>
-          </nav>
+          <Breadcrumb
+            items={[
+              { label: 'Blog', href: '/blog' },
+              { label: post.category, href: `/blog?category=${post.categorySlug}` },
+              { label: post.title },
+            ]}
+          />
         </div>
       </section>
 

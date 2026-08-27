@@ -4,12 +4,13 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, Home, SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import type { Product } from '@/components/product/ProductCard';
 import ProductFilters, { type FilterState } from '@/components/product/ProductFilters';
 import ProductGrid from '@/components/product/ProductGrid';
 import Pagination from '@/components/product/Pagination';
 import SortDropdown, { type SortValue } from '@/components/product/SortDropdown';
+import Breadcrumb from '@/components/ui/Breadcrumb';
 import { CATEGORIES } from '@/lib/constants';
 import {
   api,
@@ -54,6 +55,8 @@ function CategoryDetailContent() {
     minPrice: '',
     maxPrice: '',
     minRating: 0,
+    brands: [],
+    inStockOnly: false,
   });
   const [sort, setSort] = useState<SortValue>('newest');
   const [currentPage, setCurrentPage] = useState(1);
@@ -131,18 +134,12 @@ function CategoryDetailContent() {
       {/* Breadcrumb */}
       <section className="border-b border-muted-100 bg-white py-4">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
-          <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-600">
-            <Link href="/" className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary">
-              <Home size={14} />
-              Home
-            </Link>
-            <ChevronRight size={12} className="text-muted-400" />
-            <Link href="/categories" className="text-muted-600 transition-colors hover:text-primary">
-              Categories
-            </Link>
-            <ChevronRight size={12} className="text-muted-400" />
-            <span className="font-medium text-secondary-800">{categoryInfo.name}</span>
-          </nav>
+          <Breadcrumb
+            items={[
+              { label: 'Categories', href: '/categories' },
+              { label: categoryInfo.name },
+            ]}
+          />
         </div>
       </section>
 

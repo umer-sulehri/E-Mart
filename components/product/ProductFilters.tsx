@@ -4,12 +4,16 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp, Star, X } from 'lucide-react';
 import { CATEGORIES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import BrandFilter from '@/components/product/BrandFilter';
+import AvailabilityToggle from '@/components/ui/AvailabilityToggle';
 
 export interface FilterState {
   categories: string[];
   minPrice: string;
   maxPrice: string;
   minRating: number;
+  brands: string[];
+  inStockOnly: boolean;
 }
 
 interface ProductFiltersProps {
@@ -64,12 +68,22 @@ export default function ProductFilters({
     });
   };
 
+  const handleBrandsChange = (brands: string[]) => {
+    onFilterChange({ ...filters, brands });
+  };
+
+  const handleAvailabilityChange = (inStockOnly: boolean) => {
+    onFilterChange({ ...filters, inStockOnly });
+  };
+
   const clearAll = () => {
     onFilterChange({
       categories: [],
       minPrice: '',
       maxPrice: '',
       minRating: 0,
+      brands: [],
+      inStockOnly: false,
     });
   };
 
@@ -77,7 +91,9 @@ export default function ProductFilters({
     filters.categories.length > 0 ||
     filters.minPrice !== '' ||
     filters.maxPrice !== '' ||
-    filters.minRating > 0;
+    filters.minRating > 0 ||
+    filters.brands.length > 0 ||
+    filters.inStockOnly;
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm">
@@ -168,6 +184,16 @@ export default function ProductFilters({
           ))}
         </div>
       </FilterSection>
+
+      <BrandFilter
+        selectedBrands={filters.brands}
+        onChange={handleBrandsChange}
+      />
+
+      <AvailabilityToggle
+        inStockOnly={filters.inStockOnly}
+        onChange={handleAvailabilityChange}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -34,30 +34,23 @@ export async function POST(
       );
     }
 
-    const { data: target } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("id", id)
-      .single();
+    const body = await request.json();
+    const { amount, reason } = body;
 
-    if (!target) {
+    if (!amount) {
       return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    if (target.role === "admin") {
-      return NextResponse.json(
-        { success: false, error: "Cannot block an admin" },
+        { success: false, error: "amount is required" },
         { status: 400 }
       );
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_blocked: true })
-      .eq("id", id);
+    const { error } = await supabase.from("refunds").insert({
+      order_id: id,
+      amount,
+      reason: reason || "Order refund",
+      status: "processing",
+      processed_by: user.id,
+    });
 
     if (error) {
       return NextResponse.json(
@@ -66,20 +59,22 @@ export async function POST(
       );
     }
 
-    const { error: logError } = await supabase.from("admin_logs").insert({
-      admin_id: user.id,
-      action: "block_user",
-      entity_type: "user",
-      entity_id: id,
-    });
-    if (logError) {
-      // Non-fatal
+    const { error: orderError } = await supabase
+      .from("orders")
+      .update({ status: "refunded" })
+      .eq("id", id);
+
+    if (orderError) {
+      return NextResponse.json(
+        { success: false, error: orderError.message },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "User blocked",
-    });
+    return NextResponse.json(
+      { success: true, message: "Refund initiated" },
+      { status: 201 }
+    );
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },

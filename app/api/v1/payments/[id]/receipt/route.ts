@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST(
+export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -34,51 +34,31 @@ export async function POST(
       );
     }
 
-    const { data: target } = await supabase
-      .from("profiles")
-      .select("id, role")
+    const { data: payment, error } = await supabase
+      .from("payments")
+      .select("*")
       .eq("id", id)
       .single();
 
-    if (!target) {
+    if (error || !payment) {
       return NextResponse.json(
-        { success: false, error: "User not found" },
+        { success: false, error: "Payment not found" },
         { status: 404 }
       );
     }
 
-    if (target.role === "admin") {
-      return NextResponse.json(
-        { success: false, error: "Cannot block an admin" },
-        { status: 400 }
-      );
-    }
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_blocked: true })
-      .eq("id", id);
-
-    if (error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
-      );
-    }
-
-    const { error: logError } = await supabase.from("admin_logs").insert({
-      admin_id: user.id,
-      action: "block_user",
-      entity_type: "user",
-      entity_id: id,
-    });
-    if (logError) {
-      // Non-fatal
-    }
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const receiptToken = Buffer.from(
+      `${payment.id}:${payment.order_id}`
+    ).toString("base64url");
 
     return NextResponse.json({
       success: true,
-      message: "User blocked",
+      data: {
+        ...payment,
+        receiptUrl: `${siteUrl}/api/v1/payments/${payment.id}/receipt?token=${receiptToken}`,
+        receiptToken,
+      },
     });
   } catch (error) {
     return NextResponse.json(

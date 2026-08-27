@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -21,42 +21,43 @@ export async function POST(
       );
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
+    const { data: order } = await supabase
+      .from("orders")
+      .select("id, user_id, status")
+      .eq("id", id)
       .single();
 
-    if (profile?.role !== "admin") {
+    if (!order) {
+      return NextResponse.json(
+        { success: false, error: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    if (order.user_id !== user.id) {
       return NextResponse.json(
         { success: false, error: "Permission denied" },
         { status: 403 }
       );
     }
 
-    const { data: target } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("id", id)
-      .single();
-
-    if (!target) {
+    if (
+      order.status !== "delivered" &&
+      order.status !== "shipped" &&
+      order.status !== "out_for_delivery"
+    ) {
       return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    if (target.role === "admin") {
-      return NextResponse.json(
-        { success: false, error: "Cannot block an admin" },
+        { success: false, error: "Order not eligible for return" },
         { status: 400 }
       );
     }
 
+    const body = await request.json();
+    const { reason } = body;
+
     const { error } = await supabase
-      .from("profiles")
-      .update({ is_blocked: true })
+      .from("orders")
+      .update({ status: "return_requested", return_reason: reason })
       .eq("id", id);
 
     if (error) {
@@ -66,19 +67,9 @@ export async function POST(
       );
     }
 
-    const { error: logError } = await supabase.from("admin_logs").insert({
-      admin_id: user.id,
-      action: "block_user",
-      entity_type: "user",
-      entity_id: id,
-    });
-    if (logError) {
-      // Non-fatal
-    }
-
     return NextResponse.json({
       success: true,
-      message: "User blocked",
+      message: "Return request submitted",
     });
   } catch (error) {
     return NextResponse.json(

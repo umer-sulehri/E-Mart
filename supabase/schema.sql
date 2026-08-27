@@ -397,6 +397,58 @@ CREATE TABLE translations (
 );
 
 -- ============================================================
+-- REVIEW HELPFUL VOTES
+-- ============================================================
+CREATE TABLE review_helpful (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  review_id UUID REFERENCES reviews(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(review_id, user_id)
+);
+
+-- ============================================================
+-- REVIEW REPORTS
+-- ============================================================
+CREATE TABLE review_reports (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  review_id UUID REFERENCES reviews(id) ON DELETE CASCADE NOT NULL,
+  reporter_user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  reason TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'dismissed')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- REFUNDS
+-- ============================================================
+CREATE TABLE refunds (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
+  amount DECIMAL(10,2) NOT NULL CHECK (amount >= 0),
+  reason TEXT,
+  status TEXT DEFAULT 'processing' CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'cancelled')),
+  processed_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  processed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- ADMIN LOGS (audit trail)
+-- ============================================================
+CREATE TABLE admin_logs (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  admin_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  action TEXT NOT NULL,
+  entity_type TEXT,
+  entity_id TEXT,
+  details JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
 -- INDEXES
 -- ============================================================
 
@@ -514,6 +566,25 @@ CREATE INDEX idx_search_history_created_at ON search_history(created_at DESC);
 CREATE INDEX idx_seller_payouts_seller_id ON seller_payouts(seller_id);
 CREATE INDEX idx_seller_payouts_status ON seller_payouts(status);
 
+-- review_helpful
+CREATE INDEX idx_review_helpful_review_id ON review_helpful(review_id);
+CREATE INDEX idx_review_helpful_user_id ON review_helpful(user_id);
+
+-- review_reports
+CREATE INDEX idx_review_reports_review_id ON review_reports(review_id);
+CREATE INDEX idx_review_reports_status ON review_reports(status);
+
+-- refunds
+CREATE INDEX idx_refunds_order_id ON refunds(order_id);
+CREATE INDEX idx_refunds_status ON refunds(status);
+CREATE INDEX idx_refunds_created_at ON refunds(created_at DESC);
+
+-- admin_logs
+CREATE INDEX idx_admin_logs_admin_id ON admin_logs(admin_id);
+CREATE INDEX idx_admin_logs_action ON admin_logs(action);
+CREATE INDEX idx_admin_logs_created_at ON admin_logs(created_at DESC);
+CREATE INDEX idx_admin_logs_entity ON admin_logs(entity_type, entity_id);
+
 -- translations
 CREATE INDEX idx_translations_key ON translations(key);
 CREATE INDEX idx_translations_locale ON translations(locale);
@@ -546,6 +617,10 @@ ALTER TABLE social_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE search_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE seller_payouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE translations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE review_helpful ENABLE ROW LEVEL SECURITY;
+ALTER TABLE review_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE refunds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- RLS POLICIES: profiles
@@ -1021,6 +1096,62 @@ CREATE POLICY "Admins can manage translations"
   );
 
 -- ============================================================
+-- RLS POLICIES: review_helpful
+-- ============================================================
+
+CREATE POLICY "Review helpful votes are viewable by everyone"
+  ON review_helpful FOR SELECT
+  USING (true);
+
+CREATE POLICY "Users can toggle own helpful vote"
+  ON review_helpful FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can remove own helpful vote"
+  ON review_helpful FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- ============================================================
+-- RLS POLICIES: review_reports
+-- ============================================================
+
+CREATE POLICY "Users can create review reports"
+  ON review_reports FOR INSERT
+  WITH CHECK (auth.uid() = reporter_user_id);
+
+CREATE POLICY "Admins can manage review reports"
+  ON review_reports FOR ALL
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ============================================================
+-- RLS POLICIES: refunds
+-- ============================================================
+
+CREATE POLICY "Admins can manage refunds"
+  ON refunds FOR ALL
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ============================================================
+-- RLS POLICIES: admin_logs
+-- ============================================================
+
+CREATE POLICY "Admins can view admin logs"
+  ON admin_logs FOR SELECT
+  USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+CREATE POLICY "Admins can insert admin logs"
+  ON admin_logs FOR INSERT
+  WITH CHECK (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ============================================================
 -- TRIGGER FUNCTIONS
 -- ============================================================
 
@@ -1280,3 +1411,20 @@ SELECT
    WHERE oi.vendor_id = v.id AND o.status = 'pending'
   ) AS pending_orders
 FROM vendors v;
+
+-- ============================================================
+-- ADDITIONAL COLUMNS (for Phase E API routes)
+-- ============================================================
+
+-- Track product page views (used by POST /api/v1/products/[slug]/views)
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS view_count INTEGER DEFAULT 0;
+
+-- User blocking (used by POST /api/v1/admin/users/[id]/block)
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE;
+
+-- Vendor verification/suspension timestamps (used by seller verify/suspend routes)
+ALTER TABLE vendors
+  ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;

@@ -18,6 +18,9 @@ import {
   Menu,
   X,
   Shield,
+  ImageIcon,
+  Newspaper,
+  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +33,9 @@ const navLinks = [
   { label: 'Categories', href: '/admin/categories', icon: Grid },
   { label: 'Coupons', href: '/admin/coupons', icon: Tag },
   { label: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
+  { label: 'Banners', href: '/admin/banners', icon: ImageIcon },
+  { label: 'Blog', href: '/admin/blog', icon: Newspaper },
+  { label: 'Logs', href: '/admin/logs', icon: ScrollText },
   { label: 'Reports', href: '/admin/reports', icon: BarChart3 },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];

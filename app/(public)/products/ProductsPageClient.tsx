@@ -79,6 +79,8 @@ function ProductsContent() {
     minPrice: '',
     maxPrice: '',
     minRating: 0,
+    brands: [],
+    inStockOnly: false,
   });
   const [sort, setSort] = useState<SortValue>('newest');
   const [currentPage, setCurrentPage] = useState(1);

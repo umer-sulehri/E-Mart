@@ -34,29 +34,22 @@ export async function POST(
       );
     }
 
-    const { data: target } = await supabase
-      .from("profiles")
-      .select("id, role")
+    const { data: seller } = await supabase
+      .from("vendors")
+      .select("id, user_id")
       .eq("id", id)
       .single();
 
-    if (!target) {
+    if (!seller) {
       return NextResponse.json(
-        { success: false, error: "User not found" },
+        { success: false, error: "Seller not found" },
         { status: 404 }
       );
     }
 
-    if (target.role === "admin") {
-      return NextResponse.json(
-        { success: false, error: "Cannot block an admin" },
-        { status: 400 }
-      );
-    }
-
     const { error } = await supabase
-      .from("profiles")
-      .update({ is_blocked: true })
+      .from("vendors")
+      .update({ status: "approved", verified_at: new Date().toISOString() })
       .eq("id", id);
 
     if (error) {
@@ -66,19 +59,9 @@ export async function POST(
       );
     }
 
-    const { error: logError } = await supabase.from("admin_logs").insert({
-      admin_id: user.id,
-      action: "block_user",
-      entity_type: "user",
-      entity_id: id,
-    });
-    if (logError) {
-      // Non-fatal
-    }
-
     return NextResponse.json({
       success: true,
-      message: "User blocked",
+      message: "Seller verified",
     });
   } catch (error) {
     return NextResponse.json(

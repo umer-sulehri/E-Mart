@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
+    const offset = (page - 1) * limit;
     const supabase = await createClient();
 
     const {
@@ -34,30 +34,14 @@ export async function POST(
       );
     }
 
-    const { data: target } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("id", id)
-      .single();
-
-    if (!target) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    if (target.role === "admin") {
-      return NextResponse.json(
-        { success: false, error: "Cannot block an admin" },
-        { status: 400 }
-      );
-    }
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_blocked: true })
-      .eq("id", id);
+    const { data: logs, error, count } = await supabase
+      .from("admin_logs")
+      .select(
+        "*, profiles(first_name, last_name, email)",
+        { count: "exact" }
+      )
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json(
@@ -66,19 +50,14 @@ export async function POST(
       );
     }
 
-    const { error: logError } = await supabase.from("admin_logs").insert({
-      admin_id: user.id,
-      action: "block_user",
-      entity_type: "user",
-      entity_id: id,
-    });
-    if (logError) {
-      // Non-fatal
-    }
-
     return NextResponse.json({
       success: true,
-      message: "User blocked",
+      data: logs || [],
+      meta: {
+        currentPage: page,
+        totalPages: Math.ceil((count || 0) / limit),
+        totalItems: count || 0,
+      },
     });
   } catch (error) {
     return NextResponse.json(
