@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn, formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
+import ExportCsvButton from '@/components/ui/ExportCsvButton';
 
 type OrderStatusType = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -126,6 +127,7 @@ export default function AdminOrdersPage() {
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
+          <ExportCsvButton url="/api/v1/admin/export/orders" />
         </div>
 
         <div className="mt-4 overflow-x-auto">

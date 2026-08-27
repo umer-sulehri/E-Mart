@@ -14,6 +14,7 @@ import {
 import { cn, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import ExportCsvButton from '@/components/ui/ExportCsvButton';
 
 type UserRole = 'customer' | 'seller' | 'admin';
 
@@ -199,6 +200,7 @@ export default function AdminUsersPage() {
               <option value="admin">Admin</option>
             </select>
           </div>
+          <ExportCsvButton url="/api/v1/admin/export/users" />
         </div>
 
         <div className="mt-4 overflow-x-auto">

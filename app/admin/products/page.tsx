@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
+import ExportCsvButton from '@/components/ui/ExportCsvButton';
 
 function SkeletonRow() {
   return (
@@ -153,6 +154,7 @@ export default function AdminProductsPage() {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+          <ExportCsvButton url="/api/v1/admin/export/products" />
         </div>
 
         <div className="mt-4 overflow-x-auto">
