@@ -241,6 +241,15 @@ export default function OrderDetailPage({
             {order.status.charAt(0).toUpperCase() + order.status.slice(1).replace(/_/g, ' ')}
           </Badge>
         </div>
+        <div className="mt-4">
+          <Link
+            href={`/invoice/${order.id || orderId}`}
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary-500"
+          >
+            <Download className="h-4 w-4" />
+            Download Invoice
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
