@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { SlidersHorizontal, X } from 'lucide-react';
@@ -48,7 +48,8 @@ export default function CategoryDetailPage() {
 
 function CategoryDetailContent() {
   const searchParams = useSearchParams();
-  const slug = searchParams.get('category') || '';
+  const params = useParams();
+  const slug = (params?.slug as string) || searchParams.get('category') || '';
 
   const [filters, setFilters] = useState<FilterState>({
     categories: slug ? [slug] : [],

@@ -39,7 +39,7 @@ export async function updateSession(request: NextRequest) {
     if (profile) {
       supabaseResponse.cookies.set("sb-user-role", profile.role, {
         path: "/",
-        httpOnly: false,
+        httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 60 * 60,

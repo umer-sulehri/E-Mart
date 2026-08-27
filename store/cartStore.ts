@@ -91,18 +91,22 @@ export const useCartStore = create<CartState>()(
           const res = await fetch('/api/v1/cart/items');
           if (!res.ok) throw new Error('Failed to fetch cart');
           const data = await res.json();
-          if (data.success && data.data) {
-            const serverItems: CartItem[] = data.data.map((item: any) => ({
-              id: item.id,
-              productId: item.product_id,
-              name: item.product?.name || 'Product',
-              slug: item.product?.slug || '',
-              image: item.product?.images?.[0] || '/images/product-thumb-1.png',
-              unitPrice: item.product?.sale_price || item.product?.price || 0,
-              quantity: item.quantity,
-              totalPrice: (item.product?.sale_price || item.product?.price || 0) * item.quantity,
-              stock: item.product?.stock_quantity || 0,
-            }));
+          if (data.success && data.data?.items) {
+            const serverItems: CartItem[] = data.data.items.map((item: any) => {
+              const product = item.product || {};
+              const unitPrice = product.discount_price ?? product.price ?? 0;
+              return {
+                id: item.id,
+                productId: item.productId,
+                name: product.name || 'Product',
+                slug: product.slug || '',
+                image: product.images?.[0] || '/images/product-thumb-1.png',
+                unitPrice,
+                quantity: item.quantity,
+                totalPrice: unitPrice * item.quantity,
+                stock: product.stock_quantity || 0,
+              };
+            });
             set({ items: serverItems });
           }
         } catch {

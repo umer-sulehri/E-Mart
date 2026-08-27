@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { generateOrderNumber } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -82,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { shippingAddressId, paymentMethod, notes } = body;
+    const { shippingAddressId, paymentMethod, notes, couponCode, discountAmount } = body;
 
     if (!shippingAddressId || !paymentMethod) {
       return NextResponse.json(
@@ -105,23 +104,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: cart } = await supabase
-      .from("carts")
-      .select("id, coupon_code, discount")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!cart) {
-      return NextResponse.json(
-        { success: false, error: "Cart not found" },
-        { status: 400 }
-      );
-    }
-
     const { data: cartItems } = await supabase
       .from("cart_items")
-      .select("*, products(id, name, slug, images, price, discount_price, stock_quantity, is_active)")
-      .eq("cart_id", cart.id);
+      .select("*, products(id, name, slug, images, price, discount_price, stock_quantity, is_active, vendor_id)")
+      .eq("user_id", user.id);
 
     if (!cartItems || cartItems.length === 0) {
       return NextResponse.json(
@@ -154,27 +140,24 @@ export async function POST(request: NextRequest) {
 
     const shippingCost = subtotal >= 2000 ? 0 : 150;
     const tax = Math.round(subtotal * 0.05);
-    const discount = cart.discount || 0;
+    const discount = Number(discountAmount) || 0;
     const total = subtotal + shippingCost + tax - discount;
-
-    const orderNumber = generateOrderNumber();
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
         user_id: user.id,
-        order_number: orderNumber,
         status: "pending",
-        payment_status: paymentMethod === "cod" ? "pending" : "pending",
+        payment_status: "pending",
         payment_method: paymentMethod,
         subtotal,
         tax,
         shipping_cost: shippingCost,
         discount,
         total,
-        coupon_code: cart.coupon_code,
+        coupon_code: couponCode || null,
         notes,
-        shipping_address: JSON.stringify(address),
+        shipping_address_id: shippingAddressId,
       })
       .select()
       .single();
@@ -187,16 +170,17 @@ export async function POST(request: NextRequest) {
     }
 
     const orderItems = cartItems.map((item) => {
-      const product = item.products as unknown as { id: string; name: string; images: string[]; price: number; discount_price: number | null };
+      const product = item.products as unknown as { id: string; name: string; images: string[]; price: number; discount_price: number | null; vendor_id: string | null };
       const price = product.discount_price || product.price;
       return {
         order_id: order.id,
         product_id: product.id,
+        vendor_id: product.vendor_id,
         product_name: product.name,
         product_image: product.images?.[0] || "",
         quantity: item.quantity,
-        unit_price: price,
-        total_price: price * item.quantity,
+        price,
+        total: price * item.quantity,
         discount: 0,
       };
     });
@@ -218,8 +202,7 @@ export async function POST(request: NextRequest) {
         .eq("id", product.id);
     }
 
-    await supabase.from("cart_items").delete().eq("cart_id", cart.id);
-    await supabase.from("carts").delete().eq("id", cart.id);
+    await supabase.from("cart_items").delete().eq("user_id", user.id);
 
     return NextResponse.json(
       { success: true, data: order, message: "Order created successfully" },

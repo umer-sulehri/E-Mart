@@ -71,10 +71,10 @@ export async function PUT(
     if (slug !== undefined) updates.slug = slug;
     if (excerpt !== undefined) updates.excerpt = excerpt;
     if (content !== undefined) updates.content = content;
-    if (cover_image !== undefined) updates.cover_image = cover_image;
+    if (cover_image !== undefined) updates.featured_image = cover_image;
     if (category !== undefined) updates.category = category;
     if (is_published !== undefined) {
-      updates.is_published = is_published;
+      updates.status = is_published ? "published" : "draft";
       if (is_published) updates.published_at = new Date().toISOString();
     }
     updates.updated_at = new Date().toISOString();

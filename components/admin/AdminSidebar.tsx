@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Users,
@@ -23,6 +23,7 @@ import {
   ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore';
 
 const navLinks = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -42,10 +43,21 @@ const navLinks = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (href: string) =>
     href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST' });
+    } catch {}
+    logout();
+    setMobileOpen(false);
+    router.push('/login');
+  };
 
   const sidebarContent = (
     <div className="flex h-full flex-col">
@@ -97,7 +109,7 @@ export default function AdminSidebar() {
           Back to Store
         </Link>
         <button
-          onClick={() => setMobileOpen(false)}
+          onClick={handleLogout}
           className="mt-1 flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger-50"
         >
           <LogOut className="h-5 w-5" />

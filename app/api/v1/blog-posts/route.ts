@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("blog_posts")
-      .select("*", { count: "exact" })
-      .eq("is_published", true)
+      .select("*, profiles(id, first_name, last_name, profile_image_url)", { count: "exact" })
+      .eq("status", "published")
       .order("published_at", { ascending: false });
 
     if (category) {
@@ -32,9 +32,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const normalized = (data || []).map((post: any) => ({
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt || "",
+      coverImage: post.featured_image || "/images/post-thumbnail-1.jpg",
+      category: post.category || "News",
+      author: {
+        name: post.profiles
+          ? `${post.profiles.first_name} ${post.profiles.last_name}`.trim()
+          : "E-Mart Team",
+        avatar: post.profiles?.profile_image_url || "/images/avatar-1.jpg",
+      },
+      date: post.published_at || post.created_at,
+      readTime: "5 min read",
+      tags: post.tags || [],
+      content: post.content,
+    }));
+
     return NextResponse.json({
       success: true,
-      data: data || [],
+      data: normalized,
       meta: {
         currentPage: page,
         totalPages: Math.ceil((count || 0) / limit),

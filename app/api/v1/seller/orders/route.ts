@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("orders")
-      .select("*, order_items!inner(product_id, product_name, quantity, unit_price, total_price, products!inner(vendor_id)), profiles!inner(first_name, last_name, email)", { count: "exact" })
+      .select("*, order_items!inner(product_id, product_name, quantity, price, total, products!inner(vendor_id)), profiles!inner(first_name, last_name, email)", { count: "exact" })
       .in("order_items.product_id", ids);
 
     if (status) {

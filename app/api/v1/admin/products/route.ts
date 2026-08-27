@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("products")
-      .select("*, categories(name, slug), vendors(name, slug), profiles!products_vendor_id_fkey(first_name, last_name)", { count: "exact" });
+      .select("*, categories(name, slug), vendors(name, slug, profiles(first_name, last_name))", { count: "exact" });
 
     if (search) {
       query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`);
@@ -129,14 +129,14 @@ export async function PATCH(request: NextRequest) {
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
     if (action === "approve") {
+      updates.status = "active";
       updates.is_active = true;
-      updates.moderation_status = "approved";
     } else if (action === "flag") {
+      updates.status = "inactive";
       updates.is_active = false;
-      updates.moderation_status = "flagged";
     } else if (action === "remove") {
+      updates.status = "archived";
       updates.is_active = false;
-      updates.moderation_status = "removed";
     } else {
       return NextResponse.json(
         { success: false, error: "Invalid action. Use: approve, flag, remove" },

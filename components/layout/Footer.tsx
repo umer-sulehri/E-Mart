@@ -18,7 +18,7 @@ const organicLinks = [
 const quickLinks = [
   { label: 'Offers', href: '/products?sale=true' },
   { label: 'Discount Coupons', href: '/products' },
-  { label: 'Stores', href: '/about' },
+  { label: 'Stores', href: '/sellers' },
   { label: 'Track Order', href: '/dashboard/orders' },
   { label: 'Shop', href: '/products' },
   { label: 'Info', href: '/about' },
@@ -27,9 +27,9 @@ const quickLinks = [
 const customerServiceLinks = [
   { label: 'FAQ', href: '/faq' },
   { label: 'Contact', href: '/contact' },
-  { label: 'Privacy Policy', href: '/privacy' },
+  { label: 'Privacy Policy', href: '/privacy-policy' },
   { label: 'Returns & Refunds', href: '/faq' },
-  { label: 'Cookie Guidelines', href: '/privacy' },
+  { label: 'Cookie Guidelines', href: '/privacy-policy' },
   { label: 'Delivery Information', href: '/faq' },
 ];
 

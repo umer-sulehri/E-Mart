@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
-export default function EasypaisaConfirmPage() {
+function EasypaisaConfirmContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId') || '';
   const status = searchParams.get('status') || 'pending';
@@ -179,5 +179,13 @@ export default function EasypaisaConfirmPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function EasypaisaConfirmPage() {
+  return (
+    <Suspense>
+      <EasypaisaConfirmContent />
+    </Suspense>
   );
 }

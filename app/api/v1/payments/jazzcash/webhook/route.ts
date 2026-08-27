@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import crypto from "crypto";
 
 interface JazzCashCallbackPayload {
   orderId: string;
@@ -8,12 +9,24 @@ interface JazzCashCallbackPayload {
   responseMessage: string;
   amount: string;
   retrievalReferenceNo?: string;
+  pp_SecureHash?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const merchantId = process.env.JAZZCASH_MERCHANT_ID;
+    const password = process.env.JAZZCASH_PASSWORD;
+
+    if (!merchantId || !password) {
+      console.warn("[JazzCash Webhook] JAZZCASH_MERCHANT_ID/PASSWORD not configured. Rejecting webhook.");
+      return NextResponse.json(
+        { success: false, error: "Webhook not configured" },
+        { status: 501 }
+      );
+    }
+
     const body: JazzCashCallbackPayload = await request.json();
-    const { orderId, transactionId, responseCode, responseMessage } = body;
+    const { orderId, transactionId, responseCode, responseMessage, pp_SecureHash } = body;
 
     console.log("[JazzCash Webhook] Callback received:", {
       orderId,
@@ -29,14 +42,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify transaction signature in production:
-    // const crypto = require("crypto");
-    // const prehashString = `${orderId}${transactionId}${responseCode}${process.env.JAZZCASH_PASSWORD}`;
-    // const expectedHash = crypto.createHash("sha256").update(prehashString).digest("hex");
-    // if (body.pp_SecureHash !== expectedHash) {
-    //   console.error("[JazzCash Webhook] Signature verification failed");
-    //   return NextResponse.json({ success: false, error: "Invalid signature" }, { status: 400 });
-    // }
+    if (!pp_SecureHash) {
+      console.error("[JazzCash Webhook] Missing pp_SecureHash");
+      return NextResponse.json(
+        { success: false, error: "Missing signature" },
+        { status: 400 }
+      );
+    }
+
+    const prehashString = `${orderId}${transactionId}${responseCode}`;
+    const expectedHash = crypto
+      .createHmac("sha256", password)
+      .update(prehashString)
+      .digest("hex");
+    const expectedBuffer = Buffer.from(expectedHash, "hex");
+    const receivedBuffer = Buffer.from(pp_SecureHash, "hex");
+    const signatureValid =
+      expectedBuffer.length === receivedBuffer.length &&
+      crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+
+    if (!signatureValid) {
+      console.error("[JazzCash Webhook] Signature verification failed");
+      return NextResponse.json(
+        { success: false, error: "Invalid signature" },
+        { status: 400 }
+      );
+    }
 
     const supabase = await createClient();
 

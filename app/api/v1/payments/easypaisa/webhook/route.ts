@@ -13,6 +13,17 @@ interface EasypaisaCallbackPayload {
 
 export async function POST(request: NextRequest) {
   try {
+    const merchantId = process.env.EASYPAISA_MERCHANT_ID || process.env.EASYPISA_MERCHANT_ID;
+    const apiKey = process.env.EASYPAISA_API_KEY;
+
+    if (!merchantId || !apiKey) {
+      console.warn("[Easypaisa Webhook] Easypaisa merchant/API key not configured. Rejecting webhook.");
+      return NextResponse.json(
+        { success: false, error: "Webhook not configured" },
+        { status: 501 }
+      );
+    }
+
     const body: EasypaisaCallbackPayload = await request.json();
     const { orderId, transactionId, status, amount, responseCode, responseMessage } = body;
 
@@ -31,24 +42,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify the transaction in production:
-    // const verificationPayload = {
-    //   transactionId,
-    //   orderId,
-    // };
-    // const verificationResponse = await fetch("https://sandbox.paypak.io/msone/Easypaisa/api/v1/transaction/verify", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: `Bearer ${process.env.EASYPAISA_API_KEY}`,
-    //   },
-    //   body: JSON.stringify(verificationPayload),
-    // });
-    // const verificationResult = await verificationResponse.json();
-    // if (verificationResult.responseCode !== "0000") {
-    //   console.error("[Easypaisa Webhook] Transaction verification failed");
-    //   return NextResponse.json({ success: false, error: "Transaction verification failed" }, { status: 400 });
-    // }
+    // Verify the transaction with Easypaisa before trusting the callback.
+    try {
+      const verificationResponse = await fetch(
+        "https://sandbox.paypak.io/msone/Easypaisa/api/v1/transaction/verify",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({ transactionId, orderId }),
+        }
+      );
+      if (!verificationResponse.ok) {
+        console.error("[Easypaisa Webhook] Transaction verification request failed");
+        return NextResponse.json(
+          { success: false, error: "Transaction verification failed" },
+          { status: 400 }
+        );
+      }
+      const verificationResult = await verificationResponse.json();
+      if (verificationResult.responseCode !== "0000") {
+        console.error("[Easypaisa Webhook] Transaction verification failed");
+        return NextResponse.json(
+          { success: false, error: "Transaction verification failed" },
+          { status: 400 }
+        );
+      }
+    } catch (verifyError) {
+      console.error("[Easypaisa Webhook] Verification error:", verifyError);
+      return NextResponse.json(
+        { success: false, error: "Transaction verification failed" },
+        { status: 400 }
+      );
+    }
 
     const supabase = await createClient();
 

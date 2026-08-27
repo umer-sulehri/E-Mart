@@ -1,8 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import crypto from "crypto";
+
+function verifyStripeSignature(
+  payload: string,
+  sigHeader: string,
+  secret: string
+): boolean {
+  if (!sigHeader) return false;
+  const parts = new Map<string, string>();
+  for (const part of sigHeader.split(",")) {
+    const idx = part.indexOf("=");
+    if (idx > -1) parts.set(part.slice(0, idx), part.slice(idx + 1));
+  }
+  const timestamp = parts.get("t");
+  const signature = parts.get("v1");
+  if (!timestamp || !signature) return false;
+
+  const signedPayload = `${timestamp}.${payload}`;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(signedPayload)
+    .digest("hex");
+
+  const expectedBuffer = Buffer.from(expected, "hex");
+  const receivedBuffer = Buffer.from(signature, "hex");
+  if (expectedBuffer.length !== receivedBuffer.length) return false;
+  return crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.warn("[Stripe Webhook] STRIPE_WEBHOOK_SECRET is not configured. Rejecting webhook.");
+      return NextResponse.json(
+        { success: false, error: "Webhook not configured" },
+        { status: 501 }
+      );
+    }
+
     const body = await request.text();
     const signature = request.headers.get("stripe-signature");
 
@@ -14,20 +52,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify webhook signature in production:
-    // import Stripe from "stripe";
-    // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-    // let event: Stripe.Event;
-    // try {
-    //   event = stripe.webhooks.constructEvent(
-    //     body,
-    //     signature,
-    //     process.env.STRIPE_WEBHOOK_SECRET!
-    //   );
-    // } catch (err) {
-    //   console.error("[Stripe Webhook] Signature verification failed:", err);
-    //   return NextResponse.json({ success: false, error: "Invalid signature" }, { status: 400 });
-    // }
+    if (!verifyStripeSignature(body, signature, webhookSecret)) {
+      console.error("[Stripe Webhook] Signature verification failed");
+      return NextResponse.json(
+        { success: false, error: "Invalid signature" },
+        { status: 400 }
+      );
+    }
 
     let event: { type: string; data: { object: any } };
     try {

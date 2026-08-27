@@ -321,6 +321,9 @@ export default function Header() {
                   </ul>
                 )}
               </div>
+              <Link href="/sellers" className="hover:text-primary transition-colors">
+                Sellers
+              </Link>
             </nav>
 
             <ul className="flex items-center gap-5 justify-end m-0 list-none">

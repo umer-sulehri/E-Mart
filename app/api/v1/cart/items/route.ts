@@ -17,23 +17,10 @@ export async function GET() {
       );
     }
 
-    const { data: cart, error: cartError } = await supabase
-      .from("carts")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (cartError || !cart) {
-      return NextResponse.json({
-        success: true,
-        data: { items: [], totalItems: 0, subtotal: 0 },
-      });
-    }
-
     const { data: items, error: itemsError } = await supabase
       .from("cart_items")
       .select("*, products(id, name, slug, price, discount_price, images, stock_quantity, is_active)")
-      .eq("cart_id", cart.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (itemsError) {
@@ -43,22 +30,25 @@ export async function GET() {
       );
     }
 
-    const cartItems = (items || []).map((item) => ({
-      id: item.id,
-      productId: item.product_id,
-      product: item.products,
-      quantity: item.quantity,
-      unitPrice: item.unit_price,
-      totalPrice: item.unit_price * item.quantity,
-      addedAt: item.created_at,
-    }));
+    const cartItems = (items || []).map((item) => {
+      const product = item.products as unknown as { discount_price: number | null; price: number };
+      const unitPrice = product.discount_price || product.price;
+      return {
+        id: item.id,
+        productId: item.product_id,
+        product: item.products,
+        quantity: item.quantity,
+        unitPrice,
+        totalPrice: unitPrice * item.quantity,
+        addedAt: item.created_at,
+      };
+    });
 
     const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
     return NextResponse.json({
       success: true,
       data: {
-        id: cart.id,
         items: cartItems,
         totalItems: cartItems.reduce((sum, item) => sum + item.quantity, 0),
         subtotal,
@@ -125,32 +115,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let { data: cart } = await supabase
-      .from("carts")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!cart) {
-      const { data: newCart } = await supabase
-        .from("carts")
-        .insert({ user_id: user.id })
-        .select("id")
-        .single();
-      cart = newCart;
-    }
-
-    if (!cart) {
-      return NextResponse.json(
-        { success: false, error: "Failed to create cart" },
-        { status: 500 }
-      );
-    }
-
     const { data: existingItem } = await supabase
       .from("cart_items")
       .select("id, quantity")
-      .eq("cart_id", cart.id)
+      .eq("user_id", user.id)
       .eq("product_id", productId)
       .single();
 
@@ -181,13 +149,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const unitPrice = product.discount_price || product.price;
-
     const { error: insertError } = await supabase.from("cart_items").insert({
-      cart_id: cart.id,
+      user_id: user.id,
       product_id: productId,
       quantity,
-      unit_price: unitPrice,
     });
 
     if (insertError) {

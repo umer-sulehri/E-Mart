@@ -128,11 +128,16 @@ export default function WishlistPage() {
 
   const handleMoveToCart = async (item: WishlistItem) => {
     try {
-      await fetch('/api/v1/cart', {
+      const res = await fetch('/api/v1/cart/items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: item.productId, quantity: 1 }),
       });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        await fetch(`/api/v1/wishlist/${item.id}`, { method: 'DELETE' }).catch(() => {});
+        setItems((prev) => prev.filter((w) => w.id !== item.id));
+      }
     } catch {}
     router.push('/cart');
   };

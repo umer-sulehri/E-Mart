@@ -117,10 +117,10 @@ export async function POST(request: NextRequest) {
         slug: postSlug,
         excerpt: excerpt || "",
         content,
-        cover_image: cover_image || null,
+        featured_image: cover_image || null,
         category: category || null,
         author_id: user.id,
-        is_published: is_published ?? false,
+        status: is_published ? "published" : "draft",
         published_at: is_published ? new Date().toISOString() : null,
       })
       .select()

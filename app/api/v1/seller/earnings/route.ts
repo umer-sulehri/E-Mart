@@ -57,16 +57,15 @@ export async function GET() {
     if (ids.length > 0) {
       const { data: orderItems } = await supabase
         .from("order_items")
-        .select("total_price, quantity, orders!inner(status)")
+        .select("total, quantity, order_id, orders!inner(status)")
         .in("product_id", ids)
         .in("orders.status", ["confirmed", "processing", "shipped", "out_for_delivery", "delivered"]);
 
       if (orderItems) {
-        totalRevenue = orderItems.reduce((sum, item) => sum + item.total_price, 0);
+        totalRevenue = orderItems.reduce((sum, item) => sum + item.total, 0);
         totalProductsSold = orderItems.reduce((sum, item) => sum + item.quantity, 0);
 
-        const orderIds = new Set();
-        orderItems.forEach(() => orderIds.add("order"));
+        const orderIds = new Set(orderItems.map((item) => item.order_id));
         totalOrders = orderIds.size || 0;
       }
     }
@@ -78,13 +77,13 @@ export async function GET() {
     if (ids.length > 0) {
       const { data: monthlyItems } = await supabase
         .from("order_items")
-        .select("total_price, orders!inner(created_at, status)")
+        .select("total, orders!inner(created_at, status)")
         .in("product_id", ids)
         .in("orders.status", ["confirmed", "processing", "shipped", "out_for_delivery", "delivered"])
         .gte("orders.created_at", startOfMonth);
 
       if (monthlyItems) {
-        monthlyRevenue = monthlyItems.reduce((sum, item) => sum + item.total_price, 0);
+        monthlyRevenue = monthlyItems.reduce((sum, item) => sum + item.total, 0);
       }
     }
 

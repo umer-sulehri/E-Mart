@@ -31,24 +31,11 @@ export async function PATCH(
       );
     }
 
-    const { data: cart } = await supabase
-      .from("carts")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!cart) {
-      return NextResponse.json(
-        { success: false, error: "Cart not found" },
-        { status: 404 }
-      );
-    }
-
     const { data: cartItem, error: itemError } = await supabase
       .from("cart_items")
       .select("id, products(stock_quantity)")
       .eq("id", id)
-      .eq("cart_id", cart.id)
+      .eq("user_id", user.id)
       .single();
 
     if (itemError || !cartItem) {
@@ -109,24 +96,11 @@ export async function DELETE(
       );
     }
 
-    const { data: cart } = await supabase
-      .from("carts")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!cart) {
-      return NextResponse.json(
-        { success: false, error: "Cart not found" },
-        { status: 404 }
-      );
-    }
-
     const { error } = await supabase
       .from("cart_items")
       .delete()
       .eq("id", id)
-      .eq("cart_id", cart.id);
+      .eq("user_id", user.id);
 
     if (error) {
       return NextResponse.json(

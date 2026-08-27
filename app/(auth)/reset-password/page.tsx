@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { createClient } from '@/lib/supabase/client';
 
 const resetPasswordSchema = z
   .object({
@@ -48,8 +49,6 @@ function getStrengthLabel(score: number) {
 
 function ResetPasswordForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -57,11 +56,18 @@ function ResetPasswordForm() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    if (!token) {
-      toast.error('Invalid or missing reset token');
-      router.push('/forgot-password');
-    }
-  }, [token, router]);
+    const checkSession = async () => {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Invalid or missing reset token');
+        router.push('/forgot-password');
+      }
+    };
+    checkSession();
+  }, [router]);
 
   const {
     register,
@@ -79,17 +85,16 @@ function ResetPasswordForm() {
   const onSubmit = async (data: ResetPasswordInput) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password: data.password }),
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({
+        password: data.password,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to reset password');
+      if (error) {
+        throw new Error(error.message || 'Failed to reset password');
       }
+
+      await supabase.auth.signOut();
 
       setIsSuccess(true);
       toast.success('Password reset successful!');

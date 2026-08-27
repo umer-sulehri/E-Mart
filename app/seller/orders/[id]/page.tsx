@@ -63,10 +63,10 @@ export default function SellerOrderDetailPage() {
   const handleStatusUpdate = async (newStatus: string) => {
     setUpdating(true);
     try {
-      const res = await fetch('/api/v1/admin/orders', {
+      const res = await fetch(`/api/v1/seller/orders/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: id, status: newStatus }),
+        body: JSON.stringify({ status: newStatus }),
       });
       const data = await res.json();
       if (data.success) {

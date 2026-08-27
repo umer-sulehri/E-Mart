@@ -35,7 +35,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { moderationStatus, moderationNotes } = body;
+    const { moderationStatus } = body;
 
     if (!moderationStatus) {
       return NextResponse.json(
@@ -53,17 +53,17 @@ export async function PUT(
     }
 
     const updates: Record<string, unknown> = {
-      moderation_status: moderationStatus,
       updated_at: new Date().toISOString(),
     };
 
-    if (moderationNotes !== undefined) {
-      updates.moderation_notes = moderationNotes;
-    }
-
     if (moderationStatus === "approved") {
+      updates.status = "active";
       updates.is_active = true;
-    } else if (["flagged", "removed"].includes(moderationStatus)) {
+    } else if (moderationStatus === "removed") {
+      updates.status = "archived";
+      updates.is_active = false;
+    } else if (moderationStatus === "flagged") {
+      updates.status = "inactive";
       updates.is_active = false;
     }
 

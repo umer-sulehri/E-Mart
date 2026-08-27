@@ -34,29 +34,29 @@ export async function GET(
       );
     }
 
-    const { data: payment, error } = await supabase
-      .from("payments")
-      .select("*")
+    const { data: order, error } = await supabase
+      .from("orders")
+      .select("id, order_number, payment_status, payment_method, total, created_at")
       .eq("id", id)
       .single();
 
-    if (error || !payment) {
+    if (error || !order) {
       return NextResponse.json(
-        { success: false, error: "Payment not found" },
+        { success: false, error: "Order not found" },
         { status: 404 }
       );
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const receiptToken = Buffer.from(
-      `${payment.id}:${payment.order_id}`
+      `${order.id}:${order.order_number}`
     ).toString("base64url");
 
     return NextResponse.json({
       success: true,
       data: {
-        ...payment,
-        receiptUrl: `${siteUrl}/api/v1/payments/${payment.id}/receipt?token=${receiptToken}`,
+        ...order,
+        receiptUrl: `${siteUrl}/api/v1/payments/${order.id}/receipt?token=${receiptToken}`,
         receiptToken,
       },
     });
