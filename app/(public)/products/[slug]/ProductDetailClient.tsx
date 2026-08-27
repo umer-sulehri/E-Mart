@@ -7,6 +7,7 @@ import StarRating from '@/components/ui/StarRating';
 import QuantitySelector from '@/components/ui/QuantitySelector';
 import Button from '@/components/ui/Button';
 import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
+import SellerInformationCard from '@/components/seller/SellerInformationCard';
 import { formatPrice, cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
 import type { Product } from '@/types';
@@ -228,6 +229,23 @@ export default function ProductDetailClient({
 
       {/* Divider */}
       <div className="border-t border-muted-100" />
+
+      {/* Sold by */}
+      {product.vendor?.id && (
+        <SellerInformationCard
+          seller={{
+            id: product.vendor.id,
+            name: product.vendor.name,
+            slug: product.vendor.slug,
+            rating: product.vendor.rating ?? 0,
+            totalSales: product.vendor.totalSales ?? 0,
+            joinedDate: product.vendor.createdAt
+              ? new Date(product.vendor.createdAt).toLocaleDateString()
+              : '',
+            isVerified: product.vendor.status === 'approved',
+          }}
+        />
+      )}
 
       {/* Trust Badges */}
       <div className="grid grid-cols-3 gap-4">

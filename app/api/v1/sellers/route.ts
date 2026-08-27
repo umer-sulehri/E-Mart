@@ -13,10 +13,10 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("vendors")
-      .select("id, name, slug, logo_url, description, rating, total_sales, is_approved, created_at", {
+      .select("id, name, slug, logo_url, description, rating, total_sales, created_at", {
         count: "exact",
       })
-      .eq("is_approved", true);
+      .eq("status", "approved");
 
     if (search) {
       query = query.ilike("name", `%${search}%`);
