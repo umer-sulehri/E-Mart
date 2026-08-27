@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
 import MobileNav from './MobileNav';
+import NotificationBell from '@/components/ui/NotificationBell';
 
 const pageLinks = [
   { label: 'About', href: '/about' },
@@ -323,6 +324,9 @@ export default function Header() {
             </nav>
 
             <ul className="flex items-center gap-5 justify-end m-0 list-none">
+              <li>
+                <NotificationBell />
+              </li>
               <li>
                 <Link
                   href="/account"

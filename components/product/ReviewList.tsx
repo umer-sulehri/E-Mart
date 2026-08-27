@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { ThumbsUp, ChevronDown, PenLine, Loader2 } from 'lucide-react';
+import { ThumbsUp, ChevronDown, PenLine, Loader2, Flag } from 'lucide-react';
+import toast from 'react-hot-toast';
 import StarRating from '@/components/ui/StarRating';
 import Button from '@/components/ui/Button';
 import { formatDate, cn } from '@/lib/utils';
@@ -117,16 +118,54 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
       fetchReviews();
     }, [fetchReviews]);
 
-    const handleHelpful = (reviewId: string) => {
-      setHelpfulClicked((prev) => {
-        const next = new Set(prev);
-        if (next.has(reviewId)) {
-          next.delete(reviewId);
-        } else {
-          next.add(reviewId);
+    const handleHelpful = async (reviewId: string) => {
+      const isCurrentlyHelpful = helpfulClicked.has(reviewId);
+      const next = new Set(helpfulClicked);
+      if (isCurrentlyHelpful) {
+        next.delete(reviewId);
+      } else {
+        next.add(reviewId);
+      }
+      setHelpfulClicked(next);
+
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === reviewId
+            ? { ...r, helpfulCount: r.helpfulCount + (isCurrentlyHelpful ? -1 : 1) }
+            : r
+        )
+      );
+
+      try {
+        const res = await fetch(`/api/v1/reviews/${reviewId}/helpful`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const json = await res.json();
+        if (!json.success) {
+          toast.error(json.error || 'Failed to update');
         }
-        return next;
-      });
+      } catch {
+        toast.error('Failed to update');
+      }
+    };
+
+    const handleReport = async (reviewId: string) => {
+      try {
+        const res = await fetch(`/api/v1/reviews/${reviewId}/report`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: 'Inappropriate content' }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          toast.success('Review reported. Thank you!');
+        } else {
+          toast.error(json.error || 'Failed to report');
+        }
+      } catch {
+        toast.error('Failed to report review');
+      }
     };
 
     const sortLabel = (s: SortOption) => {
@@ -276,8 +315,8 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
                   {review.comment}
                 </p>
 
-                {/* Helpful Button */}
-                <div className="mt-4 flex items-center">
+                {/* Actions */}
+                <div className="mt-4 flex items-center gap-2">
                   <button
                     onClick={() => handleHelpful(review.id)}
                     className={cn(
@@ -288,7 +327,14 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
                     )}
                   >
                     <ThumbsUp size={12} />
-                    Helpful ({review.helpfulCount + (helpfulClicked.has(review.id) ? 1 : 0)})
+                    Helpful ({review.helpfulCount})
+                  </button>
+                  <button
+                    onClick={() => handleReport(review.id)}
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted-400 transition-colors hover:bg-danger-50 hover:text-danger"
+                  >
+                    <Flag size={12} />
+                    Report
                   </button>
                 </div>
               </div>

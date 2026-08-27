@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import StarRating from '@/components/ui/StarRating';
 import QuantitySelector from '@/components/ui/QuantitySelector';
 import Button from '@/components/ui/Button';
+import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
 import { formatPrice, cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
 import type { Product } from '@/types';
@@ -163,7 +164,7 @@ export default function ProductDetailClient({
       {/* Stock Status */}
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-600">Availability:</span>
-        <StockStatus quantity={product.stockQuantity} />
+        <StockStatusIndicator stock={product.stockQuantity} showQuantity />
       </div>
 
       {/* Quantity + Add to Cart + Wishlist */}
@@ -257,18 +258,4 @@ export default function ProductDetailClient({
       </div>
     </div>
   );
-}
-
-function StockStatus({ quantity }: { quantity: number }) {
-  if (quantity <= 0) {
-    return <span className="text-sm font-medium text-danger">Out of Stock</span>;
-  }
-  if (quantity <= 10) {
-    return (
-      <span className="text-sm font-medium text-warning">
-        Low Stock — Only {quantity} left
-      </span>
-    );
-  }
-  return <span className="text-sm font-medium text-success">In Stock</span>;
 }

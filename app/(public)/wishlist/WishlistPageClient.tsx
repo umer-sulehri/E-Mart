@@ -14,6 +14,7 @@ import {
   LogIn,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import ShareWishlist from '@/components/wishlist/ShareWishlist';
 import { formatPrice } from '@/lib/utils';
 
 interface WishlistItem {
@@ -256,11 +257,14 @@ export default function WishlistPage() {
             </div>
           ) : (
             <>
-              <p className="mb-6 text-sm text-muted-500">
-                You have{' '}
-                <span className="font-medium text-secondary-800">{items.length}</span>{' '}
-                {items.length === 1 ? 'item' : 'items'} in your wishlist
-              </p>
+              <div className="mb-6 flex items-center justify-between">
+                <p className="text-sm text-muted-500">
+                  You have{' '}
+                  <span className="font-medium text-secondary-800">{items.length}</span>{' '}
+                  {items.length === 1 ? 'item' : 'items'} in your wishlist
+                </p>
+                <ShareWishlist />
+              </div>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {items.map((item) => (
                   <div

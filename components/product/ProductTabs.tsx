@@ -4,6 +4,7 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import ReviewList from '@/components/product/ReviewList';
 import ReviewForm from '@/components/product/ReviewForm';
+import ProductSpecifications from '@/components/product/ProductSpecifications';
 import type { Product } from '@/types';
 
 interface ProductTabsProps {
@@ -17,29 +18,6 @@ const tabs = [
 ] as const;
 
 type TabId = (typeof tabs)[number]['id'];
-
-function SpecsTable({ specs }: { specs: Record<string, string> }) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-muted-100">
-      {Object.entries(specs).map(([key, value], index) => (
-        <div
-          key={key}
-          className={cn(
-            'flex border-b border-muted-100 last:border-b-0',
-            index % 2 === 0 ? 'bg-white' : 'bg-muted-50'
-          )}
-        >
-          <div className="w-1/3 px-4 py-3 text-sm font-medium text-secondary-700">
-            {key}
-          </div>
-          <div className="w-2/3 px-4 py-3 text-sm text-muted-700">
-            {value}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function ProductTabs({ product }: ProductTabsProps) {
   const [activeTab, setActiveTab] = React.useState<TabId>('description');
@@ -111,7 +89,11 @@ export default function ProductTabs({ product }: ProductTabsProps) {
             Specifications
           </h3>
           {product.specifications ? (
-            <SpecsTable specs={product.specifications} />
+            <ProductSpecifications
+              specifications={Object.entries(product.specifications).map(
+                ([key, value]) => ({ key, value })
+              )}
+            />
           ) : (
             <p className="text-sm text-muted-500">
               No specifications available for this product.

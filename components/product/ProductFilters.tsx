@@ -6,6 +6,7 @@ import { CATEGORIES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import BrandFilter from '@/components/product/BrandFilter';
 import AvailabilityToggle from '@/components/ui/AvailabilityToggle';
+import PriceRangeSlider from '@/components/ui/PriceRangeSlider';
 
 export interface FilterState {
   categories: string[];
@@ -57,10 +58,6 @@ export default function ProductFilters({
     onFilterChange({ ...filters, categories: updated });
   };
 
-  const handlePriceChange = (field: 'minPrice' | 'maxPrice', value: string) => {
-    onFilterChange({ ...filters, [field]: value });
-  };
-
   const handleRatingSelect = (rating: number) => {
     onFilterChange({
       ...filters,
@@ -74,6 +71,21 @@ export default function ProductFilters({
 
   const handleAvailabilityChange = (inStockOnly: boolean) => {
     onFilterChange({ ...filters, inStockOnly });
+  };
+
+  const minPriceVal = Number(filters.minPrice) || 0;
+  const maxPriceVal = Number(filters.maxPrice) || 100000;
+  const priceRange: [number, number] = [
+    Math.min(minPriceVal, maxPriceVal),
+    Math.max(minPriceVal, maxPriceVal),
+  ];
+
+  const handlePriceSliderChange = (range: [number, number]) => {
+    onFilterChange({
+      ...filters,
+      minPrice: range[0] > 0 ? String(range[0]) : '',
+      maxPrice: range[1] < 100000 ? String(range[1]) : '',
+    });
   };
 
   const clearAll = () => {
@@ -134,25 +146,13 @@ export default function ProductFilters({
       </FilterSection>
 
       <FilterSection title="Price Range">
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            placeholder="Min"
-            value={filters.minPrice}
-            onChange={(e) => handlePriceChange('minPrice', e.target.value)}
-            min={0}
-            className="w-full rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-          <span className="text-muted-400">-</span>
-          <input
-            type="number"
-            placeholder="Max"
-            value={filters.maxPrice}
-            onChange={(e) => handlePriceChange('maxPrice', e.target.value)}
-            min={0}
-            className="w-full rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
+        <PriceRangeSlider
+          min={0}
+          max={100000}
+          step={500}
+          value={priceRange}
+          onChange={handlePriceSliderChange}
+        />
       </FilterSection>
 
       <FilterSection title="Rating">

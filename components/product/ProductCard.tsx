@@ -3,8 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart, Eye } from "lucide-react";
 import StarRating from "@/components/ui/StarRating";
+import QuickViewModal from "@/components/product/QuickViewModal";
 import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
 
 export interface Product {
@@ -27,6 +28,7 @@ export interface ProductCardProps {
 const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
   ({ product, className }, ref) => {
     const [quantity, setQuantity] = React.useState(1);
+    const [quickViewOpen, setQuickViewOpen] = React.useState(false);
     const discount = product.discountPrice
       ? calculateDiscount(product.price, product.discountPrice)
       : 0;
@@ -102,6 +104,15 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 </button>
               </div>
               <div className="w-2/12">
+                <button
+                  className="flex w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white"
+                  aria-label={`Quick view ${product.name}`}
+                  onClick={() => setQuickViewOpen(true)}
+                >
+                  <Eye size={16} />
+                </button>
+              </div>
+              <div className="w-2/12">
                 <button className="flex w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white">
                   <Heart size={16} />
                 </button>
@@ -109,6 +120,12 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
             </div>
           </div>
         </div>
+
+        <QuickViewModal
+          product={product}
+          open={quickViewOpen}
+          onClose={() => setQuickViewOpen(false)}
+        />
       </div>
     );
   }
