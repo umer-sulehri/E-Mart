@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { X, Heart, ShoppingCart, Star, Eye } from 'lucide-react';
+import { X, Heart, ShoppingCart, Star, Eye, Check } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
+import { useAddToCart } from '@/hooks/useAddToCart';
+import { useAddToWishlist } from '@/hooks/useAddToWishlist';
 import { formatPrice, calculateDiscount } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +38,12 @@ export default function QuickViewModal({
   onClose,
 }: QuickViewModalProps) {
   const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useAddToCart();
+  const {
+    isWishlisted,
+    toggleWishlist,
+    wishlistLoading,
+  } = useAddToWishlist(product?.id ?? '', product?.name ?? '');
 
   if (!open || !product) return null;
 
@@ -162,12 +170,30 @@ export default function QuickViewModal({
                     +
                   </button>
                 </div>
-                <Button className="flex-1" size="md">
+                <Button
+                  className="flex-1"
+                  size="md"
+                  onClick={() => {
+                    addToCart(product, quantity);
+                    onClose();
+                  }}
+                >
                   <ShoppingCart size={16} />
                   Add to Cart
                 </Button>
-                <Button variant="outline" size="md" className="px-3">
-                  <Heart size={16} />
+                <Button
+                  variant="outline"
+                  size="md"
+                  className="px-3"
+                  onClick={toggleWishlist}
+                  disabled={wishlistLoading}
+                  aria-pressed={isWishlisted}
+                >
+                  {isWishlisted ? (
+                    <Check size={16} className="text-primary" />
+                  ) : (
+                    <Heart size={16} />
+                  )}
                 </Button>
               </div>
 

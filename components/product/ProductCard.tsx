@@ -3,9 +3,11 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, Heart, Eye } from "lucide-react";
+import { ShoppingCart, Heart, Eye, Check } from "lucide-react";
 import StarRating from "@/components/ui/StarRating";
 import QuickViewModal from "@/components/product/QuickViewModal";
+import { useAddToCart } from "@/hooks/useAddToCart";
+import { useAddToWishlist } from "@/hooks/useAddToWishlist";
 import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
 
 export interface Product {
@@ -29,6 +31,12 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
   ({ product, className }, ref) => {
     const [quantity, setQuantity] = React.useState(1);
     const [quickViewOpen, setQuickViewOpen] = React.useState(false);
+    const { addToCart } = useAddToCart();
+    const {
+      isWishlisted,
+      toggleWishlist,
+      wishlistLoading,
+    } = useAddToWishlist(product.id, product.name);
     const discount = product.discountPrice
       ? calculateDiscount(product.price, product.discountPrice)
       : 0;
@@ -98,7 +106,11 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 />
               </div>
               <div className="w-7/12">
-                <button className="btn-cart flex w-full items-center justify-center gap-2 rounded-1 bg-primary p-2 text-xs text-white hover:bg-primary-500">
+                <button
+                  onClick={() => addToCart(product, quantity)}
+                  className="btn-cart flex w-full items-center justify-center gap-2 rounded-1 bg-primary p-2 text-xs text-white hover:bg-primary-500"
+                  aria-label={`Add ${product.name} to cart`}
+                >
                   <ShoppingCart size={16} />
                   Add to Cart
                 </button>
@@ -113,8 +125,22 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 </button>
               </div>
               <div className="w-2/12">
-                <button className="flex w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white">
-                  <Heart size={16} />
+                <button
+                  className="flex w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white disabled:opacity-50"
+                  aria-label={
+                    isWishlisted
+                      ? `Remove ${product.name} from wishlist`
+                      : `Add ${product.name} to wishlist`
+                  }
+                  aria-pressed={isWishlisted}
+                  onClick={toggleWishlist}
+                  disabled={wishlistLoading}
+                >
+                  {isWishlisted ? (
+                    <Check size={16} className="text-primary" />
+                  ) : (
+                    <Heart size={16} />
+                  )}
                 </button>
               </div>
             </div>
