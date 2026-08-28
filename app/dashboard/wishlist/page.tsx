@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
+import ShareWishlist from '@/components/wishlist/ShareWishlist';
 import { formatPrice, calculateDiscount } from '@/lib/utils';
 import type { Product } from '@/types';
 
@@ -114,9 +115,12 @@ export default function WishlistPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-bold text-secondary-800">My Wishlist</h2>
-        <p className="text-sm text-muted-500">{items.length} items</p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-muted-500">{items.length} items</p>
+          {items.length > 0 && <ShareWishlist />}
+        </div>
       </div>
 
       {items.length === 0 ? (

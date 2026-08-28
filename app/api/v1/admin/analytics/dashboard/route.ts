@@ -45,6 +45,10 @@ export async function GET() {
       activeProducts,
       pendingOrders,
       deliveredOrders,
+      recentOrders,
+      recentUsers,
+      pendingSellers,
+      allOrders,
     ] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("vendors").select("id", { count: "exact", head: true }),
@@ -55,6 +59,20 @@ export async function GET() {
       supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
       supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "delivered"),
+      supabase.from("orders")
+        .select("id, order_number, status, total, created_at, profiles(first_name, last_name, email)")
+        .order("created_at", { ascending: false })
+        .limit(6),
+      supabase.from("profiles")
+        .select("id, first_name, last_name, email, role, created_at")
+        .order("created_at", { ascending: false })
+        .limit(6),
+      supabase.from("vendors")
+        .select("id, name, slug, status, created_at")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(6),
+      supabase.from("orders").select("status"),
     ]);
 
     const monthlyRevenue = monthlyRevenueResult.data?.reduce((sum, o) => sum + (o.total || 0), 0) || 0;
@@ -62,6 +80,15 @@ export async function GET() {
     const revenueGrowth = lastMonthRevenue > 0
       ? Math.round(((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
       : 0;
+
+    const orderStatusCounts = (allOrders.data || []).reduce<Record<string, number>>(
+      (acc, o) => {
+        const s = o.status || "pending";
+        acc[s] = (acc[s] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
 
     return NextResponse.json({
       success: true,
@@ -76,6 +103,10 @@ export async function GET() {
         monthlyRevenue,
         lastMonthRevenue,
         revenueGrowth,
+        recentOrders: recentOrders.data || [],
+        recentUsers: recentUsers.data || [],
+        pendingSellers: pendingSellers.data || [],
+        orderStatusCounts,
       },
     });
   } catch (error) {
