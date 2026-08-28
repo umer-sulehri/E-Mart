@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { ChevronRight, Home, Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { formatPrice } from '@/lib/utils';
@@ -107,10 +107,9 @@ export default function CartPage() {
                       {/* Product */}
                       <div className="flex items-center gap-4 md:col-span-5">
                         <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-muted-50">
-                          <Image
+                          <ImageWithFallback
                             src={
-                              item.product.images?.[0] ||
-                              '/images/product-1.jpg'
+                              item.product.images?.[0]
                             }
                             alt={item.product.name}
                             fill

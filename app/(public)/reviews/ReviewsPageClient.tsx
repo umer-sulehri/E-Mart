@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import {
   ChevronRight,
   Home,
@@ -34,13 +34,13 @@ const MOCK_REVIEWS: Review[] = [
     id: '1',
     userId: 'u1',
     userName: 'Ahmad Khan',
-    userAvatar: '/images/avatar-1.jpg',
+    userAvatar: '/images/reviewer-1.jpg',
     rating: 5,
     title: 'Excellent quality organic products',
     comment: 'I have been ordering from E-Mart for months now. The freshness of their fruits and vegetables is unmatched. Highly recommended!',
     productName: 'Organic Mixed Fruit Basket',
     productSlug: 'organic-mixed-fruit-basket',
-    productImage: '/images/product-1.jpg',
+    productImage: '/images/product-thumb-1.png',
     date: '2026-08-20',
     helpful: 12,
     helpfulByUser: false,
@@ -49,13 +49,13 @@ const MOCK_REVIEWS: Review[] = [
     id: '2',
     userId: 'u2',
     userName: 'Sara Malik',
-    userAvatar: '/images/avatar-2.jpg',
+    userAvatar: '/images/reviewer-2.jpg',
     rating: 4,
     title: 'Great service, fast delivery',
     comment: 'Ordered groceries at 10am and received them by 4pm the same day. The packaging was excellent and everything was fresh.',
     productName: 'Fresh Dairy Milk 1L',
     productSlug: 'fresh-dairy-milk',
-    productImage: '/images/product-2.jpg',
+    productImage: '/images/product-thumb-2.png',
     date: '2026-08-18',
     helpful: 8,
     helpfulByUser: false,
@@ -64,13 +64,13 @@ const MOCK_REVIEWS: Review[] = [
     id: '3',
     userId: 'u3',
     userName: 'Ali Raza',
-    userAvatar: '/images/avatar-3.jpg',
+    userAvatar: '/images/reviewer-3.jpg',
     rating: 5,
     title: 'Best prices for organic produce',
     comment: 'Compared to other online stores, E-Mart offers the best prices for organic produce. The desi ghee is absolutely pure and authentic.',
     productName: 'Fresh Desi Ghee 1kg',
     productSlug: 'fresh-desi-ghee',
-    productImage: '/images/product-3.jpg',
+    productImage: '/images/product-thumb-3.png',
     date: '2026-08-15',
     helpful: 15,
     helpfulByUser: true,
@@ -79,13 +79,13 @@ const MOCK_REVIEWS: Review[] = [
     id: '4',
     userId: 'u4',
     userName: 'Fatima Noor',
-    userAvatar: '/images/avatar-1.jpg',
+    userAvatar: '/images/reviewer-1.jpg',
     rating: 3,
     title: 'Good but delivery was delayed',
     comment: 'Products were fresh and good quality, but the delivery was delayed by a day. Expected same-day delivery as promised.',
     productName: 'Whole Wheat Bread Pack',
     productSlug: 'whole-wheat-bread',
-    productImage: '/images/product-1.jpg',
+    productImage: '/images/product-thumb-1.png',
     date: '2026-08-12',
     helpful: 3,
     helpfulByUser: false,
@@ -94,13 +94,13 @@ const MOCK_REVIEWS: Review[] = [
     id: '5',
     userId: 'u5',
     userName: 'Hassan Ahmed',
-    userAvatar: '/images/avatar-2.jpg',
+    userAvatar: '/images/reviewer-2.jpg',
     rating: 5,
     title: 'My go-to grocery store',
     comment: 'E-Mart has become my family\'s go-to grocery store. The quality is consistent and the customer support is very responsive.',
     productName: 'Organic Green Tea Pack',
     productSlug: 'organic-green-tea',
-    productImage: '/images/product-2.jpg',
+    productImage: '/images/product-thumb-2.png',
     date: '2026-08-10',
     helpful: 20,
     helpfulByUser: false,
@@ -293,7 +293,7 @@ export default function ReviewsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="relative h-12 w-12 overflow-hidden rounded-full">
-                        <Image
+                        <ImageWithFallback
                           src={review.userAvatar}
                           alt={review.userName}
                           fill
@@ -339,7 +339,7 @@ export default function ReviewsPage() {
                   {/* Product link */}
                   <div className="mt-4 flex items-center gap-3 rounded-xl bg-muted-50 p-3">
                     <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white">
-                      <Image
+                      <ImageWithFallback
                         src={review.productImage}
                         alt={review.productName}
                         fill

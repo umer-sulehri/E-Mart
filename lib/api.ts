@@ -1,3 +1,5 @@
+import { resolveImage } from '@/lib/imageLoader';
+
 const API_BASE = '/api/v1';
 
 export async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -153,7 +155,7 @@ export function apiProductToCardProduct(p: ApiProduct) {
     discountPrice: p.sale_price,
     rating: p.rating,
     reviewCount: p.review_count,
-    image: p.images?.[0] || '/images/product-1.jpg',
+    image: resolveImage(p.images?.[0]),
   };
 }
 
@@ -162,6 +164,6 @@ export function apiCategoryToCarouselCategory(c: ApiCategory) {
     id: c.id,
     name: c.name,
     slug: c.slug,
-    image: c.image_url || '/images/category-thumb-1.jpg',
+    image: resolveImage(c.image_url),
   };
 }

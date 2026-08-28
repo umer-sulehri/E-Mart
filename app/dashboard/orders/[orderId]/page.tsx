@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -302,7 +302,7 @@ export default function OrderDetailPage({
             {items.map((item, i) => (
               <div key={item.id || i} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-muted-200 bg-muted-50">
-                  <Image
+                  <ImageWithFallback
                     src={item.productImage || '/images/placeholder.png'}
                     alt={item.productName}
                     fill

@@ -1,9 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { ZoomIn } from 'lucide-react';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 
 export interface ProductGalleryProps {
   images: string[];
@@ -46,7 +46,7 @@ const ProductGallery = React.forwardRef<HTMLDivElement, ProductGalleryProps>(
                   : 'border-muted-200 hover:border-muted-400'
               )}
             >
-              <Image
+              <ImageWithFallback
                 src={image}
                 alt={`${productName} - Image ${index + 1}`}
                 fill
@@ -66,7 +66,7 @@ const ProductGallery = React.forwardRef<HTMLDivElement, ProductGalleryProps>(
           onMouseMove={handleMouseMove}
         >
           <div className="relative aspect-square w-full overflow-hidden">
-            <Image
+            <ImageWithFallback
               src={selectedImage}
               alt={productName}
               fill

@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ShoppingCart, X, Plus, BarChart3, Trash2, Star } from 'lucide-react';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useCompareStore } from '@/store/compareStore';
 import { useCartStore } from '@/store';
 import type { CartItem, Product } from '@/types';
@@ -208,7 +208,7 @@ export default function ComparePage() {
                   key={product.id}
                   className="rounded-xl border border-muted-100 p-3 text-center"
                 >
-                  <Image
+                  <ImageWithFallback
                     src={product.image}
                     alt={product.name}
                     width={80}
@@ -250,7 +250,7 @@ export default function ComparePage() {
                     >
                       <X size={12} />
                     </button>
-                    <Image
+                    <ImageWithFallback
                       src={item.image}
                       alt={item.name}
                       width={120}

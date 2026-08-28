@@ -34,7 +34,7 @@ function getCategoryInfo(slug: string): CategoryInfo {
     name: cat?.name || slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
     slug,
     description: `Shop the best ${cat?.name || slug} products at E-Mart with fast delivery.`,
-    thumbnail: cat?.thumbnail || '/images/categories/default.jpg',
+    thumbnail: cat?.thumbnail || '/images/category-thumb-1.jpg',
   };
 }
 

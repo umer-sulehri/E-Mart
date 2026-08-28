@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useRouter } from 'next/navigation';
 import {
   ChevronRight,
@@ -557,8 +557,8 @@ function ReviewStep({
           {items.map((item) => (
             <li key={item.id} className="flex items-center gap-3 py-3">
               <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-muted-50">
-                <Image
-                  src={item.product.images?.[0] || '/images/product-1.jpg'}
+                <ImageWithFallback
+                  src={item.product.images?.[0]}
                   alt={item.product.name}
                   fill
                   className="object-contain p-0.5"

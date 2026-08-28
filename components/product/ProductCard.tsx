@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { ShoppingCart, Heart, Eye, Check } from "lucide-react";
 import StarRating from "@/components/ui/StarRating";
 import QuickViewModal from "@/components/product/QuickViewModal";
 import { useAddToCart } from "@/hooks/useAddToCart";
 import { useAddToWishlist } from "@/hooks/useAddToWishlist";
+import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
 
 export interface Product {
@@ -45,7 +45,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
       <div ref={ref} className={cn("product-item", className)}>
         <figure className="text-center">
           <Link href={`/products/${product.slug}`} title={product.name}>
-            <Image
+            <ImageWithFallback
               src={product.image}
               alt={product.name}
               width={210}

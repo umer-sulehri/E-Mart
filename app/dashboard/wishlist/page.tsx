@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useRouter } from 'next/navigation';
 import { X, ShoppingCart, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -160,7 +160,7 @@ export default function WishlistPage() {
                 </button>
 
                 <div className="relative mx-auto mb-4 flex h-40 items-center justify-center overflow-hidden rounded-lg bg-muted-50">
-                  <Image
+                  <ImageWithFallback
                     src={imageUrl}
                     alt={product.name}
                     width={160}

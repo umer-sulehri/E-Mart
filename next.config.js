@@ -1,10 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    webpackBuildCache: false,
-  },
   images: {
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
       {
         protocol: 'https',
         hostname: '*.supabase.co',
@@ -14,10 +19,6 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.supabase.in',
         pathname: '/storage/v1/object/public/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
       },
     ],
   },

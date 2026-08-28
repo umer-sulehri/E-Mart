@@ -253,7 +253,7 @@ export default function Header() {
                 />
               </Link>
               <button
-                className="lg:hidden p-2 -ml-2"
+                className="p-2 -ml-2 hover:text-primary transition-colors"
                 onClick={() => setMobileNavOpen(true)}
                 aria-label="Open navigation menu"
               >

@@ -8,8 +8,14 @@ import { createClient } from '@/lib/supabase/client';
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirect') || '/';
+  const requestedRedirect = searchParams.get('redirect') || '/';
   const [error, setError] = useState<string | null>(null);
+
+  function roleFromPath(path: string): 'customer' | 'seller' | 'admin' {
+    if (path.startsWith('/seller')) return 'seller';
+    if (path.startsWith('/admin')) return 'admin';
+    return 'customer';
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -48,13 +54,21 @@ function AuthCallbackContent() {
               email: user.email!,
               first_name: firstName,
               last_name: lastName,
-              role: 'customer',
+              role: roleFromPath(requestedRedirect),
               is_email_verified: true,
               profile_image_url: user.user_metadata?.avatar_url || null,
             });
-          }
 
-          router.push(redirectTo);
+            router.push(
+              roleFromPath(requestedRedirect) === 'seller'
+                ? '/seller'
+                : roleFromPath(requestedRedirect) === 'admin'
+                ? '/admin'
+                : '/dashboard'
+            );
+          } else {
+            router.push(requestedRedirect === '/' ? '/dashboard' : requestedRedirect);
+          }
         } else {
           setError('Authentication failed — no user found');
         }
@@ -64,7 +78,7 @@ function AuthCallbackContent() {
     }
 
     handleAuth();
-  }, [router, redirectTo]);
+  }, [router, requestedRedirect]);
 
   if (error) {
     return (

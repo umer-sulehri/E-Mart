@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { Eye, Truck, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
@@ -188,7 +188,7 @@ export default function OrdersPage() {
                       key={item.id || i}
                       className="relative h-14 w-14 overflow-hidden rounded-lg border border-muted-200 bg-muted-50"
                     >
-                      <Image
+                      <ImageWithFallback
                         src={item.productImage || '/images/placeholder.png'}
                         alt={item.productName}
                         fill

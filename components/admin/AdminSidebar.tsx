@@ -21,6 +21,11 @@ import {
   ImageIcon,
   Newspaper,
   ScrollText,
+  User,
+  BadgePercent,
+  Building2,
+  Mail,
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
@@ -30,15 +35,20 @@ const navLinks = [
   { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Sellers', href: '/admin/sellers', icon: Store },
   { label: 'Products', href: '/admin/products', icon: Package },
+  { label: 'Offers', href: '/admin/offers', icon: BadgePercent },
   { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { label: 'Categories', href: '/admin/categories', icon: Grid },
   { label: 'Coupons', href: '/admin/coupons', icon: Tag },
   { label: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
   { label: 'Banners', href: '/admin/banners', icon: ImageIcon },
   { label: 'Blog', href: '/admin/blog', icon: Newspaper },
+  { label: 'Stores / Brands', href: '/admin/stores', icon: Building2 },
+  { label: 'Contact', href: '/admin/contact', icon: Mail },
+  { label: 'Analytics', href: '/admin/analytics', icon: Activity },
   { label: 'Logs', href: '/admin/logs', icon: ScrollText },
   { label: 'Reports', href: '/admin/reports', icon: BarChart3 },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
+  { label: 'My Account', href: '/admin/account', icon: User },
 ];
 
 export default function AdminSidebar() {

@@ -14,14 +14,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, firstName, lastName } = parsed.data;
+    const { email, password, firstName, lastName, role } = parsed.data;
     const supabase = await createClient();
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { firstName, lastName },
+        data: { firstName, lastName, role },
       },
     });
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       email,
       first_name: firstName,
       last_name: lastName,
-      role: "customer",
+      role,
       is_email_verified: false,
     });
 
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
             email: authData.user.email,
             firstName,
             lastName,
-            role: "customer",
+            role,
           },
           session: authData.session,
         },

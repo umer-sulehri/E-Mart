@@ -95,10 +95,16 @@ INSERT INTO product_tags (name, slug) VALUES
 ON CONFLICT (slug) DO NOTHING;
 
 -- ============================================================
--- NOTE: Admin user must be created via Supabase Auth signup.
--- After signup, the trigger auto-creates the profile.
--- Then update the role:
---   UPDATE profiles SET role = 'admin' WHERE email = 'admin@emart.pk';
+-- ADMIN ACCOUNT — created via Supabase Auth (not seedable).
+-- Default credentials (set these in Supabase Dashboard -> Auth -> Users):
+--   Email:    admin@emart.pk
+--   Password:  (set via 'Reset password' in the Supabase dashboard)
+-- Google admin login: admins sign in with the Admin button on /login,
+-- which routes to /admin. New Google admins get role='admin' automatically.
+-- To create an admin profile after Auth signup, run:
+--   INSERT INTO profiles (id, email, first_name, last_name, role, is_email_verified)
+--   SELECT id, email, 'Admin', 'E-Mart', 'admin', true FROM auth.users WHERE email='admin@emart.pk'
+--   ON CONFLICT (id) DO UPDATE SET role = 'admin';
 -- ============================================================
 
 -- ============================================================

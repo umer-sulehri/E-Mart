@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Search,
   CheckCircle2,
@@ -11,78 +11,102 @@ import {
   Clock,
   ShieldCheck,
   UserX,
-  Package,
-  TrendingUp,
+  Loader2,
+  RotateCcw,
 } from 'lucide-react';
-import { cn, formatPrice } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 
-type SellerStatus = 'pending' | 'approved' | 'suspended';
+type SellerStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
-interface MockSeller {
+interface Seller {
   id: string;
-  storeName: string;
-  ownerName: string;
-  email: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  contact_email: string;
+  contact_phone: string | null;
   status: SellerStatus;
-  productsCount: number;
-  revenue: number;
   rating: number;
-  registeredDate: string;
-  logoColor: string;
+  total_sales: number;
+  created_at: string;
+  owner_first_name: string;
+  owner_last_name: string;
+  owner_email: string;
+  productCount: number;
 }
 
-const sellerColors = ['#6BB252', '#364127', '#F95F09', '#F5A623', '#a3be4c', '#5a9e3f', '#2d6a1e'];
-
-const mockSellers: MockSeller[] = [
-  { id: 'sel-001', storeName: 'Fresh Valley Farms', ownerName: 'Ahmed Khan', email: 'ahmed@freshvalley.pk', status: 'approved', productsCount: 45, revenue: 580000, rating: 4.8, registeredDate: '2025-01-15', logoColor: sellerColors[0] },
-  { id: 'sel-002', storeName: 'Organic Basket', ownerName: 'Fatima Malik', email: 'fatima@organicbasket.pk', status: 'approved', productsCount: 38, revenue: 420000, rating: 4.7, registeredDate: '2025-02-10', logoColor: sellerColors[1] },
-  { id: 'sel-003', storeName: 'Karachi Meats', ownerName: 'Ali Butt', email: 'ali@karachimeats.pk', status: 'approved', productsCount: 22, revenue: 390000, rating: 4.6, registeredDate: '2025-01-28', logoColor: sellerColors[2] },
-  { id: 'sel-004', storeName: 'Green Grocery', ownerName: 'Sara Qureshi', email: 'sara@greengrocery.pk', status: 'approved', productsCount: 60, revenue: 310000, rating: 4.5, registeredDate: '2025-03-05', logoColor: sellerColors[3] },
-  { id: 'sel-005', storeName: 'Dairy Direct', ownerName: 'Hassan Siddiqui', email: 'hassan@dairdirect.pk', status: 'approved', productsCount: 18, revenue: 275000, rating: 4.4, registeredDate: '2025-02-22', logoColor: sellerColors[4] },
-  { id: 'sel-006', storeName: 'Spice World', ownerName: 'Ayesha Cheema', email: 'ayesha@spiceworld.pk', status: 'approved', productsCount: 35, revenue: 195000, rating: 4.3, registeredDate: '2025-04-12', logoColor: sellerColors[5] },
-  { id: 'sel-007', storeName: 'Bakery Hub', ownerName: 'Usman Rao', email: 'usman@bakeryhub.pk', status: 'pending', productsCount: 0, revenue: 0, rating: 0, registeredDate: '2026-08-20', logoColor: sellerColors[6] },
-  { id: 'sel-008', storeName: 'Seafood Express', ownerName: 'Zainab Sheikh', email: 'zainab@seafoodexpress.pk', status: 'pending', productsCount: 0, revenue: 0, rating: 0, registeredDate: '2026-08-21', logoColor: sellerColors[0] },
-  { id: 'sel-009', storeName: 'Organic Harvest', ownerName: 'Bilal Gillani', email: 'bilal@organicharvest.pk', status: 'pending', productsCount: 0, revenue: 0, rating: 0, registeredDate: '2026-08-22', logoColor: sellerColors[1] },
-  { id: 'sel-010', storeName: 'Fresh Bites', ownerName: 'Maryam Chaudhry', email: 'maryam@freshbites.pk', status: 'pending', productsCount: 0, revenue: 0, rating: 0, registeredDate: '2026-08-23', logoColor: sellerColors[2] },
-  { id: 'sel-011', storeName: 'Daily Deals Mart', ownerName: 'Omar Bhatti', email: 'omar@dailydeals.pk', status: 'pending', productsCount: 0, revenue: 0, rating: 0, registeredDate: '2026-08-24', logoColor: sellerColors[3] },
-  { id: 'sel-012', storeName: 'Frozen Paradise', ownerName: 'Hira Nawaz', email: 'hira@frozenparadise.pk', status: 'suspended', productsCount: 15, revenue: 45000, rating: 3.2, registeredDate: '2025-05-18', logoColor: sellerColors[4] },
-  { id: 'sel-013', storeName: 'Snack Attack', ownerName: 'Khalid Iqbal', email: 'khalid@snackattack.pk', status: 'approved', productsCount: 28, revenue: 152000, rating: 4.1, registeredDate: '2025-06-02', logoColor: sellerColors[5] },
-  { id: 'sel-014', storeName: 'Baby Care Plus', ownerName: 'Nadia Awan', email: 'nadia@babycare.pk', status: 'approved', productsCount: 42, revenue: 230000, rating: 4.5, registeredDate: '2025-04-30', logoColor: sellerColors[6] },
-  { id: 'sel-015', storeName: 'Pantry Essentials', ownerName: 'Tariq Mirza', email: 'tariq@pantry.pk', status: 'suspended', productsCount: 10, revenue: 28000, rating: 2.8, registeredDate: '2025-07-14', logoColor: sellerColors[0] },
-];
+const statusMap: Record<SellerStatus, { variant: 'warning' | 'success' | 'danger' | 'default'; label: string }> = {
+  pending: { variant: 'warning', label: 'Pending' },
+  approved: { variant: 'success', label: 'Approved' },
+  rejected: { variant: 'danger', label: 'Rejected' },
+  suspended: { variant: 'default', label: 'Suspended' },
+};
 
 export default function AdminSellersPage() {
+  const [sellers, setSellers] = useState<Seller[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [expandedSeller, setExpandedSeller] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [acting, setActing] = useState<string | null>(null);
 
-  const filtered = mockSellers.filter((s) => {
-    const matchesSearch =
-      s.storeName.toLowerCase().includes(search.toLowerCase()) ||
-      s.ownerName.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ status: statusFilter });
+      if (search.trim()) params.set('search', search.trim());
+      const res = await fetch(`/api/v1/admin/sellers?${params.toString()}`);
+      const json = await res.json();
+      if (json.success) setSellers(json.data || []);
+      else setError(json.error || 'Failed to load sellers');
+    } catch {
+      setError('Failed to load sellers');
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, search]);
 
-  const total = mockSellers.length;
-  const pendingCount = mockSellers.filter((s) => s.status === 'pending').length;
-  const approvedCount = mockSellers.filter((s) => s.status === 'approved').length;
-  const suspendedCount = mockSellers.filter((s) => s.status === 'suspended').length;
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const getStatusBadge = (status: SellerStatus) => {
-    const map: Record<SellerStatus, { variant: 'success' | 'warning' | 'danger' }> = {
-      pending: { variant: 'warning' },
-      approved: { variant: 'success' },
-      suspended: { variant: 'danger' },
-    };
-    return <Badge variant={map[status].variant} size="sm">{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+  const act = async (id: string, action: 'verify' | 'suspend' | 'reject') => {
+    setActing(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/v1/admin/sellers/${id}/${action === 'verify' ? 'verify' : 'suspend'}`, {
+        method: 'POST',
+      });
+      const json = await res.json();
+      if (json.success) {
+        await load();
+      } else {
+        setError(json.error || 'Action failed');
+      }
+    } catch {
+      setError('Action failed');
+    } finally {
+      setActing(null);
+    }
   };
+
+  const total = sellers.length;
+  const pendingCount = sellers.filter((s) => s.status === 'pending').length;
+  const approvedCount = sellers.filter((s) => s.status === 'approved').length;
+  const suspendedCount = sellers.filter((s) => s.status === 'suspended').length;
 
   const getInitials = (name: string) =>
     name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
+  const stats = [
+    { label: 'Total Sellers', value: total, icon: Store, cls: 'bg-primary-100 text-primary-600' },
+    { label: 'Pending Approval', value: pendingCount, icon: Clock, cls: 'bg-warning-100 text-warning-600' },
+    { label: 'Active', value: approvedCount, icon: ShieldCheck, cls: 'bg-success-100 text-success-600' },
+    { label: 'Suspended', value: suspendedCount, icon: UserX, cls: 'bg-danger-100 text-danger-600' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -91,55 +115,26 @@ export default function AdminSellersPage() {
         <p className="text-sm text-muted-500">Manage sellers and approval workflow</p>
       </div>
 
-      {/* Stats */}
+      {error && (
+        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger">{error}</div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-              <Store className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-secondary-800">{total}</p>
-              <p className="text-xs text-muted-500">Total Sellers</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning-100 text-warning-600">
-              <Clock className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-secondary-800">{pendingCount}</p>
-              <p className="text-xs text-muted-500">Pending Approval</p>
+        {stats.map((stat) => (
+          <div key={stat.label} className="rounded-xl bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', stat.cls)}>
+                <stat.icon className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-secondary-800">{stat.value}</p>
+                <p className="text-xs text-muted-500">{stat.label}</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-100 text-success-600">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-secondary-800">{approvedCount}</p>
-              <p className="text-xs text-muted-500">Active</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-danger-100 text-danger-600">
-              <UserX className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-secondary-800">{suspendedCount}</p>
-              <p className="text-xs text-muted-500">Suspended</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Pending Approvals Banner */}
       {pendingCount > 0 && (
         <div className="rounded-xl border border-warning-200 bg-warning-50 p-4">
           <div className="flex items-center gap-3">
@@ -152,7 +147,6 @@ export default function AdminSellersPage() {
         </div>
       )}
 
-      {/* Table */}
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
@@ -173,148 +167,211 @@ export default function AdminSellersPage() {
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
             <option value="suspended">Suspended</option>
           </select>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-muted-100">
-                <th className="pb-3 font-medium text-muted-500">Store</th>
-                <th className="hidden pb-3 font-medium text-muted-500 md:table-cell">Owner</th>
-                <th className="pb-3 font-medium text-muted-500">Status</th>
-                <th className="hidden pb-3 font-medium text-muted-500 lg:table-cell">Products</th>
-                <th className="hidden pb-3 font-medium text-muted-500 lg:table-cell">Revenue</th>
-                <th className="hidden pb-3 font-medium text-muted-500 xl:table-cell">Rating</th>
-                <th className="pb-3 font-medium text-muted-500">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-muted-50">
-              {filtered.map((seller) => (
-                <>
-                  <tr key={seller.id} className="hover:bg-muted-50/50">
-                    <td className="py-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
-                          style={{ backgroundColor: seller.logoColor }}
-                        >
-                          {getInitials(seller.storeName)}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-secondary-800">{seller.storeName}</p>
-                          <p className="truncate text-xs text-muted-500 md:hidden">{seller.ownerName}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="hidden py-3 md:table-cell">
-                      <p className="font-medium text-secondary-800">{seller.ownerName}</p>
-                      <p className="text-xs text-muted-500">{seller.email}</p>
-                    </td>
-                    <td className="py-3">{getStatusBadge(seller.status)}</td>
-                    <td className="hidden py-3 text-secondary-800 lg:table-cell">{seller.productsCount}</td>
-                    <td className="hidden py-3 font-medium text-secondary-800 lg:table-cell">
-                      {seller.revenue > 0 ? `₨${seller.revenue.toLocaleString()}` : '—'}
-                    </td>
-                    <td className="hidden py-3 xl:table-cell">
-                      {seller.rating > 0 ? (
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-                          <span className="text-secondary-800">{seller.rating}</span>
-                        </div>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="py-3">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setExpandedSeller(expandedSeller === seller.id ? null : seller.id)}
-                          className="rounded p-1.5 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {seller.status === 'pending' && (
-                          <>
-                            <button className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success">
-                              <CheckCircle2 className="h-4 w-4" />
-                            </button>
-                            <button className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger">
-                              <XCircle className="h-4 w-4" />
-                            </button>
-                          </>
-                        )}
-                        {seller.status === 'approved' && (
-                          <button className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger">
-                            <UserX className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                  {expandedSeller === seller.id && (
-                    <tr key={`${seller.id}-detail`}>
-                      <td colSpan={7} className="bg-muted-50 px-6 py-4">
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                          <div>
-                            <p className="text-xs font-medium text-muted-500">Store Name</p>
-                            <p className="text-sm font-medium text-secondary-800">{seller.storeName}</p>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : sellers.length === 0 ? (
+          <div className="py-16 text-center text-muted-500">No sellers found</div>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-muted-100">
+                  <th className="pb-3 font-medium text-muted-500">Store</th>
+                  <th className="hidden pb-3 font-medium text-muted-500 md:table-cell">Owner</th>
+                  <th className="pb-3 font-medium text-muted-500">Status</th>
+                  <th className="hidden pb-3 font-medium text-muted-500 lg:table-cell">Products</th>
+                  <th className="hidden pb-3 font-medium text-muted-500 lg:table-cell">Sales</th>
+                  <th className="hidden pb-3 font-medium text-muted-500 xl:table-cell">Rating</th>
+                  <th className="pb-3 font-medium text-muted-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-muted-50">
+                {sellers.map((seller) => {
+                  const status = statusMap[seller.status];
+                  return (
+                    <tr key={seller.id} className="hover:bg-muted-50/50">
+                      <td className="py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
+                            {getInitials(seller.name)}
                           </div>
-                          <div>
-                            <p className="text-xs font-medium text-muted-500">Owner</p>
-                            <p className="text-sm text-secondary-800">{seller.ownerName}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-muted-500">Email</p>
-                            <p className="text-sm text-secondary-800">{seller.email}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-muted-500">Registered</p>
-                            <p className="text-sm text-secondary-800">
-                              {new Date(seller.registeredDate).toLocaleDateString('en-PK', { year: 'numeric', month: 'long', day: 'numeric' })}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-muted-500">Products</p>
-                            <p className="text-sm text-secondary-800">{seller.productsCount}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-muted-500">Revenue</p>
-                            <p className="text-sm font-medium text-secondary-800">
-                              {seller.revenue > 0 ? `₨${seller.revenue.toLocaleString()}` : 'No revenue yet'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-muted-500">Rating</p>
-                            <p className="text-sm text-secondary-800">
-                              {seller.rating > 0 ? `${seller.rating} / 5.0` : 'No ratings'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-muted-500">Status</p>
-                            <div className="mt-0.5">{getStatusBadge(seller.status)}</div>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-secondary-800">{seller.name}</p>
+                            <p className="truncate text-xs text-muted-500 md:hidden">{seller.owner_first_name} {seller.owner_last_name}</p>
                           </div>
                         </div>
-                        {seller.status === 'pending' && (
-                          <div className="mt-4 flex gap-2">
-                            <Button variant="success" size="sm">
-                              <CheckCircle2 className="h-4 w-4" />
-                              Approve Seller
-                            </Button>
-                            <Button variant="danger" size="sm">
-                              <XCircle className="h-4 w-4" />
-                              Reject
-                            </Button>
+                      </td>
+                      <td className="hidden py-3 md:table-cell">
+                        <p className="font-medium text-secondary-800">{seller.owner_first_name} {seller.owner_last_name}</p>
+                        <p className="text-xs text-muted-500">{seller.contact_email || seller.owner_email}</p>
+                      </td>
+                      <td className="py-3">
+                        <Badge variant={status.variant} size="sm">{status.label}</Badge>
+                      </td>
+                      <td className="hidden py-3 text-secondary-800 lg:table-cell">{seller.productCount}</td>
+                      <td className="hidden py-3 font-medium text-secondary-800 lg:table-cell">
+                        {seller.total_sales > 0 ? `₨${seller.total_sales.toLocaleString()}` : '—'}
+                      </td>
+                      <td className="hidden py-3 xl:table-cell">
+                        {seller.rating > 0 ? (
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                            <span className="text-secondary-800">{seller.rating}</span>
                           </div>
+                        ) : (
+                          '—'
                         )}
                       </td>
+                      <td className="py-3">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setExpanded(expanded === seller.id ? null : seller.id)}
+                            className="rounded p-1.5 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
+                            aria-label="View seller"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          {seller.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => act(seller.id, 'verify')}
+                                disabled={acting === seller.id}
+                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
+                                aria-label="Approve"
+                              >
+                                {acting === seller.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                              </button>
+                              <button
+                                onClick={() => act(seller.id, 'reject')}
+                                disabled={acting === seller.id}
+                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
+                                aria-label="Reject"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
+                          {seller.status === 'approved' && (
+                            <button
+                              onClick={() => act(seller.id, 'suspend')}
+                              disabled={acting === seller.id}
+                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
+                              aria-label="Suspend"
+                            >
+                              {acting === seller.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserX className="h-4 w-4" />}
+                            </button>
+                          )}
+                          {seller.status === 'suspended' && (
+                            <button
+                              onClick={() => act(seller.id, 'verify')}
+                              disabled={acting === seller.id}
+                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
+                              aria-label="Restore"
+                            >
+                              {acting === seller.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
-                  )}
-                </>
-              ))}
-            </tbody>
-          </table>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {expanded && (
+        <SellerDetail
+          seller={sellers.find((s) => s.id === expanded)}
+          onClose={() => setExpanded(null)}
+          onApprove={() => act(expanded, 'verify')}
+          onSuspend={() => act(expanded, 'suspend')}
+          onReject={() => act(expanded, 'reject')}
+          acting={acting === expanded}
+        />
+      )}
+    </div>
+  );
+}
+
+function SellerDetail({
+  seller,
+  onClose,
+  onApprove,
+  onSuspend,
+  onReject,
+  acting,
+}: {
+  seller?: Seller;
+  onClose: () => void;
+  onApprove: () => void;
+  onSuspend: () => void;
+  onReject: () => void;
+  acting: boolean;
+}) {
+  if (!seller) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+        <h3 className="text-lg font-bold text-secondary-800">{seller.name}</h3>
+        <p className="text-sm text-muted-500">{seller.description || 'No description'}</p>
+        <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-medium text-muted-500">Owner</p>
+            <p className="text-secondary-800">{seller.owner_first_name} {seller.owner_last_name}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-500">Contact</p>
+            <p className="text-secondary-800">{seller.contact_email || seller.owner_email}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-500">Phone</p>
+            <p className="text-secondary-800">{seller.contact_phone || '—'}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-500">Products</p>
+            <p className="text-secondary-800">{seller.productCount}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-500">Sales</p>
+            <p className="text-secondary-800">₨{seller.total_sales.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-500">Registered</p>
+            <p className="text-secondary-800">
+              {new Date(seller.created_at).toLocaleDateString('en-PK', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+        </div>
+        <div className="mt-6 flex gap-3">
+          {(seller.status === 'pending' || seller.status === 'suspended') && (
+            <Button variant="success" size="sm" onClick={onApprove} disabled={acting}>
+              <CheckCircle2 className="h-4 w-4" /> {seller.status === 'suspended' ? 'Restore' : 'Approve'}
+            </Button>
+          )}
+          {seller.status === 'approved' && (
+            <Button variant="danger" size="sm" onClick={onSuspend} disabled={acting}>
+              <UserX className="h-4 w-4" /> Suspend
+            </Button>
+          )}
+          {seller.status === 'pending' && (
+            <Button variant="danger" size="sm" onClick={onReject} disabled={acting}>
+              <XCircle className="h-4 w-4" /> Reject
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={onClose} disabled={acting}>
+            Close
+          </Button>
         </div>
       </div>
     </div>

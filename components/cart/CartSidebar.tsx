@@ -2,11 +2,12 @@
 
 import { useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { X, Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { formatPrice } from '@/lib/utils';
+import { resolveImage } from '@/lib/imageLoader';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import QuantitySelector from '@/components/ui/QuantitySelector';
 import Button from '@/components/ui/Button';
 
@@ -110,8 +111,8 @@ export default function CartSidebar() {
                   <li key={item.id} className="flex gap-4 py-4">
                     {/* Thumbnail */}
                     <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-muted-50">
-                      <Image
-                        src={item.product.images?.[0] || '/images/product-1.jpg'}
+                      <ImageWithFallback
+                        src={resolveImage(item.product.images?.[0])}
                         alt={item.product.name}
                         fill
                         className="object-contain p-1"

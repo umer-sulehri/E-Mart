@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import toast from 'react-hot-toast';
 import {
   DollarSign,
@@ -15,6 +15,15 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts';
 
 const statusVariant: Record<string, 'success' | 'warning' | 'primary' | 'danger' | 'default'> = {
   delivered: 'success',
@@ -57,14 +66,16 @@ export default function SellerDashboardPage() {
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [trend, setTrend] = useState<{ label: string; revenue: number; orders: number }[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [earningsRes, ordersRes, productsRes] = await Promise.all([
+        const [earningsRes, ordersRes, productsRes, trendRes] = await Promise.all([
           fetch('/api/v1/seller/earnings'),
           fetch('/api/v1/seller/orders?limit=5'),
           fetch('/api/v1/seller/products?limit=5'),
+          fetch('/api/v1/seller/earnings/trend'),
         ]);
 
         const earningsData = await earningsRes.json();
@@ -80,6 +91,11 @@ export default function SellerDashboardPage() {
         const productsData = await productsRes.json();
         if (productsData.success) {
           setTopProducts(productsData.data || []);
+        }
+
+        const trendData = await trendRes.json();
+        if (trendData.success) {
+          setTrend(trendData.data || []);
         }
       } catch {
         toast.error('Failed to load dashboard data');
@@ -126,11 +142,28 @@ export default function SellerDashboardPage() {
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <h3 className="mb-4 text-lg font-bold text-secondary-800">Sales Overview</h3>
-        <div
-          className="flex items-center justify-center rounded-xl"
-          style={{ height: 300, background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 50%, #ede9fe 100%)' }}
-        >
-          <p className="text-lg font-semibold text-muted-500">Sales Overview Chart</p>
+        <div className="h-[300px]">
+          {trend.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-sm text-muted-500">
+              No sales data yet
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trend} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                <Tooltip
+                  formatter={(value, name) =>
+                    name === 'revenue'
+                      ? [formatPrice(Number(value) || 0), 'Revenue']
+                      : [Number(value) || 0, 'Orders']
+                  }
+                />
+                <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#6BB252" strokeWidth={2.5} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -225,7 +258,7 @@ export default function SellerDashboardPage() {
                     </span>
                     <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted-100">
                       {product.images?.[0] ? (
-                        <Image src={product.images[0]} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
+                        <ImageWithFallback src={product.images[0]} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-muted-400">
                           <Package className="h-5 w-5" />

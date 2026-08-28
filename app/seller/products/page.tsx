@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
@@ -189,7 +189,7 @@ export default function SellerProductsPage() {
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted-100">
                               {product.images?.[0] ? (
-                                <Image src={product.images[0]} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
+                                <ImageWithFallback src={product.images[0]} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
                               ) : (
                                 <div className="flex h-full w-full items-center justify-center">
                                   <Package className="h-5 w-5 text-muted-400" />

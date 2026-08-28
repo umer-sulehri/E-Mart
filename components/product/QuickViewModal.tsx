@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { X, Heart, ShoppingCart, Star, Eye, Check } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useAddToCart } from '@/hooks/useAddToCart';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
 import { formatPrice, calculateDiscount } from '@/lib/utils';
@@ -71,7 +71,7 @@ export default function QuickViewModal({
         <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2">
           {/* Image */}
           <div className="relative aspect-square overflow-hidden rounded-xl bg-muted-50">
-            <Image
+            <ImageWithFallback
               src={product.image}
               alt={product.name}
               fill

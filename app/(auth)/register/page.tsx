@@ -6,11 +6,13 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Store, ShoppingBag } from 'lucide-react';
 import { registerSchema, type RegisterInput } from '@/lib/validators';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { signInWithOAuth } from '@/lib/auth/oauth';
+import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore';
 
 function getPasswordStrength(password: string) {
   let score = 0;
@@ -33,11 +35,14 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState<'customer' | 'seller'>('customer');
+  const { login } = useAuthStore();
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -48,12 +53,21 @@ export default function RegisterPage() {
       password: '',
       confirmPassword: '',
       agreeToTerms: false as unknown as true,
+      role: 'customer',
     },
   });
 
   const passwordValue = watch('password');
   const strengthScore = useMemo(() => getPasswordStrength(passwordValue || ''), [passwordValue]);
   const strength = getStrengthLabel(strengthScore);
+
+  const selectRole = (r: 'customer' | 'seller') => {
+    setRole(r);
+    setValue('role', r);
+  };
+
+  const dashboardForRole = (r: 'customer' | 'seller') =>
+    r === 'seller' ? '/seller' : '/dashboard';
 
   const onSubmit = async (data: RegisterInput) => {
     setIsLoading(true);
@@ -66,6 +80,7 @@ export default function RegisterPage() {
           password: data.password,
           firstName: data.firstName,
           lastName: data.lastName,
+          role: data.role,
         }),
       });
 
@@ -75,10 +90,16 @@ export default function RegisterPage() {
         throw new Error(result.error || 'Registration failed');
       }
 
-      toast.success('Account created! Check your email for verification.');
+      const dashboardPath = dashboardForRole(data.role);
+      toast.success('Account created!');
+
+      if (result.data?.user) {
+        login(result.data.user);
+      }
+
       setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+        router.push(dashboardPath);
+      }, 800);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Something went wrong');
     } finally {
@@ -94,6 +115,44 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
+        <div>
+          <label className="mb-2 block text-sm font-medium text-secondary">
+            I want to register as
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => selectRole('customer')}
+              className={cn(
+                'flex flex-col items-center gap-1 rounded-xl border-2 p-4 transition-all',
+                role === 'customer'
+                  ? 'border-primary bg-primary-50 text-primary-700'
+                  : 'border-muted-200 text-muted-500 hover:border-primary-300'
+              )}
+              aria-pressed={role === 'customer'}
+            >
+              <ShoppingBag className="h-6 w-6" />
+              <span className="text-sm font-semibold">Buyer</span>
+              <span className="text-xs text-muted-400">Shop organic groceries</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => selectRole('seller')}
+              className={cn(
+                'flex flex-col items-center gap-1 rounded-xl border-2 p-4 transition-all',
+                role === 'seller'
+                  ? 'border-primary bg-primary-50 text-primary-700'
+                  : 'border-muted-200 text-muted-500 hover:border-primary-300'
+              )}
+              aria-pressed={role === 'seller'}
+            >
+              <Store className="h-6 w-6" />
+              <span className="text-sm font-semibold">Seller</span>
+              <span className="text-xs text-muted-400">Open your own store</span>
+            </button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <Input
             label="First Name"
@@ -210,7 +269,7 @@ export default function RegisterPage() {
             type="button"
             variant="outline"
             size="md"
-            onClick={() => signInWithOAuth('google')}
+            onClick={() => signInWithOAuth('google', `/${role === 'seller' ? 'seller' : 'dashboard'}`)}
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />

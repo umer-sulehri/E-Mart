@@ -7,6 +7,7 @@ import ProductDetailClient from './ProductDetailClient';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import { calculateDiscount, formatPrice } from '@/lib/utils';
 import { generateProductMetadata } from '@/lib/seo';
+import { resolveImage } from '@/lib/imageLoader';
 import { apiProductToCardProduct } from '@/lib/api';
 import {
   getProductBySlug,
@@ -206,7 +207,7 @@ export default async function ProductDetailPage({
       discountPrice: p.discountPrice,
       rating: p.rating,
       reviewCount: p.reviewCount,
-      image: p.images[0] || '/images/product-1.jpg',
+      image: resolveImage(p.images[0]),
     }));
   }
 

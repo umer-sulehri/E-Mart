@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   ChevronRight,
@@ -13,6 +12,7 @@ import {
   Loader2,
   LogIn,
 } from 'lucide-react';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import Button from '@/components/ui/Button';
 import ShareWishlist from '@/components/wishlist/ShareWishlist';
 import { formatPrice } from '@/lib/utils';
@@ -37,7 +37,7 @@ const MOCK_WISHLIST: WishlistItem[] = [
     slug: 'organic-whole-wheat-flour',
     price: 850,
     discountPrice: 720,
-    image: '/images/product-1.jpg',
+    image: '/images/product-thumb-1.png',
     inStock: true,
     addedAt: '2026-08-20',
   },
@@ -48,7 +48,7 @@ const MOCK_WISHLIST: WishlistItem[] = [
     slug: 'fresh-desi-ghee',
     price: 1200,
     discountPrice: null,
-    image: '/images/product-2.jpg',
+    image: '/images/product-thumb-2.png',
     inStock: true,
     addedAt: '2026-08-18',
   },
@@ -59,7 +59,7 @@ const MOCK_WISHLIST: WishlistItem[] = [
     slug: 'honey-pure-natural',
     price: 950,
     discountPrice: 850,
-    image: '/images/product-3.jpg',
+    image: '/images/product-thumb-3.png',
     inStock: false,
     addedAt: '2026-08-15',
   },
@@ -277,7 +277,7 @@ export default function WishlistPage() {
                     className="rounded-2xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
                   >
                     <Link href={`/products/${item.slug}`} className="relative block h-48 overflow-hidden rounded-xl bg-muted-50">
-                      <Image
+                      <ImageWithFallback
                         src={item.image}
                         alt={item.name}
                         fill
