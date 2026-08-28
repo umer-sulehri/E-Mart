@@ -221,6 +221,9 @@ function PagesDropdown() {
     { label: 'Checkout', href: '/checkout' },
     { label: 'Blog', href: '/blog' },
     { label: 'Contact', href: '/contact' },
+    { label: 'My Account', href: '/account' },
+    { label: 'Seller Dashboard', href: '/seller' },
+    { label: 'Admin', href: '/admin' },
   ];
 
   return (
@@ -238,13 +241,13 @@ function PagesDropdown() {
         />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-0 w-48 rounded-xl border border-muted-200 bg-white p-2 shadow-lg">
+        <div className="absolute left-0 top-full z-50 mt-0 min-w-[220px] border-0 bg-white p-3 shadow-lg">
           {items.map((item) => (
             <Link
-              key={item.href}
+              key={item.href + item.label}
               href={item.href}
               onClick={() => setOpen(false)}
-              className="block rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
+              className="block px-3 py-2 text-sm text-secondary hover:text-primary transition-colors"
             >
               {item.label}
             </Link>
@@ -462,30 +465,12 @@ export default function Header() {
               aria-label="Main navigation"
             >
               <Link
-                href="/products"
+                href="/"
                 className="py-2 hover:text-primary transition-colors"
               >
-                Shop
+                Home
               </Link>
               <PagesDropdown />
-              <Link
-                href="/about"
-                className="py-2 hover:text-primary transition-colors"
-              >
-                About
-              </Link>
-              <Link
-                href="/blog"
-                className="py-2 hover:text-primary transition-colors"
-              >
-                Blog
-              </Link>
-              <Link
-                href="/contact"
-                className="py-2 hover:text-primary transition-colors"
-              >
-                Contact
-              </Link>
             </nav>
 
             <ul className="flex items-center gap-5 justify-end m-0 list-none">
