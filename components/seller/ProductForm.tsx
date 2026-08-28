@@ -1,25 +1,33 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
-import { Upload, X, Image as ImageIcon, Star } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Star, Loader2 } from 'lucide-react';
 import { CATEGORIES } from '@/lib/constants';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
+import toast from 'react-hot-toast';
+
+interface ImageEntry {
+  file?: File;
+  preview: string;
+  alt: string;
+}
 
 interface ProductFormData {
   name: string;
   description: string;
   category: string;
+  subcategory: string;
   brand: string;
   sku: string;
   price: string;
   salePrice: string;
   stockQuantity: string;
   weight: string;
-  images: { file: File; preview: string; alt: string }[];
+  images: ImageEntry[];
   status: 'active' | 'draft';
 }
 
@@ -29,10 +37,18 @@ interface ProductFormProps {
   onSubmit: (data: ProductFormData) => void;
 }
 
+interface CategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+  subcategories?: { id: string; name: string; slug: string }[];
+}
+
 const defaultData: ProductFormData = {
   name: '',
   description: '',
   category: '',
+  subcategory: '',
   brand: '',
   sku: '',
   price: '',
@@ -50,7 +66,22 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ProductFormData, string>>>({});
   const [dragActive, setDragActive] = useState(false);
+  const [categories, setCategories] = useState<CategoryOption[]>(CATEGORIES as unknown as CategoryOption[]);
+  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch('/api/v1/categories')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length) {
+          setCategories(json.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const selectedCategory = categories.find((c) => c.id === form.category);
 
   const updateField = (field: keyof ProductFormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -127,15 +158,46 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
     if (!form.stockQuantity || parseInt(form.stockQuantity) < 0) {
       newErrors.stockQuantity = 'Valid stock quantity is required';
     }
+    if (form.images.length === 0) {
+      newErrors.images = 'Add at least one product image';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const uploadImage = async (entry: ImageEntry): Promise<string> => {
+    if (!entry.file) return entry.preview;
+    const fd = new FormData();
+    fd.append('file', entry.file);
+    fd.append('bucket', 'products');
+    fd.append('folder', 'products');
+    const res = await fetch('/api/v1/uploads', { method: 'POST', body: fd });
+    const json = await res.json();
+    if (json.success) return json.data.url;
+    throw new Error(json.error || 'Upload failed');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      onSubmit(form);
+    if (!validate()) return;
+    setSubmitting(true);
+    try {
+      const imageUrls: string[] = [];
+      for (const img of form.images) {
+        imageUrls.push(await uploadImage(img));
+      }
+      await onSubmit({
+        ...form,
+        images: imageUrls.map((url, i) => ({
+          preview: url,
+          alt: form.images[i]?.alt || form.name,
+        })),
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save product');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -160,7 +222,7 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
             </label>
             <textarea
               rows={5}
-              placeholder="Enter product description (Markdown supported)"
+              placeholder="Enter product description"
               value={form.description}
               onChange={(e) => updateField('description', e.target.value)}
               className={cn(
@@ -173,9 +235,6 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
             {errors.description && (
               <p className="mt-1.5 text-xs text-danger">{errors.description}</p>
             )}
-            <p className="mt-1 text-xs text-muted-500">
-              Supports Markdown formatting for rich text descriptions.
-            </p>
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-secondary-800">
@@ -183,7 +242,10 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
             </label>
             <select
               value={form.category}
-              onChange={(e) => updateField('category', e.target.value)}
+              onChange={(e) => {
+                updateField('category', e.target.value);
+                updateField('subcategory', '');
+              }}
               className={cn(
                 'w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
                 'transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
@@ -191,7 +253,7 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
               )}
             >
               <option value="">Select a category</option>
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
@@ -201,9 +263,31 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
               <p className="mt-1.5 text-xs text-danger">{errors.category}</p>
             )}
           </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-secondary-800">
+              Subcategory {selectedCategory?.subcategories?.length ? '' : '(optional)'}
+            </label>
+            <select
+              value={form.subcategory}
+              onChange={(e) => updateField('subcategory', e.target.value)}
+              disabled={!selectedCategory?.subcategories?.length}
+              className={cn(
+                'w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+                'transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-muted-50 disabled:text-muted-400',
+                'border-muted-200'
+              )}
+            >
+              <option value="">None</option>
+              {selectedCategory?.subcategories?.map((sub) => (
+                <option key={sub.id} value={sub.id}>
+                  {sub.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <Input
             label="Brand"
-            placeholder="Enter brand name"
+            placeholder="Enter brand name (optional)"
             value={form.brand}
             onChange={(e) => updateField('brand', e.target.value)}
           />
@@ -351,9 +435,7 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
               )}
             >
               <Upload className="mb-2 h-8 w-8 text-muted-400" />
-              <p className="text-sm font-medium text-muted-600">
-                Drag & drop or click
-              </p>
+              <p className="text-sm font-medium text-muted-600">Drag & drop or click</p>
               <p className="text-xs text-muted-400">PNG, JPG up to 5MB</p>
             </div>
           )}
@@ -371,7 +453,13 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
           }}
         />
 
-        {form.images.length === 0 && (
+        {errors.images && (
+          <div className="mt-4 flex items-center gap-2 rounded-lg bg-danger-50 p-3 text-sm text-danger">
+            <ImageIcon className="h-4 w-4 shrink-0" />
+            {errors.images}
+          </div>
+        )}
+        {!errors.images && form.images.length === 0 && (
           <div className="mt-4 flex items-center gap-2 rounded-lg bg-warning-50 p-3 text-sm text-warning-700">
             <ImageIcon className="h-4 w-4 shrink-0" />
             No images uploaded yet. Add at least one product image.
@@ -381,10 +469,19 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
 
       {/* Submit */}
       <div className="flex items-center gap-4">
-        <Button type="submit" size="lg">
-          {mode === 'add' ? 'Save Product' : 'Update Product'}
+        <Button type="submit" size="lg" disabled={submitting}>
+          {submitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : mode === 'add' ? (
+            'Save Product'
+          ) : (
+            'Update Product'
+          )}
         </Button>
-        <Button type="button" variant="ghost" size="lg">
+        <Button type="button" variant="ghost" size="lg" disabled={submitting}>
           Cancel
         </Button>
       </div>

@@ -10,9 +10,9 @@ export async function GET(
     const { id } = await params;
 
     const { data: subcategories, error } = await supabase
-      .from("subcategories")
+      .from("categories")
       .select("*")
-      .eq("category_id", id)
+      .eq("parent_id", id)
       .eq("is_active", true)
       .order("display_order", { ascending: true });
 

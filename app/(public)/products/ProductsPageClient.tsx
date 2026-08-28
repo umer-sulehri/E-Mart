@@ -243,6 +243,14 @@ function ProductsContent() {
     <ProductFilters filters={filters} onFilterChange={setFilters} />
   );
 
+  const mobileFiltersPanel = (
+    <ProductFilters
+      filters={filters}
+      onFilterChange={setFilters}
+      onApplied={() => setMobileFiltersOpen(false)}
+    />
+  );
+
   return (
     <section className="py-8">
       <div className="container">
@@ -391,16 +399,7 @@ function ProductsContent() {
                     <X size={20} />
                   </button>
                 </div>
-                {filtersSidebar}
-                <button
-                  onClick={() => {
-                    setMobileFiltersOpen(false);
-                    toast.success('Filters applied');
-                  }}
-                  className="mt-4 w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-500"
-                >
-                  Show Results
-                </button>
+                {mobileFiltersPanel}
               </div>
             </div>
           )}

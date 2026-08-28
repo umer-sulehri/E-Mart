@@ -9,7 +9,7 @@ export const bestSellingProducts: Product[] = [
     discountPrice: 19.99,
     rating: 4.5,
     reviewCount: 128,
-    image: "/images/product-1.jpg",
+    image: "/images/product-thumb-1.png",
     badge: "Sale",
   },
   {
@@ -20,7 +20,7 @@ export const bestSellingProducts: Product[] = [
     discountPrice: 28.99,
     rating: 4.7,
     reviewCount: 95,
-    image: "/images/product-2.jpg",
+    image: "/images/product-thumb-2.png",
   },
   {
     id: "3",
@@ -29,7 +29,7 @@ export const bestSellingProducts: Product[] = [
     price: 49.99,
     rating: 4.8,
     reviewCount: 203,
-    image: "/images/product-3.jpg",
+    image: "/images/product-thumb-3.png",
   },
   {
     id: "4",
@@ -39,7 +39,7 @@ export const bestSellingProducts: Product[] = [
     discountPrice: 12.99,
     rating: 4.3,
     reviewCount: 67,
-    image: "/images/product-4.jpg",
+    image: "/images/product-thumb-4.png",
   },
   {
     id: "5",
@@ -48,7 +48,7 @@ export const bestSellingProducts: Product[] = [
     price: 39.99,
     rating: 4.6,
     reviewCount: 156,
-    image: "/images/product-5.jpg",
+    image: "/images/product-thumb-5.png",
     badge: "Popular",
   },
   {
@@ -59,7 +59,7 @@ export const bestSellingProducts: Product[] = [
     discountPrice: 24.99,
     rating: 4.4,
     reviewCount: 88,
-    image: "/images/product-6.jpg",
+    image: "/images/product-thumb-6.png",
   },
   {
     id: "7",
@@ -68,7 +68,7 @@ export const bestSellingProducts: Product[] = [
     price: 44.99,
     rating: 4.2,
     reviewCount: 72,
-    image: "/images/product-7.jpg",
+    image: "/images/product-thumb-7.png",
   },
   {
     id: "8",
@@ -78,7 +78,7 @@ export const bestSellingProducts: Product[] = [
     discountPrice: 15.99,
     rating: 4.5,
     reviewCount: 43,
-    image: "/images/product-8.jpg",
+    image: "/images/product-thumb-8.png",
     badge: "Sale",
   },
   {
@@ -88,7 +88,7 @@ export const bestSellingProducts: Product[] = [
     price: 59.99,
     rating: 4.9,
     reviewCount: 234,
-    image: "/images/product-9.jpg",
+    image: "/images/product-thumb-9.png",
     badge: "Best Seller",
   },
   {
@@ -99,7 +99,7 @@ export const bestSellingProducts: Product[] = [
     discountPrice: 44.99,
     rating: 4.7,
     reviewCount: 112,
-    image: "/images/product-10.jpg",
+    image: "/images/product-thumb-10.png",
   },
 ];
 
@@ -112,7 +112,7 @@ export const featuredProducts: Product[] = [
     discountPrice: 14.99,
     rating: 4.6,
     reviewCount: 89,
-    image: "/images/product-11.jpg",
+    image: "/images/product-thumb-11.png",
     badge: "New",
   },
   {
@@ -122,7 +122,7 @@ export const featuredProducts: Product[] = [
     price: 89.99,
     rating: 4.8,
     reviewCount: 167,
-    image: "/images/product-12.jpg",
+    image: "/images/product-thumb-12.png",
   },
   {
     id: "13",
@@ -132,7 +132,7 @@ export const featuredProducts: Product[] = [
     discountPrice: 99.99,
     rating: 4.9,
     reviewCount: 201,
-    image: "/images/product-13.jpg",
+    image: "/images/product-thumb-13.png",
     badge: "Premium",
   },
   {
@@ -142,7 +142,7 @@ export const featuredProducts: Product[] = [
     price: 29.99,
     rating: 4.3,
     reviewCount: 56,
-    image: "/images/product-14.jpg",
+    image: "/images/product-thumb-14.png",
   },
   {
     id: "15",
@@ -152,7 +152,7 @@ export const featuredProducts: Product[] = [
     discountPrice: 27.99,
     rating: 4.5,
     reviewCount: 78,
-    image: "/images/product-15.jpg",
+    image: "/images/product-thumb-15.png",
   },
   {
     id: "16",
@@ -161,7 +161,7 @@ export const featuredProducts: Product[] = [
     price: 14.99,
     rating: 4.2,
     reviewCount: 45,
-    image: "/images/product-16.jpg",
+    image: "/images/product-thumb-16.png",
   },
   {
     id: "17",
@@ -171,7 +171,7 @@ export const featuredProducts: Product[] = [
     discountPrice: 32.99,
     rating: 4.4,
     reviewCount: 92,
-    image: "/images/product-17.jpg",
+    image: "/images/product-thumb-17.png",
   },
   {
     id: "18",
@@ -180,7 +180,7 @@ export const featuredProducts: Product[] = [
     price: 22.99,
     rating: 4.3,
     reviewCount: 64,
-    image: "/images/product-18.jpg",
+    image: "/images/product-thumb-18.png",
   },
 ];
 
@@ -192,7 +192,7 @@ export const popularProducts: Product[] = [
     price: 59.99,
     rating: 4.7,
     reviewCount: 145,
-    image: "/images/product-19.jpg",
+    image: "/images/product-thumb-19.png",
     badge: "Popular",
   },
   {
@@ -203,7 +203,7 @@ export const popularProducts: Product[] = [
     discountPrice: 39.99,
     rating: 4.5,
     reviewCount: 83,
-    image: "/images/product-20.jpg",
+    image: "/images/product-thumb-20.png",
   },
   {
     id: "21",
@@ -212,7 +212,7 @@ export const popularProducts: Product[] = [
     price: 34.99,
     rating: 4.6,
     reviewCount: 112,
-    image: "/images/product-21.jpg",
+    image: "/images/product-thumb-21.png",
   },
   {
     id: "22",
@@ -222,7 +222,7 @@ export const popularProducts: Product[] = [
     discountPrice: 54.99,
     rating: 4.8,
     reviewCount: 178,
-    image: "/images/product-22.jpg",
+    image: "/images/product-thumb-22.png",
     badge: "Sale",
   },
   {
@@ -232,7 +232,7 @@ export const popularProducts: Product[] = [
     price: 28.99,
     rating: 4.4,
     reviewCount: 67,
-    image: "/images/product-23.jpg",
+    image: "/images/product-thumb-23.png",
   },
   {
     id: "24",
@@ -242,7 +242,7 @@ export const popularProducts: Product[] = [
     discountPrice: 62.99,
     rating: 4.7,
     reviewCount: 156,
-    image: "/images/product-24.jpg",
+    image: "/images/product-thumb-24.png",
   },
   {
     id: "25",
@@ -251,7 +251,7 @@ export const popularProducts: Product[] = [
     price: 42.99,
     rating: 4.5,
     reviewCount: 94,
-    image: "/images/product-25.jpg",
+    image: "/images/product-thumb-25.png",
   },
   {
     id: "26",
@@ -260,7 +260,7 @@ export const popularProducts: Product[] = [
     price: 9.99,
     rating: 4.3,
     reviewCount: 38,
-    image: "/images/product-26.jpg",
+    image: "/images/product-thumb-26.png",
   },
 ];
 
@@ -272,7 +272,7 @@ export const newArrivals: Product[] = [
     price: 21.99,
     rating: 4.6,
     reviewCount: 12,
-    image: "/images/product-27.jpg",
+    image: "/images/product-thumb-27.png",
     badge: "New",
   },
   {
@@ -283,7 +283,7 @@ export const newArrivals: Product[] = [
     discountPrice: 25.99,
     rating: 4.4,
     reviewCount: 23,
-    image: "/images/product-28.jpg",
+    image: "/images/product-thumb-28.png",
     badge: "New",
   },
   {
@@ -293,7 +293,7 @@ export const newArrivals: Product[] = [
     price: 36.99,
     rating: 4.7,
     reviewCount: 8,
-    image: "/images/product-29.jpg",
+    image: "/images/product-thumb-29.png",
     badge: "New",
   },
   {
@@ -303,7 +303,7 @@ export const newArrivals: Product[] = [
     price: 44.99,
     rating: 4.8,
     reviewCount: 31,
-    image: "/images/product-30.jpg",
+    image: "/images/product-thumb-30.png",
     badge: "New",
   },
   {
@@ -314,7 +314,7 @@ export const newArrivals: Product[] = [
     discountPrice: 21.99,
     rating: 4.5,
     reviewCount: 15,
-    image: "/images/product-31.jpg",
+    image: "/images/product-thumb-1.png",
     badge: "New",
   },
   {
@@ -324,7 +324,7 @@ export const newArrivals: Product[] = [
     price: 52.99,
     rating: 4.6,
     reviewCount: 19,
-    image: "/images/product-32.jpg",
+    image: "/images/product-thumb-2.png",
     badge: "New",
   },
   {
@@ -334,7 +334,7 @@ export const newArrivals: Product[] = [
     price: 18.99,
     rating: 4.4,
     reviewCount: 42,
-    image: "/images/product-33.jpg",
+    image: "/images/product-thumb-3.png",
     badge: "New",
   },
   {
@@ -344,7 +344,7 @@ export const newArrivals: Product[] = [
     price: 15.99,
     rating: 4.3,
     reviewCount: 27,
-    image: "/images/product-34.jpg",
+    image: "/images/product-thumb-4.png",
     badge: "New",
   },
 ];

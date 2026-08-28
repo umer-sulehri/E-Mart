@@ -89,10 +89,10 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
         )}
       >
         <div className="flex items-center justify-between p-4 border-b border-muted-200">
-          <h2 className="text-lg font-bold text-secondary">Menu</h2>
+          <h2 className="text-lg font-bold text-secondary">E-Mart Menu</h2>
           <button
             onClick={onClose}
-            className="p-2 -mr-2 hover:text-primary transition-colors"
+            className="p-2 -mr-2 rounded-lg hover:bg-muted-100 hover:text-primary transition-colors"
             aria-label="Close menu"
           >
             <X className="h-6 w-6" />

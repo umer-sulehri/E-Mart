@@ -1,17 +1,48 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, Home, ArrowLeft, Store } from 'lucide-react';
+import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
 import ProductForm from '@/components/seller/ProductForm';
 
 export default function AddProductPage() {
   const router = useRouter();
 
-  const handleSubmit = (data: any) => {
-    alert('Product created successfully!');
-    router.push('/seller/products');
+  const handleSubmit = async (data: any) => {
+    try {
+      const imageUrls = data.images
+        .map((img: any) => img.preview)
+        .filter(Boolean);
+      const res = await fetch('/api/v1/seller/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          description: data.description,
+          shortDescription: data.description,
+          price: parseFloat(data.price),
+          discountPrice: data.salePrice ? parseFloat(data.salePrice) : undefined,
+          stockQuantity: parseInt(data.stockQuantity || '0', 10),
+          sku: data.sku,
+          categoryId: data.category,
+          subcategoryId: data.subcategory || undefined,
+          brand: data.brand.trim() || undefined,
+          images: imageUrls,
+          weight: data.weight ? parseInt(data.weight, 10) : undefined,
+          isActive: data.status === 'active',
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success('Product created successfully');
+        router.push('/seller/products');
+      } else {
+        toast.error(json.error || 'Failed to create product');
+      }
+    } catch {
+      toast.error('Failed to create product');
+    }
   };
 
   return (

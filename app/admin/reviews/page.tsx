@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Search,
   CheckCircle2,
@@ -12,88 +12,112 @@ import {
   ShieldAlert,
   ThumbsUp,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import toast from 'react-hot-toast';
 
 type ReviewStatus = 'pending' | 'approved' | 'flagged';
 
-const userNames = [
-  'Ahmed Khan', 'Fatima Malik', 'Ali Butt', 'Sara Qureshi', 'Hassan Siddiqui',
-  'Ayesha Cheema', 'Usman Rao', 'Zainab Sheikh', 'Bilal Gillani', 'Maryam Chaudhry',
-  'Omar Bhatti', 'Hira Nawaz', 'Khalid Iqbal', 'Nadia Awan', 'Tariq Mirza',
-  'Sana Baig', 'Imran Hussain', 'Rabia Akhtar', 'Faisal Javed', 'Amna Yousaf',
-];
+interface AdminReview {
+  id: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  status: ReviewStatus;
+  helpful_count: number;
+  is_verified_purchase: boolean;
+  created_at: string;
+  product: string;
+  product_slug?: string;
+  user_name: string;
+  user_email?: string;
+}
 
-const productNames = [
-  'Basmati Rice Premium 5kg', "Olper's Milk 1L", 'Organic Chicken Breast 1kg',
-  'Fresh Tomatoes 1kg', 'Nestle Pure Water 1.5L', 'Folgers Coffee 200g',
-  'Dal Masoor 1kg', 'Sugar Refined 2kg', 'Cooking Oil 3L', 'Atta Flour 10kg',
-  'Organic Honey 500g', 'Greek Yogurt 500g', 'Almarai Cheese 200g', 'Lays Chips Family Pack',
-  'Coca Cola 1.5L', 'Tang Orange 500g', 'Nestle Cream 200g', 'Fresh Bananas 1 dozen',
-  'Potatoes 5kg', 'Onions 2kg',
-];
-
-const reviewTexts = [
-  'Excellent quality! The rice was fresh and aromatic. Will order again.',
-  'Great product, fast delivery. Highly recommended for families.',
-  'Average quality. Could be better for the price.',
-  'Amazing taste and freshness. Best online grocery experience.',
-  'Product was damaged on arrival. Very disappointed.',
-  'Perfect for daily use. Good value for money.',
-  'Not as described. The packaging was poor.',
-  'Outstanding! Fresh produce delivered right to my door.',
-  'Decent product but delivery was delayed by 2 days.',
-  'Top quality! This is my go-to store for groceries.',
-  'The chicken was not fresh. Needs better quality control.',
-  'Superb! Everything was packed nicely and delivered on time.',
-  'Fair product. Nothing special but gets the job done.',
-  'Loved it! My whole family enjoys this product.',
-  'Terrible experience. Will not order from this seller again.',
-  'Good value for money. Satisfied with the purchase.',
-  'Product quality has declined since my last order.',
-  'Absolutely fantastic! 10/10 would recommend.',
-  'Packaging could be improved. Product was okay.',
-  'Best quality I have found online. Very happy!',
-];
-
-const mockReviews = Array.from({ length: 20 }, (_, i) => ({
-  id: `rev-${String(i + 1).padStart(3, '0')}`,
-  user: userNames[i],
-  product: productNames[i],
-  rating: Math.floor(Math.random() * 3) + 3,
-  text: reviewTexts[i],
-  date: new Date(2026, 7, Math.max(1, 25 - Math.floor(i / 2))).toISOString(),
-  status: (['approved', 'pending', 'flagged'] as const)[i % 3],
-  helpfulCount: Math.floor(Math.random() * 20),
-}));
+const getStatusBadge = (status: ReviewStatus) => {
+  const map: Record<ReviewStatus, { variant: 'success' | 'warning' | 'danger'; label: string }> = {
+    pending: { variant: 'warning', label: 'Pending' },
+    approved: { variant: 'success', label: 'Approved' },
+    flagged: { variant: 'danger', label: 'Flagged' },
+  };
+  return (
+    <Badge variant={map[status].variant} size="sm">
+      {map[status].label}
+    </Badge>
+  );
+};
 
 export default function AdminReviewsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [reviews, setReviews] = useState<AdminReview[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState<string | null>(null);
 
-  const filtered = mockReviews.filter((r) => {
-    const matchesSearch =
-      r.user.toLowerCase().includes(search.toLowerCase()) ||
-      r.product.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (search.trim()) params.set('search', search.trim());
+      const res = await fetch(`/api/v1/admin/reviews?${params.toString()}`);
+      const json = await res.json();
+      if (json.success) setReviews(json.data || []);
+      else toast.error(json.error || 'Failed to load reviews');
+    } catch {
+      toast.error('Failed to load reviews');
+    } finally {
+      setLoading(false);
+    }
+  }, [search, statusFilter]);
 
-  const total = mockReviews.length;
-  const pendingCount = mockReviews.filter((r) => r.status === 'pending').length;
-  const flaggedCount = mockReviews.filter((r) => r.status === 'flagged').length;
-  const approvedCount = mockReviews.filter((r) => r.status === 'approved').length;
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const getStatusBadge = (status: ReviewStatus) => {
-    const map: Record<ReviewStatus, { variant: 'success' | 'warning' | 'danger' }> = {
-      pending: { variant: 'warning' },
-      approved: { variant: 'success' },
-      flagged: { variant: 'danger' },
-    };
-    return <Badge variant={map[status].variant} size="sm">{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+  const act = async (
+    id: string,
+    action: 'approve' | 'flag' | 'delete'
+  ) => {
+    setActing(id);
+    try {
+      if (action === 'delete') {
+        if (!confirm('Are you sure you want to delete this review?')) {
+          setActing(null);
+          return;
+        }
+        const res = await fetch(`/api/v1/admin/reviews/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) toast.success('Review deleted');
+        else toast.error(json.error || 'Failed to delete review');
+      } else {
+        const status = action === 'approve' ? 'approved' : 'flagged';
+        const res = await fetch(`/api/v1/admin/reviews/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        });
+        const json = await res.json();
+        if (json.success)
+          toast.success(action === 'approve' ? 'Review approved' : 'Review flagged');
+        else toast.error(json.error || 'Update failed');
+      }
+      await load();
+    } catch {
+      toast.error('Action failed');
+    } finally {
+      setActing(null);
+    }
   };
+
+  const total = reviews.length;
+  const pendingCount = reviews.filter((r) => r.status === 'pending').length;
+  const flaggedCount = reviews.filter((r) => r.status === 'flagged').length;
+  const approvedCount = reviews.filter((r) => r.status === 'approved').length;
+
+  const getInitials = (name: string) =>
+    name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
     <div className="space-y-6">
@@ -111,7 +135,7 @@ export default function AdminReviewsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{total}</p>
-              <p className="text-xs text-muted-500">Total Reviews</p>
+              <p className="text-xs text-muted-500">Total Visible</p>
             </div>
           </div>
         </div>
@@ -157,7 +181,7 @@ export default function AdminReviewsPage() {
             <AlertTriangle className="h-5 w-5 text-danger" />
             <div>
               <p className="font-medium text-secondary-800">{flaggedCount} flagged reviews need attention</p>
-              <p className="text-sm text-muted-600">Reviews flagged by users or auto-detected for policy violations</p>
+              <p className="text-sm text-muted-600">Reviews flagged by users or for policy violations</p>
             </div>
           </div>
         </div>
@@ -188,82 +212,110 @@ export default function AdminReviewsPage() {
           </select>
         </div>
 
-        <div className="mt-4 space-y-4">
-          {filtered.map((review) => (
-            <div
-              key={review.id}
-              className={cn(
-                'rounded-lg border p-4',
-                review.status === 'flagged'
-                  ? 'border-danger-200 bg-danger-50/30'
-                  : 'border-muted-100 bg-white'
-              )}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700">
-                    {review.user.split(' ').map((w) => w[0]).join('').slice(0, 2)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-secondary-800">{review.user}</p>
-                      {getStatusBadge(review.status)}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="py-16 text-center text-muted-500">No reviews found</div>
+        ) : (
+          <div className="mt-4 space-y-4">
+            {reviews.map((review) => (
+              <div
+                key={review.id}
+                className={cn(
+                  'rounded-lg border p-4',
+                  review.status === 'flagged'
+                    ? 'border-danger-200 bg-danger-50/30'
+                    : 'border-muted-100 bg-white'
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700">
+                      {getInitials(review.user_name)}
                     </div>
-                    <p className="text-xs text-muted-500">
-                      on <span className="font-medium text-secondary-700">{review.product}</span>
-                    </p>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-secondary-800">{review.user_name}</p>
+                        {review.is_verified_purchase && (
+                          <Badge variant="primary" size="sm">Verified</Badge>
+                        )}
+                        {getStatusBadge(review.status)}
+                      </div>
+                      <p className="text-xs text-muted-500">
+                        on <span className="font-medium text-secondary-700">{review.product}</span>
+                      </p>
+                    </div>
                   </div>
+                  <p className="text-xs text-muted-400">
+                    {new Date(review.created_at).toLocaleDateString('en-PK')}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-400">
-                  {new Date(review.date).toLocaleDateString('en-PK')}
-                </p>
-              </div>
 
-              <div className="mt-2 flex items-center gap-1">
-                {Array.from({ length: 5 }, (_, i) => (
-                  <Star
-                    key={i}
-                    className={cn(
-                      'h-4 w-4',
-                      i < review.rating
-                        ? 'fill-warning text-warning'
-                        : 'text-muted-200'
-                    )}
-                  />
-                ))}
-              </div>
-
-              <p className="mt-2 text-sm text-secondary-700">{review.text}</p>
-
-              <div className="mt-3 flex items-center justify-between">
-                <div className="flex items-center gap-1 text-xs text-muted-400">
-                  <ThumbsUp className="h-3 w-3" />
-                  {review.helpfulCount} found this helpful
+                <div className="mt-2 flex items-center gap-1">
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <Star
+                      key={i}
+                      className={cn(
+                        'h-4 w-4',
+                        i < review.rating
+                          ? 'fill-warning text-warning'
+                          : 'text-muted-200'
+                      )}
+                    />
+                  ))}
                 </div>
-                <div className="flex items-center gap-1">
-                  {review.status === 'pending' && (
-                    <>
-                      <button className="rounded px-2.5 py-1 text-xs font-medium text-success transition-colors hover:bg-success-50">
+
+                {review.title && (
+                  <p className="mt-2 text-sm font-semibold text-secondary-800">{review.title}</p>
+                )}
+                <p className="mt-1 text-sm text-secondary-700">{review.comment}</p>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-1 text-xs text-muted-400">
+                    <ThumbsUp className="h-3 w-3" />
+                    {review.helpful_count} found this helpful
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {review.status !== 'approved' && (
+                      <button
+                        onClick={() => act(review.id, 'approve')}
+                        disabled={acting === review.id}
+                        className="rounded px-2.5 py-1 text-xs font-medium text-success transition-colors hover:bg-success-50 disabled:opacity-50"
+                      >
                         <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />
                         Approve
                       </button>
-                      <button className="rounded px-2.5 py-1 text-xs font-medium text-danger transition-colors hover:bg-danger-50">
+                    )}
+                    {review.status !== 'flagged' && (
+                      <button
+                        onClick={() => act(review.id, 'flag')}
+                        disabled={acting === review.id}
+                        className="rounded px-2.5 py-1 text-xs font-medium text-warning-700 transition-colors hover:bg-warning-50 disabled:opacity-50"
+                      >
                         <Flag className="mr-1 inline h-3.5 w-3.5" />
                         Flag
                       </button>
-                    </>
-                  )}
-                  {review.status === 'flagged' && (
-                    <button className="rounded px-2.5 py-1 text-xs font-medium text-danger transition-colors hover:bg-danger-50">
-                      <Trash2 className="mr-1 inline h-3.5 w-3.5" />
+                    )}
+                    <button
+                      onClick={() => act(review.id, 'delete')}
+                      disabled={acting === review.id}
+                      className="rounded px-2.5 py-1 text-xs font-medium text-danger transition-colors hover:bg-danger-50 disabled:opacity-50"
+                    >
+                      {acting === review.id ? (
+                        <Loader2 className="mr-1 inline h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="mr-1 inline h-3.5 w-3.5" />
+                      )}
                       Delete
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -95,10 +95,12 @@ export default function AdminBlogPage() {
           <h1 className="text-2xl font-bold text-secondary-800">Blog Posts</h1>
           <p className="text-sm text-muted-500">Manage blog content and articles</p>
         </div>
-        <Button size="sm">
-          <Plus className="h-4 w-4" />
-          New Post
-        </Button>
+        <Link href="/admin/blog/new">
+          <Button size="sm">
+            <Plus className="h-4 w-4" />
+            New Post
+          </Button>
+        </Link>
       </div>
 
       <div className="rounded-xl bg-white shadow-sm">
@@ -159,11 +161,12 @@ export default function AdminBlogPage() {
                             >
                               <Eye className="h-4 w-4" />
                             </Link>
-                            <button
+                            <Link
+                              href={`/admin/blog/${post.id}`}
                               className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
                             >
                               <Pencil className="h-4 w-4" />
-                            </button>
+                            </Link>
                             <button
                               onClick={() => confirmDelete(post)}
                               className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger"

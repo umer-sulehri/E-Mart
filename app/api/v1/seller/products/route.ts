@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       name, description, shortDescription, price, discountPrice,
-      stockQuantity, sku, categoryId, subcategoryId, brandId,
+      stockQuantity, sku, categoryId, subcategoryId, brandId, brand,
       images, specifications, isFeatured, isNew, weight, dimensions, tags,
     } = body;
 
@@ -149,6 +149,27 @@ export async function POST(request: NextRequest) {
         { success: false, error: "Missing required fields: name, price, sku, categoryId, images" },
         { status: 400 }
       );
+    }
+
+    // Resolve brand by name (or provided id) into brands.brand_id.
+    let resolvedBrandId: string | null = brandId || null;
+    if (!resolvedBrandId && typeof brand === "string" && brand.trim()) {
+      const brandName = brand.trim();
+      const { data: existingBrand } = await supabase
+        .from("brands")
+        .select("id")
+        .eq("name", brandName)
+        .maybeSingle();
+      if (existingBrand) {
+        resolvedBrandId = existingBrand.id;
+      } else {
+        const { data: createdBrand } = await supabase
+          .from("brands")
+          .insert({ name: brandName, slug: slugify(brandName), is_active: true })
+          .select("id")
+          .single();
+        resolvedBrandId = createdBrand?.id || null;
+      }
     }
 
     const baseSlug = slugify(name);
@@ -178,7 +199,7 @@ export async function POST(request: NextRequest) {
         sku,
         category_id: categoryId,
         subcategory_id: subcategoryId,
-        brand_id: brandId,
+        brand_id: resolvedBrandId,
         vendor_id: vendor.id,
         images,
         specifications: specifications || {},

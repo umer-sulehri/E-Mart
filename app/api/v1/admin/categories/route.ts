@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     const { data: categories, error } = await supabase
       .from("categories")
-      .select("*, subcategories(*)")
+      .select("*")
       .order("display_order", { ascending: true });
 
     if (error) {
@@ -43,7 +43,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, data: categories || [] });
+    const rows = categories || [];
+
+    // Subcategory hierarchy is stored in the categories table via parent_id.
+    const childrenByParent = new Map<string, typeof rows>();
+    for (const cat of rows) {
+      if (cat.parent_id) {
+        const list = childrenByParent.get(cat.parent_id) || [];
+        list.push(cat);
+        childrenByParent.set(cat.parent_id, list);
+      }
+    }
+
+    const data = rows.map((cat) => ({
+      ...cat,
+      subcategories: childrenByParent.get(cat.id) || [],
+    }));
+
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },

@@ -10,7 +10,6 @@ import {
   User,
   Heart,
   ShoppingBag,
-  ChevronDown,
   Loader2,
   X,
 } from 'lucide-react';
@@ -210,10 +209,9 @@ function SearchBar({ className }: { className?: string }) {
 
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [pagesOpen, setPagesOpen] = useState(false);
   const [categories, setCategories] = useState<{ name: string; slug: string }[]>([]);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const itemCount = useCartStore((s) => s.itemCount());
+  const navButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     fetch('/api/v1/categories')
@@ -227,23 +225,38 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setPagesOpen(false);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && mobileNavOpen) {
+        setMobileNavOpen(false);
+        navButtonRef.current?.focus();
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = mobileNavOpen ? 'hidden' : '';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [mobileNavOpen]);
 
   return (
     <>
-      <header>
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm shadow-sm">
         <div className="container-fluid px-4 sm:px-6 lg:px-12">
-          <div className="flex flex-wrap items-center justify-between py-3 border-b border-muted-200 gap-4">
+          <div className="flex flex-wrap items-center justify-between py-3 gap-4">
 
-            <div className="flex items-center gap-3">
-              <Link href="/" className="flex-shrink-0" aria-label="Home">
+            <div className="flex items-center gap-2">
+              <button
+                ref={navButtonRef}
+                className="p-2 -ml-2 rounded-lg text-secondary hover:bg-muted-100 hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open navigation menu"
+                aria-expanded={mobileNavOpen}
+                aria-haspopup="dialog"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+              <Link href="/" className="flex-shrink-0" aria-label="E-Mart Home">
                 <Image
                   src="/images/logo.svg"
                   alt="E-Mart logo"
@@ -253,17 +266,10 @@ export default function Header() {
                   priority
                 />
               </Link>
-              <button
-                className="p-2 -ml-2 hover:text-primary transition-colors"
-                onClick={() => setMobileNavOpen(true)}
-                aria-label="Open navigation menu"
-              >
-                <Menu className="h-6 w-6 text-secondary" />
-              </button>
             </div>
 
             <div className="order-last lg:order-none w-full lg:w-auto flex-1 max-w-xl mx-auto hidden sm:block">
-              <div className="flex items-center bg-muted-50 rounded-2xl p-2">
+              <div className="flex items-center bg-muted-50 rounded-2xl p-2 border border-muted-200 focus-within:border-primary">
                 <div className="hidden md:block border-r border-muted-300 pr-2">
                   <select
                     className="bg-transparent border-0 text-sm text-secondary focus:outline-none cursor-pointer py-1 px-2"
@@ -285,40 +291,18 @@ export default function Header() {
             </div>
 
             <nav
-              className="hidden lg:flex items-center gap-5 xl:gap-8 text-sm font-bold uppercase text-dark"
+              className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase text-dark"
               aria-label="Main navigation"
             >
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  className="flex items-center gap-1 hover:text-primary transition-colors py-2"
-                  onClick={() => setPagesOpen((o) => !o)}
-                  aria-expanded={pagesOpen}
-                  aria-haspopup="true"
+              {pageLinks.slice(0, 5).map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="py-2 hover:text-primary transition-colors"
                 >
-                  Pages
-                  <ChevronDown
-                    className={cn(
-                      'h-4 w-4 transition-transform duration-200',
-                      pagesOpen && 'rotate-180'
-                    )}
-                  />
-                </button>
-                {pagesOpen && (
-                  <ul className="absolute top-full left-0 mt-1 bg-white border-0 shadow-lg rounded-none p-3 min-w-[200px] z-50 animate-slide-up">
-                    {pageLinks.map((link) => (
-                      <li key={link.label}>
-                        <Link
-                          href={link.href}
-                          className="block py-2 px-3 text-sm font-normal text-secondary hover:bg-muted-50 hover:text-primary transition-colors rounded"
-                          onClick={() => setPagesOpen(false)}
-                        >
-                          {link.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+                  {link.label}
+                </Link>
+              ))}
             </nav>
 
             <ul className="flex items-center gap-5 justify-end m-0 list-none">
@@ -361,8 +345,8 @@ export default function Header() {
               </li>
             </ul>
 
-            <div className="w-full sm:hidden">
-              <div className="flex items-center bg-muted-50 rounded-2xl p-2">
+            <div className="w-full lg:hidden">
+              <div className="flex items-center bg-muted-50 rounded-2xl p-2 border border-muted-200 focus-within:border-primary">
                 <SearchBar className="flex-1" />
               </div>
             </div>

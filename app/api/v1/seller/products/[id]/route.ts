@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { slugify } from "@/lib/utils";
 
 export async function GET(
   _request: NextRequest,
@@ -49,7 +50,7 @@ export async function GET(
 
     const { data: product, error } = await supabase
       .from("products")
-      .select("*, categories(id, name, slug), subcategories(id, name, slug)")
+      .select("*, categories(id, name, slug)")
       .eq("id", id)
       .eq("vendor_id", vendor.id)
       .single();
@@ -129,8 +130,7 @@ export async function PUT(
     if (body.sku !== undefined) updates.sku = body.sku;
     if (body.categoryId !== undefined) updates.category_id = body.categoryId;
     if (body.subcategoryId !== undefined) updates.subcategory_id = body.subcategoryId;
-    if (body.brandId !== undefined) updates.brand_id = body.brandId;
-    if (body.images !== undefined) updates.images = body.images;
+    if (body.brandId !== undefined) updates.brand_id = body.brandId;    if (body.images !== undefined) updates.images = body.images;
     if (body.specifications !== undefined) updates.specifications = body.specifications;
     if (body.isFeatured !== undefined) updates.is_featured = body.isFeatured;
     if (body.isNew !== undefined) updates.is_new = body.isNew;
@@ -138,6 +138,30 @@ export async function PUT(
     if (body.weight !== undefined) updates.weight = body.weight;
     if (body.dimensions !== undefined) updates.dimensions = body.dimensions;
     if (body.tags !== undefined) updates.tags = body.tags;
+
+    if (
+      body.brand !== undefined &&
+      body.brand !== null &&
+      typeof body.brand === "string" &&
+      body.brand.trim()
+    ) {
+      const brandName = body.brand.trim();
+      const { data: existingBrand } = await supabase
+        .from("brands")
+        .select("id")
+        .eq("name", brandName)
+        .maybeSingle();
+      if (existingBrand) {
+        updates.brand_id = existingBrand.id;
+      } else {
+        const { data: createdBrand } = await supabase
+          .from("brands")
+          .insert({ name: brandName, slug: slugify(brandName), is_active: true })
+          .select("id")
+          .single();
+        if (createdBrand) updates.brand_id = createdBrand.id;
+      }
+    }
 
     updates.updated_at = new Date().toISOString();
 

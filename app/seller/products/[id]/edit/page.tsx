@@ -1,34 +1,107 @@
 'use client';
 
-import { use } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
 import ProductForm from '@/components/seller/ProductForm';
 
-const mockProductData = {
-  name: 'Organic Basmati Rice 5kg',
-  description: 'Premium quality organic basmati rice sourced directly from farms in Punjab. Aged for 2 years for extra long grains and amazing aroma.',
-  category: '8',
-  brand: 'Farm Fresh',
-  sku: 'RICE-001',
-  price: '1999',
-  salePrice: '',
-  stockQuantity: '150',
-  weight: '5000',
-  images: [],
-  status: 'active' as const,
-};
+interface LoadedProduct {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  discount_price?: number;
+  stock_quantity?: number;
+  sku?: string;
+  category_id?: string;
+  subcategory_id?: string;
+  images?: string[];
+  weight?: number;
+  is_active?: boolean;
+}
 
 export default function EditProductPage() {
   const params = useParams();
   const router = useRouter();
   const productId = params.id as string;
 
-  const handleSubmit = (data: any) => {
-    alert(`Product ${productId} updated successfully!`);
-    router.push('/seller/products');
+  const [product, setProduct] = useState<LoadedProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/seller/products/${productId}`);
+        const json = await res.json();
+        if (!cancelled) {
+          if (json.success) setProduct(json.data);
+          else setNotFound(true);
+        }
+      } catch {
+        if (!cancelled) setNotFound(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
+
+  const handleSubmit = async (data: any) => {
+    try {
+      const imageUrls = data.images
+        .map((img: any) => img.preview)
+        .filter(Boolean);
+      const res = await fetch(`/api/v1/seller/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          description: data.description,
+          shortDescription: data.description,
+          price: parseFloat(data.price),
+          discountPrice: data.salePrice ? parseFloat(data.salePrice) : undefined,
+          stockQuantity: parseInt(data.stockQuantity || '0', 10),
+          sku: data.sku,
+          categoryId: data.category,
+          subcategoryId: data.subcategory || undefined,
+          images: imageUrls,
+          weight: data.weight ? parseInt(data.weight, 10) : undefined,
+          isActive: data.status === 'active',
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success('Product updated successfully');
+        router.push('/seller/products');
+      } else {
+        toast.error(json.error || 'Failed to update product');
+      }
+    } catch {
+      toast.error('Failed to update product');
+    }
   };
+
+  const initialData = product
+    ? {
+        name: product.name,
+        description: product.description || '',
+        category: product.category_id || '',
+        subcategory: product.subcategory_id || '',
+        sku: product.sku || '',
+        price: product.price != null ? String(product.price) : '',
+        salePrice: product.discount_price != null ? String(product.discount_price) : '',
+        stockQuantity: product.stock_quantity != null ? String(product.stock_quantity) : '',
+        weight: product.weight != null ? String(product.weight) : '',
+        images: (product.images || []).map((url) => ({ preview: url, alt: product.name })),
+        status: product.is_active === false ? ('draft' as const) : ('active' as const),
+      }
+    : undefined;
 
   return (
     <div className="space-y-6">
@@ -65,13 +138,25 @@ export default function EditProductPage() {
         <div>
           <h2 className="text-2xl font-bold text-secondary-800">Edit Product</h2>
           <p className="text-sm text-muted-500">
-            Updating: {mockProductData.name} (ID: {productId})
+            {loading
+              ? 'Loading product...'
+              : notFound
+                ? 'Product not found.'
+                : `Updating: ${product?.name}`}
           </p>
         </div>
       </div>
 
       {/* Form */}
-      <ProductForm initialData={mockProductData} mode="edit" onSubmit={handleSubmit} />
+      {loading ? (
+        <div className="flex items-center justify-center py-20 text-muted-500">Loading...</div>
+      ) : notFound ? (
+        <div className="rounded-xl bg-white p-8 text-center text-muted-500 shadow-sm">
+          This product could not be found or you do not have access to it.
+        </div>
+      ) : (
+        <ProductForm initialData={initialData} mode="edit" onSubmit={handleSubmit} />
+      )}
     </div>
   );
 }

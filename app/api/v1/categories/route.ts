@@ -18,17 +18,27 @@ export async function GET() {
       );
     }
 
-    const { data: subcategories } = await supabase
-      .from("subcategories")
-      .select("*")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
+    const rows = categories || [];
+    const keyByParent = new Map<string, typeof rows>();
 
-    const categoriesWithSubs = (categories || []).map((cat) => ({
+    for (const cat of rows) {
+      if (cat.parent_id) {
+        const list = keyByParent.get(cat.parent_id) || [];
+        list.push(cat);
+        keyByParent.set(cat.parent_id, list);
+      }
+    }
+
+    // Top-level categories are those without a parent.
+    const topLevel = rows.filter((c) => !c.parent_id);
+
+    const categoriesWithSubs = topLevel.map((cat) => ({
       ...cat,
-      subcategories: (subcategories || []).filter(
-        (sub) => sub.category_id === cat.id
-      ),
+      subcategories: (keyByParent.get(cat.id) || []).map((sub) => ({
+        id: sub.id,
+        name: sub.name,
+        slug: sub.slug,
+      })),
     }));
 
     return NextResponse.json({
