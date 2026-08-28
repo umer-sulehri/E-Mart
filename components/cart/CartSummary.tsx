@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Tag, Lock } from 'lucide-react';
+import { Tag, Lock, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useCartStore } from '@/store/cartStore';
 import { formatPrice } from '@/lib/utils';
 import Button from '@/components/ui/Button';
@@ -22,22 +23,73 @@ export default function CartSummary({
 }: CartSummaryProps) {
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
+  const [applying, setApplying] = useState(false);
 
   const items = useCartStore((s) => s.items);
+  const couponCode = useCartStore((s) => s.couponCode);
+  const removeCoupon = useCartStore((s) => s.removeCoupon);
+  const applyCoupon = useCartStore((s) => s.applyCoupon);
   const subtotal = useCartStore((s) => s.subtotal);
+  const taxAmount = useCartStore((s) => s.taxAmount);
   const shippingCost = useCartStore((s) => s.shippingCost);
   const discountAmount = useCartStore((s) => s.discountAmount);
   const total = useCartStore((s) => s.total);
 
   const currentSubtotal = subtotal();
+  const currentTax = taxAmount();
   const currentShipping = shippingCost();
   const currentDiscount = discountAmount();
   const currentTotal = total();
 
-  const handleApplyPromo = () => {
-    if (promoCode.trim()) {
+  const handleApplyPromo = async () => {
+    const code = promoCode.trim();
+    if (!code || applying) return;
+
+    setApplying(true);
+    try {
+      const res = await fetch('/api/v1/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const json = await res.json();
+
+      if (!json.success) {
+        toast.error(json.error || 'Invalid coupon code');
+        return;
+      }
+
+      const data = json.data;
+      let discount = 0;
+      if (data.coupon.type === 'percentage') {
+        discount = Math.round(
+          (currentSubtotal * data.coupon.value) / 100
+        );
+        if (data.coupon.maximumDiscountAmount) {
+          discount = Math.min(
+            discount,
+            data.coupon.maximumDiscountAmount
+          );
+        }
+      } else if (data.coupon.type === 'fixed_amount') {
+        discount = data.coupon.value;
+      }
+
+      discount = Math.min(discount, currentSubtotal);
+      applyCoupon(data.coupon.code, discount);
       setPromoApplied(true);
+      toast.success(data.message || 'Coupon applied');
+    } catch {
+      toast.error('Unable to apply coupon');
+    } finally {
+      setApplying(false);
     }
+  };
+
+  const handleRemovePromo = () => {
+    removeCoupon();
+    setPromoCode('');
+    setPromoApplied(false);
   };
 
   return (
@@ -83,16 +135,18 @@ export default function CartSummary({
           </span>
         </div>
 
-        {/* Tax placeholder */}
+        {/* Tax */}
         <div className="flex items-center justify-between text-secondary-700">
           <span>Estimated Tax</span>
-          <span className="font-medium text-muted-400">{formatPrice(0)}</span>
+          <span className="font-medium">{formatPrice(currentTax)}</span>
         </div>
 
         {/* Discount */}
         {currentDiscount > 0 && (
           <div className="flex items-center justify-between text-success">
-            <span>Discount</span>
+            <span>
+              Discount{couponCode ? ` (${couponCode})` : ''}
+            </span>
             <span className="font-medium">-{formatPrice(currentDiscount)}</span>
           </div>
         )}
@@ -111,28 +165,44 @@ export default function CartSummary({
       </div>
 
       {/* Promo Code */}
-      {!isCheckout && (
-        <div className="mt-4 flex gap-2">
-          <div className="flex-1">
-            <Input
-              placeholder="Promo code"
-              value={promoCode}
-              onChange={(e) => {
-                setPromoCode(e.target.value);
-                setPromoApplied(false);
-              }}
-              icon={<Tag size={16} />}
-            />
+      {!isCheckout &&
+        (promoApplied && couponCode ? (
+          <div className="mt-4 flex items-center justify-between rounded-lg bg-primary-50 px-3 py-2 text-sm">
+            <span className="flex items-center gap-2 font-medium text-primary">
+              <Tag size={14} />
+              {couponCode}
+            </span>
+            <button
+              onClick={handleRemovePromo}
+              className="rounded p-1 text-muted-500 transition-colors hover:bg-primary-100"
+              aria-label="Remove coupon"
+            >
+              <X size={16} />
+            </button>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleApplyPromo}
-            disabled={!promoCode.trim()}
-          >
-            Apply
-          </Button>
-        </div>
-      )}
+        ) : (
+          <div className="mt-4 flex gap-2">
+            <div className="flex-1">
+              <Input
+                placeholder="Promo code"
+                value={promoCode}
+                onChange={(e) => {
+                  setPromoCode(e.target.value);
+                  setPromoApplied(false);
+                }}
+                icon={<Tag size={16} />}
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleApplyPromo}
+              disabled={!promoCode.trim() || applying}
+              loading={applying}
+            >
+              Apply
+            </Button>
+          </div>
+        ))}
 
       {/* CTA Button */}
       {isCheckout ? (

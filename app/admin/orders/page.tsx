@@ -2,16 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import {
-  Search,
-  Eye,
-  ShoppingCart,
-  Clock,
-  Truck,
-  CheckCircle2,
-  XCircle,
-  Package,
-} from 'lucide-react';
+import { Search } from 'lucide-react';
 import { cn, formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
@@ -88,6 +79,27 @@ export default function AdminOrdersPage() {
       setSearch(value);
       setCurrentPage(1);
     }, 400);
+  };
+
+  const handleStatusChange = async (orderId: string, newStatus: OrderStatusType) => {
+    try {
+      const res = await fetch(`/api/v1/admin/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Order marked as ${newStatus}`);
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+        );
+      } else {
+        toast.error(data.error || 'Failed to update status');
+      }
+    } catch {
+      toast.error('Failed to update status');
+    }
   };
 
   const startItem = (currentPage - 1) * itemsPerPage + 1;
@@ -170,9 +182,20 @@ export default function AdminOrdersPage() {
                           {formatDate(order.created_at)}
                         </td>
                         <td className="py-3">
-                          <button className="rounded p-1.5 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary" title="View Details">
-                            <Eye className="h-4 w-4" />
-                          </button>
+                          <select
+                            value={order.status}
+                            onChange={(e) =>
+                              handleStatusChange(order.id, e.target.value as OrderStatusType)
+                            }
+                            className="rounded-lg border border-muted-200 bg-white px-2 py-1.5 text-xs font-medium text-secondary-700 focus:border-primary focus:outline-none"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
                         </td>
                       </tr>
                     );

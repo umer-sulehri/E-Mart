@@ -215,10 +215,12 @@ export default function OrdersPage() {
                       </Button>
                     </Link>
                     {order.status === 'shipped' && (
-                      <Button variant="ghost" size="sm">
-                        <Truck className="h-4 w-4" />
-                        Track
-                      </Button>
+                      <Link href={`/dashboard/orders/${order.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <Truck className="h-4 w-4" />
+                          Track
+                        </Button>
+                      </Link>
                     )}
                   </div>
                 </div>

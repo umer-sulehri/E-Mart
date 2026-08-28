@@ -10,6 +10,7 @@ import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
 import SellerInformationCard from '@/components/seller/SellerInformationCard';
 import { formatPrice, cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
+import { useAddToWishlist } from '@/hooks/useAddToWishlist';
 import type { Product } from '@/types';
 
 export interface ProductDetailClientProps {
@@ -24,10 +25,12 @@ export default function ProductDetailClient({
   discount,
 }: ProductDetailClientProps) {
   const [quantity, setQuantity] = React.useState(1);
-  const [isWishlisted, setIsWishlisted] = React.useState(false);
-  const [wishlistLoading, setWishlistLoading] = React.useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const addToServer = useCartStore((s) => s.addToServer);
+  const { isWishlisted, toggleWishlist, wishlistLoading } = useAddToWishlist(
+    product.id,
+    product.name
+  );
 
   const handleAddToCart = () => {
     const price = hasDiscount ? product.discountPrice! : product.price;
@@ -45,37 +48,6 @@ export default function ProductDetailClient({
     addToServer(product.id, quantity);
 
     toast.success(`${product.name} added to cart!`);
-  };
-
-  const handleWishlist = async () => {
-    if (wishlistLoading) return;
-
-    const newState = !isWishlisted;
-    setIsWishlisted(newState);
-    setWishlistLoading(true);
-
-    try {
-      const res = await fetch('/api/v1/wishlist', {
-        method: newState ? 'POST' : 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product.id }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Wishlist request failed');
-      }
-
-      toast[newState ? 'success' : 'success'](
-        newState
-          ? `${product.name} added to wishlist!`
-          : `${product.name} removed from wishlist`
-      );
-    } catch {
-      setIsWishlisted(!newState);
-      toast.error('Failed to update wishlist');
-    } finally {
-      setWishlistLoading(false);
-    }
   };
 
   const handleShare = () => {
@@ -190,7 +162,7 @@ export default function ProductDetailClient({
         <Button
           variant={isWishlisted ? 'danger' : 'outline'}
           size="lg"
-          onClick={handleWishlist}
+          onClick={toggleWishlist}
           disabled={wishlistLoading}
           className={cn(isWishlisted && 'bg-danger-50')}
         >

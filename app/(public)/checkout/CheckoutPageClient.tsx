@@ -650,6 +650,8 @@ export default function CheckoutPage() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
+  const couponCode = useCartStore((s) => s.couponCode);
+  const discountAmount = useCartStore((s) => s.discountAmount);
   const [currentStep, setCurrentStep] = useState(0);
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -769,6 +771,8 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           shippingAddressId,
           paymentMethod: paymentMethodMap[paymentData.method] || 'cod',
+          couponCode: couponCode || null,
+          discountAmount: discountAmount() || 0,
         }),
       });
 
@@ -779,6 +783,7 @@ export default function CheckoutPage() {
 
       const order = orderResult.data;
       const orderId = order.id;
+      const orderNumber = order.order_number || orderId;
       const orderTotal = order.total;
 
       // Step 3: Initiate payment based on method
@@ -799,7 +804,7 @@ export default function CheckoutPage() {
           if (epResult.data?.paymentUrl) {
             window.location.href = epResult.data.paymentUrl;
           } else {
-            router.push(`/checkout/success?orderId=${orderId}`);
+            router.push(`/checkout/success?orderId=${orderId}&orderNumber=${orderNumber}`);
           }
           return;
         }
@@ -820,7 +825,7 @@ export default function CheckoutPage() {
           if (jcResult.data?.redirectUrl) {
             window.location.href = jcResult.data.redirectUrl;
           } else {
-            router.push(`/checkout/success?orderId=${orderId}`);
+            router.push(`/checkout/success?orderId=${orderId}&orderNumber=${orderNumber}`);
           }
           return;
         }
@@ -831,7 +836,7 @@ export default function CheckoutPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               orderId,
-              successUrl: `${window.location.origin}/checkout/success?orderId=${orderId}`,
+              successUrl: `${window.location.origin}/checkout/success?orderId=${orderId}&orderNumber=${orderNumber}`,
               cancelUrl: `${window.location.origin}/checkout`,
             }),
           });
@@ -841,7 +846,7 @@ export default function CheckoutPage() {
           if (stripeResult.data?.url) {
             window.location.href = stripeResult.data.url;
           } else {
-            router.push(`/checkout/success?orderId=${orderId}`);
+            router.push(`/checkout/success?orderId=${orderId}&orderNumber=${orderNumber}`);
           }
           return;
         }
@@ -855,7 +860,7 @@ export default function CheckoutPage() {
           const codResult = await codRes.json();
           if (!codResult.success) throw new Error(codResult.error || 'COD confirmation failed');
           clearCart();
-          router.push(`/checkout/success?orderId=${orderId}`);
+          router.push(`/checkout/success?orderId=${orderId}&orderNumber=${orderNumber}`);
           return;
         }
 

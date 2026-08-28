@@ -147,6 +147,17 @@ export async function POST(
       );
     }
 
+    const { data: deliveredPurchase } = await supabase
+      .from("order_items")
+      .select("id, orders(status, user_id)")
+      .eq("orders.user_id", user.id)
+      .eq("orders.status", "delivered")
+      .eq("product_id", product.id)
+      .limit(1)
+      .maybeSingle();
+
+    const isVerified = !!deliveredPurchase;
+
     const { data: review, error: insertError } = await supabase
       .from("reviews")
       .insert({
@@ -155,7 +166,7 @@ export async function POST(
         rating: parsed.data.rating,
         title: parsed.data.title,
         comment: parsed.data.comment,
-        is_verified_purchase: false,
+        is_verified_purchase: isVerified,
         helpful_count: 0,
       })
       .select()

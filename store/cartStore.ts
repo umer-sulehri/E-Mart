@@ -28,8 +28,9 @@ interface CartState {
   itemCount: () => number;
 }
 
-const FREE_SHIPPING_THRESHOLD = 5000;
-const SHIPPING_COST = 200;
+const FREE_SHIPPING_THRESHOLD = 2000;
+const SHIPPING_COST = 150;
+const TAX_RATE = 0.05;
 
 export const useCartStore = create<CartState>()(
   persist(
@@ -61,12 +62,27 @@ export const useCartStore = create<CartState>()(
           return { items: [...state.items, item] };
         }),
 
-      removeItem: (productId) =>
+      removeItem: (productId) => {
+        const item = get().items.find((i) => i.productId === productId);
+        if (item) {
+          get().removeFromServer(item.id);
+        }
         set((state) => ({
           items: state.items.filter((i) => i.productId !== productId),
-        })),
+        }));
+      },
 
-      updateQuantity: (productId, quantity) =>
+      updateQuantity: (productId, quantity) => {
+        const item = get().items.find((i) => i.productId === productId);
+        if (item) {
+          if (quantity <= 0) {
+            get().removeFromServer(item.id);
+          } else if (item.id.startsWith('cart-')) {
+            get().addToServer(productId, quantity);
+          } else {
+            get().updateOnServer(item.id, quantity);
+          }
+        }
         set((state) => ({
           items:
             quantity <= 0
@@ -76,7 +92,8 @@ export const useCartStore = create<CartState>()(
                     ? { ...i, quantity, totalPrice: quantity * i.unitPrice }
                     : i
                 ),
-        })),
+        }));
+      },
 
       clearCart: () => set({ items: [], couponCode: null, discount: 0 }),
 
@@ -156,7 +173,7 @@ export const useCartStore = create<CartState>()(
       subtotal: () =>
         get().items.reduce((sum, item) => sum + item.totalPrice, 0),
 
-      taxAmount: () => 0,
+      taxAmount: () => Math.round(get().subtotal() * TAX_RATE),
 
       shippingCost: () => {
         const subtotal = get().subtotal();

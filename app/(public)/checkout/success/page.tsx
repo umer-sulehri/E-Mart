@@ -3,12 +3,13 @@ import { CheckCircle, ShoppingBag, FileText, Home } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 interface SuccessPageProps {
-  searchParams: Promise<{ orderId?: string }>;
+  searchParams: Promise<{ orderId?: string; orderNumber?: string }>;
 }
 
 export default async function CheckoutSuccessPage({ searchParams }: SuccessPageProps) {
   const params = await searchParams;
   const orderId = params.orderId;
+  const orderNumber = params.orderNumber || orderId;
 
   return (
     <>
@@ -40,10 +41,12 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
             Your order has been placed successfully.
           </p>
 
-          {orderId && (
+          {orderNumber && (
             <div className="mb-8 inline-block rounded-xl border border-muted-200 bg-muted-50 px-6 py-3">
               <p className="text-xs text-muted-500">Order Number</p>
-              <p className="font-mono text-lg font-bold text-secondary-800">{orderId}</p>
+              <p className="font-mono text-lg font-bold text-secondary-800">
+                {orderNumber}
+              </p>
             </div>
           )}
 
