@@ -6,12 +6,42 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, Mail, Lock, Loader2, Store, ShoppingBag, Shield } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Loader2, Store, ShoppingBag, Shield, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { loginSchema, type LoginInput } from '@/lib/validators';
 import { useAuthStore } from '@/store';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { signInWithOAuth } from '@/lib/auth/oauth';
+import { cn } from '@/lib/utils';
+
+type Role = 'buyer' | 'seller' | 'admin';
+
+const ROLE_META: Record<
+  Role,
+  { label: string; tagline: string; icon: typeof Store; route: string; accent: boolean }
+> = {
+  buyer: {
+    label: 'Buyer',
+    tagline: 'Shop products & manage orders',
+    icon: ShoppingBag,
+    route: '/dashboard',
+    accent: false,
+  },
+  seller: {
+    label: 'Seller',
+    tagline: 'Manage your store & products',
+    icon: Store,
+    route: '/seller',
+    accent: false,
+  },
+  admin: {
+    label: 'Admin',
+    tagline: 'Manage the platform',
+    icon: Shield,
+    route: '/admin',
+    accent: true,
+  },
+};
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -24,38 +54,89 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-function LoginForm() {
+function RoleSelector({ onSelect, onContinue }: { onSelect: (r: Role) => void; onContinue: (r: Role) => void }) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1 text-center">
+        <h1 className="text-2xl font-bold font-heading text-secondary">Welcome to E-Mart</h1>
+        <p className="text-sm text-muted-500">Choose how you want to sign in</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3">
+        {(Object.keys(ROLE_META) as Role[]).map((role) => {
+          const meta = ROLE_META[role];
+          const Icon = meta.icon;
+          return (
+            <button
+              key={role}
+              type="button"
+              onClick={() => {
+                onSelect(role);
+                onContinue(role);
+              }}
+              className={cn(
+                'group flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all',
+                meta.accent
+                  ? 'border-muted-200 hover:border-danger hover:bg-danger/5'
+                  : 'border-muted-200 hover:border-primary hover:bg-primary-50'
+              )}
+              aria-label={`Login as ${meta.label}`}
+            >
+              <span
+                className={cn(
+                  'flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors',
+                  meta.accent ? 'bg-danger/10 text-danger group-hover:bg-danger group-hover:text-white' : 'bg-primary-50 text-primary group-hover:bg-primary group-hover:text-white'
+                )}
+              >
+                <Icon className="h-6 w-6" />
+              </span>
+              <span className="flex-1">
+                <span className="block font-semibold text-secondary">Login as {meta.label}</span>
+                <span className="block text-xs text-muted-500">{meta.tagline}</span>
+              </span>
+              <span
+                className={cn(
+                  'text-sm font-semibold',
+                  meta.accent ? 'text-danger group-hover:text-danger' : 'text-primary'
+                )}
+              >
+                Continue →
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="text-center text-xs text-muted-400">
+        Not sure? Start as a Buyer — you can open a store anytime.
+      </p>
+    </div>
+  );
+}
+
+function RoleLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
   const { login } = useAuthStore();
+  const [role, setRole] = useState<Role | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const dashboardForRole = (role?: string) => {
-    if (role === 'seller') return '/seller';
-    if (role === 'admin') return '/admin';
+  const dashboardForRole = (r?: string) => {
+    if (r === 'seller') return '/seller';
+    if (r === 'admin') return '/admin';
     return '/dashboard';
   };
 
   // Only honor a requested redirect if the signed-in user is allowed to access
   // it. A buyer must never be pushed into a seller/admin area just because the
   // login URL carried ?redirect=/seller or ?redirect=/admin.
-  const safeRedirect = (role?: string) => {
+  const safeRedirect = (r?: string) => {
     if (!redirectTo || redirectTo === '/') return null;
-    if (redirectTo.startsWith('/admin') && role !== 'admin') return null;
-    if (
-      redirectTo.startsWith('/seller') &&
-      role !== 'seller' &&
-      role !== 'admin'
-    )
-      return null;
-    if (
-      redirectTo.startsWith('/dashboard') &&
-      role !== 'customer' &&
-      role !== 'admin'
-    )
-      return null;
+    if (redirectTo.startsWith('/admin') && r !== 'admin') return null;
+    if (redirectTo.startsWith('/seller') && r !== 'seller' && r !== 'admin') return null;
+    if (redirectTo.startsWith('/dashboard') && r !== 'customer' && r !== 'admin') return null;
     return redirectTo;
   };
 
@@ -65,11 +146,7 @@ function LoginForm() {
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      rememberMe: false,
-    },
+    defaultValues: { email: '', password: '', rememberMe: false },
   });
 
   const onSubmit = async (data: LoginInput) => {
@@ -82,10 +159,7 @@ function LoginForm() {
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Login failed');
-      }
+      if (!response.ok) throw new Error(result.error || 'Login failed');
 
       const user = result.data?.user;
       login(user);
@@ -99,14 +173,34 @@ function LoginForm() {
     }
   };
 
+  // Role selector step (no role chosen yet)
+  if (!role) {
+    return (
+      <RoleSelector
+        onSelect={(r) => setRole(r)}
+        onContinue={(r) => setRole(r)}
+      />
+    );
+  }
+
+  const meta = ROLE_META[role];
+
   return (
-    <>
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold font-heading text-secondary">Welcome Back</h1>
-        <p className="text-sm text-muted-500">Sign in to your account to continue</p>
+    <div className="space-y-5">
+      <div className="space-y-1 text-center">
+        <h1 className="text-2xl font-bold font-heading text-secondary">
+          Login as {meta.label}
+        </h1>
+        <button
+          type="button"
+          onClick={() => setRole(null)}
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-500"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Change role
+        </button>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
           label="Email"
           type="email"
@@ -148,71 +242,72 @@ function LoginForm() {
           </Link>
         </div>
 
-        <Button type="submit" loading={isLoading} className="w-full" size="lg">
-          Login
+        <Button
+          type="submit"
+          loading={isLoading}
+          className={cn('w-full', meta.accent && '!bg-danger hover:!bg-danger/90')}
+          size="lg"
+        >
+          Login as {meta.label}
         </Button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-muted-200" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-3 text-muted-400">Sign in with Google as</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => signInWithOAuth('google', '/dashboard')}
-            className="flex flex-col items-center gap-1 rounded-xl border-2 border-muted-200 p-3 text-center transition-all hover:border-primary-300 hover:bg-primary-50"
-            aria-label="Sign in as Buyer with Google"
-          >
-            <ShoppingBag className="h-5 w-5 text-primary" />
-            <span className="text-xs font-semibold text-secondary">Buyer</span>
-            <GoogleIcon className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => signInWithOAuth('google', '/seller')}
-            className="flex flex-col items-center gap-1 rounded-xl border-2 border-muted-200 p-3 text-center transition-all hover:border-primary-300 hover:bg-primary-50"
-            aria-label="Sign in as Seller with Google"
-          >
-            <Store className="h-5 w-5 text-primary" />
-            <span className="text-xs font-semibold text-secondary">Seller</span>
-            <GoogleIcon className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => signInWithOAuth('google', '/admin')}
-            className="flex flex-col items-center gap-1 rounded-xl border-2 border-muted-200 p-3 text-center transition-all hover:border-primary-300 hover:bg-primary-50"
-            aria-label="Sign in as Admin with Google"
-          >
-            <Shield className="h-5 w-5 text-primary" />
-            <span className="text-xs font-semibold text-secondary">Admin</span>
-            <GoogleIcon className="h-4 w-4" />
-          </button>
-        </div>
-        <p className="text-center text-[11px] text-muted-400">
-          New Google accounts pick Buyer or Seller here. Admin access is
-          provisioned by an administrator and only works for approved accounts.
-        </p>
       </form>
 
-      <p className="mt-8 text-center text-sm text-muted-500">
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-muted-200" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="bg-white px-3 text-muted-400">OR sign in with Google</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => signInWithOAuth('google', meta.route)}
+        className={cn(
+          'flex w-full items-center justify-center gap-2 rounded-xl border-2 py-2.5 text-sm font-semibold transition-colors',
+          meta.accent
+            ? 'border-muted-200 text-secondary hover:border-danger'
+            : 'border-muted-200 text-secondary hover:border-primary'
+        )}
+      >
+        <GoogleIcon className="h-5 w-5" />
+        Continue with Google
+      </button>
+
+      <p
+        className={cn(
+          'flex items-center justify-center gap-1.5 text-center text-[11px]',
+          meta.accent ? 'text-danger' : 'text-muted-400'
+        )}
+      >
+        {meta.accent ? (
+          <Shield className="h-3.5 w-3.5" />
+        ) : (
+          <CheckCircle2 className="h-3.5 w-3.5" />
+        )}
+        {meta.accent
+          ? 'Admin access is provisioned by an administrator and only works for approved accounts.'
+          : 'New Google accounts are created with the selected role.'}
+      </p>
+
+      <p className="pt-3 text-center text-sm text-muted-500">
         Don&apos;t have an account?{' '}
-        <Link href="/register" className="font-medium text-primary hover:text-primary-500">
-          Register
+        <Link
+          href={role === 'buyer' ? '/register' : `/register?role=${role}`}
+          className={cn('font-medium hover:text-primary-500', meta.accent ? 'text-danger' : 'text-primary')}
+        >
+          Register as {meta.label}
         </Link>
       </p>
-    </>
+    </div>
   );
 }
 
 export default function LoginPage() {
   return (
     <Suspense>
-      <LoginForm />
+      <RoleLoginForm />
     </Suspense>
   );
 }

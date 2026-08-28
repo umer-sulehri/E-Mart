@@ -26,6 +26,12 @@ export const registerSchema = z
       errorMap: () => ({ message: "You must agree to the terms" }),
     }),
     role: z.enum(["customer", "seller"]).default("customer"),
+    storeName: z
+      .string()
+      .trim()
+      .max(100, "Store name is too long")
+      .optional()
+      .or(z.literal("")),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,12 +30,14 @@ function getStrengthLabel(score: number) {
   return { label: 'Strong', color: 'bg-success' };
 }
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [role, setRole] = useState<'customer' | 'seller'>('customer');
+  const initialRole = searchParams.get('role') === 'seller' ? 'seller' : 'customer';
+  const [role, setRole] = useState<'customer' | 'seller'>(initialRole);
   const { login } = useAuthStore();
 
   const {
@@ -53,7 +55,8 @@ export default function RegisterPage() {
       password: '',
       confirmPassword: '',
       agreeToTerms: false as unknown as true,
-      role: 'customer',
+      role: initialRole,
+      storeName: '',
     },
   });
 
@@ -81,6 +84,7 @@ export default function RegisterPage() {
           firstName: data.firstName,
           lastName: data.lastName,
           role: data.role,
+          storeName: data.role === 'seller' ? data.storeName || '' : undefined,
         }),
       });
 
@@ -90,7 +94,7 @@ export default function RegisterPage() {
         throw new Error(result.error || 'Registration failed');
       }
 
-      const dashboardPath = dashboardForRole(data.role);
+      const dashboardRole = data.role;
       toast.success('Account created!');
 
       if (result.data?.user) {
@@ -98,7 +102,7 @@ export default function RegisterPage() {
       }
 
       setTimeout(() => {
-        router.push(dashboardPath);
+        router.push(dashboardForRole(dashboardRole));
       }, 800);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Something went wrong');
@@ -110,8 +114,14 @@ export default function RegisterPage() {
   return (
     <>
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold font-heading text-secondary">Create Account</h1>
-        <p className="text-sm text-muted-500">Join E-Mart for fresh organic groceries</p>
+        <h1 className="text-2xl font-bold font-heading text-secondary">
+          {role === 'seller' ? 'Create Your Store' : 'Create Account'}
+        </h1>
+        <p className="text-sm text-muted-500">
+          {role === 'seller'
+            ? 'Start selling your products on E-Mart'
+            : 'Join E-Mart for fresh organic groceries'}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
@@ -178,6 +188,16 @@ export default function RegisterPage() {
           error={errors.email?.message}
           {...register('email')}
         />
+
+        {role === 'seller' && (
+          <Input
+            label="Store Name"
+            placeholder="My Awesome Store"
+            icon={<Store className="h-4 w-4" />}
+            error={errors.storeName?.message}
+            {...register('storeName')}
+          />
+        )}
 
         <div>
           <div className="relative">
@@ -300,5 +320,13 @@ export default function RegisterPage() {
         </Link>
       </p>
     </>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="py-10 text-center text-muted-500">Loading...</div>}>
+      <RegisterContent />
+    </Suspense>
   );
 }

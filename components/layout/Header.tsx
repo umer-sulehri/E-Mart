@@ -12,22 +12,17 @@ import {
   ShoppingBag,
   Loader2,
   X,
+  ChevronDown,
+  LayoutDashboard,
+  Shield,
+  Store,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
+import { useAuthStore } from '@/store/authStore';
 import MobileNav from './MobileNav';
 import NotificationBell from '@/components/ui/NotificationBell';
-
-const pageLinks = [
-  { label: 'About', href: '/about' },
-  { label: 'Sellers', href: '/sellers' },
-  { label: 'Shop', href: '/products' },
-  { label: 'Cart', href: '/cart' },
-  { label: 'Checkout', href: '/checkout' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Contact', href: '/contact' },
-  { label: 'My Account', href: '/account' },
-];
 
 interface Suggestion {
   text: string;
@@ -207,11 +202,183 @@ function SearchBar({ className }: { className?: string }) {
   );
 }
 
+function PagesDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const items = [
+    { label: 'About Us', href: '/about' },
+    { label: 'Shop', href: '/products' },
+    { label: 'Cart', href: '/cart' },
+    { label: 'Checkout', href: '/checkout' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Contact', href: '/contact' },
+  ];
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1 py-2 hover:text-primary transition-colors"
+        aria-expanded={open}
+        aria-haspopup="menu"
+      >
+        Pages
+        <ChevronDown
+          className={cn('h-4 w-4 transition-transform', open && 'rotate-180')}
+        />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-0 w-48 rounded-xl border border-muted-200 bg-white p-2 shadow-lg">
+          {items.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="block rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UserMenu({
+  user,
+  isAuthenticated,
+  onLogout,
+}: {
+  user: ReturnType<typeof useAuthStore.getState>['user'];
+  isAuthenticated: boolean;
+  onLogout: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  if (!isAuthenticated || !user) {
+    return (
+      <Link
+        href="/login"
+        className="p-2 hover:text-primary transition-colors"
+        aria-label="Login / Account"
+      >
+        <User className="h-6 w-6" />
+      </Link>
+    );
+  }
+
+  const dashboard =
+    user.role === 'seller' ? '/seller' : user.role === 'admin' ? '/admin' : '/dashboard';
+
+  const DisplayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 p-1.5 hover:text-primary transition-colors rounded-full"
+        aria-label="Account menu"
+        aria-expanded={open}
+        aria-haspopup="menu"
+      >
+        <User className="h-6 w-6" />
+        <ChevronDown
+          className={cn('h-4 w-4 text-muted transition-transform', open && 'rotate-180')}
+        />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-muted-200 bg-white p-2 shadow-lg">
+          <div className="border-b border-muted-100 px-3 py-2">
+            <p className="truncate text-sm font-semibold text-secondary">{DisplayName}</p>
+            <p className="truncate text-xs capitalize text-muted-500">{user.role}</p>
+          </div>
+          <Link
+            href={dashboard}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
+          >
+            <LayoutDashboard className="h-4 w-4" /> Dashboard
+          </Link>
+          {user.role === 'admin' && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
+            >
+              <Shield className="h-4 w-4" /> Admin Panel
+            </Link>
+          )}
+          {user.role === 'seller' && (
+            <Link
+              href="/seller"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
+            >
+              <Store className="h-4 w-4" /> Seller Dashboard
+            </Link>
+          )}
+          <Link
+            href="/account"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
+          >
+            <User className="h-4 w-4" /> My Account
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onLogout();
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger hover:bg-danger/5 transition-colors"
+          >
+            <LogOut className="h-4 w-4" /> Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [categories, setCategories] = useState<{ name: string; slug: string }[]>([]);
   const itemCount = useCartStore((s) => s.itemCount());
   const navButtonRef = useRef<HTMLButtonElement>(null);
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST' });
+    } catch {
+      // ignore network errors; still clear local state
+    } finally {
+      logout();
+      router.push('/');
+    }
+  };
 
   useEffect(() => {
     fetch('/api/v1/categories')
@@ -294,15 +461,31 @@ export default function Header() {
               className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase text-dark"
               aria-label="Main navigation"
             >
-              {pageLinks.slice(0, 5).map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="py-2 hover:text-primary transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <Link
+                href="/products"
+                className="py-2 hover:text-primary transition-colors"
+              >
+                Shop
+              </Link>
+              <PagesDropdown />
+              <Link
+                href="/about"
+                className="py-2 hover:text-primary transition-colors"
+              >
+                About
+              </Link>
+              <Link
+                href="/blog"
+                className="py-2 hover:text-primary transition-colors"
+              >
+                Blog
+              </Link>
+              <Link
+                href="/contact"
+                className="py-2 hover:text-primary transition-colors"
+              >
+                Contact
+              </Link>
             </nav>
 
             <ul className="flex items-center gap-5 justify-end m-0 list-none">
@@ -310,13 +493,11 @@ export default function Header() {
                 <NotificationBell />
               </li>
               <li>
-                <Link
-                  href="/account"
-                  className="p-2 hover:text-primary transition-colors"
-                  aria-label="My Account"
-                >
-                  <User className="h-6 w-6" />
-                </Link>
+                <UserMenu
+                  user={user}
+                  isAuthenticated={isAuthenticated}
+                  onLogout={handleLogout}
+                />
               </li>
               <li>
                 <Link
