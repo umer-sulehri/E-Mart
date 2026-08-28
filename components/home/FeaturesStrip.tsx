@@ -12,27 +12,27 @@ const features: Feature[] = [
   {
     icon: Truck,
     title: "Free Delivery",
-    description: "Lorem ipsum dolor sit amet, consectetur adipi elit.",
+    description: "Free delivery on orders above Rs. 2000",
   },
   {
     icon: ShieldCheck,
     title: "100% secure payment",
-    description: "Lorem ipsum dolor sit amet, consectetur adipi elit.",
+    description: "Safe checkout with COD, cards & wallets",
   },
   {
     icon: Star,
     title: "Quality Guarantee",
-    description: "Lorem ipsum dolor sit amet, consectetur adipi elit.",
+    description: "Farm-fresh organic produce, every time",
   },
   {
     icon: Tag,
-    title: "guaranteed savings",
-    description: "Lorem ipsum dolor sit amet, consectetur adipi elit.",
+    title: "Guaranteed Savings",
+    description: "Everyday discounts on your essentials",
   },
   {
     icon: Gift,
     title: "Daily Offers",
-    description: "Lorem ipsum dolor sit amet, consectetur adipi elit.",
+    description: "New deals and coupons added daily",
   },
 ];
 

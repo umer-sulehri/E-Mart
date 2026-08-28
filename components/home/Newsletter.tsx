@@ -51,7 +51,7 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
       <section ref={ref} className={cn('py-3', className)}>
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
           <div
-            className="relative overflow-hidden bg-secondary my-5 py-5 text-light"
+            className="relative overflow-hidden bg-secondary my-5 py-5 text-white"
             style={{
               background: "url('/images/banner-newsletter.jpg') no-repeat",
               backgroundSize: 'cover',
@@ -61,7 +61,7 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
               <div className="flex flex-col items-center justify-center gap-6 md:flex-row">
                 <div className="w-full p-3 md:w-5/12">
                   <div className="section-header">
-                    <h2 className="font-heading text-4xl font-bold text-light md:text-5xl">
+                    <h2 className="font-heading text-4xl font-bold text-white md:text-5xl">
                       Get 25% Discount on your first purchase
                     </h2>
                   </div>

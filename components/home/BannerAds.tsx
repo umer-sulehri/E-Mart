@@ -101,16 +101,16 @@ const BannerAds = React.forwardRef<HTMLDivElement, BannerAdsProps>(
                     i === 0 ? "p-5" : "flex items-center p-5"
                   )}
                 >
-                  <div className="content-wrapper text-light">
-                    <h3 className="banner-title text-light font-heading text-2xl font-bold md:text-3xl">
+                  <div className="content-wrapper text-white">
+                    <h3 className="banner-title text-white font-heading text-2xl font-bold md:text-3xl">
                       {ad.title}
                     </h3>
                     <p className="mt-1 text-white">{ad.subtitle}</p>
                     <Link
                       href={ad.linkUrl}
-                      className="btn-link text-white mt-3 inline-block"
+                      className="mt-3 inline-block font-medium text-white underline underline-offset-4 transition-colors hover:text-primary-hover"
                     >
-                      Shop Now
+                      Shop Now →
                     </Link>
                   </div>
                 </div>

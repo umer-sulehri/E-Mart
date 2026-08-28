@@ -21,7 +21,7 @@ const fallbackBanner = {
   image: "/images/banner-1.jpg",
   title: "Organic",
   titleSuffix: "Foods at your Doorsteps",
-  subtitle: "Dignissim massa diam elementum.",
+  subtitle: "Farm-fresh organic groceries delivered to your doorstep.",
   linkUrl: "/products",
   cta: "Start Shopping",
 };
@@ -36,19 +36,19 @@ const features = [
   {
     icon: Sprout,
     title: "Fresh from farm",
-    description: "Lorem ipsum dolor sit amet, consectetur adipi elit.",
+    description: "Harvested and delivered the same day",
     bgColor: "bg-primary",
   },
   {
     icon: Leaf,
     title: "100% Organic",
-    description: "Lorem ipsum dolor sit amet, consectetur adipi elit.",
+    description: "Certified organic, naturally grown",
     bgColor: "bg-secondary",
   },
   {
     icon: Truck,
     title: "Free delivery",
-    description: "Lorem ipsum dolor sit amet, consectetur adipi elit.",
+    description: "On all orders above Rs. 2000",
     bgColor: "bg-danger",
   },
 ];
@@ -109,8 +109,8 @@ const HeroBanner = () => {
       style={{ backgroundImage: `url('${active.image}')` }}
     >
       <div className="container mx-auto px-4">
-        <div className="row">
-          <div className="pt-5 mt-5 lg:col-6">
+        <div className="lg:w-1/2">
+          <div className="pt-5 mt-5">
             <h2 className="font-heading text-4xl leading-tight md:text-6xl">
               <span className="font-bold text-primary">{displayTitle}</span>{" "}
               {displayTitleSuffix}
@@ -150,7 +150,7 @@ const HeroBanner = () => {
 
         <div className="grid grid-cols-1 gap-0 sm:grid-cols-3 lg:grid-cols-3">
           {features.map((feature) => (
-            <div key={feature.title} className="col">
+            <div key={feature.title}>
               <div
                 className={`${feature.bgColor} rounded-none p-4 text-white`}
               >
@@ -159,7 +159,7 @@ const HeroBanner = () => {
                     <feature.icon size={48} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h5 className="text-light">{feature.title}</h5>
+                    <h5 className="text-white">{feature.title}</h5>
                     <p className="mb-0 text-sm">{feature.description}</p>
                   </div>
                 </div>
