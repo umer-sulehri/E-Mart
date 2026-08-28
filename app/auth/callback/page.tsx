@@ -35,7 +35,7 @@ function AuthCallbackContent() {
         if (user) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id')
+            .select('id, role')
             .eq('id', user.id)
             .single();
 
@@ -49,25 +49,37 @@ function AuthCallbackContent() {
               user.user_metadata?.full_name?.split(' ').slice(1).join(' ') ||
               '';
 
+            const role = roleFromPath(requestedRedirect);
+
             await supabase.from('profiles').insert({
               id: user.id,
               email: user.email!,
               first_name: firstName,
               last_name: lastName,
-              role: roleFromPath(requestedRedirect),
+              role,
               is_email_verified: true,
               profile_image_url: user.user_metadata?.avatar_url || null,
             });
 
             router.push(
-              roleFromPath(requestedRedirect) === 'seller'
+              role === 'seller'
                 ? '/seller'
-                : roleFromPath(requestedRedirect) === 'admin'
+                : role === 'admin'
                 ? '/admin'
                 : '/dashboard'
             );
           } else {
-            router.push(requestedRedirect === '/' ? '/dashboard' : requestedRedirect);
+            // Route based on the user's ACTUAL role so an existing buyer is
+            // never dumped into a seller/admin area (and bounced by guards).
+            // Role selection only applies to brand-new Google accounts; an
+            // existing account always lands on its own dashboard.
+            router.push(
+              profile.role === 'seller'
+                ? '/seller'
+                : profile.role === 'admin'
+                ? '/admin'
+                : '/dashboard'
+            );
           }
         } else {
           setError('Authentication failed — no user found');
