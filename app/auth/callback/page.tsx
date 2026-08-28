@@ -17,6 +17,18 @@ function AuthCallbackContent() {
     return 'customer';
   }
 
+  // Admin is a privileged role. A brand-new Google account must never be able
+  // to self-assign it — otherwise anyone could sign up as an admin. Only allow
+  // admin for new accounts whose email is explicitly pre-approved via
+  // NEXT_PUBLIC_ADMIN_EMAILS (comma-separated). Existing admins are unaffected.
+  function canSelfProvisionAdmin(email?: string | null): boolean {
+    const allowed = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    return allowed.length > 0 && !!email && allowed.includes(email.toLowerCase());
+  }
+
   useEffect(() => {
     const supabase = createClient();
 
@@ -49,7 +61,14 @@ function AuthCallbackContent() {
               user.user_metadata?.full_name?.split(' ').slice(1).join(' ') ||
               '';
 
-            const role = roleFromPath(requestedRedirect);
+            let role = roleFromPath(requestedRedirect);
+
+            // Privilege-escalation guard: only provision admin for new accounts
+            // whose email is on the explicit allow-list; otherwise downgrade to
+            // a customer so the sign-in still succeeds securely.
+            if (role === 'admin' && !canSelfProvisionAdmin(user.email)) {
+              role = 'customer';
+            }
 
             await supabase.from('profiles').insert({
               id: user.id,

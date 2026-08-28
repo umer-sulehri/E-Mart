@@ -38,6 +38,27 @@ function LoginForm() {
     return '/dashboard';
   };
 
+  // Only honor a requested redirect if the signed-in user is allowed to access
+  // it. A buyer must never be pushed into a seller/admin area just because the
+  // login URL carried ?redirect=/seller or ?redirect=/admin.
+  const safeRedirect = (role?: string) => {
+    if (!redirectTo || redirectTo === '/') return null;
+    if (redirectTo.startsWith('/admin') && role !== 'admin') return null;
+    if (
+      redirectTo.startsWith('/seller') &&
+      role !== 'seller' &&
+      role !== 'admin'
+    )
+      return null;
+    if (
+      redirectTo.startsWith('/dashboard') &&
+      role !== 'customer' &&
+      role !== 'admin'
+    )
+      return null;
+    return redirectTo;
+  };
+
   const {
     register,
     handleSubmit,
@@ -69,7 +90,7 @@ function LoginForm() {
       const user = result.data?.user;
       login(user);
       toast.success('Welcome back!');
-      const dest = redirectTo && redirectTo !== '/' ? redirectTo : dashboardForRole(user?.role);
+      const dest = safeRedirect(user?.role) || dashboardForRole(user?.role);
       router.push(dest);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Something went wrong');
@@ -173,7 +194,8 @@ function LoginForm() {
           </button>
         </div>
         <p className="text-center text-[11px] text-muted-400">
-          Choose your role. New Google accounts are created with the selected role.
+          New Google accounts pick Buyer or Seller here. Admin access is
+          provisioned by an administrator and only works for approved accounts.
         </p>
       </form>
 
