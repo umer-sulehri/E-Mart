@@ -100,7 +100,7 @@ function SearchBar({ className }: { className?: string }) {
     (q: string) => {
       setOpen(false);
       setQuery('');
-      router.push(`/products?q=${encodeURIComponent(q)}`);
+      router.push(`/search?q=${encodeURIComponent(q)}`);
     },
     [router]
   );

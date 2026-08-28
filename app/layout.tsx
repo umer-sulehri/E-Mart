@@ -1,11 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Nunito, Open_Sans } from 'next/font/google';
 import '@/styles/globals.css';
 import { Providers } from '@/components/providers';
 
-const inter = Inter({
+const nunito = Nunito({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['400', '700', '800', '900'],
+  variable: '--font-heading',
+  display: 'swap',
+});
+
+const openSans = Open_Sans({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-body',
   display: 'swap',
 });
 
@@ -87,7 +95,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${nunito.variable} ${openSans.variable}`}>
       <body className="font-body">
         <Providers>{children}</Providers>
       </body>

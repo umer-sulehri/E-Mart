@@ -93,9 +93,9 @@ const config: Config = {
         border: '#F7F7F7',
       },
       fontFamily: {
-        heading: ['Inter', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
-        sans: ['Inter', 'sans-serif'],
+        heading: ['var(--font-heading)', 'Nunito', 'sans-serif'],
+        body: ['var(--font-body)', 'Open Sans', 'sans-serif'],
+        sans: ['var(--font-body)', 'Open Sans', 'sans-serif'],
       },
       maxWidth: {
         organic: '1600px',
