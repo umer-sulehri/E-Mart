@@ -1,0 +1,72 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+export async function POST(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Permission denied" },
+        { status: 403 }
+      );
+    }
+
+    const { data: seller } = await supabase
+      .from("vendors")
+      .select("id")
+      .eq("id", id)
+      .single();
+
+    if (!seller) {
+      return NextResponse.json(
+        { success: false, error: "Seller not found" },
+        { status: 404 }
+      );
+    }
+
+    const { error } = await supabase
+      .from("vendors")
+      .update({ status: "rejected" })
+      .eq("id", id);
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Seller rejected",
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

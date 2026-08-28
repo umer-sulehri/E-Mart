@@ -99,7 +99,39 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           </button>
         </div>
 
-        <ul className="p-4">
+        <div className="px-4 py-3 border-b border-muted-200">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted mb-2">Pages</p>
+          <ul>
+            {(
+              [
+                { label: 'About', href: '/about' },
+                { label: 'Sellers', href: '/sellers' },
+                { label: 'Shop', href: '/products' },
+                { label: 'Cart', href: '/cart' },
+                { label: 'Checkout', href: '/checkout' },
+                { label: 'Blog', href: '/blog' },
+                { label: 'Contact', href: '/contact' },
+                { label: 'My Account', href: '/account' },
+              ] as const
+            ).map((link) => (
+              <li key={link.label}>
+                <Link
+                  href={link.href}
+                  onClick={onClose}
+                  className="block py-2 text-sm font-medium text-secondary hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="px-4 pt-4 pb-1">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">Shop by Category</p>
+        </div>
+
+        <ul className="p-4 pt-2">
           {categories.map((cat) => {
             const Icon = cat.icon;
             const hasChildren = !!cat.children?.length;

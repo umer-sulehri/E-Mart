@@ -21,6 +21,7 @@ import NotificationBell from '@/components/ui/NotificationBell';
 
 const pageLinks = [
   { label: 'About', href: '/about' },
+  { label: 'Sellers', href: '/sellers' },
   { label: 'Shop', href: '/products' },
   { label: 'Cart', href: '/cart' },
   { label: 'Checkout', href: '/checkout' },
@@ -287,9 +288,6 @@ export default function Header() {
               className="hidden lg:flex items-center gap-5 xl:gap-8 text-sm font-bold uppercase text-dark"
               aria-label="Main navigation"
             >
-              <Link href="/" className="hover:text-primary transition-colors">
-                Home
-              </Link>
               <div className="relative" ref={dropdownRef}>
                 <button
                   className="flex items-center gap-1 hover:text-primary transition-colors py-2"
@@ -321,9 +319,6 @@ export default function Header() {
                   </ul>
                 )}
               </div>
-              <Link href="/sellers" className="hover:text-primary transition-colors">
-                Sellers
-              </Link>
             </nav>
 
             <ul className="flex items-center gap-5 justify-end m-0 list-none">

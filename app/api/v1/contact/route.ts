@@ -16,12 +16,12 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    const { error } = await supabase.from("contact_messages").insert({
+    const { error } = await supabase.from("contact_submissions").insert({
       name: parsed.data.name,
       email: parsed.data.email,
       subject: parsed.data.subject,
       message: parsed.data.message,
-      status: "unread",
+      is_resolved: false,
     });
 
     if (error) {

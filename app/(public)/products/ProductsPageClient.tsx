@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import type { Product } from '@/components/product/ProductCard';
 import ProductFilters, {
   type FilterState,
@@ -11,6 +12,7 @@ import ProductGrid from '@/components/product/ProductGrid';
 import Pagination from '@/components/product/Pagination';
 import SortDropdown, { type SortValue } from '@/components/product/SortDropdown';
 import SectionHeader from '@/components/ui/SectionHeader';
+import { CATEGORIES } from '@/lib/constants';
 import {
   api,
   apiProductToCardProduct,
@@ -38,6 +40,27 @@ const allMockProducts: Product[] = (() => {
   }
   return Array.from(map.values());
 })();
+
+const BRAND_NAMES: Record<string, string> = {
+  'nature-best': "Nature's Best",
+  'farm-fresh': 'Farm Fresh',
+  'organic-valley': 'Organic Valley',
+  'green-harvest': 'Green Harvest',
+  'pure-earth': 'Pure Earth',
+  'meadow-gold': 'Meadow Gold',
+};
+
+const RATING_LABELS: Record<number, string> = {
+  1: '1★ & up',
+  2: '2★ & up',
+  3: '3★ & up',
+  4: '4★ & up',
+  5: '5★ only',
+};
+
+function categoryName(slug: string) {
+  return CATEGORIES.find((c) => c.slug === slug)?.name ?? slug;
+}
 
 function sortProducts(products: Product[], sort: SortValue): Product[] {
   const sorted = [...products];
@@ -178,6 +201,14 @@ function ProductsContent() {
           params.maxPrice = filters.maxPrice;
         }
 
+        if (filters.minRating > 0) {
+          params.minRating = String(filters.minRating);
+        }
+
+        if (filters.brands.length > 0) {
+          params.brand = filters.brands[0];
+        }
+
         const res = await api.products.list(params) as ApiListResponse<ApiProduct>;
 
         if (cancelled) return;
@@ -234,6 +265,100 @@ function ProductsContent() {
           <SortDropdown value={sort} onChange={setSort} />
         </div>
 
+        {(filters.categories.length > 0 ||
+          filters.minPrice !== '' ||
+          filters.maxPrice !== '' ||
+          filters.minRating > 0 ||
+          filters.brands.length > 0 ||
+          filters.inStockOnly) && (
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {filters.categories.map((slug) => (
+              <button
+                key={slug}
+                onClick={() => {
+                  setFilters({
+                    ...filters,
+                    categories: filters.categories.filter((c) => c !== slug),
+                  });
+                  toast.success('Filter removed');
+                }}
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                {categoryName(slug)}
+                <X size={13} />
+              </button>
+            ))}
+            {filters.minPrice !== '' && (
+              <button
+                onClick={() => setFilters({ ...filters, minPrice: '' })}
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                From {filters.minPrice}
+                <X size={13} />
+              </button>
+            )}
+            {filters.maxPrice !== '' && (
+              <button
+                onClick={() => setFilters({ ...filters, maxPrice: '' })}
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                Up to {filters.maxPrice}
+                <X size={13} />
+              </button>
+            )}
+            {filters.minRating > 0 && (
+              <button
+                onClick={() => setFilters({ ...filters, minRating: 0 })}
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                {RATING_LABELS[filters.minRating] || `${filters.minRating}★ & up`}
+                <X size={13} />
+              </button>
+            )}
+            {filters.brands.map((brand) => (
+              <button
+                key={brand}
+                onClick={() => {
+                  setFilters({
+                    ...filters,
+                    brands: filters.brands.filter((b) => b !== brand),
+                  });
+                  toast.success('Filter removed');
+                }}
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                {BRAND_NAMES[brand] || brand}
+                <X size={13} />
+              </button>
+            ))}
+            {filters.inStockOnly && (
+              <button
+                onClick={() => setFilters({ ...filters, inStockOnly: false })}
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                In stock
+                <X size={13} />
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setFilters({
+                  categories: initialCategory ? [initialCategory] : [],
+                  minPrice: '',
+                  maxPrice: '',
+                  minRating: 0,
+                  brands: [],
+                  inStockOnly: false,
+                });
+                toast.success('All filters cleared');
+              }}
+              className="text-xs font-semibold text-danger underline underline-offset-2 hover:text-danger-600"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-6">
           {/* Desktop sidebar */}
           <aside className="hidden w-64 shrink-0 lg:block">{filtersSidebar}</aside>
@@ -268,7 +393,10 @@ function ProductsContent() {
                 </div>
                 {filtersSidebar}
                 <button
-                  onClick={() => setMobileFiltersOpen(false)}
+                  onClick={() => {
+                    setMobileFiltersOpen(false);
+                    toast.success('Filters applied');
+                  }}
                   className="mt-4 w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-500"
                 >
                   Show Results

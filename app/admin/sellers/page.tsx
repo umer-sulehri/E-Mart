@@ -77,7 +77,7 @@ export default function AdminSellersPage() {
     setActing(id);
     setError(null);
     try {
-      const res = await fetch(`/api/v1/admin/sellers/${id}/${action === 'verify' ? 'verify' : 'suspend'}`, {
+      const res = await fetch(`/api/v1/admin/sellers/${id}/${action}`, {
         method: 'POST',
       });
       const json = await res.json();

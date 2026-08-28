@@ -192,13 +192,13 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-muted-200">
-          <div className="max-w-md">
+          <div className="mx-auto max-w-xl text-center">
             <h5 className="widget-title text-lg font-bold mb-2">Subscribe Us</h5>
-            <p className="text-muted text-sm mb-3">
+            <p className="text-muted text-sm mb-4">
               Subscribe to our newsletter to get updates about our grand offers.
             </p>
             <form
-              className="flex gap-0"
+              className="flex flex-col gap-3 sm:flex-row"
               onSubmit={handleSubscribe}
               aria-label="Newsletter signup"
             >
@@ -207,13 +207,13 @@ export default function Footer() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
-                className="flex-1 rounded-l-none border border-muted-200 bg-muted-50 px-4 py-2.5 text-sm text-dark placeholder:text-muted focus:outline-none focus:border-primary"
+                className="flex-1 rounded-full border border-muted-200 bg-muted-50 px-5 py-2.5 text-sm text-dark placeholder:text-muted focus:outline-none focus:border-primary"
                 aria-label="Email Address"
               />
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-r-none bg-dark px-6 py-2.5 text-sm font-medium text-white hover:bg-secondary-800 transition-colors disabled:pointer-events-none disabled:opacity-50"
+                className="rounded-full bg-primary px-8 py-2.5 text-sm font-medium text-white transition-colors hover:bg-secondary-800 disabled:pointer-events-none disabled:opacity-50"
               >
                 {isSubmitting ? 'Submitting...' : 'Subscribe'}
               </button>

@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Store, Star, Package, ChevronRight, Loader2 } from 'lucide-react';
+import { Store, Star, Package, ChevronRight, Loader2, Search } from 'lucide-react';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import Pagination from '@/components/product/Pagination';
+import Input from '@/components/ui/Input';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -25,6 +26,8 @@ export default function SellersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -32,9 +35,12 @@ export default function SellersPage() {
 
     async function fetchSellers() {
       try {
-        const res = await fetch(
-          `/api/v1/sellers?page=${currentPage}&limit=${ITEMS_PER_PAGE}`
-        );
+        const params = new URLSearchParams({
+          page: String(currentPage),
+          limit: String(ITEMS_PER_PAGE),
+        });
+        if (search) params.set('search', search);
+        const res = await fetch(`/api/v1/sellers?${params.toString()}`);
         const json = await res.json();
         if (!cancelled) {
           if (json.success) {
@@ -53,7 +59,7 @@ export default function SellersPage() {
 
     fetchSellers();
     return () => { cancelled = true; };
-  }, [currentPage]);
+  }, [currentPage, search]);
 
   return (
     <>
@@ -76,6 +82,24 @@ export default function SellersPage() {
 
       <section className="py-10">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
+          <form
+            className="mx-auto mb-8 max-w-xl"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setCurrentPage(1);
+              setSearch(searchInput.trim());
+            }}
+          >
+            <Input
+              icon={<Search className="h-5 w-5 text-muted-400" />}
+              type="search"
+              placeholder="Search sellers by name..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Search sellers"
+            />
+          </form>
+
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 size={32} className="animate-spin text-primary" />

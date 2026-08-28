@@ -16,15 +16,22 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get("maxPrice")
       ? parseFloat(searchParams.get("maxPrice")!)
       : undefined;
+    const minRating = searchParams.get("minRating")
+      ? parseFloat(searchParams.get("minRating")!)
+      : undefined;
+    const brand = searchParams.get("brand") || "";
     const sort = searchParams.get("sort") || "newest";
     const status = searchParams.get("status") || "active";
     const offset = (page - 1) * limit;
 
     let query = supabase
       .from("products")
-      .select("*, categories!inner(name, slug), vendors(name, slug)", {
-        count: "exact",
-      });
+      .select(
+        brand
+          ? "*, categories!inner(name, slug), brands!inner(name, slug), vendors(name, slug)"
+          : "*, categories!inner(name, slug), brands(name, slug), vendors(name, slug)",
+        { count: "exact" }
+      );
 
     if (status !== "all") {
       query = query.eq("is_active", status === "active");
@@ -40,12 +47,20 @@ export async function GET(request: NextRequest) {
       query = query.eq("categories.slug", category);
     }
 
+    if (brand) {
+      query = query.eq("brands.slug", brand);
+    }
+
     if (minPrice !== undefined) {
       query = query.gte("price", minPrice);
     }
 
     if (maxPrice !== undefined) {
       query = query.lte("price", maxPrice);
+    }
+
+    if (minRating !== undefined) {
+      query = query.gte("rating", minRating);
     }
 
     switch (sort) {
