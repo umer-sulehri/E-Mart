@@ -23,8 +23,9 @@ export async function GET(
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("id, status, order_number, tracking_number, shipping_carrier, estimated_delivery, delivered_at, created_at, updated_at")
+      .select("id, user_id, status, order_number, tracking_number, shipping_carrier, estimated_delivery, delivered_at, created_at, updated_at")
       .eq("id", id)
+      .eq("user_id", user.id)
       .single();
 
     if (orderError || !order) {

@@ -88,6 +88,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Net earnings the seller actually keeps after the platform commission,
+    // consistent with the earnings dashboard (`netEarnings`).
+    const commissionRate = vendor.commission_rate || 0;
+    const netEarnings = totalEarnings * (1 - commissionRate / 100);
+
     const settingKey = `payouts_${vendor.id}`;
     const { data: setting } = await supabase
       .from("settings")
@@ -101,7 +106,7 @@ export async function POST(request: NextRequest) {
       .filter((p) => p.status === "completed")
       .reduce((sum, p) => sum + ((p.amount as number) || 0), 0);
 
-    const availableBalance = totalEarnings - totalPaid;
+    const availableBalance = netEarnings - totalPaid;
 
     if (amount > availableBalance) {
       return NextResponse.json(
