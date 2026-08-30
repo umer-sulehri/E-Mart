@@ -21,7 +21,8 @@ CREATE TYPE payment_status AS ENUM (
 );
 CREATE TYPE payment_method AS ENUM (
   'credit_card', 'debit_card', 'paypal', 'stripe',
-  'cash_on_delivery', 'bank_transfer'
+  'cash_on_delivery', 'bank_transfer',
+  'cod', 'easypaisa', 'jazzcash', 'card'
 );
 CREATE TYPE coupon_type AS ENUM ('percentage', 'fixed_amount', 'free_shipping');
 CREATE TYPE banner_position AS ENUM (
@@ -96,6 +97,9 @@ CREATE TABLE vendors (
   rating DECIMAL(3,2) DEFAULT 0,
   total_sales INTEGER DEFAULT 0,
   commission_rate DECIMAL(5,2) DEFAULT 10.00,
+  verified_at TIMESTAMPTZ,
+  suspended_at TIMESTAMPTZ,
+  rejected_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

@@ -54,11 +54,11 @@ export async function POST(request: NextRequest) {
     }
 
     let discountAmount = 0;
-    if (coupon.type === "percentage") {
-      discountAmount = coupon.value;
-    } else if (coupon.type === "fixed_amount") {
-      discountAmount = coupon.value;
-    } else if (coupon.type === "free_shipping") {
+    if (coupon.discount_type === "percentage") {
+      discountAmount = coupon.discount_value;
+    } else if (coupon.discount_type === "fixed_amount") {
+      discountAmount = coupon.discount_value;
+    } else if (coupon.discount_type === "free_shipping") {
       discountAmount = 0;
     }
 
@@ -69,18 +69,18 @@ export async function POST(request: NextRequest) {
         coupon: {
           id: coupon.id,
           code: coupon.code,
-          type: coupon.type,
-          value: coupon.value,
+          type: coupon.discount_type,
+          value: coupon.discount_value,
           description: coupon.description,
           minimumOrderAmount: coupon.minimum_order_amount,
           maximumDiscountAmount: coupon.maximum_discount_amount,
         },
         discountAmount,
         message: `Coupon applied: ${
-          coupon.type === "percentage"
-            ? `${coupon.value}% off`
-            : coupon.type === "fixed_amount"
-            ? `Rs. ${coupon.value} off`
+          coupon.discount_type === "percentage"
+            ? `${coupon.discount_value}% off`
+            : coupon.discount_type === "fixed_amount"
+            ? `Rs. ${coupon.discount_value} off`
             : "Free shipping"
         }`,
       },

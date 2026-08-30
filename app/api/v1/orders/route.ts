@@ -81,11 +81,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { shippingAddressId, paymentMethod, notes, couponCode, discountAmount } = body;
+    const { shippingAddressId, paymentMethod, notes, couponCode } = body;
 
     if (!shippingAddressId || !paymentMethod) {
       return NextResponse.json(
         { success: false, error: "shippingAddressId and paymentMethod are required" },
+        { status: 400 }
+      );
+    }
+
+    // Normalize the payment method from client values to the DB enum.
+    const validPaymentMethods = [
+      "credit_card", "debit_card", "paypal", "stripe",
+      "cash_on_delivery", "bank_transfer", "cod", "easypaisa", "jazzcash", "card",
+    ];
+    if (!validPaymentMethods.includes(paymentMethod)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid payment method" },
         { status: 400 }
       );
     }
@@ -140,8 +152,72 @@ export async function POST(request: NextRequest) {
 
     const shippingCost = subtotal >= 2000 ? 0 : 150;
     const tax = Math.round(subtotal * 0.05);
-    const discount = Number(discountAmount) || 0;
-    const total = subtotal + shippingCost + tax - discount;
+
+    // Validate the coupon server-side. The client-supplied discountAmount is
+    // never trusted — the discount is computed from the validated coupon row.
+    let discount = 0;
+    if (couponCode) {
+      const { data: coupon } = await supabase
+        .from("coupons")
+        .select("*")
+        .ilike("code", String(couponCode).trim())
+        .eq("is_active", true)
+        .single();
+
+      if (!coupon) {
+        return NextResponse.json(
+          { success: false, error: "Invalid coupon code" },
+          { status: 400 }
+        );
+      }
+
+      const now = new Date().toISOString();
+      if (coupon.starts_at && now < coupon.starts_at) {
+        return NextResponse.json(
+          { success: false, error: "Coupon is not yet active" },
+          { status: 400 }
+        );
+      }
+      if (coupon.expires_at && now > coupon.expires_at) {
+        return NextResponse.json(
+          { success: false, error: "Coupon has expired" },
+          { status: 400 }
+        );
+      }
+      if (
+        coupon.usage_limit != null &&
+        (coupon.used_count ?? 0) >= coupon.usage_limit
+      ) {
+        return NextResponse.json(
+          { success: false, error: "Coupon usage limit reached" },
+          { status: 400 }
+        );
+      }
+      if (
+        coupon.minimum_order_amount &&
+        subtotal < coupon.minimum_order_amount
+      ) {
+        return NextResponse.json(
+          { success: false, error: `Minimum order amount of Rs. ${coupon.minimum_order_amount} required` },
+          { status: 400 }
+        );
+      }
+
+      const couponValue = Number(coupon.discount_value) || 0;
+      if (coupon.discount_type === "percentage") {
+        discount = (subtotal * couponValue) / 100;
+        if (coupon.maximum_discount_amount && discount > coupon.maximum_discount_amount) {
+          discount = Number(coupon.maximum_discount_amount);
+        }
+      } else if (coupon.discount_type === "fixed_amount") {
+        discount = couponValue;
+      } else {
+        discount = 0; // free_shipping
+      }
+    }
+
+    // Total can never drop below zero.
+    let total = Math.max(0, subtotal + shippingCost + tax - Math.floor(discount));
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -155,7 +231,7 @@ export async function POST(request: NextRequest) {
         shipping_cost: shippingCost,
         discount,
         total,
-        coupon_code: couponCode || null,
+        coupon_code: couponCode ? String(couponCode).trim() : null,
         notes,
         shipping_address_id: shippingAddressId,
       })
@@ -188,21 +264,56 @@ export async function POST(request: NextRequest) {
     const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
 
     if (itemsError) {
+      // Roll back the order to avoid an orphaned record.
+      await supabase.from("orders").delete().eq("id", order.id);
       return NextResponse.json(
         { success: false, error: "Failed to create order items" },
         { status: 500 }
       );
     }
 
+    // Decrement stock; if any decrement fails, restore stock from this order
+    // and remove the order so inventory stays accurate.
+    let stockError = false;
+    const decremented: { id: string; original: number }[] = [];
     for (const item of cartItems) {
       const product = item.products as unknown as { id: string; stock_quantity: number };
-      await supabase
+      const original = product.stock_quantity;
+      const { error } = await supabase
         .from("products")
-        .update({ stock_quantity: product.stock_quantity - item.quantity })
+        .update({ stock_quantity: original - item.quantity })
         .eq("id", product.id);
+      if (error) {
+        stockError = true;
+        break;
+      }
+      decremented.push({ id: product.id, original });
     }
 
-    await supabase.from("cart_items").delete().eq("user_id", user.id);
+    if (stockError) {
+      // Restore only the products that were actually decremented, then clean up.
+      for (const d of decremented) {
+        await supabase
+          .from("products")
+          .update({ stock_quantity: d.original })
+          .eq("id", d.id);
+      }
+      await supabase.from("orders").delete().eq("id", order.id);
+      await supabase.from("order_items").delete().eq("order_id", order.id);
+      return NextResponse.json(
+        { success: false, error: "Failed to update stock" },
+        { status: 500 }
+      );
+    }
+
+    const { error: cartError } = await supabase
+      .from("cart_items")
+      .delete()
+      .eq("user_id", user.id);
+    if (cartError) {
+      // Stock is already decremented; leaving the cart is non-fatal.
+      console.error("[orders] Failed to clear cart:", cartError.message);
+    }
 
     return NextResponse.json(
       { success: true, data: order, message: "Order created successfully" },
