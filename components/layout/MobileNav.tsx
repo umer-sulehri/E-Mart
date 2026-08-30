@@ -100,17 +100,13 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
         </div>
 
         <div className="px-4 py-3 border-b border-muted-200">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted mb-2">Pages</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted mb-2">Quick Links</p>
           <ul>
             {(
               [
-                { label: 'About', href: '/about' },
-                { label: 'Sellers', href: '/sellers' },
                 { label: 'Shop', href: '/products' },
                 { label: 'Cart', href: '/cart' },
-                { label: 'Checkout', href: '/checkout' },
-                { label: 'Blog', href: '/blog' },
-                { label: 'Contact', href: '/contact' },
+                { label: 'Wishlist', href: '/wishlist' },
                 { label: 'My Account', href: '/account' },
               ] as const
             ).map((link) => (

@@ -155,7 +155,11 @@ function RoleLoginForm() {
       const response = await fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: data.email, password: data.password }),
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          role: role === 'buyer' ? 'customer' : role,
+        }),
       });
 
       const result = await response.json();

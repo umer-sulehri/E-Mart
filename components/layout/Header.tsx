@@ -267,6 +267,12 @@ function UserMenu({
   isAuthenticated: boolean;
   onLogout: () => void;
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -278,7 +284,7 @@ function UserMenu({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  if (!isAuthenticated || !user) {
+  if (!mounted || !isAuthenticated || !user) {
     return (
       <Link
         href="/login"
@@ -366,6 +372,7 @@ function UserMenu({
 
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [categories, setCategories] = useState<{ name: string; slug: string }[]>([]);
   const itemCount = useCartStore((s) => s.itemCount());
   const navButtonRef = useRef<HTMLButtonElement>(null);
@@ -382,6 +389,10 @@ export default function Header() {
       router.push('/');
     }
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetch('/api/v1/categories')
@@ -464,12 +475,6 @@ export default function Header() {
               className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase text-dark"
               aria-label="Main navigation"
             >
-              <Link
-                href="/"
-                className="py-2 hover:text-primary transition-colors"
-              >
-                Home
-              </Link>
               <PagesDropdown />
             </nav>
 
@@ -502,7 +507,7 @@ export default function Header() {
                   }}
                 >
                   <ShoppingBag className="h-6 w-6" />
-                  {itemCount > 0 && (
+                  {mounted && itemCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
                       {itemCount > 99 ? '99+' : itemCount}
                     </span>

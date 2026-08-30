@@ -62,6 +62,16 @@ function categoryName(slug: string) {
   return CATEGORIES.find((c) => c.slug === slug)?.name ?? slug;
 }
 
+function activeFilterCount(filters: FilterState): number {
+  let count = 0;
+  if (filters.categories.length > 0) count++;
+  if (filters.minPrice !== '' || filters.maxPrice !== '') count++;
+  if (filters.minRating > 0) count++;
+  if (filters.brands.length > 0) count++;
+  if (filters.inStockOnly) count++;
+  return count;
+}
+
 function sortProducts(products: Product[], sort: SortValue): Product[] {
   const sorted = [...products];
   switch (sort) {
@@ -378,6 +388,11 @@ function ProductsContent() {
           >
             <SlidersHorizontal size={16} />
             Filters
+            {activeFilterCount(filters) > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
+                {activeFilterCount(filters)}
+              </span>
+            )}
           </button>
 
           {/* Mobile filter drawer */}
