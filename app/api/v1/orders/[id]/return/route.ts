@@ -23,7 +23,7 @@ export async function POST(
 
     const { data: order } = await supabase
       .from("orders")
-      .select("id, user_id, status")
+      .select("id, user_id, status, total")
       .eq("id", id)
       .single();
 
@@ -55,9 +55,26 @@ export async function POST(
     const body = await request.json();
     const { reason } = body;
 
+    // Record the return (with the buyer's reason) in the refunds table, then
+    // move the order to the "returned" state.
+    const { error: refundError } = await supabase.from("refunds").insert({
+      order_id: id,
+      amount: order.total,
+      reason: reason || "Customer return",
+      status: "pending",
+      processed_by: user.id,
+    });
+
+    if (refundError) {
+      return NextResponse.json(
+        { success: false, error: refundError.message },
+        { status: 500 }
+      );
+    }
+
     const { error } = await supabase
       .from("orders")
-      .update({ status: "return_requested", return_reason: reason })
+      .update({ status: "returned", updated_at: new Date().toISOString() })
       .eq("id", id);
 
     if (error) {
