@@ -130,7 +130,8 @@ export async function PUT(
     if (body.sku !== undefined) updates.sku = body.sku;
     if (body.categoryId !== undefined) updates.category_id = body.categoryId;
     if (body.subcategoryId !== undefined) updates.subcategory_id = body.subcategoryId;
-    if (body.brandId !== undefined) updates.brand_id = body.brandId;    if (body.images !== undefined) updates.images = body.images;
+    if (body.brandId !== undefined) updates.brand_id = body.brandId;
+    if (body.images !== undefined) updates.images = body.images;
     if (body.specifications !== undefined) updates.specifications = body.specifications;
     if (body.isFeatured !== undefined) updates.is_featured = body.isFeatured;
     if (body.isNew !== undefined) updates.is_new = body.isNew;
