@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Product } from '@/components/product/ProductCard';
@@ -104,19 +104,27 @@ export default function ProductsPage() {
 
 function ProductsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const initialSearch = searchParams.get('q') ?? '';
   const initialCategory = searchParams.get('category') ?? '';
 
-  const [filters, setFilters] = useState<FilterState>({
-    categories: initialCategory ? [initialCategory] : [],
-    minPrice: '',
-    maxPrice: '',
-    minRating: 0,
-    brands: [],
-    inStockOnly: false,
-  });
-  const [sort, setSort] = useState<SortValue>('newest');
-  const [currentPage, setCurrentPage] = useState(1);
+  // URL query params are the source of truth for committed filters/sort, so
+  // they survive navigation, are shareable, and drive browser back/forward.
+  const [filters, setFilters] = useState<FilterState>(() => ({
+    categories: searchParams.get('category') ? [searchParams.get('category')!] : [],
+    minPrice: searchParams.get('minPrice') ?? '',
+    maxPrice: searchParams.get('maxPrice') ?? '',
+    minRating: Number(searchParams.get('minRating') || 0),
+    brands: searchParams.get('brand') ? [searchParams.get('brand')!] : [],
+    inStockOnly: searchParams.get('inStock') === 'true',
+  }));
+  const [sort, setSort] = useState<SortValue>(
+    (searchParams.get('sort') as SortValue) || 'newest'
+  );
+  const [currentPage, setCurrentPage] = useState(() =>
+    Number(searchParams.get('page') || 1)
+  );
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -124,6 +132,71 @@ function ProductsContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [useApi, setUseApi] = useState(true);
+
+  // Keep state in sync when the user navigates via back/forward or a link
+  // that carries new query params.
+  useEffect(() => {
+    setFilters({
+      categories: searchParams.get('category')
+        ? [searchParams.get('category')!]
+        : [],
+      minPrice: searchParams.get('minPrice') ?? '',
+      maxPrice: searchParams.get('maxPrice') ?? '',
+      minRating: Number(searchParams.get('minRating') || 0),
+      brands: searchParams.get('brand') ? [searchParams.get('brand')!] : [],
+      inStockOnly: searchParams.get('inStock') === 'true',
+    });
+    setSort((searchParams.get('sort') as SortValue) || 'newest');
+    setCurrentPage(Number(searchParams.get('page') || 1));
+  }, [searchParams]);
+
+  const applyFilters = useCallback(
+    (next: FilterState, nextSort?: SortValue) => {
+      const params = new URLSearchParams(searchParams.toString());
+      const setIf = (key: string, value: string | undefined) => {
+        if (value) params.set(key, value);
+        else params.delete(key);
+      };
+
+      setIf('category', next.categories[0]);
+      setIf('minPrice', next.minPrice || undefined);
+      setIf('maxPrice', next.maxPrice || undefined);
+      setIf('minRating', next.minRating > 0 ? String(next.minRating) : undefined);
+      setIf('brand', next.brands[0]);
+      setIf('inStock', next.inStockOnly ? 'true' : undefined);
+      params.delete('page');
+
+      const theSort = nextSort ?? sort;
+      setIf('sort', theSort !== 'newest' ? theSort : undefined);
+
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [searchParams, pathname, router, sort]
+  );
+
+  const clearAllFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('category');
+    params.delete('minPrice');
+    params.delete('maxPrice');
+    params.delete('minRating');
+    params.delete('brand');
+    params.delete('inStock');
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`);
+    toast.success('All filters cleared');
+  }, [searchParams, pathname, router]);
+
+  const handleSortChange = useCallback(
+    (value: SortValue) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value !== 'newest') params.set('sort', value);
+      else params.delete('sort');
+      params.delete('page');
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [searchParams, pathname, router]
+  );
 
   useEffect(() => {
     setCurrentPage(1);
@@ -250,13 +323,13 @@ function ProductsContent() {
   }, [currentPage, sort, initialSearch, initialCategory, filters, useApi]);
 
   const filtersSidebar = (
-    <ProductFilters filters={filters} onFilterChange={setFilters} />
+    <ProductFilters filters={filters} onFilterChange={applyFilters} />
   );
 
   const mobileFiltersPanel = (
     <ProductFilters
       filters={filters}
-      onFilterChange={setFilters}
+      onFilterChange={applyFilters}
       onApplied={() => setMobileFiltersOpen(false)}
     />
   );
@@ -280,7 +353,7 @@ function ProductsContent() {
               </span>
             )}
           </p>
-          <SortDropdown value={sort} onChange={setSort} />
+          <SortDropdown value={sort} onChange={handleSortChange} />
         </div>
 
         {(filters.categories.length > 0 ||
@@ -294,10 +367,7 @@ function ProductsContent() {
               <button
                 key={slug}
                 onClick={() => {
-                  setFilters({
-                    ...filters,
-                    categories: filters.categories.filter((c) => c !== slug),
-                  });
+                  applyFilters({ ...filters, categories: [] });
                   toast.success('Filter removed');
                 }}
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
@@ -308,7 +378,7 @@ function ProductsContent() {
             ))}
             {filters.minPrice !== '' && (
               <button
-                onClick={() => setFilters({ ...filters, minPrice: '' })}
+                onClick={() => applyFilters({ ...filters, minPrice: '' })}
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
               >
                 From {filters.minPrice}
@@ -317,7 +387,7 @@ function ProductsContent() {
             )}
             {filters.maxPrice !== '' && (
               <button
-                onClick={() => setFilters({ ...filters, maxPrice: '' })}
+                onClick={() => applyFilters({ ...filters, maxPrice: '' })}
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
               >
                 Up to {filters.maxPrice}
@@ -326,7 +396,7 @@ function ProductsContent() {
             )}
             {filters.minRating > 0 && (
               <button
-                onClick={() => setFilters({ ...filters, minRating: 0 })}
+                onClick={() => applyFilters({ ...filters, minRating: 0 })}
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
               >
                 {RATING_LABELS[filters.minRating] || `${filters.minRating}★ & up`}
@@ -337,10 +407,7 @@ function ProductsContent() {
               <button
                 key={brand}
                 onClick={() => {
-                  setFilters({
-                    ...filters,
-                    brands: filters.brands.filter((b) => b !== brand),
-                  });
+                  applyFilters({ ...filters, brands: [] });
                   toast.success('Filter removed');
                 }}
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
@@ -351,7 +418,7 @@ function ProductsContent() {
             ))}
             {filters.inStockOnly && (
               <button
-                onClick={() => setFilters({ ...filters, inStockOnly: false })}
+                onClick={() => applyFilters({ ...filters, inStockOnly: false })}
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
               >
                 In stock
@@ -359,17 +426,7 @@ function ProductsContent() {
               </button>
             )}
             <button
-              onClick={() => {
-                setFilters({
-                  categories: initialCategory ? [initialCategory] : [],
-                  minPrice: '',
-                  maxPrice: '',
-                  minRating: 0,
-                  brands: [],
-                  inStockOnly: false,
-                });
-                toast.success('All filters cleared');
-              }}
+              onClick={clearAllFilters}
               className="text-xs font-semibold text-danger underline underline-offset-2 hover:text-danger-600"
             >
               Clear all

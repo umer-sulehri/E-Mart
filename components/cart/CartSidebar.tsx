@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { X, Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
+import { useHydrated } from '@/hooks/useHydrated';
 import { formatPrice } from '@/lib/utils';
 import { resolveImage } from '@/lib/imageLoader';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
@@ -21,6 +22,8 @@ export default function CartSidebar() {
   const shippingCost = useCartStore((s) => s.shippingCost);
   const total = useCartStore((s) => s.total);
   const itemCount = useCartStore((s) => s.itemCount);
+
+  const hydrated = useHydrated();
 
   const handleToggle = useCallback(() => {
     toggleCart();
@@ -47,6 +50,11 @@ export default function CartSidebar() {
   const currentShipping = shippingCost();
   const currentTotal = total();
   const currentItemCount = itemCount();
+
+  // Persisted cart state rehydrates on the client before React hydrates, which
+  // otherwise causes a "hydration failed" mismatch. Until mounted, treat the
+  // cart as empty so the hidden drawer matches the server-rendered output.
+  const shownItems = hydrated ? items : [];
 
   return (
     <>
@@ -87,7 +95,7 @@ export default function CartSidebar() {
         </div>
 
         {/* Items List */}
-        {items.length === 0 ? (
+        {shownItems.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted-100">
               <ShoppingBag size={36} className="text-muted-400" />
@@ -107,7 +115,7 @@ export default function CartSidebar() {
           <>
             <div className="flex-1 overflow-y-auto px-6 py-4" style={{ maxHeight: '60vh' }}>
               <ul className="divide-y divide-muted-100">
-                {items.map((item) => (
+                {shownItems.map((item) => (
                   <li key={item.id} className="flex gap-4 py-4">
                     {/* Thumbnail */}
                     <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-muted-50">

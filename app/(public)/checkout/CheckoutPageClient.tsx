@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { z } from 'zod';
 import { useCartStore } from '@/store/cartStore';
+import { useHydrated } from '@/hooks/useHydrated';
 import { formatPrice } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -474,6 +475,9 @@ function ReviewStep({
   const shippingCost = useCartStore((s) => s.shippingCost);
   const total = useCartStore((s) => s.total);
 
+  const hydrated = useHydrated();
+  const shownItems = hydrated ? items : [];
+
   const currentSubtotal = subtotal();
   const currentShipping = shippingCost();
   const currentTotal = total();
@@ -551,10 +555,10 @@ function ReviewStep({
       {/* Items */}
       <div className="rounded-xl border border-muted-200 p-4">
         <h3 className="mb-3 text-sm font-semibold text-secondary-800">
-          Order Items ({items.length})
+          Order Items ({shownItems.length})
         </h3>
         <ul className="divide-y divide-muted-100">
-          {items.map((item) => (
+          {shownItems.map((item) => (
             <li key={item.id} className="flex items-center gap-3 py-3">
               <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-muted-50">
                 <ImageWithFallback

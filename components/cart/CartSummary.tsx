@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Tag, Lock, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useCartStore } from '@/store/cartStore';
+import { useHydrated } from '@/hooks/useHydrated';
 import { formatPrice } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -40,6 +41,9 @@ export default function CartSummary({
   const currentShipping = shippingCost();
   const currentDiscount = discountAmount();
   const currentTotal = total();
+
+  const hydrated = useHydrated();
+  const shownItems = hydrated ? items : [];
 
   const handleApplyPromo = async () => {
     const code = promoCode.trim();
@@ -100,7 +104,7 @@ export default function CartSummary({
 
       {/* Items List */}
       <ul className="mb-4 max-h-48 space-y-3 overflow-y-auto">
-        {items.map((item) => (
+        {shownItems.map((item) => (
           <li
             key={item.id}
             className="flex items-center justify-between text-sm"

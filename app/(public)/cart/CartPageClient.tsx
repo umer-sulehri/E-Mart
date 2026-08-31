@@ -5,6 +5,7 @@ import Link from 'next/link';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { ChevronRight, Home, Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
+import { useHydrated } from '@/hooks/useHydrated';
 import { formatPrice } from '@/lib/utils';
 import QuantitySelector from '@/components/ui/QuantitySelector';
 import Button from '@/components/ui/Button';
@@ -16,6 +17,9 @@ export default function CartPage() {
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
   const clearCart = useCartStore((s) => s.clearCart);
+
+  const hydrated = useHydrated();
+  const shownItems = hydrated ? items : [];
 
   const handleClearCart = () => {
     setClearing(true);
@@ -56,7 +60,7 @@ export default function CartPage() {
       {/* Content */}
       <section className="pb-12 lg:pb-16">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
-          {items.length === 0 ? (
+          {shownItems.length === 0 ? (
             /* Empty State */
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-muted-100">
@@ -99,7 +103,7 @@ export default function CartPage() {
 
                 {/* Cart Items */}
                 <ul className="divide-y divide-muted-100">
-                  {items.map((item) => (
+                  {shownItems.map((item) => (
                     <li
                       key={item.id}
                       className="py-4 md:grid md:grid-cols-12 md:items-center md:gap-4"

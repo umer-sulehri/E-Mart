@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ShoppingCart, Heart, Share2, Truck, ShieldCheck, RotateCcw } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Truck, ShieldCheck, RotateCcw, GitCompareArrows } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StarRating from '@/components/ui/StarRating';
 import QuantitySelector from '@/components/ui/QuantitySelector';
@@ -10,6 +10,7 @@ import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
 import SellerInformationCard from '@/components/seller/SellerInformationCard';
 import { formatPrice, cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
+import { useCompareStore } from '@/store/compareStore';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
 import type { Product } from '@/types';
 
@@ -27,10 +28,41 @@ export default function ProductDetailClient({
   const [quantity, setQuantity] = React.useState(1);
   const addItem = useCartStore((s) => s.addItem);
   const addToServer = useCartStore((s) => s.addToServer);
+  const compareItems = useCompareStore((s) => s.items);
+  const addCompare = useCompareStore((s) => s.addItem);
+  const removeCompare = useCompareStore((s) => s.removeItem);
   const { isWishlisted, toggleWishlist, wishlistLoading } = useAddToWishlist(
     product.id,
     product.name
   );
+
+  const isCompared = compareItems.some((i) => i.id === product.id);
+
+  const handleAddToCompare = () => {
+    if (isCompared) {
+      removeCompare(product.id);
+      toast.success('Removed from compare');
+      return;
+    }
+    if (compareItems.length >= 4) {
+      toast.error('You can compare up to 4 products');
+      return;
+    }
+    addCompare({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      rating: product.rating,
+      reviewCount: product.reviewCount,
+      image: product.images?.[0] || '/images/product-thumb-1.png',
+      category: product.category?.name || '',
+      brand: product.brand?.name || '',
+      inStock: product.stockQuantity > 0,
+    });
+    toast.success('Added to compare');
+  };
 
   const handleAddToCart = () => {
     const price = hasDiscount ? product.discountPrice! : product.price;
@@ -170,6 +202,17 @@ export default function ProductDetailClient({
         </Button>
         <Button variant="ghost" size="lg" onClick={handleShare}>
           <Share2 size={18} />
+        </Button>
+        <Button
+          variant={isCompared ? 'outline' : 'ghost'}
+          size="lg"
+          onClick={handleAddToCompare}
+          aria-label={isCompared ? 'Remove from compare' : 'Add to compare'}
+        >
+          <GitCompareArrows
+            size={18}
+            className={cn(isCompared && 'text-primary')}
+          />
         </Button>
       </div>
 
