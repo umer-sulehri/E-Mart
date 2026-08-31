@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import toast from 'react-hot-toast';
 import {
   Search,
@@ -177,8 +178,12 @@ export default function AdminProductsPage() {
                     <tr key={product.id} className="hover:bg-muted-50/50">
                       <td className="py-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted-100">
-                            <Package className="h-5 w-5 text-muted-400" />
+                          <div className="dashboard-image-cell h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted-100">
+                            {product.images?.[0] ? (
+                              <ImageWithFallback src={product.images[0]} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
+                            ) : (
+                              <Package className="h-5 w-5 text-muted-400" />
+                            )}
                           </div>
                           <div className="min-w-0">
                             <p className="truncate font-medium text-secondary-800">{product.name}</p>

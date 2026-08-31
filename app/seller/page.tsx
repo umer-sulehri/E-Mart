@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import toast from 'react-hot-toast';
 import {
@@ -53,6 +54,7 @@ function StatSkeleton() {
 
 export default function SellerDashboardPage() {
   const { user } = useAuthStore();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalRevenue: 0,
@@ -79,6 +81,10 @@ export default function SellerDashboardPage() {
         ]);
 
         const earningsData = await earningsRes.json();
+        if (earningsRes.status === 401) {
+          router.push('/login');
+          return;
+        }
         if (earningsData.success) {
           setStats(earningsData.data);
         }
@@ -104,7 +110,7 @@ export default function SellerDashboardPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [router]);
 
   const statCards = [
     { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: DollarSign, bg: 'bg-primary' },

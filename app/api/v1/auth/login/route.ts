@@ -35,10 +35,9 @@ export async function POST(request: NextRequest) {
       .eq("id", data.user.id)
       .single();
 
-    // Role scoping: if a role was selected on the login screen, require the
-    // account's actual role to match. This prevents an admin/seller from
-    // signing into the buyer flow (and vice-versa) with the wrong button.
-    if (role && profile?.role && role !== profile.role) {
+    // Role scoping: the account's actual role must match the selected role.
+    // This prevents an admin/seller from signing into the buyer flow (and vice-versa).
+    if (profile?.role && role !== profile.role) {
       await supabase.auth.signOut();
       return NextResponse.json(
         {
@@ -84,7 +83,11 @@ export async function POST(request: NextRequest) {
           firstName: profile?.first_name,
           lastName: profile?.last_name,
           role: profile?.role,
+          isEmailVerified: profile?.is_email_verified ?? false,
           profileImageUrl: profile?.profile_image_url,
+          phone: profile?.phone,
+          createdAt: profile?.created_at,
+          updatedAt: profile?.updated_at,
         },
         session: data.session,
       },

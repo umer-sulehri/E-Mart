@@ -208,6 +208,62 @@
   }
 }
 
+/* Organic Theme - Image Styling */
+.organic-image {
+  @apply rounded-xl overflow-hidden shadow-md;
+  border: 1px solid rgba(107, 178, 82, 0.1);
+  transition: all 0.3s ease;
+}
+
+.organic-image:hover {
+  @apply shadow-lg;
+  border-color: rgba(107, 178, 82, 0.3);
+  transform: translateY(-2px);
+}
+
+.image-container {
+  @apply flex items-center justify-center overflow-hidden;
+  background: linear-gradient(135deg, #f9faf8 0%, #f0f7ed 100%);
+  aspect-ratio: 1 / 1;
+}
+
+.image-container img {
+  @apply object-contain transition-transform duration-300;
+}
+
+.image-container:hover img {
+  transform: scale(1.05);
+}
+
+/* Dashboard image centering */
+.dashboard-image-cell {
+  @apply flex items-center justify-center;
+}
+
+.dashboard-image-cell img {
+  @apply object-cover;
+}
+
+/* Product detail image gallery */
+.product-gallery-main {
+  @apply flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-green-50 to-emerald-50;
+  aspect-ratio: 1 / 1;
+}
+
+.product-gallery-thumb {
+  @apply overflow-hidden rounded-lg border-2 border-transparent transition-all duration-200;
+  aspect-ratio: 1 / 1;
+}
+
+.product-gallery-thumb:hover,
+.product-gallery-thumb.active {
+  @apply border-primary;
+}
+
+.product-gallery-thumb img {
+  @apply object-cover;
+}
+
 @layer utilities {
   .ls-1 {
     letter-spacing: -0.04em;

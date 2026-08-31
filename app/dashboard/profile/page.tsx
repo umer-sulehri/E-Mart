@@ -13,10 +13,11 @@ import Skeleton from '@/components/ui/Skeleton';
 import { resolveImage } from '@/lib/imageLoader';
 
 export default function ProfilePage() {
-  const { user, setUser, updateUser } = useAuthStore();
+  const { user, setUser, updateUser, logout } = useAuthStore();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -81,6 +82,31 @@ export default function ProfilePage() {
       toast.error('Failed to update profile');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to permanently delete your account? This action cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      const res = await fetch('/api/v1/auth/delete-account', { method: 'POST' });
+      const data = await res.json();
+
+      if (data.success) {
+        logout();
+        toast.success('Your account has been deleted. Goodbye!');
+        router.push('/');
+      } else {
+        toast.error(data.error || 'Failed to delete account');
+      }
+    } catch {
+      toast.error('Failed to delete account');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -259,7 +285,13 @@ export default function ProfilePage() {
         <p className="mt-1 text-sm text-muted-500">
           Permanently delete your account and all associated data.
         </p>
-        <Button variant="danger" size="sm" className="mt-4">
+        <Button
+          variant="danger"
+          size="sm"
+          className="mt-4"
+          onClick={handleDeleteAccount}
+          loading={deleting}
+        >
           <Trash2 className="h-4 w-4" />
           Delete Account
         </Button>

@@ -43,7 +43,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
 
     return (
       <div ref={ref} className={cn("product-item", className)}>
-        <figure className="text-center">
+        <figure className="image-container mx-auto mb-3 h-[210px] rounded-xl">
           <Link href={`/products/${product.slug}`} title={product.name}>
             <ImageWithFallback
               src={product.image}

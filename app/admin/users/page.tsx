@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import {
   Search,
@@ -218,8 +218,8 @@ export default function AdminUsersPage() {
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
                 : users.map((user: any) => (
-                    <>
-                      <tr key={user.id} className="hover:bg-muted-50/50">
+                    <React.Fragment key={user.id}>
+                      <tr className="hover:bg-muted-50/50">
                         <td className="py-3">
                           <div className="flex items-center gap-3">
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700">
@@ -270,7 +270,7 @@ export default function AdminUsersPage() {
                         </td>
                       </tr>
                       {expandedUser === user.id && (
-                        <tr key={`${user.id}-detail`}>
+                        <tr>
                           <td colSpan={5} className="bg-muted-50 px-6 py-4">
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                               <div>
@@ -302,7 +302,7 @@ export default function AdminUsersPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   ))}
             </tbody>
           </table>

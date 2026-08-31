@@ -165,6 +165,9 @@ function RoleLoginForm() {
       }
 
       const user = result.data?.user;
+      if (!user) {
+        throw new Error('No user data received');
+      }
       login(user);
       toast.success(`Welcome to the ${ROLE_META[role].label} demo!`);
       router.push(ROLE_META[role].route);
@@ -206,6 +209,7 @@ function RoleLoginForm() {
       if (!response.ok) throw new Error(result.error || 'Login failed');
 
       const user = result.data?.user;
+      if (!user) throw new Error('No user data received');
       login(user);
       toast.success('Welcome back!');
       const dest = safeRedirect(user?.role) || dashboardForRole(user?.role);

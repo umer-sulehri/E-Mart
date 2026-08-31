@@ -160,6 +160,8 @@ export async function POST(request: NextRequest) {
       lastName: meta.lastName,
       role: meta.role,
       isEmailVerified: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     return NextResponse.json({ success: true, data: { user: finalUser } });

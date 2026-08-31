@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Package,
@@ -35,6 +35,7 @@ const navLinks = [
 
 export default function SellerSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -101,9 +102,13 @@ export default function SellerSidebar() {
 
       <div className="border-t border-muted-200 p-4">
         <button
-          onClick={() => {
+          onClick={async () => {
+            try {
+              await fetch('/api/v1/auth/logout', { method: 'POST' });
+            } catch {}
             logout();
             setMobileOpen(false);
+            router.push('/login');
           }}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger-50"
         >

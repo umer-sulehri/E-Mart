@@ -135,7 +135,10 @@ export async function PUT(
     if (body.specifications !== undefined) updates.specifications = body.specifications;
     if (body.isFeatured !== undefined) updates.is_featured = body.isFeatured;
     if (body.isNew !== undefined) updates.is_new = body.isNew;
-    if (body.isActive !== undefined) updates.is_active = body.isActive;
+    if (body.isActive !== undefined) {
+      updates.is_active = body.isActive;
+      updates.status = body.isActive ? "active" : "inactive";
+    }
     if (body.weight !== undefined) updates.weight = body.weight;
     if (body.dimensions !== undefined) updates.dimensions = body.dimensions;
     if (body.tags !== undefined) updates.tags = body.tags;
@@ -242,7 +245,7 @@ export async function DELETE(
 
     const { error } = await supabase
       .from("products")
-      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .update({ is_active: false, status: "inactive", updated_at: new Date().toISOString() })
       .eq("id", id);
 
     if (error) {

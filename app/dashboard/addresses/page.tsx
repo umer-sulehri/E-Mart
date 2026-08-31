@@ -20,20 +20,36 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import { cn } from '@/lib/utils';
-import type { Address } from '@/types';
+
+interface Address {
+  id: string;
+  label: string;
+  first_name: string;
+  last_name: string;
+  phone: string | null;
+  address_line1: string;
+  address_line2: string | null;
+  city: string;
+  state: string | null;
+  postal_code: string | null;
+  country: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 const emptyForm = {
   label: 'Home',
-  firstName: '',
-  lastName: '',
+  first_name: '',
+  last_name: '',
   phone: '',
-  addressLine1: '',
-  addressLine2: '',
+  address_line1: '',
+  address_line2: '',
   city: '',
   state: '',
-  postalCode: '',
+  postal_code: '',
   country: 'Pakistan',
-  isDefault: false,
+  is_default: false,
 };
 
 const labelIcons: Record<string, typeof Home> = {
@@ -63,15 +79,16 @@ export default function AddressesPage() {
     const fetchAddresses = async () => {
       try {
         setLoading(true);
-        const res = await fetch('/api/v1/auth/profile');
+        const res = await fetch('/api/v1/auth/addresses');
         if (res.status === 401) {
           router.push('/login');
           return;
         }
         const data = await res.json();
         if (data.success) {
-          setUser(data.data);
-          setAddresses(data.data?.addresses || []);
+          setAddresses(Array.isArray(data.data) ? data.data : []);
+        } else {
+          toast.error(data.error || 'Failed to load addresses');
         }
       } catch {
         toast.error('Failed to load addresses');
@@ -87,8 +104,8 @@ export default function AddressesPage() {
     setEditingId(null);
     setForm({
       ...emptyForm,
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
+      first_name: user?.firstName || '',
+      last_name: user?.lastName || '',
       phone: user?.phone || '',
     });
     setShowForm(true);
@@ -97,23 +114,23 @@ export default function AddressesPage() {
   const startEdit = (addr: Address) => {
     setEditingId(addr.id);
     setForm({
-      label: addr.label,
-      firstName: addr.firstName,
-      lastName: addr.lastName,
-      phone: addr.phone,
-      addressLine1: addr.addressLine1,
-      addressLine2: addr.addressLine2 || '',
+      label: addr.label || 'Home',
+      first_name: addr.first_name,
+      last_name: addr.last_name,
+      phone: addr.phone || '',
+      address_line1: addr.address_line1,
+      address_line2: addr.address_line2 || '',
       city: addr.city,
-      state: addr.state,
-      postalCode: addr.postalCode,
+      state: addr.state || '',
+      postal_code: addr.postal_code || '',
       country: addr.country || 'Pakistan',
-      isDefault: addr.isDefault,
+      is_default: addr.is_default,
     });
     setShowForm(true);
   };
 
   const handleSave = async () => {
-    if (!form.firstName || !form.addressLine1 || !form.city) {
+    if (!form.first_name || !form.address_line1 || !form.city) {
       toast.error('Please fill in required fields');
       return;
     }
@@ -121,41 +138,29 @@ export default function AddressesPage() {
     try {
       setSaving(true);
 
-      let updatedAddresses: Address[];
+      let res: Response;
       if (editingId) {
-        updatedAddresses = addresses.map((a) =>
-          a.id === editingId
-            ? { ...a, ...form, updatedAt: new Date().toISOString() }
-            : form.isDefault
-            ? { ...a, isDefault: false }
-            : a
-        );
+        res = await fetch(`/api/v1/auth/addresses/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
       } else {
-        const newAddr: Address = {
-          id: Date.now().toString(),
-          userId: user?.id || '',
-          ...form,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        updatedAddresses = form.isDefault
-          ? [...addresses.map((a) => ({ ...a, isDefault: false })), newAddr]
-          : [...addresses, newAddr];
+        res = await fetch('/api/v1/auth/addresses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
       }
 
-      const res = await fetch('/api/v1/auth/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addresses: updatedAddresses }),
-      });
       const data = await res.json();
 
       if (data.success) {
-        setAddresses(updatedAddresses);
+        toast.success(editingId ? 'Address updated' : 'Address added');
         setShowForm(false);
         setEditingId(null);
         setForm(emptyForm);
-        toast.success(editingId ? 'Address updated' : 'Address added');
+        await refreshAddresses();
       } else {
         toast.error(data.error || 'Failed to save address');
       }
@@ -166,21 +171,29 @@ export default function AddressesPage() {
     }
   };
 
+  const refreshAddresses = async () => {
+    try {
+      const res = await fetch('/api/v1/auth/addresses');
+      const data = await res.json();
+      if (data.success) {
+        setAddresses(Array.isArray(data.data) ? data.data : []);
+      }
+    } catch {
+      // silently ignore refresh failure
+    }
+  };
+
   const handleDelete = async (id: string) => {
     try {
       setDeletingId(id);
-      const updatedAddresses = addresses.filter((a) => a.id !== id);
-
-      const res = await fetch('/api/v1/auth/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addresses: updatedAddresses }),
+      const res = await fetch(`/api/v1/auth/addresses/${id}`, {
+        method: 'DELETE',
       });
       const data = await res.json();
 
       if (data.success) {
-        setAddresses(updatedAddresses);
         toast.success('Address deleted');
+        await refreshAddresses();
       } else {
         toast.error(data.error || 'Failed to delete address');
       }
@@ -193,20 +206,15 @@ export default function AddressesPage() {
 
   const setDefault = async (id: string) => {
     try {
-      const updatedAddresses = addresses.map((a) => ({
-        ...a,
-        isDefault: a.id === id,
-      }));
-
-      const res = await fetch('/api/v1/auth/profile', {
+      const res = await fetch(`/api/v1/auth/addresses/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addresses: updatedAddresses }),
+        body: JSON.stringify({ is_default: true }),
       });
       const data = await res.json();
 
       if (data.success) {
-        setAddresses(updatedAddresses);
+        await refreshAddresses();
         toast.success('Default address updated');
       } else {
         toast.error(data.error || 'Failed to update default');
@@ -291,14 +299,14 @@ export default function AddressesPage() {
             <Input
               label="First Name"
               placeholder="First name"
-              value={form.firstName}
-              onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+              value={form.first_name}
+              onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))}
             />
             <Input
               label="Last Name"
               placeholder="Last name"
-              value={form.lastName}
-              onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+              value={form.last_name}
+              onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))}
             />
             <Input
               label="Phone Number"
@@ -309,18 +317,18 @@ export default function AddressesPage() {
             <Input
               label="Address Line 1"
               placeholder="Street address"
-              value={form.addressLine1}
+              value={form.address_line1}
               onChange={(e) =>
-                setForm((f) => ({ ...f, addressLine1: e.target.value }))
+                setForm((f) => ({ ...f, address_line1: e.target.value }))
               }
               className="sm:col-span-2"
             />
             <Input
               label="Address Line 2 (optional)"
               placeholder="Apartment, suite, etc."
-              value={form.addressLine2}
+              value={form.address_line2}
               onChange={(e) =>
-                setForm((f) => ({ ...f, addressLine2: e.target.value }))
+                setForm((f) => ({ ...f, address_line2: e.target.value }))
               }
               className="sm:col-span-2"
             />
@@ -339,9 +347,9 @@ export default function AddressesPage() {
             <Input
               label="Postal Code"
               placeholder="Postal code"
-              value={form.postalCode}
+              value={form.postal_code}
               onChange={(e) =>
-                setForm((f) => ({ ...f, postalCode: e.target.value }))
+                setForm((f) => ({ ...f, postal_code: e.target.value }))
               }
             />
 
@@ -349,9 +357,9 @@ export default function AddressesPage() {
               <label className="flex items-center gap-2 text-sm text-secondary-800">
                 <input
                   type="checkbox"
-                  checked={form.isDefault}
+                  checked={form.is_default}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, isDefault: e.target.checked }))
+                    setForm((f) => ({ ...f, is_default: e.target.checked }))
                   }
                   className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary"
                 />
@@ -401,7 +409,7 @@ export default function AddressesPage() {
                 key={addr.id}
                 className={cn(
                   'rounded-xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md',
-                  addr.isDefault && 'ring-2 ring-primary'
+                  addr.is_default && 'ring-2 ring-primary'
                 )}
               >
                 <div className="mb-3 flex items-start justify-between">
@@ -415,7 +423,7 @@ export default function AddressesPage() {
                     >
                       {addr.label}
                     </span>
-                    {addr.isDefault && (
+                    {addr.is_default && (
                       <Badge variant="success" size="sm">
                         Default
                       </Badge>
@@ -424,18 +432,18 @@ export default function AddressesPage() {
                 </div>
 
                 <p className="text-sm font-medium text-secondary-800">
-                  {addr.firstName} {addr.lastName}
+                  {addr.first_name} {addr.last_name}
                 </p>
                 <p className="mt-1 text-sm text-muted-600 leading-relaxed">
-                  {addr.addressLine1}
-                  {addr.addressLine2 && <>, {addr.addressLine2}</>}
+                  {addr.address_line1}
+                  {addr.address_line2 && <>, {addr.address_line2}</>}
                   <br />
-                  {addr.city}, {addr.state} {addr.postalCode}
+                  {addr.city}, {addr.state} {addr.postal_code}
                 </p>
                 <p className="mt-1 text-sm text-muted-600">{addr.phone}</p>
 
                 <div className="mt-4 flex gap-2 border-t border-muted-100 pt-3">
-                  {!addr.isDefault && (
+                  {!addr.is_default && (
                     <button
                       onClick={() => setDefault(addr.id)}
                       className="text-xs font-medium text-primary hover:text-primary-500"

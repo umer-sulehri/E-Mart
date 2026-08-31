@@ -132,7 +132,7 @@ export default function WishlistPage() {
           <p className="mt-1 text-sm text-muted-500">
             Save items you love for later.
           </p>
-          <Button variant="primary" className="mt-4">
+          <Button variant="primary" className="mt-4" onClick={() => router.push('/products')}>
             Browse Products
           </Button>
         </div>
@@ -163,7 +163,7 @@ export default function WishlistPage() {
                   <X className="h-4 w-4" />
                 </button>
 
-                <div className="relative mx-auto mb-4 flex h-40 items-center justify-center overflow-hidden rounded-lg bg-muted-50">
+                <div className="image-container mx-auto mb-4 h-40 w-full overflow-hidden rounded-lg">
                   <ImageWithFallback
                     src={imageUrl}
                     alt={product.name}

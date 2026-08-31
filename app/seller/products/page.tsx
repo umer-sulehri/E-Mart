@@ -187,7 +187,7 @@ export default function SellerProductsPage() {
                       <tr key={product.id} className="border-b border-muted-50 transition-colors hover:bg-muted-50/50">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted-100">
+                            <div className="dashboard-image-cell h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted-100">
                               {product.images?.[0] ? (
                                 <ImageWithFallback src={product.images[0]} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
                               ) : (

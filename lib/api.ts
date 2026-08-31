@@ -57,7 +57,7 @@ export interface ApiProduct {
   name: string;
   slug: string;
   price: number;
-  sale_price?: number;
+  discount_price?: number;
   images: string[];
   rating: number;
   review_count: number;
@@ -152,7 +152,7 @@ export function apiProductToCardProduct(p: ApiProduct) {
     name: p.name,
     slug: p.slug,
     price: p.price,
-    discountPrice: p.sale_price,
+    discountPrice: p.discount_price,
     rating: p.rating,
     reviewCount: p.review_count,
     image: resolveImage(p.images?.[0]),

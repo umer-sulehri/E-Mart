@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
       name, description, shortDescription, price, discountPrice,
       stockQuantity, sku, categoryId, subcategoryId, brandId, brand,
       images, specifications, isFeatured, isNew, weight, dimensions, tags,
+      isActive,
     } = body;
 
     if (!name || !price || !sku || !categoryId || !images?.length) {
@@ -204,8 +205,9 @@ export async function POST(request: NextRequest) {
         images,
         specifications: specifications || {},
         is_featured: isFeatured || false,
-        is_new: isNew || true,
-        is_active: true,
+        is_new: isNew ?? true,
+        is_active: isActive === true,
+        status: isActive === true ? "active" : "draft",
         weight,
         dimensions,
         tags: tags || [],

@@ -156,6 +156,8 @@ export async function POST(request: NextRequest) {
     // Validate the coupon server-side. The client-supplied discountAmount is
     // never trusted — the discount is computed from the validated coupon row.
     let discount = 0;
+    let couponId: string | null = null;
+    let couponUsedCount = 0;
     if (couponCode) {
       const { data: coupon } = await supabase
         .from("coupons")
@@ -170,6 +172,9 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      couponId = coupon.id;
+      couponUsedCount = Number(coupon.used_count) || 0;
 
       const now = new Date().toISOString();
       if (coupon.starts_at && now < coupon.starts_at) {
@@ -313,6 +318,17 @@ export async function POST(request: NextRequest) {
     if (cartError) {
       // Stock is already decremented; leaving the cart is non-fatal.
       console.error("[orders] Failed to clear cart:", cartError.message);
+    }
+
+    // Redeem the coupon so its usage count reflects this order.
+    if (couponId) {
+      const { error: couponError } = await supabase
+        .from("coupons")
+        .update({ used_count: couponUsedCount + 1 })
+        .eq("id", couponId);
+      if (couponError) {
+        console.error("[orders] Failed to increment coupon used_count:", couponError.message);
+      }
     }
 
     return NextResponse.json(
