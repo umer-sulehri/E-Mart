@@ -21,6 +21,7 @@ export default function AdminAccountPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
+  const [resending, setResending] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [firstName, setFirstName] = useState('');
@@ -70,10 +71,26 @@ export default function AdminAccountPage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      const res = await fetch('/api/v1/auth/resend-verification', { method: 'POST' });
+      const json = await res.json();
+      if (json.success) {
+        setMessage({ type: 'success', text: 'Verification email sent' });
+      } else {
+        setMessage({ type: 'error', text: json.error || 'Failed to send verification email' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to send verification email' });
+    } finally {
+      setResending(false);
+    }
+  };
+
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setChangingPw(true);
-    setMessage(null);
+    setChangingPw(true);    setMessage(null);
     try {
       const res = await fetch('/api/v1/auth/change-password', {
         method: 'POST',
@@ -158,9 +175,21 @@ export default function AdminAccountPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-500">Email verified</span>
-                <Badge variant={profile?.isEmailVerified ? 'success' : 'warning'} size="sm">
-                  {profile?.isEmailVerified ? 'Verified' : 'Unverified'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={profile?.isEmailVerified ? 'success' : 'warning'} size="sm">
+                    {profile?.isEmailVerified ? 'Verified' : 'Unverified'}
+                  </Badge>
+                  {!profile?.isEmailVerified && (
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={resending}
+                      className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
+                    >
+                      {resending ? 'Sending...' : 'Resend'}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

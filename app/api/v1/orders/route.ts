@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
       return sum + price * item.quantity;
     }, 0);
 
-    const shippingCost = subtotal >= 2000 ? 0 : 150;
+    let shippingCost = subtotal >= 2000 ? 0 : 150;
     const tax = Math.round(subtotal * 0.05);
 
     // Validate the coupon server-side. The client-supplied discountAmount is
@@ -217,7 +217,10 @@ export async function POST(request: NextRequest) {
       } else if (coupon.discount_type === "fixed_amount") {
         discount = couponValue;
       } else {
-        discount = 0; // free_shipping
+        // free_shipping: waive the delivery fee entirely instead of applying a
+        // monetary discount.
+        discount = 0;
+        shippingCost = 0;
       }
     }
 

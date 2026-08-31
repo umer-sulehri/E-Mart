@@ -29,42 +29,6 @@ interface WishlistItem {
   addedAt: string;
 }
 
-const MOCK_WISHLIST: WishlistItem[] = [
-  {
-    id: '1',
-    productId: 'p1',
-    name: 'Organic Whole Wheat Flour',
-    slug: 'organic-whole-wheat-flour',
-    price: 850,
-    discountPrice: 720,
-    image: '/images/product-thumb-1.png',
-    inStock: true,
-    addedAt: '2026-08-20',
-  },
-  {
-    id: '2',
-    productId: 'p2',
-    name: 'Fresh Desi Ghee 1kg',
-    slug: 'fresh-desi-ghee',
-    price: 1200,
-    discountPrice: null,
-    image: '/images/product-thumb-2.png',
-    inStock: true,
-    addedAt: '2026-08-18',
-  },
-  {
-    id: '3',
-    productId: 'p3',
-    name: 'Honey Pure Natural 500g',
-    slug: 'honey-pure-natural',
-    price: 950,
-    discountPrice: 850,
-    image: '/images/product-thumb-3.png',
-    inStock: false,
-    addedAt: '2026-08-15',
-  },
-];
-
 export default function WishlistPage() {
   const router = useRouter();
   const [items, setItems] = useState<WishlistItem[]>([]);
@@ -100,16 +64,32 @@ export default function WishlistPage() {
         const res = await fetch('/api/v1/wishlist');
         const json = await res.json();
         if (!cancelled) {
-          if (json.success && json.data?.length) {
-            setItems(json.data);
-          } else {
-            setItems(MOCK_WISHLIST);
+          if (json.success && Array.isArray(json.data)) {
+            setItems(
+              json.data
+                .map((row: any) => {
+                  const p = row?.products;
+                  if (!p) return null;
+                  return {
+                    id: row.id,
+                    productId: row.product_id,
+                    name: p.name,
+                    slug: p.slug,
+                    price: p.price ?? 0,
+                    discountPrice: p.discount_price ?? null,
+                    image: p.images?.[0] || '',
+                    inStock: (p.stock_quantity ?? 0) > 0 && !!p.is_active,
+                    addedAt: row.created_at,
+                  } as WishlistItem;
+                })
+                .filter(Boolean) as WishlistItem[]
+            );
           }
           setLoading(false);
         }
       } catch {
         if (!cancelled) {
-          setItems(MOCK_WISHLIST);
+          setItems([]);
           setLoading(false);
         }
       }
@@ -119,9 +99,9 @@ export default function WishlistPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = async (id: string, productId: string) => {
     try {
-      await fetch(`/api/v1/wishlist/${id}`, { method: 'DELETE' });
+      await fetch(`/api/v1/wishlist/${productId}`, { method: 'DELETE' });
     } catch {}
     setItems((prev) => prev.filter((item) => item.id !== id));
   };
@@ -135,7 +115,7 @@ export default function WishlistPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        await fetch(`/api/v1/wishlist/${item.id}`, { method: 'DELETE' }).catch(() => {});
+        await fetch(`/api/v1/wishlist/${item.productId}`, { method: 'DELETE' }).catch(() => {});
         setItems((prev) => prev.filter((w) => w.id !== item.id));
       }
     } catch {}
@@ -324,7 +304,7 @@ export default function WishlistPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemove(item.id)}
+                          onClick={() => handleRemove(item.id, item.productId)}
                         >
                           <Trash2 size={14} className="text-danger" />
                         </Button>

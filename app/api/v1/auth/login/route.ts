@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema } from "@/lib/validators";
+import { rateLimitByIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const limit = rateLimitByIp(request, 10, 60 * 1000);
+    if (!limit.success) {
+      return NextResponse.json(
+        { success: false, error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } }
+      );
+    }
+
     const body = await request.json();
     const parsed = loginSchema.safeParse(body);
 

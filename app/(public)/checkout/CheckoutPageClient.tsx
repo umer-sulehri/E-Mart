@@ -756,6 +756,7 @@ export default function CheckoutPage() {
           state: shippingData.state,
           postalCode: shippingData.postalCode,
           country: shippingData.country,
+          isDefault: shippingData.saveDefault ?? false,
         }),
       });
 

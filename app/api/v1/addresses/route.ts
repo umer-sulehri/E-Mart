@@ -29,13 +29,22 @@ export async function POST(request: NextRequest) {
       state,
       postalCode,
       country,
+      isDefault = false,
     } = body;
+    const saveDefault = !!isDefault || !!body.saveDefault;
 
     if (!firstName || !lastName || !addressLine1 || !city || !state || !postalCode || !country) {
       return NextResponse.json(
         { success: false, error: "Missing required address fields" },
         { status: 400 }
       );
+    }
+
+    if (saveDefault) {
+      await supabase
+        .from("addresses")
+        .update({ is_default: false })
+        .eq("user_id", user.id);
     }
 
     const { data: address, error } = await supabase
@@ -52,7 +61,7 @@ export async function POST(request: NextRequest) {
         state,
         postal_code: postalCode,
         country,
-        is_default: false,
+        is_default: saveDefault,
       })
       .select()
       .single();

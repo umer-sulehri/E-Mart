@@ -17,9 +17,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!user.email) {
+      return NextResponse.json(
+        { success: false, error: "Account has no email address" },
+        { status: 400 }
+      );
+    }
+
+    if (user.email_confirmed_at) {
+      return NextResponse.json(
+        { success: false, error: "Email already verified" },
+        { status: 400 }
+      );
+    }
+
+    const origin = request.nextUrl.origin;
     const { error } = await supabase.auth.resend({
       type: "signup",
-      email: user.email!,
+      email: user.email,
+      options: { emailRedirectTo: `${origin}/dashboard/profile` },
     });
 
     if (error) {

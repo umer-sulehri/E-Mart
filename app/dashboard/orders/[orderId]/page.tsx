@@ -20,6 +20,7 @@ import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
 import { formatPrice, formatDate, cn } from '@/lib/utils';
+import { useCartStore } from '@/store';
 import type { Order, OrderItem, Address } from '@/types';
 
 const allTimelineSteps = [
@@ -109,6 +110,22 @@ export default function OrderDetailPage({
       toast.error('Failed to cancel order');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleReorder = async () => {
+    if (!order) return;
+    const items = getOrderItems(order);
+    if (items.length === 0) return;
+    try {
+      for (const item of items) {
+        if (!item.productId) continue;
+        await useCartStore.getState().addToServer(item.productId, item.quantity);
+      }
+      toast.success('Items added to your cart');
+      router.push('/cart');
+    } catch {
+      toast.error('Failed to re-order items');
     }
   };
 
@@ -403,11 +420,11 @@ export default function OrderDetailPage({
             Cancel Order
           </Button>
         )}
-        <Button variant="primary">
+        <Button variant="primary" onClick={handleReorder}>
           <RotateCcw className="h-4 w-4" />
           Re-Order
         </Button>
-        <Button variant="outline">
+        <Button variant="outline" onClick={() => router.push(`/invoice/${order.id || orderId}`)}>
           <Download className="h-4 w-4" />
           Download Invoice
         </Button>

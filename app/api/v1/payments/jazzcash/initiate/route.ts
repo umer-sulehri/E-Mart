@@ -109,8 +109,11 @@ export async function POST(request: NextRequest) {
     // const result = await response.json();
     // const redirectUrl = result.pp_RedirectURL;
 
+    // No real JazzCash gateway is wired up. Return a clearly-labelled demo
+    // response WITHOUT a fabricated external redirect URL, so the checkout falls
+    // through to the app's own success flow rather than sending the user to a
+    // dead third-party page.
     const mockTransactionId = `JC_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const mockRedirectUrl = `https://sandbox.jazzcash.com.pk/pay?txnId=${mockTransactionId}&amount=${amount}&order=${order.order_number}`;
 
     await supabase
       .from("orders")
@@ -120,19 +123,19 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", orderId);
 
-    console.log("[JazzCash Initiate] Payment initiated. Transaction:", mockTransactionId);
+    console.log("[JazzCash Initiate] Demo payment initiated. Transaction:", mockTransactionId);
 
     return NextResponse.json({
       success: true,
+      mode: "demo",
       data: {
         transactionId: mockTransactionId,
-        redirectUrl: mockRedirectUrl,
-        deepLink: `jazzcash://pay?txnId=${mockTransactionId}&amount=${amount}`,
+        redirectUrl: "",
         amount,
         mobileNumber,
         orderNumber: order.order_number,
       },
-      message: "JazzCash payment initiated",
+      message: "JazzCash payment initiated (demo mode — no gateway configured)",
     });
   } catch (error) {
     console.error("[JazzCash Initiate] Error:", error);

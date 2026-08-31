@@ -38,7 +38,7 @@ async function fetchProductBySlug(slug: string): Promise<Product | null> {
       description: p.description || '',
       shortDescription: p.short_description,
       price: p.price,
-      discountPrice: p.sale_price,
+      discountPrice: p.discount_price,
       stockQuantity: p.stock_quantity ?? 0,
       sku: p.sku || '',
       category: p.categories

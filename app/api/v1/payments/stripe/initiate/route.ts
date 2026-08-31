@@ -72,41 +72,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Real Stripe integration:
-    // import Stripe from "stripe";
-    // const stripe = new Stripe(stripeSecretKey);
-    //
-    // const lineItems = order.order_items.map((item: any) => ({
-    //   price_data: {
-    //     currency: "pkr",
-    //     product_data: {
-    //       name: item.product_name,
-    //       images: item.product_image ? [item.product_image] : [],
-    //     },
-    //     unit_amount: Math.round(item.unit_price * 100),
-    //   },
-    //   quantity: item.quantity,
-    // }));
-    //
-    // const session = await stripe.checkout.sessions.create({
-    //   payment_method_types: ["card"],
-    //   line_items: lineItems,
-    //   mode: "payment",
-    //   success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
-    //   cancel_url: cancelUrl,
-    //   metadata: { orderId, userId: user.id },
-    //   customer_email: user.email,
-    // });
+    // The real Stripe integration (stripe package + checkout session create) is
+    // not wired up yet. Do NOT fabricate an external payment URL — instead return
+    // a clearly-labelled demo session so the checkout falls through to the app's
+    // own success flow rather than sending users to a dead gateway page.
+    console.log("[Stripe Initiate] Stripe integration not configured — returning demo session");
 
-    console.log("[Stripe Initiate] Stripe session created for order:", order.order_number);
+    const mockSessionId = `cs_demo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
     return NextResponse.json({
       success: true,
       data: {
-        sessionId: "real_session_id_here",
-        url: "https://checkout.stripe.com/real_session_url",
+        sessionId: mockSessionId,
+        url: `${successUrl}?session_id=${mockSessionId}&order_id=${orderId}`,
+        mode: "demo",
       },
-      message: "Stripe checkout session created",
+      message: "Stripe checkout is running in demo mode (no gateway configured)",
     });
   } catch (error) {
     console.error("[Stripe Initiate] Error:", error);

@@ -108,6 +108,8 @@ export default function ComparePage() {
       addedAt: new Date().toISOString(),
     };
     addItemToCart(cartItem);
+    // Persist to the server cart when signed in; gracefully no-ops for guests.
+    useCartStore.getState().addToServer(item.id, 1);
   };
 
   const comparisonFields = [

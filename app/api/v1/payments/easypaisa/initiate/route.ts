@@ -98,8 +98,11 @@ export async function POST(request: NextRequest) {
     // const result = await response.json();
     // const paymentUrl = result.data?.deeplink || result.data?.redirectUrl;
 
+    // No real Easypaisa gateway is wired up. Return a clearly-labelled demo
+    // response WITHOUT a fabricated external payment URL, so the checkout falls
+    // through to the app's own success flow rather than sending the user to a
+    // dead third-party page.
     const mockTransactionId = `EP_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const mockPaymentUrl = `https://easypaisa.com/pay?txnId=${mockTransactionId}&amount=${amount}&order=${order.order_number}`;
 
     await supabase
       .from("orders")
@@ -109,19 +112,19 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", orderId);
 
-    console.log("[Easypaisa Initiate] Payment initiated. Transaction:", mockTransactionId);
+    console.log("[Easypaisa Initiate] Demo payment initiated. Transaction:", mockTransactionId);
 
     return NextResponse.json({
       success: true,
+      mode: "demo",
       data: {
         transactionId: mockTransactionId,
-        paymentUrl: mockPaymentUrl,
-        deepLink: `easypaisa://pay?txnId=${mockTransactionId}&amount=${amount}`,
+        paymentUrl: "",
         amount,
         mobileNumber,
         orderNumber: order.order_number,
       },
-      message: "Easypaisa payment initiated",
+      message: "Easypaisa payment initiated (demo mode — no gateway configured)",
     });
   } catch (error) {
     console.error("[Easypaisa Initiate] Error:", error);

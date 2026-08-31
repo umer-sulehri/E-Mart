@@ -90,7 +90,7 @@ export default function CartSummary({
       }
 
       discount = Math.min(discount, currentSubtotal);
-      applyCoupon(data.coupon.code, discount);
+      applyCoupon(data.coupon.code, discount, data.coupon.type === 'free_shipping');
       setPromoApplied(true);
       toast.success(data.message || 'Coupon applied');
     } catch {

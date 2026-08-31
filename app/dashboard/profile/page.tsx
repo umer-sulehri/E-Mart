@@ -25,6 +25,7 @@ export default function ProfilePage() {
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [resending, setResending] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -82,6 +83,25 @@ export default function ProfilePage() {
       toast.error('Failed to update profile');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    try {
+      setResending(true);
+      const res = await fetch('/api/v1/auth/resend-verification', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Verification email sent. Please check your inbox.');
+      } else {
+        toast.error(data.error || 'Failed to send verification email');
+      }
+    } catch {
+      toast.error('Failed to send verification email');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -257,8 +277,22 @@ export default function ProfilePage() {
                 value={user?.email ?? ''}
                 className="w-full rounded-lg border border-muted-200 bg-muted-50 px-3.5 py-2.5 text-sm text-muted-600"
               />
-              <Badge variant="success">Verified</Badge>
+              {user?.isEmailVerified ? (
+                <Badge variant="success">Verified</Badge>
+              ) : (
+                <Badge variant="warning">Unverified</Badge>
+              )}
             </div>
+            {!user?.isEmailVerified && (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resending}
+                className="mt-2 text-sm font-medium text-primary hover:underline disabled:opacity-50"
+              >
+                {resending ? 'Sending...' : 'Resend verification email'}
+              </button>
+            )}
           </div>
           <Input
             label="Phone Number"

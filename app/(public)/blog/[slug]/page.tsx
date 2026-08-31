@@ -11,11 +11,11 @@ import {
   Share2,
   Link as LinkIcon,
   ThumbsUp,
-  MessageCircle,
   Calendar,
 } from 'lucide-react';
 import SectionHeader from '@/components/ui/SectionHeader';
 import Breadcrumb from '@/components/ui/Breadcrumb';
+import BlogComments from '@/components/blog/BlogComments';
 
 interface BlogPost {
   id: string;
@@ -262,30 +262,8 @@ export default async function BlogDetailPage({
                 </button>
               </div>
 
-              {/* Comments Placeholder */}
-              <div className="mt-12 rounded-2xl bg-white p-6 shadow-sm">
-                <h2 className="mb-4 font-heading text-xl font-bold text-secondary-800">
-                  Comments (0)
-                </h2>
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <MessageCircle size={32} className="mb-3 text-muted-300" />
-                  <p className="text-sm text-muted-500">
-                    No comments yet. Be the first to share your thoughts!
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <textarea
-                    placeholder="Write a comment..."
-                    className="w-full rounded-lg border border-muted-200 px-4 py-3 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    rows={3}
-                  />
-                  <div className="mt-3 flex justify-end">
-                    <button className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary-500">
-                      Post Comment
-                    </button>
-                  </div>
-                </div>
-              </div>
+              {/* Comments */}
+              <BlogComments postId={post.id} />
             </article>
 
             {/* Sidebar */}

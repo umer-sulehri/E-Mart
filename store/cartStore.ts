@@ -6,13 +6,14 @@ interface CartState {
   items: CartItem[];
   couponCode: string | null;
   discount: number;
+  freeShipping: boolean;
   isLoading: boolean;
 
   addItem: (item: CartItem) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  applyCoupon: (code: string, discount: number) => void;
+  applyCoupon: (code: string, discount: number, freeShipping?: boolean) => void;
   removeCoupon: () => void;
 
   syncWithServer: () => Promise<void>;
@@ -38,6 +39,7 @@ export const useCartStore = create<CartState>()(
       items: [],
       couponCode: null,
       discount: 0,
+      freeShipping: false,
       isLoading: false,
 
       addItem: (item) =>
@@ -95,12 +97,12 @@ export const useCartStore = create<CartState>()(
         }));
       },
 
-      clearCart: () => set({ items: [], couponCode: null, discount: 0 }),
+      clearCart: () => set({ items: [], couponCode: null, discount: 0, freeShipping: false }),
 
-      applyCoupon: (code, discount) =>
-        set({ couponCode: code, discount }),
+      applyCoupon: (code, discount, freeShipping = false) =>
+        set({ couponCode: code, discount, freeShipping }),
 
-      removeCoupon: () => set({ couponCode: null, discount: 0 }),
+      removeCoupon: () => set({ couponCode: null, discount: 0, freeShipping: false }),
 
       syncWithServer: async () => {
         set({ isLoading: true });
@@ -176,7 +178,9 @@ export const useCartStore = create<CartState>()(
       taxAmount: () => Math.round(get().subtotal() * TAX_RATE),
 
       shippingCost: () => {
-        const subtotal = get().subtotal();
+        const state = get();
+        if (state.freeShipping) return 0;
+        const subtotal = state.subtotal();
         return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
       },
 

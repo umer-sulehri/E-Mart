@@ -378,7 +378,6 @@ export default function Header() {
   const navButtonRef = useRef<HTMLButtonElement>(null);
   const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
-
   const handleLogout = async () => {
     try {
       await fetch('/api/v1/auth/logout', { method: 'POST' });
@@ -393,6 +392,13 @@ export default function Header() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Sync the logged-in user's server cart into local state after hydration
+  // so returning users see their persisted cart items.
+  useEffect(() => {
+    if (!mounted || !isAuthenticated) return;
+    useCartStore.getState().syncWithServer();
+  }, [mounted, isAuthenticated]);
 
   useEffect(() => {
     fetch('/api/v1/categories')

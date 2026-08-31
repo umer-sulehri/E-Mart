@@ -8,11 +8,27 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Mail, Lock, Loader2, Store, ShoppingBag, Shield, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { loginSchema, type LoginInput } from '@/lib/validators';
-import { useAuthStore } from '@/store';
+import { useAuthStore, useCartStore } from '@/store';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { signInWithOAuth } from '@/lib/auth/oauth';
 import { cn } from '@/lib/utils';
+
+// Push a guest's locally-stored cart items to the server after login so the
+// cart is not lost when they sign in as an authenticated user.
+async function mergeGuestCartToServer() {
+  const cart = useCartStore.getState();
+  const guestItems = cart.items.filter((item) => item.id.startsWith('cart-'));
+  if (guestItems.length === 0) return;
+  // Upsert each guest item on the server (server merges quantities).
+  for (const item of guestItems) {
+    try {
+      await cart.addToServer(item.productId, item.quantity);
+    } catch {
+      // ignore per-item failures; local cart stays intact
+    }
+  }
+}
 
 type Role = 'buyer' | 'seller' | 'admin';
 
@@ -211,6 +227,7 @@ function RoleLoginForm() {
       const user = result.data?.user;
       if (!user) throw new Error('No user data received');
       login(user);
+      await mergeGuestCartToServer();
       toast.success('Welcome back!');
       const dest = safeRedirect(user?.role) || dashboardForRole(user?.role);
       router.push(dest);
