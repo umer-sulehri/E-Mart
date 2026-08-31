@@ -54,33 +54,40 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-function RoleSelector({ onSelect, onContinue }: { onSelect: (r: Role) => void; onContinue: (r: Role) => void }) {
+function RoleSelector({
+  onStart,
+  loadingRole,
+}: {
+  onStart: (r: Role) => void;
+  loadingRole: Role | null;
+}) {
   return (
     <div className="space-y-6">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-bold font-heading text-secondary">Welcome to E-Mart</h1>
-        <p className="text-sm text-muted-500">Choose how you want to sign in</p>
+        <p className="text-sm text-muted-500">
+          Choose a role to jump straight into its dashboard
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
         {(Object.keys(ROLE_META) as Role[]).map((role) => {
           const meta = ROLE_META[role];
           const Icon = meta.icon;
+          const loading = loadingRole === role;
           return (
             <button
               key={role}
               type="button"
-              onClick={() => {
-                onSelect(role);
-                onContinue(role);
-              }}
+              disabled={loading}
+              onClick={() => onStart(role)}
               className={cn(
-                'group flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all',
+                'group flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all disabled:pointer-events-none disabled:opacity-60',
                 meta.accent
                   ? 'border-muted-200 hover:border-danger hover:bg-danger/5'
                   : 'border-muted-200 hover:border-primary hover:bg-primary-50'
               )}
-              aria-label={`Login as ${meta.label}`}
+              aria-label={`Open ${meta.label} dashboard`}
             >
               <span
                 className={cn(
@@ -88,10 +95,10 @@ function RoleSelector({ onSelect, onContinue }: { onSelect: (r: Role) => void; o
                   meta.accent ? 'bg-danger/10 text-danger group-hover:bg-danger group-hover:text-white' : 'bg-primary-50 text-primary group-hover:bg-primary group-hover:text-white'
                 )}
               >
-                <Icon className="h-6 w-6" />
+                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Icon className="h-6 w-6" />}
               </span>
               <span className="flex-1">
-                <span className="block font-semibold text-secondary">Login as {meta.label}</span>
+                <span className="block font-semibold text-secondary">Open {meta.label} dashboard</span>
                 <span className="block text-xs text-muted-500">{meta.tagline}</span>
               </span>
               <span
@@ -100,7 +107,7 @@ function RoleSelector({ onSelect, onContinue }: { onSelect: (r: Role) => void; o
                   meta.accent ? 'text-danger group-hover:text-danger' : 'text-primary'
                 )}
               >
-                Continue →
+                {loading ? 'Signing in…' : 'Enter →'}
               </span>
             </button>
           );
@@ -108,7 +115,8 @@ function RoleSelector({ onSelect, onContinue }: { onSelect: (r: Role) => void; o
       </div>
 
       <p className="text-center text-xs text-muted-400">
-        Not sure? Start as a Buyer — you can open a store anytime.
+        Demo accounts are created automatically &mdash; sign in instantly, no password needed.
+        Real account sign-in is still available <Link href="/login" className="font-medium text-primary hover:text-primary-500">here</Link>.
       </p>
     </div>
   );
@@ -122,6 +130,8 @@ function RoleLoginForm() {
   const [role, setRole] = useState<Role | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState<Role | null>(null);
+  const [demoError, setDemoError] = useState<string | null>(null);
 
   const dashboardForRole = (r?: string) => {
     if (r === 'seller') return '/seller';
@@ -138,6 +148,36 @@ function RoleLoginForm() {
     if (redirectTo.startsWith('/seller') && r !== 'seller' && r !== 'admin') return null;
     if (redirectTo.startsWith('/dashboard') && r !== 'customer' && r !== 'admin') return null;
     return redirectTo;
+  };
+
+  const handleDemoLogin = async (role: Role) => {
+    setDemoLoading(role);
+    setDemoError(null);
+    try {
+      const response = await fetch('/api/v1/auth/demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Demo login failed');
+      }
+
+      const user = result.data?.user;
+      login(user);
+      toast.success(`Welcome to the ${ROLE_META[role].label} demo!`);
+      router.push(ROLE_META[role].route);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Something went wrong';
+      // If demo access is unavailable (e.g. disabled or provisioning failed),
+      // fall back to the normal credentials/Google flow for that role.
+      setRole(role);
+      setDemoError(message);
+    } finally {
+      setDemoLoading(null);
+    }
   };
 
   const {
@@ -177,13 +217,26 @@ function RoleLoginForm() {
     }
   };
 
-  // Role selector step (no role chosen yet)
+  // Role selector step (no role chosen yet) — direct demo entry into dashboards.
   if (!role) {
     return (
-      <RoleSelector
-        onSelect={(r) => setRole(r)}
-        onContinue={(r) => setRole(r)}
-      />
+      <div className="space-y-4">
+        <RoleSelector onStart={handleDemoLogin} loadingRole={demoLoading} />
+        {demoError && (
+          <p className="rounded-lg bg-danger/5 px-3 py-2 text-center text-xs font-medium text-danger">
+            {demoError}. Showing the sign-in form instead.
+          </p>
+        )}
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setRole('buyer')}
+            className="text-sm font-medium text-primary hover:text-primary-500"
+          >
+            Sign in with email &amp; password
+          </button>
+        </div>
+      </div>
     );
   }
 

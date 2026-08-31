@@ -45,6 +45,16 @@ export default function CartSummary({
   const hydrated = useHydrated();
   const shownItems = hydrated ? items : [];
 
+  // Persisted cart state rehydrates on the client before React hydrates, so
+  // derived pricing must render empty/zero until mounted to match the
+  // server-rendered output (otherwise the subtotal/total text mismatches).
+  const shownSubtotal = hydrated ? currentSubtotal : 0;
+  const shownTax = hydrated ? currentTax : 0;
+  const shownShipping = hydrated ? currentShipping : 0;
+  const shownDiscount = hydrated ? currentDiscount : 0;
+  const shownTotal = hydrated ? currentTotal : 0;
+  const shownCouponCode = hydrated ? couponCode : null;
+
   const handleApplyPromo = async () => {
     const code = promoCode.trim();
     if (!code || applying) return;
@@ -124,17 +134,17 @@ export default function CartSummary({
         {/* Subtotal */}
         <div className="flex items-center justify-between text-secondary-700">
           <span>Subtotal</span>
-          <span className="font-medium">{formatPrice(currentSubtotal)}</span>
+          <span className="font-medium">{formatPrice(shownSubtotal)}</span>
         </div>
 
         {/* Shipping */}
         <div className="flex items-center justify-between text-secondary-700">
           <span>Shipping</span>
           <span className="font-medium">
-            {currentShipping === 0 ? (
+            {shownShipping === 0 ? (
               <span className="text-success">Free</span>
             ) : (
-              formatPrice(currentShipping)
+              formatPrice(shownShipping)
             )}
           </span>
         </div>
@@ -142,16 +152,16 @@ export default function CartSummary({
         {/* Tax */}
         <div className="flex items-center justify-between text-secondary-700">
           <span>Estimated Tax</span>
-          <span className="font-medium">{formatPrice(currentTax)}</span>
+          <span className="font-medium">{formatPrice(shownTax)}</span>
         </div>
 
         {/* Discount */}
-        {currentDiscount > 0 && (
+        {shownDiscount > 0 && (
           <div className="flex items-center justify-between text-success">
             <span>
-              Discount{couponCode ? ` (${couponCode})` : ''}
+              Discount{shownCouponCode ? ` (${shownCouponCode})` : ''}
             </span>
-            <span className="font-medium">-{formatPrice(currentDiscount)}</span>
+            <span className="font-medium">-{formatPrice(shownDiscount)}</span>
           </div>
         )}
 
@@ -162,7 +172,7 @@ export default function CartSummary({
               Total
             </span>
             <span className="text-base font-bold text-primary">
-              {formatPrice(currentTotal)}
+              {formatPrice(shownTotal)}
             </span>
           </div>
         </div>
@@ -216,14 +226,14 @@ export default function CartSummary({
           className="mt-4 w-full"
           onClick={onPlaceOrder}
           loading={placeOrderLoading}
-          disabled={items.length === 0}
+          disabled={shownItems.length === 0}
         >
           <Lock size={16} />
           Place Order
         </Button>
       ) : (
         <Link href="/checkout">
-          <Button variant="primary" size="lg" className="mt-4 w-full" disabled={items.length === 0}>
+          <Button variant="primary" size="lg" className="mt-4 w-full" disabled={shownItems.length === 0}>
             Proceed to Checkout
           </Button>
         </Link>

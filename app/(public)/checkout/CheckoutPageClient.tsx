@@ -482,6 +482,10 @@ function ReviewStep({
   const currentShipping = shippingCost();
   const currentTotal = total();
 
+  const shownSubtotal = hydrated ? currentSubtotal : 0;
+  const shownShipping = hydrated ? currentShipping : 0;
+  const shownTotal = hydrated ? currentTotal : 0;
+
   const paymentLabel = useMemo(() => {
     switch (paymentData.method) {
       case 'easypaisa':
@@ -586,22 +590,22 @@ function ReviewStep({
         <div className="mt-4 space-y-2 border-t border-muted-100 pt-4 text-sm">
           <div className="flex justify-between text-secondary-700">
             <span>Subtotal</span>
-            <span className="font-medium">{formatPrice(currentSubtotal)}</span>
+            <span className="font-medium">{formatPrice(shownSubtotal)}</span>
           </div>
           <div className="flex justify-between text-secondary-700">
             <span>Shipping</span>
             <span className="font-medium">
-              {currentShipping === 0 ? (
+              {shownShipping === 0 ? (
                 <span className="text-success">Free</span>
               ) : (
-                formatPrice(currentShipping)
+                formatPrice(shownShipping)
               )}
             </span>
           </div>
           <div className="flex justify-between border-t border-muted-100 pt-2">
             <span className="font-bold text-secondary-800">Total</span>
             <span className="font-bold text-primary">
-              {formatPrice(currentTotal)}
+              {formatPrice(shownTotal)}
             </span>
           </div>
         </div>
@@ -656,6 +660,7 @@ export default function CheckoutPage() {
   const clearCart = useCartStore((s) => s.clearCart);
   const couponCode = useCartStore((s) => s.couponCode);
   const discountAmount = useCartStore((s) => s.discountAmount);
+  const hydrated = useHydrated();
   const [currentStep, setCurrentStep] = useState(0);
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -878,8 +883,8 @@ export default function CheckoutPage() {
     }
   };
 
-  // Empty cart guard
-  if (items.length === 0) {
+  // Empty cart guard (gated on hydration so the empty state matches server output on first render)
+  if (!hydrated || items.length === 0) {
     return (
       <>
         <section className="border-b border-muted-100 bg-white py-4">

@@ -79,7 +79,7 @@ export default function CartSidebar() {
             <h2 className="font-heading text-lg font-bold text-secondary-800">
               Shopping Cart
             </h2>
-            {currentItemCount > 0 && (
+            {hydrated && currentItemCount > 0 && (
               <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">
                 {currentItemCount}
               </span>

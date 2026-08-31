@@ -55,6 +55,15 @@ function isProtectedRoute(
   return pathname === pattern || pathname.startsWith(pattern + "/");
 }
 
+// Supabase SSR stores the auth session cookie either as the legacy "sb:token"
+// or the v2 format "sb-<project-ref>-auth-token". Check for either so that a
+// validly signed-in session is recognized regardless of format.
+function hasSupabaseSession(request: NextRequest): boolean {
+  return request.cookies
+    .getAll()
+    .some((c) => c.name === "sb:token" || (c.name.startsWith("sb-") && c.name.endsWith("-auth-token")));
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -66,9 +75,7 @@ export async function middleware(request: NextRequest) {
 
   const userRole = supabaseResponse.cookies.get("sb-user-role")?.value;
 
-  const hasAuth =
-    supabaseResponse.cookies.get("sb-access-token")?.value ||
-    supabaseResponse.cookies.get("sb:token")?.value;
+  const hasAuth = hasSupabaseSession(request);
 
   if (isProtectedRoute(pathname, "/admin")) {
     if (!hasAuth) {
