@@ -124,6 +124,7 @@ seeded AS (
   CROSS JOIN vendor_resolution vr
   WHERE vr.vendor_id IS NOT NULL
   ON CONFLICT (slug) DO NOTHING
+  RETURNING id
 )
 SELECT count(*) AS products_seeded FROM seeded;
 
