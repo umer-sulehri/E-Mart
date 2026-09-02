@@ -72,7 +72,7 @@ seeded AS (
     b.id   AS brand_id,
     p.images,
     p.is_active,
-    p.status,
+    p.status::product_status AS status,
     p.rating,
     p.review_count,
     p.is_featured,
