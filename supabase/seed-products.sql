@@ -1,21 +1,20 @@
 -- ============================================================================
 -- E-Mart Product Seed Data (2026)
 -- ----------------------------------------------------------------------------
--- Use this to populate real product data so the storefront does not rely on
--- mock data. Idempotent (safe to run multiple times).
+-- Populates real product data so the storefront does not rely on mock data.
+-- Idempotent (safe to run multiple times) and uses plain top-level DML (no
+-- plpgsql DO block) so it runs as the SQL-editor role (postgres/superuser),
+-- bypassing RLS.
 --
--- PREREQUISITES:
---   - A seller profile + approved vendor must exist. Update the email below
---     to match your demo seller's registered email (profiles.email) OR provide
---     a vendor by slug. The script falls back: email match on profiles -> vendors,
---     otherwise the first active vendor.
---   - Categories are created or matched by slug.
+-- PREREQUISITE: a seller profile + approved vendor must exist. Update the
+-- email below to match your demo seller (profiles.email -> vendors). The first
+-- approved vendor is used as a fallback.
 -- ============================================================================
 
 BEGIN;
 
 -- ----------------------------------------------------------------------------
--- 1. Ensure base categories exist (Electronics, Fashion, Home & Garden)
+-- 1. Ensure base categories exist
 -- ----------------------------------------------------------------------------
 INSERT INTO categories (name, slug, description, is_active, display_order) VALUES
   ('Electronics', 'electronics', 'Electronic devices, gadgets and accessories', TRUE, 1),
@@ -33,92 +32,99 @@ INSERT INTO brands (name, slug, description, is_active) VALUES
 ON CONFLICT (slug) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
--- 2. Resolve the target vendor (edit the email to match your demo seller)
+-- 2. Resolve the target vendor (edit the email to match your demo seller).
+--    Plain CTE: try email match first, fall back to any approved vendor.
 -- ----------------------------------------------------------------------------
-DO $$
-DECLARE
-  target_vendor_id UUID;
-  target_email TEXT := 'seller@demo.com';
-  cat_elec UUID;
-  cat_fash UUID;
-  cat_home UUID;
-  cat_groc UUID;
-  cat_beau UUID;
-  brand_id UUID;
-BEGIN
-  -- Try to resolve vendor by seller email -> profiles -> vendors
-  SELECT v.id INTO target_vendor_id
-  FROM vendors v
-  JOIN profiles p ON p.id = v.user_id
-  WHERE p.email = target_email
-  LIMIT 1;
+WITH vendor_resolution AS (
+  SELECT COALESCE(
+    (
+      SELECT v.id FROM vendors v
+      JOIN profiles p ON p.id = v.user_id
+      WHERE p.email = 'seller@demo.com' AND v.status = 'approved'
+      LIMIT 1
+    ),
+    (
+      SELECT id FROM vendors WHERE status = 'approved' ORDER BY created_at ASC LIMIT 1
+    )
+  ) AS vendor_id
+),
 
-  -- Fallback: any approved vendor
-  IF target_vendor_id IS NULL THEN
-    SELECT id INTO target_vendor_id FROM vendors WHERE status = 'approved' LIMIT 1;
-  END IF;
-
-  IF target_vendor_id IS NULL THEN
-    RAISE NOTICE 'No vendor found. Create a seller/vendor first, or update target_email.';
-    RETURN;
-  END IF;
-
-  SELECT id INTO cat_elec FROM categories WHERE slug = 'electronics';
-  SELECT id INTO cat_fash FROM categories WHERE slug = 'fashion';
-  SELECT id INTO cat_home FROM categories WHERE slug = 'home-garden';
-  SELECT id INTO cat_groc FROM categories WHERE slug = 'groceries';
-  SELECT id INTO cat_beau FROM categories WHERE slug = 'beauty';
-  SELECT id INTO brand_id FROM brands WHERE slug = 'e-mart-essentials';
-
-  -- ----------------------------------------------------------------------------
-  -- 3. Insert sample products
-  -- ----------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------
+-- 3. Seed sample products referencing resolved IDs.
+--    No-op when no vendor is found (the LEFT JOIN yields a NULL vendor_id).
+-- ----------------------------------------------------------------------------
+seeded AS (
   INSERT INTO products (
-    vendor_id, name, slug, sku, description, price, cost, stock_quantity,
+    vendor_id, name, slug, sku, description, price, discount_price, stock_quantity,
     category_id, brand_id, images, is_active, status, rating, review_count,
     is_featured, is_new, tags
-  ) VALUES
+  )
+  SELECT
+    vr.vendor_id,
+    p.name,
+    p.slug,
+    p.sku,
+    p.description,
+    p.price,
+    p.discount_price,
+    p.stock_quantity,
+    c.id   AS category_id,
+    b.id   AS brand_id,
+    p.images,
+    p.is_active,
+    p.status,
+    p.rating,
+    p.review_count,
+    p.is_featured,
+    p.is_new,
+    p.tags
+  FROM (VALUES
     (
-      target_vendor_id, 'Wireless Noise-Cancelling Headphones',
-      'wireless-noise-cancelling-headphones', 'WHP-001',
+      'Wireless Noise-Cancelling Headphones', 'wireless-noise-cancelling-headphones',
+      'WHP-001',
       'Premium over-ear Bluetooth headphones with active noise cancellation and 30-hour battery life.',
-      24999.00, 12000.00, 50, cat_elec, brand_id,
+      24999.00, 24999.00, 50, 'electronics',
       ARRAY['https://images.unsplash.com/photo-1505740420928-5e560c06d30e'],
       TRUE, 'active', 4.5, 128, TRUE, TRUE, ARRAY['audio','wireless','electronics']
     ),
     (
-      target_vendor_id, 'Organic Cotton T-Shirt',
-      'organic-cotton-t-shirt', 'TEE-001',
+      'Organic Cotton T-Shirt', 'organic-cotton-t-shirt', 'TEE-001',
       'Soft, breathable organic cotton t-shirt in neutral tones. Machine washable.',
-      1899.00, 700.00, 200, cat_fash, brand_id,
+      1899.00, 1899.00, 200, 'fashion',
       ARRAY['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab'],
       TRUE, 'active', 4.2, 45, FALSE, TRUE, ARRAY['fashion','apparel','organic']
     ),
     (
-      target_vendor_id, 'Ceramic Plant Pot Set',
-      'ceramic-plant-pot-set', 'HOM-001',
+      'Ceramic Plant Pot Set', 'ceramic-plant-pot-set', 'HOM-001',
       'Aesthetic set of three ceramic plant pots with drainage holes, ideal for indoor plants.',
-      3499.00, 1500.00, 30, cat_home, brand_id,
+      3499.00, 3499.00, 30, 'home-garden',
       ARRAY['https://images.unsplash.com/photo-1485955900006-10f4d324d411'],
       TRUE, 'active', 4.7, 82, TRUE, FALSE, ARRAY['home','decor','garden']
     ),
     (
-      target_vendor_id, 'Artisan Roasted Coffee Beans 500g',
-      'artisan-roasted-coffee-beans-500g', 'GRC-001',
+      'Artisan Roasted Coffee Beans 500g', 'artisan-roasted-coffee-beans-500g', 'GRC-001',
       'Single-origin medium roast coffee beans, freshly roasted and vacuum packed.',
-      2999.00, 1100.00, 150, cat_groc, brand_id,
+      2999.00, 2999.00, 150, 'groceries',
       ARRAY['https://images.unsplash.com/photo-1447933601403-0c6688de566e'],
       TRUE, 'active', 4.8, 210, TRUE, TRUE, ARRAY['groceries','coffee','beverages']
     ),
     (
-      target_vendor_id, 'Vitamin C Brightening Serum',
-      'vitamin-c-brightening-serum', 'BEA-001',
+      'Vitamin C Brightening Serum', 'vitamin-c-brightening-serum', 'BEA-001',
       'Lightweight facial serum with Vitamin C, hyaluronic acid and vitamin E for radiant skin.',
-      2499.00, 900.00, 90, cat_beau, brand_id,
+      2499.00, 2499.00, 90, 'beauty',
       ARRAY['https://images.unsplash.com/photo-1620916566398-39f1143ab7be'],
       TRUE, 'active', 4.4, 67, FALSE, TRUE, ARRAY['beauty','skincare','serum']
     )
-  ON CONFLICT (sku) DO NOTHING;
-END $$;
+  ) AS p(
+    name, slug, sku, description, price, discount_price, stock_quantity,
+    category_slug, images, is_active, status, rating, review_count, is_featured, is_new, tags
+  )
+  JOIN categories c ON c.slug = p.category_slug
+  JOIN brands b        ON b.slug  = 'e-mart-essentials'
+  CROSS JOIN vendor_resolution vr
+  WHERE vr.vendor_id IS NOT NULL
+  ON CONFLICT (slug) DO NOTHING
+)
+SELECT count(*) AS products_seeded FROM seeded;
 
 COMMIT;

@@ -7,7 +7,6 @@ interface ImportRow {
   sku: string;
   description: string;
   price: number;
-  cost: number | null;
   stock: number;
   categoryName: string;
   subcategoryName: string;
@@ -114,14 +113,12 @@ export async function POST(request: NextRequest) {
         return;
       }
       const stock = get(row, "stock") ? parseInt(get(row, "stock"), 10) : 0;
-      const costRaw = get(row, "cost") ? parseFloat(get(row, "cost")) : null;
 
       imports.push({
         name: get(row, "name"),
         sku: get(row, "sku"),
         description: get(row, "description") || "",
         price,
-        cost: costRaw && !isNaN(costRaw) ? costRaw : null,
         stock: isNaN(stock) ? 0 : stock,
         categoryName: get(row, "category_name") || get(row, "category") || "",
         subcategoryName: get(row, "subcategory_name") || get(row, "subcategory") || "",
@@ -231,7 +228,6 @@ export async function POST(request: NextRequest) {
             sku: item.sku,
             description: item.description,
             price: item.price,
-            cost: item.cost,
             stock_quantity: item.stock,
             category_id,
             subcategory_id,
