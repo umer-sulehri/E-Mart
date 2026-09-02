@@ -1,48 +1,46 @@
 -- ============================================================================
--- E-Mart Storage Bucket Creation + RLS Policies (2026)
+-- E-Mart Storage Buckets — SETUP GUIDE
 -- ----------------------------------------------------------------------------
--- Create the storage buckets used by the app. Without these buckets, "Bucket
--- not found" errors occur on upload.
+-- NOTE (2026): The storage.* tables in this project are owned by the
+-- `supabase_storage_admin` role, and the SQL-editor role (`postgres`) does NOT
+-- have permission to insert into storage.buckets, call storage.create_bucket(),
+-- or SET ROLE to supabase_storage_admin. Attempting these from the SQL editor
+-- fails with "42501: must be owner" / "permission denied to set role".
 --
--- Buckets referenced by the codebase:
---   products       -> product images (components/seller/ProductForm.tsx)
---   blog           -> blog post images
---   vendor-assets  -> seller profile/store images
---   avatars        -> user profile pictures
---   uploads        -> generic fallback uploads (app/api/v1/uploads/route.ts)
---
--- WHY THIS VERSION: In Supabase the storage.* tables are owned by the
--- `supabase_storage_admin` role, NOT `postgres`. Direct INSERT/ALTER/CREATE
--- POLICY from postgres fails with "42501: must be owner of table objects",
--- and the storage.create_bucket() helper is not present/exposed in every
--- project. postgres is a superuser, so it can SET ROLE to the storage admin
--- owner role and perform all storage DDL/inserts as that owner.
+-- => Create the buckets through the Storage Dashboard UI instead (it uses the
+--    service role internally). The app only needs the buckets to EXIST and be
+--    PUBLIC. Steps + the RLS policy SQL you may paste into the Dashboard's
+--    "Policies" editor for storage.objects are below.
 -- ============================================================================
 
-BEGIN;
-
--- Run all storage operations as the table-owner role.
-SET ROLE supabase_storage_admin;
-
 -- ----------------------------------------------------------------------------
--- 1. Create public buckets (idempotent).
+-- STEP 1 — Create the buckets (Dashboard: Storage -> New Bucket)
 -- ----------------------------------------------------------------------------
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES
-  ('products',       'products',       TRUE, 5242880, ARRAY['image/jpeg','image/png','image/webp','image/gif']),
-  ('blog',           'blog',           TRUE, 10485760, ARRAY['image/jpeg','image/png','image/webp','image/gif']),
-  ('vendor-assets',  'vendor-assets',  TRUE, 5242880, ARRAY['image/jpeg','image/png','image/webp','image/gif']),
-  ('avatars',        'avatars',        TRUE, 3145728, ARRAY['image/jpeg','image/png','image/webp']),
-  ('uploads',        'uploads',        TRUE, 10485760, ARRAY['image/jpeg','image/png','image/webp','image/gif','application/pdf'])
-ON CONFLICT (id) DO NOTHING;
+-- For EACH of the following, click "New bucket", name it, and set "Public
+-- bucket" = ON:
+--
+--   products      5 MB   (image/jpeg, png, webp, gif)   <- product images
+--   blog          10 MB  (image/jpeg, png, webp, gif)   <- blog images
+--   vendor-assets 5 MB   (image/jpeg, png, webp, gif)   <- seller store images
+--   avatars       3 MB   (image/jpeg, png, webp)        <- user avatars
+--   uploads       10 MB  (image/jpeg, png, webp, gif, application/pdf)
+--
+-- (File-size/mime limits are optional; leave defaults if preferred.)
 
 -- ----------------------------------------------------------------------------
--- 2. storage.objects RLS policies.
+-- STEP 2 — Add storage.objects policies (Dashboard: Storage -> Policies)
 -- ----------------------------------------------------------------------------
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Public buckets already allow anonymous reads. To let signed-in users upload,
+-- add an INSERT policy on storage.objects. In the Dashboard, open "Storage" ->
+-- "Policies", then run these (the Dashboard policy editor uses a privileged
+-- role, so it can create policies here even though the SQL editor cannot):
+--
+-- SELECT (for public read — usually already provided by making the bucket public):
+CREATE POLICY "Allow public read from app buckets"
+  ON storage.objects FOR SELECT
+  USING (bucket_id IN ('products','blog','vendor-assets','avatars','uploads'));
 
--- Allow authenticated users to upload objects into our buckets
-DROP POLICY IF EXISTS "Allow authenticated uploads to app buckets" ON storage.objects;
+-- INSERT (authenticated uploads):
 CREATE POLICY "Allow authenticated uploads to app buckets"
   ON storage.objects FOR INSERT
   WITH CHECK (
@@ -50,23 +48,17 @@ CREATE POLICY "Allow authenticated uploads to app buckets"
     AND bucket_id IN ('products','blog','vendor-assets','avatars','uploads')
   );
 
--- Allow public read of objects in our buckets
-DROP POLICY IF EXISTS "Allow public read from app buckets" ON storage.objects;
-CREATE POLICY "Allow public read from app buckets"
-  ON storage.objects FOR SELECT
-  USING (bucket_id IN ('products','blog','vendor-assets','avatars','uploads'));
-
--- Allow object owners to update/delete their own uploads
-DROP POLICY IF EXISTS "Allow owner update in app buckets" ON storage.objects;
+-- UPDATE / DELETE (owners manage their own objects):
 CREATE POLICY "Allow owner update in app buckets"
   ON storage.objects FOR UPDATE
   USING (auth.uid() = owner);
 
-DROP POLICY IF EXISTS "Allow owner delete in app buckets" ON storage.objects;
 CREATE POLICY "Allow owner delete in app buckets"
   ON storage.objects FOR DELETE
   USING (auth.uid() = owner);
 
-RESET ROLE;
-
-COMMIT;
+-- ----------------------------------------------------------------------------
+-- ONE-LINE VERIFICATION (SQL editor, read-only — safe to run):
+--   SELECT id, public FROM storage.buckets ORDER BY id;
+-- Expect all five buckets listed with public = true.
+-- ============================================================================
