@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 import { slugify } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
@@ -131,6 +132,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    await writeAdminLog(supabase, user.id, {
+      action: "create_category",
+      entityType: "category",
+      entityId: category.id,
+      details: { name: category.name },
+    });
+
     return NextResponse.json(
       { success: true, data: category, message: "Category created successfully" },
       { status: 201 }
@@ -189,6 +197,12 @@ export async function PUT(request: NextRequest) {
         .update({ display_order: i })
         .eq("id", cat.id);
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "reorder_categories",
+      entityType: "category",
+      details: { count: categories.length },
+    });
 
     return NextResponse.json({
       success: true,

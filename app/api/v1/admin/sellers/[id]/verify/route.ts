@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 
 export async function POST(
   _request: NextRequest,
@@ -58,6 +59,12 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "verify_seller",
+      entityType: "seller",
+      entityId: id,
+    });
 
     return NextResponse.json({
       success: true,

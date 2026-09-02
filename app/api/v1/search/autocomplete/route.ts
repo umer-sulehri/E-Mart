@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeSearchPattern } from "@/lib/search-safe";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     const { data: results, error } = await supabase
       .from("products")
       .select("id, name, slug, price, discount_price, images")
-      .ilike("name", `%${query}%`)
+      .ilike("name", safeSearchPattern(query))
       .eq("is_active", true)
       .limit(limit);
 
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
     const { data: categoryResults } = await supabase
       .from("categories")
       .select("name, slug")
-      .ilike("name", `%${query}%`)
+      .ilike("name", safeSearchPattern(query))
       .limit(5);
 
     if (categoryResults) {

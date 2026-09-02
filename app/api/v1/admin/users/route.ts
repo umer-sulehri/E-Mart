@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeOrTerm } from "@/lib/search-safe";
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,8 +43,9 @@ export async function GET(request: NextRequest) {
       .select("*", { count: "exact" });
 
     if (search) {
+      const escaped = safeOrTerm(search);
       query = query.or(
-        `first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`
+        `first_name.ilike.%${escaped}%,last_name.ilike.%${escaped}%,email.ilike.%${escaped}%`
       );
     }
 

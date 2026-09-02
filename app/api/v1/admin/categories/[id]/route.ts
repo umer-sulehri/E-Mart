@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 import { slugify } from "@/lib/utils";
 
 export async function PUT(
@@ -61,6 +62,13 @@ export async function PUT(
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "update_category",
+      entityType: "category",
+      entityId: id,
+      details: { updates },
+    });
 
     return NextResponse.json({
       success: true,
@@ -131,6 +139,12 @@ export async function DELETE(
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "delete_category",
+      entityType: "category",
+      entityId: id,
+    });
 
     return NextResponse.json({
       success: true,

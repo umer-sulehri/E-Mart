@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeSearchPattern, safeOrTerm } from "@/lib/search-safe";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,25 +15,26 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = await createClient();
-    const searchTerm = `%${query}%`;
+    const safeSearch = safeSearchPattern(query);
+    const safeOr = safeOrTerm(query);
 
     const [productsResult, categoriesResult, brandsResult] = await Promise.all([
       supabase
         .from("products")
         .select("id, name, slug, images, price, discount_price, is_active")
-        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm}`)
+        .or(`name.ilike.${safeOr},description.ilike.${safeOr}`)
         .eq("is_active", true)
         .limit(5),
       supabase
         .from("categories")
         .select("id, name, slug, image_url")
-        .ilike("name", searchTerm)
+        .ilike("name", safeSearch)
         .eq("is_active", true)
         .limit(3),
       supabase
         .from("brands")
         .select("id, name, slug, logo_url")
-        .ilike("name", searchTerm)
+        .ilike("name", safeSearch)
         .eq("is_active", true)
         .limit(3),
     ]);

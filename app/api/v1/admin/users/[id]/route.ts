@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 
 async function verifyAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const {
@@ -89,6 +90,13 @@ export async function PATCH(
       );
     }
 
+    await writeAdminLog(supabase, auth.userId, {
+      action: "update_user",
+      entityType: "user",
+      entityId: id,
+      details: { updates },
+    });
+
     return NextResponse.json({
       success: true,
       data: user,
@@ -136,6 +144,12 @@ export async function DELETE(
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, auth.userId, {
+      action: "deactivate_user",
+      entityType: "user",
+      entityId: id,
+    });
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeOrTerm } from "@/lib/search-safe";
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,9 +47,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      const q = `%${search}%`;
+      const escaped = safeOrTerm(search);
       query = query.or(
-        `comment.ilike.${q},title.ilike.${q},products.name.ilike.${q}`
+        `comment.ilike.%${escaped}%,title.ilike.%${escaped}%,products.name.ilike.%${escaped}%`
       );
     }
 
