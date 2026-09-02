@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
       .from("products")
       .select(
         brand
-          ? "*, categories!inner(name, slug), brands!inner(name, slug), vendors(name, slug)"
-          : "*, categories!inner(name, slug), brands(name, slug), vendors(name, slug)",
+          ? "*, categories!products_category_id_fkey(name, slug), brands!inner(name, slug), vendors(name, slug)"
+          : "*, categories!products_category_id_fkey(name, slug), brands(name, slug), vendors(name, slug)",
         { count: "exact" }
       );
 

@@ -28,7 +28,7 @@ export async function GET(
       .select(
         `
         *,
-        categories(id, name, slug, image_url),
+        categories!products_category_id_fkey(id, name, slug, image_url),
         brands(id, name, slug)
       `
       )

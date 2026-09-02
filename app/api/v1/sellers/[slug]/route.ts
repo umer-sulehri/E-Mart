@@ -30,7 +30,7 @@ export async function GET(
 
     let productQuery = supabase
       .from("products")
-      .select("*, categories!inner(name, slug)", { count: "exact" })
+      .select("*, categories!products_category_id_fkey(name, slug)", { count: "exact" })
       .eq("vendor_id", seller.id)
       .eq("is_active", true);
 

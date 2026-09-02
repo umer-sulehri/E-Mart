@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("products")
-      .select("*, categories(name, slug), brands(name, slug)", { count: "exact" })
+      .select("*, categories!products_category_id_fkey(name, slug), brands(name, slug)", { count: "exact" })
       .eq("is_active", true);
 
     if (q) {

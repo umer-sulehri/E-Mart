@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("products")
-      .select("*, categories(name, slug), vendors(name, slug, profiles(first_name, last_name))", { count: "exact" });
+      .select("*, categories!products_category_id_fkey(name, slug), vendors(name, slug, profiles(first_name, last_name))", { count: "exact" });
 
     if (search) {
       query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`);

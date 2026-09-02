@@ -26,6 +26,8 @@ export default function SellerPayoutsPage() {
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
   const [amount, setAmount] = useState('');
+  const [method, setMethod] = useState('bank');
+  const [accountDetails, setAccountDetails] = useState('');
   const [requesting, setRequesting] = useState(false);
 
   const fetchPayouts = useCallback(async () => {
@@ -34,7 +36,12 @@ export default function SellerPayoutsPage() {
       const res = await fetch('/api/v1/seller/payout');
       const data = await res.json();
       if (data.success) {
-        setPayouts(data.data || []);
+        const payoutArray = Array.isArray(data.data?.payouts)
+          ? data.data.payouts
+          : Array.isArray(data.data)
+            ? data.data
+            : [];
+        setPayouts(payoutArray);
       } else {
         toast.error(data.error || 'Failed to load payouts');
       }
@@ -55,17 +62,27 @@ export default function SellerPayoutsPage() {
       toast.error('Enter a valid amount');
       return;
     }
+    if (!accountDetails.trim()) {
+      toast.error('Enter your account details');
+      return;
+    }
     setRequesting(true);
     try {
       const res = await fetch('/api/v1/seller/payout/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: amt }),
+        body: JSON.stringify({
+          amount: amt,
+          method,
+          account_details: { value: accountDetails.trim() },
+        }),
       });
       const data = await res.json();
       if (data.success) {
         toast.success('Payout request submitted');
         setAmount('');
+        setMethod('bank');
+        setAccountDetails('');
         setRequestOpen(false);
         fetchPayouts();
       } else {
@@ -185,6 +202,31 @@ export default function SellerPayoutsPage() {
               min={100}
               className="w-full rounded-lg border border-muted-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
+            <label className="mb-1 mt-4 block text-sm font-medium text-secondary-700">Payout Method</label>
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              className="w-full rounded-lg border border-muted-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="bank">Bank Transfer</option>
+              <option value="easypaisa">Easypaisa</option>
+              <option value="jazzcash">JazzCash</option>
+            </select>
+            <label className="mb-1 mt-4 block text-sm font-medium text-secondary-700">
+              Account Details
+            </label>
+            <input
+              type="text"
+              value={accountDetails}
+              onChange={(e) => setAccountDetails(e.target.value)}
+              placeholder={
+                method === 'bank'
+                  ? 'Account name / IBAN'
+                  : 'Mobile number (03xx-xxxxxxx)'
+              }
+              className="w-full rounded-lg border border-muted-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+            <p className="mt-1 text-xs text-muted-400">Enter the account details for receiving the payout.</p>
             <div className="mt-6 flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setRequestOpen(false)}>
                 Cancel

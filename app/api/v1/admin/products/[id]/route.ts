@@ -41,7 +41,7 @@ export async function GET(
         `
         *,
         vendors(id, name, slug, contact_email, status),
-        categories(id, name, slug),
+        categories!products_category_id_fkey(id, name, slug),
         brands(id, name, slug)
       `
       )

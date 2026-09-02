@@ -53,7 +53,10 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("products")
-      .select("*, categories(name, slug)", { count: "exact" })
+      .select(
+        "*, category:categories!products_category_id_fkey(id, name, slug), subcategory:categories!products_subcategory_id_fkey(id, name, slug)",
+        { count: "exact" }
+      )
       .eq("vendor_id", vendor.id);
 
     if (search) {

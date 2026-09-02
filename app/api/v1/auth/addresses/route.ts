@@ -57,21 +57,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      label,
-      firstName,
-      lastName,
-      phone,
-      addressLine1,
-      addressLine2,
-      city,
-      state,
-      postalCode,
-      country,
-      is_default,
-    } = body;
 
-    if (!firstName || !lastName || !addressLine1 || !city || !postalCode) {
+    // Accept snake_case (dashboard form + DB columns) with camelCase fallback
+    // for backward compatibility with any camelCase callers.
+    const label = body.label ?? body.addressLabel ?? null;
+    const first_name = body.first_name ?? body.firstName ?? "";
+    const last_name = body.last_name ?? body.lastName ?? "";
+    const phone = body.phone ?? "";
+    const address_line1 = body.address_line1 ?? body.addressLine1 ?? "";
+    const address_line2 = body.address_line2 ?? body.addressLine2 ?? null;
+    const city = body.city ?? "";
+    const state = body.state ?? "";
+    const postal_code = body.postal_code ?? body.postalCode ?? "";
+    const country = body.country ?? "Pakistan";
+    const is_default = !!body.is_default;
+
+    if (!first_name || !last_name || !address_line1 || !city) {
       return NextResponse.json(
         { success: false, error: "Missing required address fields" },
         { status: 400 }
@@ -89,17 +90,17 @@ export async function POST(request: NextRequest) {
       .from("addresses")
       .insert({
         user_id: user.id,
-        label: label || null,
-        first_name: firstName,
-        last_name: lastName,
+        label: label || "Home",
+        first_name,
+        last_name,
         phone: phone || null,
-        address_line1: addressLine1,
-        address_line2: addressLine2 || null,
+        address_line1,
+        address_line2: address_line2 || null,
         city,
-        state: state || null,
-        postal_code: postalCode,
+        state: state || "Punjab",
+        postal_code: postal_code || null,
         country: country || "Pakistan",
-        is_default: is_default ?? false,
+        is_default,
       })
       .select()
       .single();

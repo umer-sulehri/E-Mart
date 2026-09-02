@@ -69,8 +69,7 @@ export default function HomePage() {
   const [bestSellers, setBestSellers] = useState<Product[]>(bestSellingProducts);
   const [featured, setFeatured] = useState<Product[]>(featuredProducts);
   const [popular, setPopular] = useState<Product[]>(popularProducts);
-  const [newArrivalsProducts, setNewArrivalsProducts] =
-    useState<Product[]>(newArrivals);
+  const [newArrivalsProducts, setNewArrivalsProducts] = useState<Product[]>(newArrivals);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -92,40 +91,40 @@ export default function HomePage() {
 
         if (bestRes.status === 'fulfilled') {
           const res = bestRes.value as ApiListResponse<ApiProduct>;
-          if (res.success && res.data?.length) {
+          if (res.success && Array.isArray(res.data)) {
             setBestSellers(res.data.map(apiProductToCardProduct));
           }
         }
 
         if (featuredRes.status === 'fulfilled') {
           const res = featuredRes.value as ApiListResponse<ApiProduct>;
-          if (res.success && res.data?.length) {
+          if (res.success && Array.isArray(res.data)) {
             setFeatured(res.data.map(apiProductToCardProduct));
           }
         }
 
         if (popularRes.status === 'fulfilled') {
           const res = popularRes.value as ApiListResponse<ApiProduct>;
-          if (res.success && res.data?.length) {
+          if (res.success && Array.isArray(res.data)) {
             setPopular(res.data.map(apiProductToCardProduct));
           }
         }
 
         if (newRes.status === 'fulfilled') {
           const res = newRes.value as ApiListResponse<ApiProduct>;
-          if (res.success && res.data?.length) {
+          if (res.success && Array.isArray(res.data)) {
             setNewArrivalsProducts(res.data.map(apiProductToCardProduct));
           }
         }
 
         if (catRes.status === 'fulfilled') {
           const res = catRes.value as ApiListResponse<ApiCategory>;
-          if (res.success && res.data?.length) {
+          if (res.success && Array.isArray(res.data)) {
             setCategories(res.data.map(apiCategoryToCarouselCategory));
           }
         }
       } catch {
-        // Fall back to mock data (already set as defaults)
+        // Network failure — keep the initial mock defaults as a last resort.
       } finally {
         if (!cancelled) setLoading(false);
       }

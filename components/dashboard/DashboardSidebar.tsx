@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Leaf,
+  Bell,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,7 @@ const navLinks = [
   { label: 'My Orders', href: '/dashboard/orders', icon: Package },
   { label: 'Wishlist', href: '/dashboard/wishlist', icon: Heart },
   { label: 'My Addresses', href: '/dashboard/addresses', icon: MapPin },
+  { label: 'Notifications', href: '/dashboard/notifications', icon: Bell },
   { label: 'Profile Settings', href: '/dashboard/profile', icon: User },
   { label: 'Change Password', href: '/dashboard/change-password', icon: Lock },
 ];

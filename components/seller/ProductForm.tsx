@@ -92,8 +92,22 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
 
   const handleFiles = useCallback(
     (files: FileList | File[]) => {
-      const newImages = Array.from(files)
-        .filter((f) => f.type.startsWith('image/'))
+      const MAX_SIZE = 5 * 1024 * 1024;
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      const incoming = Array.from(files);
+
+      for (const f of incoming) {
+        if (!ALLOWED_TYPES.includes(f.type)) {
+          toast.error(`${f.name}: only JPEG, PNG, WebP, GIF images are allowed`);
+          return;
+        }
+        if (f.size > MAX_SIZE) {
+          toast.error(`${f.name}: image must be under 5MB`);
+          return;
+        }
+      }
+
+      const newImages = incoming
         .slice(0, 5 - form.images.length)
         .map((file) => ({
           file,

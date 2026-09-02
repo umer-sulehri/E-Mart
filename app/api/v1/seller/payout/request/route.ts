@@ -93,18 +93,16 @@ export async function POST(request: NextRequest) {
     const commissionRate = vendor.commission_rate || 0;
     const netEarnings = totalEarnings * (1 - commissionRate / 100);
 
-    const settingKey = `payouts_${vendor.id}`;
-    const { data: setting } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", settingKey)
-      .single();
+    const { data: paidRows } = await supabase
+      .from("seller_payouts")
+      .select("amount, status")
+      .eq("seller_id", user.id)
+      .eq("status", "completed");
 
-    const existingPayouts =
-      ((setting?.value as Record<string, unknown>)?.payouts as Array<Record<string, unknown>>) || [];
-    const totalPaid = existingPayouts
-      .filter((p) => p.status === "completed")
-      .reduce((sum, p) => sum + ((p.amount as number) || 0), 0);
+    const totalPaid = (paidRows || []).reduce(
+      (sum, p) => sum + Number(p.amount || 0),
+      0
+    );
 
     const availableBalance = netEarnings - totalPaid;
 
@@ -119,23 +117,19 @@ export async function POST(request: NextRequest) {
     }
 
     const payout = {
-      id: crypto.randomUUID(),
-      vendor_id: vendor.id,
+      seller_id: user.id,
       amount,
       method,
       account_details,
       status: "pending",
-      requested_at: new Date().toISOString(),
+      notes: null,
     };
 
-    const updatedPayouts = [...existingPayouts, payout];
-
-    const { error } = await supabase
-      .from("settings")
-      .upsert(
-        { key: settingKey, value: { payouts: updatedPayouts } },
-        { onConflict: "key" }
-      );
+    const { data: created, error } = await supabase
+      .from("seller_payouts")
+      .insert(payout)
+      .select()
+      .single();
 
     if (error) {
       return NextResponse.json(
@@ -147,7 +141,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        data: payout,
+        data: created,
         message: "Payout request submitted successfully",
       },
       { status: 201 }

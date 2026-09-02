@@ -198,7 +198,7 @@ export default function SellerProductsPage() {
                             </div>
                             <div>
                               <span className="font-medium text-secondary-800">{product.name}</span>
-                              <p className="text-xs text-muted-500">{product.categories?.name ?? ''}</p>
+                              <p className="text-xs text-muted-500">{product.category?.name ?? product.categories?.name ?? ''}</p>
                             </div>
                           </div>
                         </td>

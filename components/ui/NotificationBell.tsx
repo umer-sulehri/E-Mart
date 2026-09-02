@@ -9,10 +9,13 @@ interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'order' | 'promotion' | 'system';
+  type: string;
   read: boolean;
   createdAt: string;
   link?: string;
+  is_read?: boolean;
+  created_at?: string;
+  data?: { link?: string };
 }
 
 interface NotificationBellProps {
@@ -28,11 +31,11 @@ export default function NotificationBell({ className }: NotificationBellProps) {
   useEffect(() => {
     async function fetchNotifications() {
       try {
-        const res = await fetch('/api/v1/notifications');
+        const res = await fetch('/api/v1/notifications?limit=10');
         const json = await res.json();
-        if (json.success && json.data) {
+        if (json.success && Array.isArray(json.data)) {
           setNotifications(json.data.slice(0, 10));
-          setUnreadCount(json.data.filter((n: Notification) => !n.read).length);
+          setUnreadCount(typeof json.unread_count === 'number' ? json.unread_count : json.data.filter((n: Notification) => !(n.read ?? n.is_read)).length);
         }
       } catch {
         // Silent fail
@@ -56,8 +59,12 @@ export default function NotificationBell({ className }: NotificationBellProps) {
 
   async function markAllRead() {
     try {
-      await fetch('/api/v1/notifications/mark-all-read', { method: 'POST' });
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      await fetch('/api/v1/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mark_all: true }),
+      });
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true, is_read: true })));
       setUnreadCount(0);
     } catch {
       // Silent fail
@@ -102,25 +109,29 @@ export default function NotificationBell({ className }: NotificationBellProps) {
                 No notifications yet
               </div>
             ) : (
-              notifications.map((notification) => (
+              notifications.map((notification) => {
+                const isRead = notification.read ?? notification.is_read ?? false;
+                const type = notification.type?.toLowerCase() || '';
+                const isOrder = type.includes('order') || type.includes('payment') || type.includes('review');
+                const isPromo = type.includes('promo');
+                const createdDate = notification.createdAt ?? notification.created_at;
+                const href = notification.link ?? notification.data?.link ?? '#';
+                return (
                 <Link
                   key={notification.id}
-                  href={notification.link || '#'}
+                  href={href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
                     'flex gap-3 border-b border-muted-50 px-4 py-3 transition-colors hover:bg-muted-50',
-                    !notification.read && 'bg-primary/5'
+                    !isRead && 'bg-primary/5'
                   )}
                 >
                   <div
                     className={cn(
                       'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-                      notification.type === 'order' &&
-                        'bg-primary/10 text-primary',
-                      notification.type === 'promotion' &&
-                        'bg-warning/10 text-warning',
-                      notification.type === 'system' &&
-                        'bg-muted-100 text-muted-500'
+                      isOrder && 'bg-primary/10 text-primary',
+                      isPromo && 'bg-warning/10 text-warning',
+                      !isOrder && !isPromo && 'bg-muted-100 text-muted-500'
                     )}
                   >
                     <Bell size={14} />
@@ -129,7 +140,7 @@ export default function NotificationBell({ className }: NotificationBellProps) {
                     <p
                       className={cn(
                         'text-sm',
-                        notification.read
+                        isRead
                           ? 'text-muted-600'
                           : 'font-medium text-secondary-800'
                       )}
@@ -140,14 +151,15 @@ export default function NotificationBell({ className }: NotificationBellProps) {
                       {notification.message}
                     </p>
                     <p className="mt-1 text-[10px] text-muted-400">
-                      {new Date(notification.createdAt).toLocaleDateString()}
+                      {createdDate ? new Date(createdDate).toLocaleDateString() : ''}
                     </p>
                   </div>
-                  {!notification.read && (
+                  {!isRead && (
                     <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
                   )}
                 </Link>
-              ))
+                );
+              })
             )}
           </div>
 

@@ -23,6 +23,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import MobileNav from './MobileNav';
 import NotificationBell from '@/components/ui/NotificationBell';
+import VoiceSearch from './VoiceSearch';
 
 interface Suggestion {
   text: string;
@@ -167,6 +168,7 @@ function SearchBar({ className }: { className?: string }) {
             <Search className="h-5 w-5" />
           )}
         </button>
+        <VoiceSearch onSearch={navigateTo} />
       </form>
 
       {/* Suggestions Dropdown */}
@@ -221,6 +223,7 @@ function PagesDropdown() {
     { label: 'Checkout', href: '/checkout' },
     { label: 'Blog', href: '/blog' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Help Center', href: '/help' },
     { label: 'My Account', href: '/account' },
     { label: 'Seller Dashboard', href: '/seller' },
     { label: 'Admin', href: '/admin' },

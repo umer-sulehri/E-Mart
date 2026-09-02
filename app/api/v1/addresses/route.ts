@@ -21,7 +21,6 @@ export async function POST(request: NextRequest) {
     const {
       firstName,
       lastName,
-      email,
       phone,
       addressLine1,
       addressLine2,
@@ -53,7 +52,6 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         first_name: firstName,
         last_name: lastName,
-        email,
         phone,
         address_line1: addressLine1,
         address_line2: addressLine2 || null,

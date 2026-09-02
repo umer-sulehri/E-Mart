@@ -48,25 +48,41 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const offset = (page - 1) * limit;
 
-    const { data: setting } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", `payouts_${vendor.id}`)
-      .single();
+    // Payouts are stored in the seller_payouts table keyed by the seller's
+    // profile id (user.id), which matches the RLS policy (auth.uid() = seller_id).
+    const { data: payoutRows, error, count } = await supabase
+      .from("seller_payouts")
+      .select("*", { count: "exact" })
+      .eq("seller_id", user.id)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    const allPayouts =
-      ((setting?.value as Record<string, unknown>)?.payouts as Array<Record<string, unknown>>) || [];
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
 
-    const sorted = allPayouts.sort(
-      (a, b) =>
-        new Date(b.created_at as string).getTime() -
-        new Date(a.created_at as string).getTime()
-    );
+    const payouts = (payoutRows || []).map((p) => ({
+      id: p.id,
+      amount: Number(p.amount),
+      status: p.status as string,
+      method: p.method,
+      account_details: p.account_details,
+      requested_at: p.created_at,
+      processed_at: p.processed_at,
+    }));
 
-    const paginated = sorted.slice(offset, offset + limit);
+    const { data: totalData } = await supabase
+      .from("seller_payouts")
+      .select("amount, status")
+      .eq("seller_id", user.id);
+
+    const allPayouts = totalData || [];
     const totalPaid = allPayouts
       .filter((p) => p.status === "completed")
-      .reduce((sum, p) => sum + ((p.amount as number) || 0), 0);
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
     const { data: productIds } = await supabase
       .from("products")
@@ -91,7 +107,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        payouts: paginated,
+        payouts,
         summary: {
           total_paid: totalPaid,
           pending_balance: Math.max(0, pendingBalance),

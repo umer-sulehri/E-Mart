@@ -65,9 +65,19 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
+      const status =
+        uploadError.message && uploadError.message.toLowerCase().includes("bucket not found")
+          ? 404
+          : 500;
       return NextResponse.json(
-        { success: false, error: uploadError.message },
-        { status: 500 }
+        {
+          success: false,
+          error:
+            status === 404
+              ? `Storage bucket "${bucket}" does not exist. Please create it in Supabase (see supabase/storage-buckets.sql).`
+              : uploadError.message,
+        },
+        { status }
       );
     }
 

@@ -3,11 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createClient();
-    const { id } = await params;
 
     const {
       data: { user },
@@ -21,12 +20,20 @@ export async function PUT(
       );
     }
 
-    const { data: existing } = await supabase
+    const { id } = params;
+
+    const { data: existing, error: fetchError } = await supabase
       .from("addresses")
-      .select("id")
+      .select("id, user_id")
       .eq("id", id)
-      .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
+
+    if (fetchError) {
+      return NextResponse.json(
+        { success: false, error: fetchError.message },
+        { status: 500 }
+      );
+    }
 
     if (!existing) {
       return NextResponse.json(
@@ -35,45 +42,41 @@ export async function PUT(
       );
     }
 
-    const body = await request.json();
-    const {
-      label,
-      firstName,
-      lastName,
-      phone,
-      addressLine1,
-      addressLine2,
-      city,
-      state,
-      postalCode,
-      country,
-      is_default,
-    } = body;
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { success: false, error: "You cannot edit this address" },
+        { status: 403 }
+      );
+    }
 
-    if (is_default) {
+    const body = await request.json();
+
+    // Partial update support (e.g. setting default). Only include provided fields.
+    const patch: Record<string, unknown> = {};
+    if ("label" in body && body.label != null) patch.label = body.label;
+    if ("first_name" in body) patch.first_name = body.first_name;
+    if ("last_name" in body) patch.last_name = body.last_name;
+    if ("phone" in body) patch.phone = body.phone ?? null;
+    if ("address_line1" in body) patch.address_line1 = body.address_line1;
+    if ("address_line2" in body) patch.address_line2 = body.address_line2 ?? null;
+    if ("city" in body) patch.city = body.city;
+    if ("state" in body) patch.state = body.state;
+    if ("postal_code" in body) patch.postal_code = body.postal_code ?? null;
+    if ("country" in body) patch.country = body.country;
+    if ("is_default" in body) patch.is_default = !!body.is_default;
+
+    // If setting this as default, clear others first.
+    if (patch.is_default === true) {
       await supabase
         .from("addresses")
         .update({ is_default: false })
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .neq("id", id);
     }
-
-    const updates: Record<string, unknown> = {};
-    if (label !== undefined) updates.label = label;
-    if (firstName !== undefined) updates.first_name = firstName;
-    if (lastName !== undefined) updates.last_name = lastName;
-    if (phone !== undefined) updates.phone = phone;
-    if (addressLine1 !== undefined) updates.address_line1 = addressLine1;
-    if (addressLine2 !== undefined) updates.address_line2 = addressLine2;
-    if (city !== undefined) updates.city = city;
-    if (state !== undefined) updates.state = state;
-    if (postalCode !== undefined) updates.postal_code = postalCode;
-    if (country !== undefined) updates.country = country;
-    if (is_default !== undefined) updates.is_default = is_default;
-    updates.updated_at = new Date().toISOString();
 
     const { data: address, error } = await supabase
       .from("addresses")
-      .update(updates)
+      .update(patch)
       .eq("id", id)
       .select()
       .single();
@@ -85,7 +88,11 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json({ success: true, data: address, message: "Address updated" });
+    return NextResponse.json({
+      success: true,
+      data: address,
+      message: "Address updated successfully",
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
@@ -96,11 +103,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createClient();
-    const { id } = await params;
 
     const {
       data: { user },
@@ -114,11 +120,39 @@ export async function DELETE(
       );
     }
 
+    const { id } = params;
+
+    const { data: existing, error: fetchError } = await supabase
+      .from("addresses")
+      .select("id, user_id, is_default")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchError) {
+      return NextResponse.json(
+        { success: false, error: fetchError.message },
+        { status: 500 }
+      );
+    }
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Address not found" },
+        { status: 404 }
+      );
+    }
+
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { success: false, error: "You cannot delete this address" },
+        { status: 403 }
+      );
+    }
+
     const { error } = await supabase
       .from("addresses")
       .delete()
-      .eq("id", id)
-      .eq("user_id", user.id);
+      .eq("id", id);
 
     if (error) {
       return NextResponse.json(
@@ -127,7 +161,10 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json({ success: true, message: "Address deleted" });
+    return NextResponse.json({
+      success: true,
+      message: "Address deleted successfully",
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
