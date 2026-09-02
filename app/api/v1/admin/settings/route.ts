@@ -145,42 +145,27 @@ export async function PUT(request: NextRequest) {
     }
 
     const entries = Object.entries(dataObj);
-    const results = [];
-
-    for (const [name, value] of entries) {
+    const rows = entries.map(([name, value]) => {
       const key = `${section}.${name}`;
-      const stored =
-        typeof value === "string" ? value : JSON.stringify(value);
-      const { data: existing } = await supabase
-        .from("settings")
-        .select("id")
-        .eq("key", key)
-        .single();
+      const stored = typeof value === "string" ? value : JSON.stringify(value);
+      return { key, value: stored, updated_at: new Date().toISOString() };
+    });
 
-      if (existing) {
-        const { data } = await supabase
-          .from("settings")
-          .update({
-            value: stored,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("key", key)
-          .select()
-          .single();
-        results.push(data);
-      } else {
-        const { data } = await supabase
-          .from("settings")
-          .insert({ key, value: stored })
-          .select()
-          .single();
-        results.push(data);
-      }
+    const { data, error } = await supabase
+      .from("settings")
+      .upsert(rows, { onConflict: "key" })
+      .select();
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
       success: true,
-      data: results,
+      data: data || [],
       message: "Settings updated successfully",
     });
   } catch (error) {

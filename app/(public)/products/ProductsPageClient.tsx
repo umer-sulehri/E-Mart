@@ -19,27 +19,8 @@ import {
   type ApiProduct,
   type ApiListResponse,
 } from '@/lib/api';
-import {
-  bestSellingProducts,
-  featuredProducts,
-  popularProducts,
-  newArrivals,
-} from '@/lib/mock/products';
 
 const ITEMS_PER_PAGE = 15;
-
-const allMockProducts: Product[] = (() => {
-  const map = new Map<string, Product>();
-  for (const p of [
-    ...bestSellingProducts,
-    ...featuredProducts,
-    ...popularProducts,
-    ...newArrivals,
-  ]) {
-    map.set(p.id, p);
-  }
-  return Array.from(map.values());
-})();
 
 const BRAND_NAMES: Record<string, string> = {
   'nature-best': "Nature's Best",
@@ -70,28 +51,6 @@ function activeFilterCount(filters: FilterState): number {
   if (filters.brands.length > 0) count++;
   if (filters.inStockOnly) count++;
   return count;
-}
-
-function sortProducts(products: Product[], sort: SortValue): Product[] {
-  const sorted = [...products];
-  switch (sort) {
-    case 'newest':
-      return sorted.reverse();
-    case 'price_asc':
-      return sorted.sort(
-        (a, b) => (a.discountPrice ?? a.price) - (b.discountPrice ?? b.price)
-      );
-    case 'price_desc':
-      return sorted.sort(
-        (a, b) => (b.discountPrice ?? b.price) - (a.discountPrice ?? a.price)
-      );
-    case 'rating':
-      return sorted.sort((a, b) => b.rating - a.rating);
-    case 'popularity':
-      return sorted.sort((a, b) => b.reviewCount - a.reviewCount);
-    default:
-      return sorted;
-  }
 }
 
 export default function ProductsPage() {
@@ -131,7 +90,6 @@ function ProductsContent() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [useApi, setUseApi] = useState(true);
 
   // Keep state in sync when the user navigates via back/forward or a link
   // that carries new query params.
@@ -206,57 +164,6 @@ function ProductsContent() {
     let cancelled = false;
 
     async function fetchProducts() {
-      if (!useApi) {
-        // Fallback to client-side filtering with mock data
-        let result = allMockProducts;
-
-        if (initialSearch.trim()) {
-          const query = initialSearch.toLowerCase();
-          result = result.filter(
-            (p) =>
-              p.name.toLowerCase().includes(query) ||
-              p.slug.toLowerCase().includes(query)
-          );
-        }
-
-        if (filters.minPrice !== '') {
-          const min = parseFloat(filters.minPrice);
-          if (!isNaN(min)) {
-            result = result.filter(
-              (p) => (p.discountPrice ?? p.price) >= min
-            );
-          }
-        }
-
-        if (filters.maxPrice !== '') {
-          const max = parseFloat(filters.maxPrice);
-          if (!isNaN(max)) {
-            result = result.filter(
-              (p) => (p.discountPrice ?? p.price) <= max
-            );
-          }
-        }
-
-        if (filters.minRating > 0) {
-          result = result.filter((p) => p.rating >= filters.minRating);
-        }
-
-        const sorted = sortProducts(result, sort);
-        const total = Math.ceil(sorted.length / ITEMS_PER_PAGE);
-        const paginated = sorted.slice(
-          (currentPage - 1) * ITEMS_PER_PAGE,
-          currentPage * ITEMS_PER_PAGE
-        );
-
-        if (!cancelled) {
-          setProducts(paginated);
-          setTotalItems(sorted.length);
-          setTotalPages(total);
-          setLoading(false);
-        }
-        return;
-      }
-
       try {
         setLoading(true);
         const params: Record<string, string> = {
@@ -306,12 +213,17 @@ function ProductsContent() {
           }
           setLoading(false);
         } else {
-          // API returned no data — fall back to mock
-          setUseApi(false);
+          setProducts([]);
+          setTotalItems(0);
+          setTotalPages(1);
+          setLoading(false);
         }
       } catch {
         if (!cancelled) {
-          setUseApi(false);
+          setProducts([]);
+          setTotalItems(0);
+          setTotalPages(1);
+          setLoading(false);
         }
       }
     }
@@ -320,7 +232,7 @@ function ProductsContent() {
     return () => {
       cancelled = true;
     };
-  }, [currentPage, sort, initialSearch, initialCategory, filters, useApi]);
+  }, [currentPage, sort, initialSearch, initialCategory, filters]);
 
   const filtersSidebar = (
     <ProductFilters filters={filters} onFilterChange={applyFilters} />

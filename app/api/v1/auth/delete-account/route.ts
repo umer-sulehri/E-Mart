@@ -1,9 +1,32 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { rateLimitByIp } from "@/lib/rate-limit";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    const limit = rateLimitByIp(request, 3, 60 * 1000);
+    if (!limit.success) {
+      return NextResponse.json(
+        { success: false, error: "Too many attempts. Try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(limit.retryAfterSec) },
+        }
+      );
+    }
+
+    const body = await request.json().catch(() => null);
+    if (!body || body?.confirm !== "DELETE") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Please confirm account deletion by sending { 'confirm': 'DELETE' }",
+        },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createClient();
 
     const {

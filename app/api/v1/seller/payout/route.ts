@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     const { data: vendor } = await supabase
       .from("vendors")
-      .select("id")
+      .select("id, commission_rate")
       .eq("user_id", user.id)
       .single();
 
@@ -100,7 +100,10 @@ export async function GET(request: NextRequest) {
         .in("orders.status", ["confirmed", "processing", "shipped", "out_for_delivery", "delivered"]);
 
       if (earnings) {
-        pendingBalance = earnings.reduce((sum, item) => sum + (item.total || 0), 0) - totalPaid;
+        const grossTotal = earnings.reduce((sum, item) => sum + (item.total || 0), 0);
+        const commissionRate = vendor?.commission_rate || 0;
+        const netTotal = grossTotal * (1 - commissionRate / 100);
+        pendingBalance = netTotal - totalPaid;
       }
     }
 

@@ -859,15 +859,65 @@ CREATE POLICY "Admins can update all orders"
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+-- Break the recursive order_items <-> orders dependency: a SECURITY DEFINER
+-- function runs the cross-table lookup with the definer's privileges so RLS
+-- is not re-evaluated, avoiding PostgreSQL ERROR 42P17 (infinite recursion).
+CREATE OR REPLACE FUNCTION public.user_can_view_order(target_order_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM order_items oi
+    JOIN vendors v ON oi.vendor_id = v.id
+    WHERE oi.order_id = target_order_id
+      AND v.user_id = auth.uid()
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.user_can_view_order(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.user_can_view_order(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.user_can_view_order(UUID) TO anon;
+
 CREATE POLICY "Sellers can view orders containing their products"
   ON orders FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM order_items oi
-      JOIN vendors v ON oi.vendor_id = v.id
-      WHERE oi.order_id = orders.id AND v.user_id = auth.uid()
-    )
+  USING (public.user_can_view_order(orders.id));
+
+-- ----------------------------------------------------------------------------
+-- order_items write helpers (SECURITY DEFINER, non-recursive)
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.user_owns_order(target_order_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM orders
+    WHERE id = target_order_id AND user_id = auth.uid()
   );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.user_owns_order(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.user_owns_order(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.user_owns_order(UUID) TO anon;
+
+-- Users can insert/delete order items belonging to their own orders (rollback)
+CREATE POLICY "Users can insert own order items"
+  ON order_items FOR INSERT
+  WITH CHECK (public.user_owns_order(order_id));
+
+CREATE POLICY "Users can delete own order items"
+  ON order_items FOR DELETE
+  USING (public.user_owns_order(order_id));
 
 -- ============================================================
 -- RLS POLICIES: order_items
@@ -875,9 +925,7 @@ CREATE POLICY "Sellers can view orders containing their products"
 
 CREATE POLICY "Users can view own order items"
   ON order_items FOR SELECT
-  USING (
-    EXISTS (SELECT 1 FROM orders WHERE id = order_id AND user_id = auth.uid())
-  );
+  USING (public.user_owns_order(order_id));
 
 CREATE POLICY "Admins can view all order items"
   ON order_items FOR SELECT

@@ -18,12 +18,6 @@ import FeaturesStrip from '@/components/home/FeaturesStrip';
 import ProductCard from '@/components/product/ProductCard';
 import type { Product } from '@/components/product/ProductCard';
 import {
-  bestSellingProducts,
-  featuredProducts,
-  popularProducts,
-  newArrivals,
-} from '@/lib/mock/products';
-import {
   api,
   apiProductToCardProduct,
   apiCategoryToCarouselCategory,
@@ -66,10 +60,10 @@ function SkeletonCarousel() {
 }
 
 export default function HomePage() {
-  const [bestSellers, setBestSellers] = useState<Product[]>(bestSellingProducts);
-  const [featured, setFeatured] = useState<Product[]>(featuredProducts);
-  const [popular, setPopular] = useState<Product[]>(popularProducts);
-  const [newArrivalsProducts, setNewArrivalsProducts] = useState<Product[]>(newArrivals);
+  const [bestSellers, setBestSellers] = useState<Product[]>([]);
+  const [featured, setFeatured] = useState<Product[]>([]);
+  const [popular, setPopular] = useState<Product[]>([]);
+  const [newArrivalsProducts, setNewArrivalsProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -124,7 +118,7 @@ export default function HomePage() {
           }
         }
       } catch {
-        // Network failure — keep the initial mock defaults as a last resort.
+        // Network failure — leave sections empty rather than falling back to mock data.
       } finally {
         if (!cancelled) setLoading(false);
       }

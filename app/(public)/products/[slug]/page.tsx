@@ -7,13 +7,7 @@ import ProductDetailClient from './ProductDetailClient';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import { calculateDiscount, formatPrice } from '@/lib/utils';
 import { generateProductMetadata } from '@/lib/seo';
-import { resolveImage } from '@/lib/imageLoader';
 import { apiProductToCardProduct } from '@/lib/api';
-import {
-  getProductBySlug,
-  getAllProductSlugs,
-  getRelatedProducts,
-} from '@/lib/mock/product-detail';
 import type { Product } from '@/types';
 
 interface ProductDetailPageProps {
@@ -149,8 +143,9 @@ async function fetchRelatedProducts(slug: string) {
 }
 
 export async function generateStaticParams() {
-  const slugs = getAllProductSlugs();
-  return slugs.map((slug) => ({ slug }));
+  // No static pre-generation — product slugs come from the live database,
+  // so pages are rendered on-demand (ISR/dynamic).
+  return [];
 }
 
 export async function generateMetadata({
@@ -160,15 +155,7 @@ export async function generateMetadata({
 
   const product = await fetchProductBySlug(slug);
   if (!product) {
-    const mock = getProductBySlug(slug);
-    if (!mock) return { title: 'Product Not Found' };
-    return generateProductMetadata({
-      name: mock.name,
-      shortDescription: mock.shortDescription,
-      description: mock.description,
-      images: mock.images,
-      slug: mock.slug,
-    });
+    return { title: 'Product Not Found' };
   }
 
   return generateProductMetadata({
@@ -187,29 +174,11 @@ export default async function ProductDetailPage({
 
   let product = await fetchProductBySlug(slug);
 
-  // Fallback to mock data if API unavailable
-  if (!product) {
-    product = (getProductBySlug(slug) as Product | undefined) ?? null;
-  }
-
   if (!product) {
     notFound();
   }
 
-  let relatedProducts = await fetchRelatedProducts(slug);
-  if (relatedProducts.length === 0) {
-    const mockRelated = getRelatedProducts(slug);
-    relatedProducts = mockRelated.map((p) => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      price: p.price,
-      discountPrice: p.discountPrice,
-      rating: p.rating,
-      reviewCount: p.reviewCount,
-      image: resolveImage(p.images[0]),
-    }));
-  }
+  const relatedProducts = await fetchRelatedProducts(slug);
 
   const hasDiscount =
     product.discountPrice != null && product.discountPrice < product.price;
