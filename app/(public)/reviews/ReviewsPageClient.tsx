@@ -12,6 +12,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import toast from 'react-hot-toast';
 
 interface Review {
   id: string;
@@ -165,7 +166,7 @@ export default function ReviewsPage() {
 
   const filteredTotalPages = Math.ceil(filteredReviews.length / ITEMS_PER_PAGE);
 
-  const handleHelpful = (reviewId: string) => {
+  const handleHelpful = async (reviewId: string) => {
     setReviews((prev) =>
       prev.map((r) => {
         if (r.id === reviewId) {
@@ -178,6 +179,20 @@ export default function ReviewsPage() {
         return r;
       })
     );
+
+    try {
+      const res = await fetch(`/api/v1/reviews/${reviewId}/helpful`, {
+        method: 'POST',
+      });
+      if (res.status === 401) {
+        toast.error('Please sign in to mark reviews as helpful');
+      } else if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || 'Failed to update review');
+      }
+    } catch {
+      // keep optimistic local state
+    }
   };
 
   return (

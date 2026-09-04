@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 
 async function requireAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const {
@@ -57,6 +58,13 @@ export async function PUT(
       );
     }
 
+    await writeAdminLog(supabase, admin.user.id, {
+      action: "update_banner",
+      entityType: "banner",
+      entityId: id,
+      details: { updates },
+    });
+
     return NextResponse.json({ success: true, data: banner, message: "Banner updated" });
   } catch (error) {
     return NextResponse.json(
@@ -87,6 +95,12 @@ export async function DELETE(
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, admin.user.id, {
+      action: "delete_banner",
+      entityType: "banner",
+      entityId: id,
+    });
 
     return NextResponse.json({ success: true, message: "Banner deleted" });
   } catch (error) {

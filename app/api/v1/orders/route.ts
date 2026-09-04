@@ -44,6 +44,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Summary aggregates for the buyer dashboard (Total Spent / Pending Orders),
+    // computed across ALL of the user's orders, not just the current page.
+    let totalSpent = 0;
+    let pendingCount = 0;
+    const { data: allOrders } = await supabase
+      .from("orders")
+      .select("total, status")
+      .eq("user_id", user.id);
+    for (const o of allOrders || []) {
+      if (o.status === "cancelled" || o.status === "returned" || o.status === "refunded") {
+        continue;
+      }
+      totalSpent += Number(o.total) || 0;
+      if (o.status === "pending" || o.status === "processing") {
+        pendingCount += 1;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: orders || [],
@@ -54,6 +72,10 @@ export async function GET(request: NextRequest) {
         itemsPerPage: limit,
         hasNextPage: page * limit < (count || 0),
         hasPreviousPage: page > 1,
+      },
+      summary: {
+        totalSpent,
+        pendingCount,
       },
     });
   } catch (error) {

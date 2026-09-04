@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 
 export async function PUT(
   request: NextRequest,
@@ -66,6 +67,13 @@ export async function PUT(
       );
     }
 
+    await writeAdminLog(supabase, user.id, {
+      action: "update_coupon",
+      entityType: "coupon",
+      entityId: id,
+      details: { updates },
+    });
+
     return NextResponse.json({
       success: true,
       data: coupon,
@@ -123,6 +131,12 @@ export async function DELETE(
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "delete_coupon",
+      entityType: "coupon",
+      entityId: id,
+    });
 
     return NextResponse.json({
       success: true,

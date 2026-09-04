@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       .from("seller_payouts")
       .select("amount, status")
       .eq("seller_id", user.id)
-      .eq("status", "completed");
+      .in("status", ["pending", "processing", "completed"]);
 
     const totalPaid = (paidRows || []).reduce(
       (sum, p) => sum + Number(p.amount || 0),

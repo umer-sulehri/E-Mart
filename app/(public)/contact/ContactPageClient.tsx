@@ -71,7 +71,6 @@ export default function ContactPageClient() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     subject: '',
     message: '',
   });
@@ -85,7 +84,6 @@ export default function ContactPageClient() {
     if (!formData.email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       errs.email = 'Enter a valid email';
-    if (!formData.phone.trim()) errs.phone = 'Phone number is required';
     if (!formData.subject.trim()) errs.subject = 'Subject is required';
     if (!formData.message.trim()) errs.message = 'Message is required';
     setErrors(errs);
@@ -105,7 +103,6 @@ export default function ContactPageClient() {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
-          phone: formData.phone,
           subject: formData.subject,
           message: formData.message,
         }),
@@ -118,7 +115,7 @@ export default function ContactPageClient() {
       }
 
       toast.success('Message sent successfully! We will get back to you soon.');
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      setFormData({ name: '', email: '', subject: '', message: '' });
       setErrors({});
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong. Please try again.');
@@ -188,15 +185,6 @@ export default function ContactPageClient() {
                   />
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Input
-                    label="Phone Number"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    error={errors.phone}
-                    placeholder="+92 300 1234567"
-                  />
                   <Input
                     label="Subject"
                     name="subject"

@@ -43,7 +43,7 @@ export default function ComparePage() {
             name: p.name,
             slug: p.slug,
             price: p.price,
-            discountPrice: p.sale_price,
+            discountPrice: p.discount_price,
             rating: p.rating || 0,
             reviewCount: p.review_count || 0,
             image: p.images?.[0] || '/images/product-thumb-1.webp',

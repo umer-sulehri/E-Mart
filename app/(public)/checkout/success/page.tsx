@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle, ShoppingBag, FileText, Home } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import CartClear from "./CartClear";
 
 interface SuccessPageProps {
   searchParams: Promise<{ orderId?: string; orderNumber?: string }>;
@@ -13,6 +14,7 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
 
   return (
     <>
+      <CartClear />
       <section className="border-b border-muted-100 bg-white py-4">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
           <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-600">

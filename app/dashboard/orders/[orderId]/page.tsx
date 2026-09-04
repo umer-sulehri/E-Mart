@@ -65,6 +65,7 @@ export default function OrderDetailPage({
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [returning, setReturning] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -110,6 +111,34 @@ export default function OrderDetailPage({
       toast.error('Failed to cancel order');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!order) return;
+    const confirmed = window.confirm(
+      'Are you sure you want to request a return for this order?'
+    );
+    if (!confirmed) return;
+
+    try {
+      setReturning(true);
+      const res = await fetch(`/api/v1/orders/${order.id}/return`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Customer requested return' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Return request submitted successfully');
+        setOrder({ ...order, status: 'returned' });
+      } else {
+        toast.error(data.error || 'Failed to submit return request');
+      }
+    } catch {
+      toast.error('Failed to submit return request');
+    } finally {
+      setReturning(false);
     }
   };
 
@@ -410,7 +439,7 @@ export default function OrderDetailPage({
       </div>
 
       <div className="flex flex-wrap gap-3">
-        {order.status !== 'cancelled' && order.status !== 'delivered' && (
+        {['pending', 'confirmed', 'processing'].includes(order.status) && (
           <Button
             variant="danger"
             loading={cancelling}
@@ -418,6 +447,16 @@ export default function OrderDetailPage({
           >
             <X className="h-4 w-4" />
             Cancel Order
+          </Button>
+        )}
+        {['delivered', 'shipped', 'out_for_delivery'].includes(order.status) && (
+          <Button
+            variant="danger"
+            loading={returning}
+            onClick={handleReturn}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Request Return
           </Button>
         )}
         <Button variant="primary" onClick={handleReorder}>

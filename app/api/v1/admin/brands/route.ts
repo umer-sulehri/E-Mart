@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 import { safeOrTerm } from "@/lib/search-safe";
 
 export async function GET(request: NextRequest) {
@@ -133,6 +134,13 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "create_brand",
+      entityType: "brand",
+      entityId: brand.id,
+      details: { name: brand.name },
+    });
 
     return NextResponse.json({
       success: true,

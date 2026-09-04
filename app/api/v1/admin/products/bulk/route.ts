@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,6 +75,12 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "bulk_update_product",
+      entityType: "product",
+      details: { product_ids, updates: updateFields, updated_count: data?.length || 0 },
+    });
 
     return NextResponse.json({
       success: true,

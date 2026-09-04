@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 
 export async function PUT(
   request: NextRequest,
@@ -70,6 +71,13 @@ export async function PUT(
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "update_social_link",
+      entityType: "social_link",
+      entityId: id,
+      details: { platform: links[index].platform },
+    });
 
     return NextResponse.json({
       success: true,
@@ -156,6 +164,12 @@ export async function DELETE(
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "delete_social_link",
+      entityType: "social_link",
+      entityId: id,
+    });
 
     return NextResponse.json({
       success: true,

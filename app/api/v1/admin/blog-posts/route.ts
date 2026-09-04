@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 import { slugify } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
@@ -132,6 +133,13 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "create_blog_post",
+      entityType: "blog_post",
+      entityId: post.id,
+      details: { title: post.title },
+    });
 
     return NextResponse.json(
       { success: true, data: post, message: "Blog post created successfully" },

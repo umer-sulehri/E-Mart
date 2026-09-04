@@ -112,18 +112,36 @@ export const useCartStore = create<CartState>()(
           const data = await res.json();
           if (data.success && data.data?.items) {
             const serverItems: CartItem[] = data.data.items.map((item: any) => {
-              const product = item.product || {};
-              const unitPrice = product.discount_price ?? product.price ?? 0;
+              const p = item.product || {};
+              const unitPrice = p.discount_price ?? p.price ?? 0;
+              const product = {
+                id: p.id || item.productId,
+                name: p.name || 'Product',
+                slug: p.slug || '',
+                description: p.description || '',
+                price: p.price ?? 0,
+                discountPrice: p.discount_price,
+                stockQuantity: p.stock_quantity ?? 0,
+                sku: p.sku || '',
+                category: { id: '', name: '', slug: '' },
+                categoryId: '',
+                rating: p.rating ?? 0,
+                reviewCount: p.review_count ?? 0,
+                isActive: p.is_active ?? true,
+                isFeatured: false,
+                isNew: false,
+                images: Array.isArray(p.images) ? p.images : [],
+                createdAt: p.created_at || '',
+                updatedAt: p.updated_at || '',
+              };
               return {
                 id: item.id,
                 productId: item.productId,
-                name: product.name || 'Product',
-                slug: product.slug || '',
-                image: product.images?.[0] || '/images/product-thumb-1.webp',
-                unitPrice,
+                product,
                 quantity: item.quantity,
+                unitPrice,
                 totalPrice: unitPrice * item.quantity,
-                stock: product.stock_quantity || 0,
+                addedAt: item.addedAt || new Date().toISOString(),
               };
             });
             set({ items: serverItems });

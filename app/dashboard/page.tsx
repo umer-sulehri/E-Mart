@@ -62,13 +62,8 @@ export default function DashboardPage() {
             setRecentOrders(ordersData.data || []);
             setStats({
               totalOrders: ordersData.meta?.totalItems || ordersData.data?.length || 0,
-              totalSpent: (ordersData.data || []).reduce(
-                (sum: number, o: Order) => sum + (o.total || 0),
-                0
-              ),
-              pendingOrders: (ordersData.data || []).filter(
-                (o: Order) => o.status === 'pending' || o.status === 'processing'
-              ).length,
+              totalSpent: ordersData.summary?.totalSpent ?? 0,
+              pendingOrders: ordersData.summary?.pendingCount ?? 0,
             });
           }
         }

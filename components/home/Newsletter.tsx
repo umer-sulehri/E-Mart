@@ -10,15 +10,14 @@ export interface NewsletterProps {
 
 const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
   ({ className }, ref) => {
-    const [name, setName] = React.useState('');
     const [email, setEmail] = React.useState('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
 
-      if (!name.trim() || !email.trim()) {
-        toast.error('Please fill in all fields');
+      if (!email.trim()) {
+        toast.error('Please fill in your email');
         return;
       }
 
@@ -38,7 +37,6 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
         }
 
         toast.success('Thanks for subscribing!');
-        setName('');
         setEmail('');
       } catch (err: any) {
         toast.error(err.message || 'Something went wrong. Please try again.');
@@ -72,20 +70,6 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
 
                 <div className="w-full p-3 md:w-5/12">
                   <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                      <label htmlFor="name" className="sr-only">
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full rounded-none border-0 bg-white p-3 text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                        name="name"
-                        id="name"
-                        placeholder="Name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
                     <div className="mb-3">
                       <label htmlFor="email" className="sr-only">
                         Email

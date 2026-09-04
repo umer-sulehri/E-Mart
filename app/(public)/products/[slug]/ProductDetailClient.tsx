@@ -11,6 +11,7 @@ import SellerInformationCard from '@/components/seller/SellerInformationCard';
 import { formatPrice, cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
 import { useCompareStore } from '@/store/compareStore';
+import { useAuthStore } from '@/store/authStore';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
 import type { Product } from '@/types';
 
@@ -31,9 +32,11 @@ export default function ProductDetailClient({
   const compareItems = useCompareStore((s) => s.items);
   const addCompare = useCompareStore((s) => s.addItem);
   const removeCompare = useCompareStore((s) => s.removeItem);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { isWishlisted, toggleWishlist, wishlistLoading } = useAddToWishlist(
     product.id,
-    product.name
+    product.name,
+    { isAuthenticated }
   );
 
   const isCompared = compareItems.some((i) => i.id === product.id);

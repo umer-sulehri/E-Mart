@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -201,12 +201,20 @@ function RoleLoginForm() {
 
   const {
     register,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '', rememberMe: false },
+    defaultValues: { email: '', password: '', rememberMe: false, role: 'customer' },
   });
+
+  // Keep the hidden `role` field in sync with the role selected via the
+  // role-selector step (the local `role` state). Without this, zodResolver
+  // rejects the submit because the required `role` field is never populated.
+  useEffect(() => {
+    setValue('role', role === 'buyer' ? 'customer' : (role ?? 'customer'), { shouldValidate: true });
+  }, [role, setValue]);
 
   const onSubmit = async (data: LoginInput) => {
     setIsLoading(true);
@@ -279,6 +287,7 @@ function RoleLoginForm() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <input type="hidden" {...register('role')} />
         <Input
           label="Email"
           type="email"

@@ -810,7 +810,6 @@ export default function CheckoutPage() {
           });
           const epResult = await epRes.json();
           if (!epResult.success) throw new Error(epResult.error || 'Easypaisa payment initiation failed');
-          clearCart();
           if (epResult.data?.paymentUrl) {
             window.location.href = epResult.data.paymentUrl;
           } else {
@@ -831,7 +830,6 @@ export default function CheckoutPage() {
           });
           const jcResult = await jcRes.json();
           if (!jcResult.success) throw new Error(jcResult.error || 'JazzCash payment initiation failed');
-          clearCart();
           if (jcResult.data?.redirectUrl) {
             window.location.href = jcResult.data.redirectUrl;
           } else {
@@ -852,7 +850,6 @@ export default function CheckoutPage() {
           });
           const stripeResult = await stripeRes.json();
           if (!stripeResult.success) throw new Error(stripeResult.error || 'Stripe payment initiation failed');
-          clearCart();
           if (stripeResult.data?.url) {
             window.location.href = stripeResult.data.url;
           } else {

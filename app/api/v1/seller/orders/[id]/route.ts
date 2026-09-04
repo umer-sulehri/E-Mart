@@ -134,7 +134,45 @@ export async function PATCH(
       );
     }
 
-    const { data: order, error } = await supabase
+    const { data: vendor } = await supabase
+      .from("vendors")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!vendor && profile?.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Seller profile not found" },
+        { status: 404 }
+      );
+    }
+
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("order_items(products(vendor_id))")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (orderError || !order) {
+      return NextResponse.json(
+        { success: false, error: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    const items = (order.order_items as Array<{ products?: Array<{ vendor_id: string }> }> | undefined) || [];
+    const hasSellerProduct = items.some((item) =>
+      (item.products || []).some((p) => p.vendor_id === vendor?.id)
+    );
+
+    if (!hasSellerProduct && profile?.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Access denied" },
+        { status: 403 }
+      );
+    }
+
+    const { data: updated, error } = await supabase
       .from("orders")
       .update({ status, updated_at: new Date().toISOString() })
       .eq("id", id)
@@ -148,7 +186,7 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ success: true, data: order, message: "Order status updated" });
+    return NextResponse.json({ success: true, data: updated, message: "Order status updated" });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
