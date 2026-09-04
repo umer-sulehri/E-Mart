@@ -119,7 +119,7 @@ export const useCartStore = create<CartState>()(
                 productId: item.productId,
                 name: product.name || 'Product',
                 slug: product.slug || '',
-                image: product.images?.[0] || '/images/product-thumb-1.png',
+                image: product.images?.[0] || '/images/product-thumb-1.webp',
                 unitPrice,
                 quantity: item.quantity,
                 totalPrice: unitPrice * item.quantity,

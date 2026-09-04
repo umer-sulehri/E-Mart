@@ -21,7 +21,7 @@ const DownloadApp = React.forwardRef<HTMLDivElement, { className?: string }>(
                 <div className="flex flex-wrap items-center gap-3">
                   <a href="#" title="Download on the App Store" className="block transition-transform hover:scale-105">
                     <Image
-                      src="/images/img-app-store.png"
+                      src="/images/img-app-store.webp"
                       alt="App Store"
                       width={135}
                       height={40}
@@ -30,7 +30,7 @@ const DownloadApp = React.forwardRef<HTMLDivElement, { className?: string }>(
                   </a>
                   <a href="#" title="Get it on Google Play" className="block transition-transform hover:scale-105">
                     <Image
-                      src="/images/img-google-play.png"
+                      src="/images/img-google-play.webp"
                       alt="Google Play"
                       width={135}
                       height={40}
@@ -42,7 +42,7 @@ const DownloadApp = React.forwardRef<HTMLDivElement, { className?: string }>(
 
               <div className="relative flex-shrink-0">
                 <Image
-                  src="/images/banner-onlineapp.png"
+                  src="/images/banner-onlineapp.webp"
                   alt="Download our app"
                   width={320}
                   height={280}

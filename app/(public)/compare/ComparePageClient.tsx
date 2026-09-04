@@ -46,7 +46,7 @@ export default function ComparePage() {
             discountPrice: p.sale_price,
             rating: p.rating || 0,
             reviewCount: p.review_count || 0,
-            image: p.images?.[0] || '/images/product-thumb-1.png',
+            image: p.images?.[0] || '/images/product-thumb-1.webp',
           }));
           setSearchResults(mapped.filter((m) => !items.find((i) => i.id === m.id)));
         }

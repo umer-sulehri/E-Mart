@@ -201,7 +201,7 @@ export default function AdminStoresPage() {
               label="Logo URL"
               value={form.logo_url}
               onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-              placeholder="https://.../logo.png"
+              placeholder="https://.../logo.webp"
             />
           </div>
           <div className="mt-4">

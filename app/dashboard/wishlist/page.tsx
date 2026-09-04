@@ -146,7 +146,7 @@ export default function WishlistPage() {
               ? calculateDiscount(product.price, product.discountPrice)
               : 0;
             const inStock = product.stockQuantity > 0 && product.isActive;
-            const imageUrl = product.images?.[0] || '/images/placeholder.png';
+            const imageUrl = product.images?.[0] || '/images/placeholder.webp';
             const isRemoving = removingId === entry.productId;
             const isAdding = addingCartId === entry.productId;
 

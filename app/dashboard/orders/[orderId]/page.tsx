@@ -320,7 +320,7 @@ export default function OrderDetailPage({
               <div key={item.id || i} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-muted-200 bg-muted-50">
                   <ImageWithFallback
-                    src={item.productImage || '/images/placeholder.png'}
+                    src={item.productImage || '/images/placeholder.webp'}
                     alt={item.productName}
                     fill
                     className="object-cover"

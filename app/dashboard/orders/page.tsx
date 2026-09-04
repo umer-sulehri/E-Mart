@@ -189,7 +189,7 @@ export default function OrdersPage() {
                       className="relative h-14 w-14 overflow-hidden rounded-lg border border-muted-200 bg-muted-50"
                     >
                       <ImageWithFallback
-                        src={item.productImage || '/images/placeholder.png'}
+                        src={item.productImage || '/images/placeholder.webp'}
                         alt={item.productName}
                         fill
                         className="object-cover"

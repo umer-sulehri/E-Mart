@@ -56,7 +56,7 @@ export default function ProductDetailClient({
       discountPrice: product.discountPrice,
       rating: product.rating,
       reviewCount: product.reviewCount,
-      image: product.images?.[0] || '/images/product-thumb-1.png',
+      image: product.images?.[0] || '/images/product-thumb-1.webp',
       category: product.category?.name || '',
       brand: product.brand?.name || '',
       inStock: product.stockQuantity > 0,

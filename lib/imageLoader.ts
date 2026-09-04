@@ -8,7 +8,7 @@
  *  - Supabase storage relative paths -> public URL
  *  - local absolute paths
  */
-export const FALLBACK_IMAGE = "/images/placeholder.png";
+export const FALLBACK_IMAGE = "/images/placeholder.webp";
 
 function getSupabaseUrl(): { url: string; ref: string } | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
