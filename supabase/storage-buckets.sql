@@ -36,11 +36,13 @@
 -- role, so it can create policies here even though the SQL editor cannot):
 --
 -- SELECT (for public read — usually already provided by making the bucket public):
+DROP POLICY IF EXISTS "Allow public read from app buckets" ON storage.objects;
 CREATE POLICY "Allow public read from app buckets"
   ON storage.objects FOR SELECT
   USING (bucket_id IN ('products','blog','vendor-assets','avatars','uploads'));
 
 -- INSERT (authenticated uploads):
+DROP POLICY IF EXISTS "Allow authenticated uploads to app buckets" ON storage.objects;
 CREATE POLICY "Allow authenticated uploads to app buckets"
   ON storage.objects FOR INSERT
   WITH CHECK (
@@ -49,10 +51,12 @@ CREATE POLICY "Allow authenticated uploads to app buckets"
   );
 
 -- UPDATE / DELETE (owners manage their own objects):
+DROP POLICY IF EXISTS "Allow owner update in app buckets" ON storage.objects;
 CREATE POLICY "Allow owner update in app buckets"
   ON storage.objects FOR UPDATE
   USING (auth.uid() = owner);
 
+DROP POLICY IF EXISTS "Allow owner delete in app buckets" ON storage.objects;
 CREATE POLICY "Allow owner delete in app buckets"
   ON storage.objects FOR DELETE
   USING (auth.uid() = owner);

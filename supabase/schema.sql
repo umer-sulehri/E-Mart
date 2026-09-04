@@ -10,38 +10,66 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 -- ENUM TYPES
 -- ============================================================
 
-CREATE TYPE user_role AS ENUM ('customer', 'admin', 'seller');
-CREATE TYPE order_status AS ENUM (
-  'pending', 'confirmed', 'processing', 'shipped',
-  'out_for_delivery', 'delivered', 'cancelled', 'returned', 'refunded'
-);
-CREATE TYPE payment_status AS ENUM (
-  'pending', 'processing', 'completed', 'failed',
-  'refunded', 'partially_refunded'
-);
-CREATE TYPE payment_method AS ENUM (
-  'credit_card', 'debit_card', 'paypal', 'stripe',
-  'cash_on_delivery', 'bank_transfer',
-  'cod', 'easypaisa', 'jazzcash', 'card'
-);
-CREATE TYPE coupon_type AS ENUM ('percentage', 'fixed_amount', 'free_shipping');
-CREATE TYPE banner_position AS ENUM (
-  'home_top', 'home_middle', 'home_bottom', 'category_page', 'sidebar'
-);
-CREATE TYPE blog_status AS ENUM ('draft', 'published', 'archived');
-CREATE TYPE notification_type AS ENUM (
-  'order_placed', 'order_shipped', 'order_delivered', 'order_cancelled',
-  'payment_received', 'payment_failed', 'promo', 'system', 'review_received'
-);
-CREATE TYPE vendor_status AS ENUM ('pending', 'approved', 'rejected', 'suspended');
-CREATE TYPE product_status AS ENUM ('active', 'inactive', 'draft', 'archived');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+    CREATE TYPE user_role AS ENUM ('customer', 'admin', 'seller');
+  END IF;
+END
+$$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_status') THEN
+    CREATE TYPE order_status AS ENUM (
+      'pending', 'confirmed', 'processing', 'shipped',
+      'out_for_delivery', 'delivered', 'cancelled', 'returned', 'refunded'
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status') THEN
+    CREATE TYPE payment_status AS ENUM (
+      'pending', 'processing', 'completed', 'failed',
+      'refunded', 'partially_refunded'
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_method') THEN
+    CREATE TYPE payment_method AS ENUM (
+      'credit_card', 'debit_card', 'paypal', 'stripe',
+      'cash_on_delivery', 'bank_transfer',
+      'cod', 'easypaisa', 'jazzcash', 'card'
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'coupon_type') THEN
+    CREATE TYPE coupon_type AS ENUM ('percentage', 'fixed_amount', 'free_shipping');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'banner_position') THEN
+    CREATE TYPE banner_position AS ENUM (
+      'home_top', 'home_middle', 'home_bottom', 'category_page', 'sidebar'
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'blog_status') THEN
+    CREATE TYPE blog_status AS ENUM ('draft', 'published', 'archived');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type') THEN
+    CREATE TYPE notification_type AS ENUM (
+      'order_placed', 'order_shipped', 'order_delivered', 'order_cancelled',
+      'payment_received', 'payment_failed', 'promo', 'system', 'review_received'
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'vendor_status') THEN
+    CREATE TYPE vendor_status AS ENUM ('pending', 'approved', 'rejected', 'suspended');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_status') THEN
+    CREATE TYPE product_status AS ENUM ('active', 'inactive', 'draft', 'archived');
+  END IF;
+END
+$$;
 
 -- ============================================================
 -- TABLES
 -- ============================================================
 
 -- Users profile table (extends Supabase auth.users)
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   first_name TEXT NOT NULL,
@@ -56,7 +84,7 @@ CREATE TABLE profiles (
 );
 
 -- Categories
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
@@ -70,7 +98,7 @@ CREATE TABLE categories (
 );
 
 -- Brands
-CREATE TABLE brands (
+CREATE TABLE IF NOT EXISTS brands (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
@@ -83,7 +111,7 @@ CREATE TABLE brands (
 );
 
 -- Vendors / Sellers
-CREATE TABLE vendors (
+CREATE TABLE IF NOT EXISTS vendors (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
@@ -105,7 +133,7 @@ CREATE TABLE vendors (
 );
 
 -- Products
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
@@ -135,7 +163,7 @@ CREATE TABLE products (
 );
 
 -- Product Tags
-CREATE TABLE product_tags (
+CREATE TABLE IF NOT EXISTS product_tags (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
@@ -143,7 +171,7 @@ CREATE TABLE product_tags (
 );
 
 -- Product Reviews
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -160,7 +188,7 @@ CREATE TABLE reviews (
 );
 
 -- Addresses
-CREATE TABLE addresses (
+CREATE TABLE IF NOT EXISTS addresses (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   label TEXT DEFAULT 'Home',
@@ -179,7 +207,7 @@ CREATE TABLE addresses (
 );
 
 -- Cart Items
-CREATE TABLE cart_items (
+CREATE TABLE IF NOT EXISTS cart_items (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
@@ -190,7 +218,7 @@ CREATE TABLE cart_items (
 );
 
 -- Wishlist
-CREATE TABLE wishlist_items (
+CREATE TABLE IF NOT EXISTS wishlist_items (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
@@ -199,7 +227,7 @@ CREATE TABLE wishlist_items (
 );
 
 -- Coupons
-CREATE TABLE coupons (
+CREATE TABLE IF NOT EXISTS coupons (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   code TEXT UNIQUE NOT NULL,
   description TEXT,
@@ -222,7 +250,7 @@ CREATE TABLE coupons (
 );
 
 -- Orders
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   order_number TEXT UNIQUE NOT NULL,
@@ -248,7 +276,7 @@ CREATE TABLE orders (
 );
 
 -- Order Items
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE SET NULL,
@@ -263,7 +291,7 @@ CREATE TABLE order_items (
 );
 
 -- Banners
-CREATE TABLE banners (
+CREATE TABLE IF NOT EXISTS banners (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   title TEXT NOT NULL,
   subtitle TEXT,
@@ -280,7 +308,7 @@ CREATE TABLE banners (
 );
 
 -- Blog Posts
-CREATE TABLE blog_posts (
+CREATE TABLE IF NOT EXISTS blog_posts (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   title TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
@@ -298,7 +326,7 @@ CREATE TABLE blog_posts (
 );
 
 -- Blog Comments
-CREATE TABLE blog_comments (
+CREATE TABLE IF NOT EXISTS blog_comments (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   post_id UUID REFERENCES blog_posts(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -309,7 +337,7 @@ CREATE TABLE blog_comments (
 );
 
 -- Notifications
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   type notification_type DEFAULT 'system',
@@ -321,14 +349,14 @@ CREATE TABLE notifications (
 );
 
 -- Settings (key-value store for platform settings)
-CREATE TABLE settings (
+CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value JSONB NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Newsletter subscribers
-CREATE TABLE newsletter_subscribers (
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   is_active BOOLEAN DEFAULT TRUE,
@@ -336,7 +364,7 @@ CREATE TABLE newsletter_subscribers (
 );
 
 -- Contact submissions
-CREATE TABLE contact_submissions (
+CREATE TABLE IF NOT EXISTS contact_submissions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL,
@@ -349,7 +377,7 @@ CREATE TABLE contact_submissions (
 -- ============================================
 -- SOCIAL LINKS
 -- ============================================
-CREATE TABLE social_links (
+CREATE TABLE IF NOT EXISTS social_links (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   platform VARCHAR(50) NOT NULL,
   url TEXT NOT NULL,
@@ -363,7 +391,7 @@ CREATE TABLE social_links (
 -- ============================================
 -- SEARCH HISTORY
 -- ============================================
-CREATE TABLE search_history (
+CREATE TABLE IF NOT EXISTS search_history (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   query TEXT NOT NULL,
@@ -374,7 +402,7 @@ CREATE TABLE search_history (
 -- ============================================
 -- SELLER PAYOUTS
 -- ============================================
-CREATE TABLE seller_payouts (
+CREATE TABLE IF NOT EXISTS seller_payouts (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   seller_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   amount DECIMAL(10,2) NOT NULL,
@@ -390,7 +418,7 @@ CREATE TABLE seller_payouts (
 -- ============================================
 -- TRANSLATIONS
 -- ============================================
-CREATE TABLE translations (
+CREATE TABLE IF NOT EXISTS translations (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   key VARCHAR(255) NOT NULL,
   locale VARCHAR(10) NOT NULL DEFAULT 'en',
@@ -403,7 +431,7 @@ CREATE TABLE translations (
 -- ============================================================
 -- REVIEW HELPFUL VOTES
 -- ============================================================
-CREATE TABLE review_helpful (
+CREATE TABLE IF NOT EXISTS review_helpful (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   review_id UUID REFERENCES reviews(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -414,7 +442,7 @@ CREATE TABLE review_helpful (
 -- ============================================================
 -- REVIEW REPORTS
 -- ============================================================
-CREATE TABLE review_reports (
+CREATE TABLE IF NOT EXISTS review_reports (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   review_id UUID REFERENCES reviews(id) ON DELETE CASCADE NOT NULL,
   reporter_user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -427,7 +455,7 @@ CREATE TABLE review_reports (
 -- ============================================================
 -- REFUNDS
 -- ============================================================
-CREATE TABLE refunds (
+CREATE TABLE IF NOT EXISTS refunds (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE NOT NULL,
   amount DECIMAL(10,2) NOT NULL CHECK (amount >= 0),
@@ -442,7 +470,7 @@ CREATE TABLE refunds (
 -- ============================================================
 -- ADMIN LOGS (audit trail)
 -- ============================================================
-CREATE TABLE admin_logs (
+CREATE TABLE IF NOT EXISTS admin_logs (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   admin_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   action TEXT NOT NULL,
@@ -457,141 +485,141 @@ CREATE TABLE admin_logs (
 -- ============================================================
 
 -- profiles
-CREATE INDEX idx_profiles_email ON profiles(email);
-CREATE INDEX idx_profiles_role ON profiles(role);
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
+CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);
 
 -- categories
-CREATE INDEX idx_categories_slug ON categories(slug);
-CREATE INDEX idx_categories_parent_id ON categories(parent_id);
-CREATE INDEX idx_categories_is_active ON categories(is_active);
-CREATE INDEX idx_categories_display_order ON categories(display_order);
+CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
+CREATE INDEX IF NOT EXISTS idx_categories_parent_id ON categories(parent_id);
+CREATE INDEX IF NOT EXISTS idx_categories_is_active ON categories(is_active);
+CREATE INDEX IF NOT EXISTS idx_categories_display_order ON categories(display_order);
 
 -- brands
-CREATE INDEX idx_brands_slug ON brands(slug);
-CREATE INDEX idx_brands_is_active ON brands(is_active);
+CREATE INDEX IF NOT EXISTS idx_brands_slug ON brands(slug);
+CREATE INDEX IF NOT EXISTS idx_brands_is_active ON brands(is_active);
 
 -- vendors
-CREATE INDEX idx_vendors_user_id ON vendors(user_id);
-CREATE INDEX idx_vendors_slug ON vendors(slug);
-CREATE INDEX idx_vendors_status ON vendors(status);
+CREATE INDEX IF NOT EXISTS idx_vendors_user_id ON vendors(user_id);
+CREATE INDEX IF NOT EXISTS idx_vendors_slug ON vendors(slug);
+CREATE INDEX IF NOT EXISTS idx_vendors_status ON vendors(status);
 
 -- products
-CREATE INDEX idx_products_vendor_id ON products(vendor_id);
-CREATE INDEX idx_products_slug ON products(slug);
-CREATE INDEX idx_products_sku ON products(sku);
-CREATE INDEX idx_products_category_id ON products(category_id);
-CREATE INDEX idx_products_subcategory_id ON products(subcategory_id);
-CREATE INDEX idx_products_brand_id ON products(brand_id);
-CREATE INDEX idx_products_status ON products(status);
-CREATE INDEX idx_products_is_active ON products(is_active);
-CREATE INDEX idx_products_is_featured ON products(is_featured);
-CREATE INDEX idx_products_is_new ON products(is_new);
-CREATE INDEX idx_products_price ON products(price);
-CREATE INDEX idx_products_rating ON products(rating);
-CREATE INDEX idx_products_created_at ON products(created_at DESC);
-CREATE INDEX idx_products_name_trgm ON products USING gin(name gin_trgm_ops);
-CREATE INDEX idx_products_tags ON products USING gin(tags);
-CREATE INDEX idx_products_images ON products USING gin(images);
+CREATE INDEX IF NOT EXISTS idx_products_vendor_id ON products(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
+CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
+CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_subcategory_id ON products(subcategory_id);
+CREATE INDEX IF NOT EXISTS idx_products_brand_id ON products(brand_id);
+CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
+CREATE INDEX IF NOT EXISTS idx_products_is_active ON products(is_active);
+CREATE INDEX IF NOT EXISTS idx_products_is_featured ON products(is_featured);
+CREATE INDEX IF NOT EXISTS idx_products_is_new ON products(is_new);
+CREATE INDEX IF NOT EXISTS idx_products_price ON products(price);
+CREATE INDEX IF NOT EXISTS idx_products_rating ON products(rating);
+CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_products_name_trgm ON products USING gin(name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_products_tags ON products USING gin(tags);
+CREATE INDEX IF NOT EXISTS idx_products_images ON products USING gin(images);
 
 -- product_tags
-CREATE INDEX idx_product_tags_slug ON product_tags(slug);
+CREATE INDEX IF NOT EXISTS idx_product_tags_slug ON product_tags(slug);
 
 -- reviews
-CREATE INDEX idx_reviews_product_id ON reviews(product_id);
-CREATE INDEX idx_reviews_user_id ON reviews(user_id);
-CREATE INDEX idx_reviews_status ON reviews(status);
-CREATE INDEX idx_reviews_rating ON reviews(rating);
-CREATE INDEX idx_reviews_created_at ON reviews(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reviews_product_id ON reviews(product_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at DESC);
 
 -- addresses
-CREATE INDEX idx_addresses_user_id ON addresses(user_id);
-CREATE INDEX idx_addresses_is_default ON addresses(is_default);
+CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
+CREATE INDEX IF NOT EXISTS idx_addresses_is_default ON addresses(is_default);
 
 -- cart_items
-CREATE INDEX idx_cart_items_user_id ON cart_items(user_id);
-CREATE INDEX idx_cart_items_product_id ON cart_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_cart_items_product_id ON cart_items(product_id);
 
 -- wishlist_items
-CREATE INDEX idx_wishlist_items_user_id ON wishlist_items(user_id);
-CREATE INDEX idx_wishlist_items_product_id ON wishlist_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_wishlist_items_user_id ON wishlist_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_wishlist_items_product_id ON wishlist_items(product_id);
 
 -- coupons
-CREATE INDEX idx_coupons_code ON coupons(code);
-CREATE INDEX idx_coupons_is_active ON coupons(is_active);
-CREATE INDEX idx_coupons_expires_at ON coupons(expires_at);
+CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
+CREATE INDEX IF NOT EXISTS idx_coupons_is_active ON coupons(is_active);
+CREATE INDEX IF NOT EXISTS idx_coupons_expires_at ON coupons(expires_at);
 
 -- orders
-CREATE INDEX idx_orders_user_id ON orders(user_id);
-CREATE INDEX idx_orders_order_number ON orders(order_number);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_payment_status ON orders(payment_status);
-CREATE INDEX idx_orders_created_at ON orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON orders(payment_status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 
 -- order_items
-CREATE INDEX idx_order_items_order_id ON order_items(order_id);
-CREATE INDEX idx_order_items_product_id ON order_items(product_id);
-CREATE INDEX idx_order_items_vendor_id ON order_items(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_vendor_id ON order_items(vendor_id);
 
 -- banners
-CREATE INDEX idx_banners_position ON banners(position);
-CREATE INDEX idx_banners_is_active ON banners(is_active);
-CREATE INDEX idx_banners_priority ON banners(priority DESC);
+CREATE INDEX IF NOT EXISTS idx_banners_position ON banners(position);
+CREATE INDEX IF NOT EXISTS idx_banners_is_active ON banners(is_active);
+CREATE INDEX IF NOT EXISTS idx_banners_priority ON banners(priority DESC);
 
 -- blog_posts
-CREATE INDEX idx_blog_posts_slug ON blog_posts(slug);
-CREATE INDEX idx_blog_posts_author_id ON blog_posts(author_id);
-CREATE INDEX idx_blog_posts_status ON blog_posts(status);
-CREATE INDEX idx_blog_posts_published_at ON blog_posts(published_at DESC);
-CREATE INDEX idx_blog_posts_tags ON blog_posts USING gin(tags);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_author_id ON blog_posts(author_id);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts(published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_tags ON blog_posts USING gin(tags);
 
 -- blog_comments
-CREATE INDEX idx_blog_comments_post_id ON blog_comments(post_id);
-CREATE INDEX idx_blog_comments_user_id ON blog_comments(user_id);
-CREATE INDEX idx_blog_comments_parent_id ON blog_comments(parent_id);
+CREATE INDEX IF NOT EXISTS idx_blog_comments_post_id ON blog_comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_blog_comments_user_id ON blog_comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_blog_comments_parent_id ON blog_comments(parent_id);
 
 -- notifications
-CREATE INDEX idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX idx_notifications_is_read ON notifications(is_read);
-CREATE INDEX idx_notifications_type ON notifications(type);
-CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
 
 -- newsletter_subscribers
-CREATE INDEX idx_newsletter_email ON newsletter_subscribers(email);
+CREATE INDEX IF NOT EXISTS idx_newsletter_email ON newsletter_subscribers(email);
 
 -- social_links
-CREATE INDEX idx_social_links_is_active ON social_links(is_active);
-CREATE INDEX idx_social_links_display_order ON social_links(display_order);
+CREATE INDEX IF NOT EXISTS idx_social_links_is_active ON social_links(is_active);
+CREATE INDEX IF NOT EXISTS idx_social_links_display_order ON social_links(display_order);
 
 -- search_history
-CREATE INDEX idx_search_history_user_id ON search_history(user_id);
-CREATE INDEX idx_search_history_created_at ON search_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_search_history_created_at ON search_history(created_at DESC);
 
 -- seller_payouts
-CREATE INDEX idx_seller_payouts_seller_id ON seller_payouts(seller_id);
-CREATE INDEX idx_seller_payouts_status ON seller_payouts(status);
+CREATE INDEX IF NOT EXISTS idx_seller_payouts_seller_id ON seller_payouts(seller_id);
+CREATE INDEX IF NOT EXISTS idx_seller_payouts_status ON seller_payouts(status);
 
 -- review_helpful
-CREATE INDEX idx_review_helpful_review_id ON review_helpful(review_id);
-CREATE INDEX idx_review_helpful_user_id ON review_helpful(user_id);
+CREATE INDEX IF NOT EXISTS idx_review_helpful_review_id ON review_helpful(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_helpful_user_id ON review_helpful(user_id);
 
 -- review_reports
-CREATE INDEX idx_review_reports_review_id ON review_reports(review_id);
-CREATE INDEX idx_review_reports_status ON review_reports(status);
+CREATE INDEX IF NOT EXISTS idx_review_reports_review_id ON review_reports(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_reports_status ON review_reports(status);
 
 -- refunds
-CREATE INDEX idx_refunds_order_id ON refunds(order_id);
-CREATE INDEX idx_refunds_status ON refunds(status);
-CREATE INDEX idx_refunds_created_at ON refunds(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_refunds_order_id ON refunds(order_id);
+CREATE INDEX IF NOT EXISTS idx_refunds_status ON refunds(status);
+CREATE INDEX IF NOT EXISTS idx_refunds_created_at ON refunds(created_at DESC);
 
 -- admin_logs
-CREATE INDEX idx_admin_logs_admin_id ON admin_logs(admin_id);
-CREATE INDEX idx_admin_logs_action ON admin_logs(action);
-CREATE INDEX idx_admin_logs_created_at ON admin_logs(created_at DESC);
-CREATE INDEX idx_admin_logs_entity ON admin_logs(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_admin_logs_admin_id ON admin_logs(admin_id);
+CREATE INDEX IF NOT EXISTS idx_admin_logs_action ON admin_logs(action);
+CREATE INDEX IF NOT EXISTS idx_admin_logs_created_at ON admin_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_logs_entity ON admin_logs(entity_type, entity_id);
 
 -- translations
-CREATE INDEX idx_translations_key ON translations(key);
-CREATE INDEX idx_translations_locale ON translations(locale);
+CREATE INDEX IF NOT EXISTS idx_translations_key ON translations(key);
+CREATE INDEX IF NOT EXISTS idx_translations_locale ON translations(locale);
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -630,14 +658,17 @@ ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
 -- RLS POLICIES: profiles
 -- ============================================================
 
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
 CREATE POLICY "Public profiles are viewable by everyone"
   ON profiles FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile"
   ON profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
@@ -646,22 +677,26 @@ CREATE POLICY "Users can insert own profile"
 -- RLS POLICIES: categories
 -- ============================================================
 
+DROP POLICY IF EXISTS "Categories are viewable by everyone" ON categories;
 CREATE POLICY "Categories are viewable by everyone"
   ON categories FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Admins can insert categories" ON categories;
 CREATE POLICY "Admins can insert categories"
   ON categories FOR INSERT
   WITH CHECK (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can update categories" ON categories;
 CREATE POLICY "Admins can update categories"
   ON categories FOR UPDATE
   USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can delete categories" ON categories;
 CREATE POLICY "Admins can delete categories"
   ON categories FOR DELETE
   USING (
@@ -672,10 +707,12 @@ CREATE POLICY "Admins can delete categories"
 -- RLS POLICIES: brands
 -- ============================================================
 
+DROP POLICY IF EXISTS "Brands are viewable by everyone" ON brands;
 CREATE POLICY "Brands are viewable by everyone"
   ON brands FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage brands" ON brands;
 CREATE POLICY "Admins can manage brands"
   ON brands FOR ALL
   USING (
@@ -686,18 +723,22 @@ CREATE POLICY "Admins can manage brands"
 -- RLS POLICIES: vendors
 -- ============================================================
 
+DROP POLICY IF EXISTS "Active vendors are viewable by everyone" ON vendors;
 CREATE POLICY "Active vendors are viewable by everyone"
   ON vendors FOR SELECT
   USING (status = 'approved' OR auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create vendor applications" ON vendors;
 CREATE POLICY "Users can create vendor applications"
   ON vendors FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Vendors can update own vendor profile" ON vendors;
 CREATE POLICY "Vendors can update own vendor profile"
   ON vendors FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can manage all vendors" ON vendors;
 CREATE POLICY "Admins can manage all vendors"
   ON vendors FOR ALL
   USING (
@@ -708,6 +749,7 @@ CREATE POLICY "Admins can manage all vendors"
 -- RLS POLICIES: products
 -- ============================================================
 
+DROP POLICY IF EXISTS "Active products are viewable by everyone" ON products;
 CREATE POLICY "Active products are viewable by everyone"
   ON products FOR SELECT
   USING (
@@ -716,6 +758,7 @@ CREATE POLICY "Active products are viewable by everyone"
     OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Sellers can insert own products" ON products;
 CREATE POLICY "Sellers can insert own products"
   ON products FOR INSERT
   WITH CHECK (
@@ -723,6 +766,7 @@ CREATE POLICY "Sellers can insert own products"
     OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Sellers can update own products" ON products;
 CREATE POLICY "Sellers can update own products"
   ON products FOR UPDATE
   USING (
@@ -730,6 +774,7 @@ CREATE POLICY "Sellers can update own products"
     OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Sellers can delete own products" ON products;
 CREATE POLICY "Sellers can delete own products"
   ON products FOR DELETE
   USING (
@@ -741,10 +786,12 @@ CREATE POLICY "Sellers can delete own products"
 -- RLS POLICIES: product_tags
 -- ============================================================
 
+DROP POLICY IF EXISTS "Product tags are viewable by everyone" ON product_tags;
 CREATE POLICY "Product tags are viewable by everyone"
   ON product_tags FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage product tags" ON product_tags;
 CREATE POLICY "Admins can manage product tags"
   ON product_tags FOR ALL
   USING (
@@ -755,22 +802,27 @@ CREATE POLICY "Admins can manage product tags"
 -- RLS POLICIES: reviews
 -- ============================================================
 
+DROP POLICY IF EXISTS "Approved reviews are viewable by everyone" ON reviews;
 CREATE POLICY "Approved reviews are viewable by everyone"
   ON reviews FOR SELECT
   USING (status = 'approved' OR auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Authenticated users can insert reviews" ON reviews;
 CREATE POLICY "Authenticated users can insert reviews"
   ON reviews FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own reviews" ON reviews;
 CREATE POLICY "Users can update own reviews"
   ON reviews FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own reviews" ON reviews;
 CREATE POLICY "Users can delete own reviews"
   ON reviews FOR DELETE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can manage all reviews" ON reviews;
 CREATE POLICY "Admins can manage all reviews"
   ON reviews FOR ALL
   USING (
@@ -781,18 +833,22 @@ CREATE POLICY "Admins can manage all reviews"
 -- RLS POLICIES: addresses
 -- ============================================================
 
+DROP POLICY IF EXISTS "Users can view own addresses" ON addresses;
 CREATE POLICY "Users can view own addresses"
   ON addresses FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own addresses" ON addresses;
 CREATE POLICY "Users can insert own addresses"
   ON addresses FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own addresses" ON addresses;
 CREATE POLICY "Users can update own addresses"
   ON addresses FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own addresses" ON addresses;
 CREATE POLICY "Users can delete own addresses"
   ON addresses FOR DELETE
   USING (auth.uid() = user_id);
@@ -801,10 +857,12 @@ CREATE POLICY "Users can delete own addresses"
 -- RLS POLICIES: cart_items
 -- ============================================================
 
+DROP POLICY IF EXISTS "Users can view own cart" ON cart_items;
 CREATE POLICY "Users can view own cart"
   ON cart_items FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own cart" ON cart_items;
 CREATE POLICY "Users can manage own cart"
   ON cart_items FOR ALL
   USING (auth.uid() = user_id);
@@ -813,10 +871,12 @@ CREATE POLICY "Users can manage own cart"
 -- RLS POLICIES: wishlist_items
 -- ============================================================
 
+DROP POLICY IF EXISTS "Users can view own wishlist" ON wishlist_items;
 CREATE POLICY "Users can view own wishlist"
   ON wishlist_items FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage own wishlist" ON wishlist_items;
 CREATE POLICY "Users can manage own wishlist"
   ON wishlist_items FOR ALL
   USING (auth.uid() = user_id);
@@ -825,10 +885,12 @@ CREATE POLICY "Users can manage own wishlist"
 -- RLS POLICIES: coupons
 -- ============================================================
 
+DROP POLICY IF EXISTS "Active coupons are viewable by everyone" ON coupons;
 CREATE POLICY "Active coupons are viewable by everyone"
   ON coupons FOR SELECT
   USING (is_active = true OR auth.uid() = created_by);
 
+DROP POLICY IF EXISTS "Admins can manage coupons" ON coupons;
 CREATE POLICY "Admins can manage coupons"
   ON coupons FOR ALL
   USING (
@@ -839,20 +901,24 @@ CREATE POLICY "Admins can manage coupons"
 -- RLS POLICIES: orders
 -- ============================================================
 
+DROP POLICY IF EXISTS "Users can view own orders" ON orders;
 CREATE POLICY "Users can view own orders"
   ON orders FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create own orders" ON orders;
 CREATE POLICY "Users can create own orders"
   ON orders FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can view all orders" ON orders;
 CREATE POLICY "Admins can view all orders"
   ON orders FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can update all orders" ON orders;
 CREATE POLICY "Admins can update all orders"
   ON orders FOR UPDATE
   USING (
@@ -884,6 +950,7 @@ REVOKE ALL ON FUNCTION public.user_can_view_order(UUID) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.user_can_view_order(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.user_can_view_order(UUID) TO anon;
 
+DROP POLICY IF EXISTS "Sellers can view orders containing their products" ON orders;
 CREATE POLICY "Sellers can view orders containing their products"
   ON orders FOR SELECT
   USING (public.user_can_view_order(orders.id));
@@ -911,10 +978,12 @@ GRANT EXECUTE ON FUNCTION public.user_owns_order(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.user_owns_order(UUID) TO anon;
 
 -- Users can insert/delete order items belonging to their own orders (rollback)
+DROP POLICY IF EXISTS "Users can insert own order items" ON order_items;
 CREATE POLICY "Users can insert own order items"
   ON order_items FOR INSERT
   WITH CHECK (public.user_owns_order(order_id));
 
+DROP POLICY IF EXISTS "Users can delete own order items" ON order_items;
 CREATE POLICY "Users can delete own order items"
   ON order_items FOR DELETE
   USING (public.user_owns_order(order_id));
@@ -923,16 +992,19 @@ CREATE POLICY "Users can delete own order items"
 -- RLS POLICIES: order_items
 -- ============================================================
 
+DROP POLICY IF EXISTS "Users can view own order items" ON order_items;
 CREATE POLICY "Users can view own order items"
   ON order_items FOR SELECT
   USING (public.user_owns_order(order_id));
 
+DROP POLICY IF EXISTS "Admins can view all order items" ON order_items;
 CREATE POLICY "Admins can view all order items"
   ON order_items FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Sellers can view their order items" ON order_items;
 CREATE POLICY "Sellers can view their order items"
   ON order_items FOR SELECT
   USING (
@@ -945,10 +1017,12 @@ CREATE POLICY "Sellers can view their order items"
 -- RLS POLICIES: banners
 -- ============================================================
 
+DROP POLICY IF EXISTS "Active banners are viewable by everyone" ON banners;
 CREATE POLICY "Active banners are viewable by everyone"
   ON banners FOR SELECT
   USING (is_active = true);
 
+DROP POLICY IF EXISTS "Admins can manage banners" ON banners;
 CREATE POLICY "Admins can manage banners"
   ON banners FOR ALL
   USING (
@@ -959,18 +1033,22 @@ CREATE POLICY "Admins can manage banners"
 -- RLS POLICIES: blog_posts
 -- ============================================================
 
+DROP POLICY IF EXISTS "Published blog posts are viewable by everyone" ON blog_posts;
 CREATE POLICY "Published blog posts are viewable by everyone"
   ON blog_posts FOR SELECT
   USING (status = 'published' OR auth.uid() = author_id);
 
+DROP POLICY IF EXISTS "Authenticated users can create blog posts" ON blog_posts;
 CREATE POLICY "Authenticated users can create blog posts"
   ON blog_posts FOR INSERT
   WITH CHECK (auth.uid() = author_id);
 
+DROP POLICY IF EXISTS "Authors can update own blog posts" ON blog_posts;
 CREATE POLICY "Authors can update own blog posts"
   ON blog_posts FOR UPDATE
   USING (auth.uid() = author_id);
 
+DROP POLICY IF EXISTS "Admins can manage all blog posts" ON blog_posts;
 CREATE POLICY "Admins can manage all blog posts"
   ON blog_posts FOR ALL
   USING (
@@ -981,18 +1059,22 @@ CREATE POLICY "Admins can manage all blog posts"
 -- RLS POLICIES: blog_comments
 -- ============================================================
 
+DROP POLICY IF EXISTS "Blog comments are viewable by everyone" ON blog_comments;
 CREATE POLICY "Blog comments are viewable by everyone"
   ON blog_comments FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create comments" ON blog_comments;
 CREATE POLICY "Authenticated users can create comments"
   ON blog_comments FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own comments" ON blog_comments;
 CREATE POLICY "Users can update own comments"
   ON blog_comments FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own comments" ON blog_comments;
 CREATE POLICY "Users can delete own comments"
   ON blog_comments FOR DELETE
   USING (auth.uid() = user_id);
@@ -1001,18 +1083,22 @@ CREATE POLICY "Users can delete own comments"
 -- RLS POLICIES: notifications
 -- ============================================================
 
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
 CREATE POLICY "Users can view own notifications"
   ON notifications FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "System can insert notifications" ON notifications;
 CREATE POLICY "System can insert notifications"
   ON notifications FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 CREATE POLICY "Users can update own notifications"
   ON notifications FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own notifications" ON notifications;
 CREATE POLICY "Users can delete own notifications"
   ON notifications FOR DELETE
   USING (auth.uid() = user_id);
@@ -1021,10 +1107,12 @@ CREATE POLICY "Users can delete own notifications"
 -- RLS POLICIES: settings
 -- ============================================================
 
+DROP POLICY IF EXISTS "Settings are viewable by everyone" ON settings;
 CREATE POLICY "Settings are viewable by everyone"
   ON settings FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage settings" ON settings;
 CREATE POLICY "Admins can manage settings"
   ON settings FOR ALL
   USING (
@@ -1035,16 +1123,19 @@ CREATE POLICY "Admins can manage settings"
 -- RLS POLICIES: newsletter_subscribers
 -- ============================================================
 
+DROP POLICY IF EXISTS "Anyone can subscribe to newsletter" ON newsletter_subscribers;
 CREATE POLICY "Anyone can subscribe to newsletter"
   ON newsletter_subscribers FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admins can view subscribers" ON newsletter_subscribers;
 CREATE POLICY "Admins can view subscribers"
   ON newsletter_subscribers FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can manage subscribers" ON newsletter_subscribers;
 CREATE POLICY "Admins can manage subscribers"
   ON newsletter_subscribers FOR ALL
   USING (
@@ -1055,16 +1146,19 @@ CREATE POLICY "Admins can manage subscribers"
 -- RLS POLICIES: contact_submissions
 -- ============================================================
 
+DROP POLICY IF EXISTS "Anyone can submit contact form" ON contact_submissions;
 CREATE POLICY "Anyone can submit contact form"
   ON contact_submissions FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admins can view contact submissions" ON contact_submissions;
 CREATE POLICY "Admins can view contact submissions"
   ON contact_submissions FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can manage contact submissions" ON contact_submissions;
 CREATE POLICY "Admins can manage contact submissions"
   ON contact_submissions FOR ALL
   USING (
@@ -1075,16 +1169,19 @@ CREATE POLICY "Admins can manage contact submissions"
 -- RLS POLICIES: social_links
 -- ============================================================
 
+DROP POLICY IF EXISTS "Active social links are viewable by everyone" ON social_links;
 CREATE POLICY "Active social links are viewable by everyone"
   ON social_links FOR SELECT
   USING (is_active = true);
 
+DROP POLICY IF EXISTS "Admins can view all social links" ON social_links;
 CREATE POLICY "Admins can view all social links"
   ON social_links FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can manage social links" ON social_links;
 CREATE POLICY "Admins can manage social links"
   ON social_links FOR ALL
   USING (
@@ -1095,14 +1192,17 @@ CREATE POLICY "Admins can manage social links"
 -- RLS POLICIES: search_history
 -- ============================================================
 
+DROP POLICY IF EXISTS "Users can view own search history" ON search_history;
 CREATE POLICY "Users can view own search history"
   ON search_history FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own search history" ON search_history;
 CREATE POLICY "Users can insert own search history"
   ON search_history FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can view all search history" ON search_history;
 CREATE POLICY "Admins can view all search history"
   ON search_history FOR SELECT
   USING (
@@ -1113,20 +1213,24 @@ CREATE POLICY "Admins can view all search history"
 -- RLS POLICIES: seller_payouts
 -- ============================================================
 
+DROP POLICY IF EXISTS "Sellers can view own payouts" ON seller_payouts;
 CREATE POLICY "Sellers can view own payouts"
   ON seller_payouts FOR SELECT
   USING (auth.uid() = seller_id);
 
+DROP POLICY IF EXISTS "Sellers can create own payouts" ON seller_payouts;
 CREATE POLICY "Sellers can create own payouts"
   ON seller_payouts FOR INSERT
   WITH CHECK (auth.uid() = seller_id);
 
+DROP POLICY IF EXISTS "Admins can view all payouts" ON seller_payouts;
 CREATE POLICY "Admins can view all payouts"
   ON seller_payouts FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can manage all payouts" ON seller_payouts;
 CREATE POLICY "Admins can manage all payouts"
   ON seller_payouts FOR ALL
   USING (
@@ -1137,10 +1241,12 @@ CREATE POLICY "Admins can manage all payouts"
 -- RLS POLICIES: translations
 -- ============================================================
 
+DROP POLICY IF EXISTS "Translations are viewable by everyone" ON translations;
 CREATE POLICY "Translations are viewable by everyone"
   ON translations FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage translations" ON translations;
 CREATE POLICY "Admins can manage translations"
   ON translations FOR ALL
   USING (
@@ -1151,14 +1257,17 @@ CREATE POLICY "Admins can manage translations"
 -- RLS POLICIES: review_helpful
 -- ============================================================
 
+DROP POLICY IF EXISTS "Review helpful votes are viewable by everyone" ON review_helpful;
 CREATE POLICY "Review helpful votes are viewable by everyone"
   ON review_helpful FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Users can toggle own helpful vote" ON review_helpful;
 CREATE POLICY "Users can toggle own helpful vote"
   ON review_helpful FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can remove own helpful vote" ON review_helpful;
 CREATE POLICY "Users can remove own helpful vote"
   ON review_helpful FOR DELETE
   USING (auth.uid() = user_id);
@@ -1167,10 +1276,12 @@ CREATE POLICY "Users can remove own helpful vote"
 -- RLS POLICIES: review_reports
 -- ============================================================
 
+DROP POLICY IF EXISTS "Users can create review reports" ON review_reports;
 CREATE POLICY "Users can create review reports"
   ON review_reports FOR INSERT
   WITH CHECK (auth.uid() = reporter_user_id);
 
+DROP POLICY IF EXISTS "Admins can manage review reports" ON review_reports;
 CREATE POLICY "Admins can manage review reports"
   ON review_reports FOR ALL
   USING (
@@ -1181,6 +1292,7 @@ CREATE POLICY "Admins can manage review reports"
 -- RLS POLICIES: refunds
 -- ============================================================
 
+DROP POLICY IF EXISTS "Admins can manage refunds" ON refunds;
 CREATE POLICY "Admins can manage refunds"
   ON refunds FOR ALL
   USING (
@@ -1191,12 +1303,14 @@ CREATE POLICY "Admins can manage refunds"
 -- RLS POLICIES: admin_logs
 -- ============================================================
 
+DROP POLICY IF EXISTS "Admins can view admin logs" ON admin_logs;
 CREATE POLICY "Admins can view admin logs"
   ON admin_logs FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can insert admin logs" ON admin_logs;
 CREATE POLICY "Admins can insert admin logs"
   ON admin_logs FOR INSERT
   WITH CHECK (
@@ -1217,70 +1331,87 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Apply updated_at trigger to all tables with updated_at
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_categories_updated_at ON categories;
 CREATE TRIGGER update_categories_updated_at
   BEFORE UPDATE ON categories
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_brands_updated_at ON brands;
 CREATE TRIGGER update_brands_updated_at
   BEFORE UPDATE ON brands
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_vendors_updated_at ON vendors;
 CREATE TRIGGER update_vendors_updated_at
   BEFORE UPDATE ON vendors
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_products_updated_at ON products;
 CREATE TRIGGER update_products_updated_at
   BEFORE UPDATE ON products
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_reviews_updated_at ON reviews;
 CREATE TRIGGER update_reviews_updated_at
   BEFORE UPDATE ON reviews
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_addresses_updated_at ON addresses;
 CREATE TRIGGER update_addresses_updated_at
   BEFORE UPDATE ON addresses
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_cart_items_updated_at ON cart_items;
 CREATE TRIGGER update_cart_items_updated_at
   BEFORE UPDATE ON cart_items
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_coupons_updated_at ON coupons;
 CREATE TRIGGER update_coupons_updated_at
   BEFORE UPDATE ON coupons
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
 CREATE TRIGGER update_orders_updated_at
   BEFORE UPDATE ON orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_banners_updated_at ON banners;
 CREATE TRIGGER update_banners_updated_at
   BEFORE UPDATE ON banners
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_blog_posts_updated_at ON blog_posts;
 CREATE TRIGGER update_blog_posts_updated_at
   BEFORE UPDATE ON blog_posts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_blog_comments_updated_at ON blog_comments;
 CREATE TRIGGER update_blog_comments_updated_at
   BEFORE UPDATE ON blog_comments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_settings_updated_at ON settings;
 CREATE TRIGGER update_settings_updated_at
   BEFORE UPDATE ON settings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_social_links_updated_at ON social_links;
 CREATE TRIGGER update_social_links_updated_at
   BEFORE UPDATE ON social_links
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_seller_payouts_updated_at ON seller_payouts;
 CREATE TRIGGER update_seller_payouts_updated_at
   BEFORE UPDATE ON seller_payouts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_translations_updated_at ON translations;
 CREATE TRIGGER update_translations_updated_at
   BEFORE UPDATE ON translations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -1304,6 +1435,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
@@ -1331,6 +1463,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS set_order_number ON orders;
 CREATE TRIGGER set_order_number
   BEFORE INSERT ON orders
   FOR EACH ROW
@@ -1367,6 +1500,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_review_change ON reviews;
 CREATE TRIGGER on_review_change
   AFTER INSERT OR UPDATE OR DELETE ON reviews
   FOR EACH ROW EXECUTE FUNCTION update_product_rating();
@@ -1389,6 +1523,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_order_confirmed ON orders;
 CREATE TRIGGER on_order_confirmed
   AFTER UPDATE ON orders
   FOR EACH ROW EXECUTE FUNCTION cleanup_cart_after_order();
@@ -1397,7 +1532,7 @@ CREATE TRIGGER on_order_confirmed
 -- VIEWS (useful for dashboard queries)
 -- ============================================================
 
-CREATE VIEW product_summary AS
+CREATE OR REPLACE VIEW product_summary AS
 SELECT
   p.id,
   p.name,
@@ -1423,7 +1558,7 @@ LEFT JOIN categories c ON p.category_id = c.id
 LEFT JOIN brands b ON p.brand_id = b.id
 LEFT JOIN vendors v ON p.vendor_id = v.id;
 
-CREATE VIEW order_summary AS
+CREATE OR REPLACE VIEW order_summary AS
 SELECT
   o.id,
   o.order_number,
@@ -1443,7 +1578,7 @@ SELECT
 FROM orders o
 LEFT JOIN profiles p ON o.user_id = p.id;
 
-CREATE VIEW seller_dashboard AS
+CREATE OR REPLACE VIEW seller_dashboard AS
 SELECT
   v.id AS vendor_id,
   v.name AS store_name,
