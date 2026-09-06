@@ -7,12 +7,22 @@ import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BlogForm from '@/components/admin/BlogForm';
 
+export interface BlogFormData {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  cover_image: string;
+  is_published: boolean;
+}
+
 export default function EditBlogPostPage() {
   const params = useParams();
   const router = useRouter();
   const postId = params.id as string;
 
-  const [initialData, setInitialData] = useState<any>(null);
+  const [initialData, setInitialData] = useState<BlogFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -48,15 +58,7 @@ export default function EditBlogPostPage() {
     };
   }, [postId]);
 
-  const handleSubmit = async (data: {
-    title: string;
-    slug: string;
-    excerpt: string;
-    content: string;
-    category: string;
-    cover_image: string;
-    is_published: boolean;
-  }) => {
+  const handleSubmit = async (data: BlogFormData) => {
     const res = await fetch(`/api/v1/admin/blog-posts/${postId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -106,7 +108,7 @@ export default function EditBlogPostPage() {
           This blog post could not be found.
         </div>
       ) : (
-        <BlogForm mode="edit" initialData={initialData} onSubmit={handleSubmit} />
+        <BlogForm mode="edit" initialData={initialData ?? undefined} onSubmit={handleSubmit} />
       )}
     </div>
   );

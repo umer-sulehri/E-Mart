@@ -15,6 +15,8 @@ import {
 import { cn } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import type { CategoryRow } from '@/types/supabase';
 
 function SkeletonCard() {
   return (
@@ -34,11 +36,12 @@ function SkeletonCard() {
 }
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<CategoryRow | null>(null);
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
@@ -122,7 +125,6 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
     try {
       const res = await fetch(`/api/v1/admin/categories/${id}`, { method: 'DELETE' });
       const data = await res.json();
@@ -137,7 +139,7 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const startEdit = (cat: any) => {
+  const startEdit = (cat: CategoryRow) => {
     setEditingId(cat.id);
     setNewCategory({
       name: cat.name,
@@ -148,8 +150,8 @@ export default function AdminCategoriesPage() {
     setShowForm(true);
   };
 
-  const totalProducts = categories.reduce((sum: number, c: any) => sum + (c.product_count || 0), 0);
-  const activeCategories = categories.filter((c: any) => c.is_active).length;
+  const totalProducts = categories.reduce((sum: number, c: CategoryRow) => sum + (c.product_count || 0), 0);
+  const activeCategories = categories.filter((c: CategoryRow) => c.is_active).length;
 
   return (
     <div className="space-y-6">
@@ -261,7 +263,7 @@ export default function AdminCategoriesPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
-          : categories.map((cat: any) => (
+          : categories.map((cat: CategoryRow) => (
               <div key={cat.id} className="group relative rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -288,7 +290,7 @@ export default function AdminCategoriesPage() {
                     <button onClick={() => startEdit(cat)} className="rounded p-1 text-muted-500 hover:bg-muted-100 hover:text-primary">
                       <Edit3 className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => handleDelete(cat.id)} className="rounded p-1 text-muted-500 hover:bg-danger-50 hover:text-danger">
+                    <button onClick={() => setDeleteTarget(cat)} className="rounded p-1 text-muted-500 hover:bg-danger-50 hover:text-danger">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -296,6 +298,26 @@ export default function AdminCategoriesPage() {
               </div>
             ))}
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            handleDelete(deleteTarget.id).finally(() => setDeleteTarget(null));
+          } else {
+            setDeleteTarget(null);
+          }
+        }}
+        title="Delete category?"
+        message={
+          deleteTarget
+            ? `This will permanently delete "${deleteTarget.name}". Products in this category will be unaffected.`
+            : ''
+        }
+        variant="danger"
+        confirmLabel="Delete category"
+      />
     </div>
   );
 }

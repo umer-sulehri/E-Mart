@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 interface CodConfirmRequest {
   orderId: string;
@@ -69,14 +70,14 @@ export async function POST(request: NextRequest) {
       .eq("id", orderId);
 
     if (updateError) {
-      console.error("[COD] Failed to update order:", updateError.message);
+      logger.error("COD", "Failed to update order:", updateError.message);
       return NextResponse.json(
         { success: false, error: "Failed to confirm order" },
         { status: 500 }
       );
     }
 
-    console.log("[COD] Order", order.order_number, "confirmed for Cash on Delivery");
+    logger.info("COD", "Order", order.order_number, "confirmed for Cash on Delivery");
 
     return NextResponse.json({
       success: true,
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
       message: "Cash on Delivery order confirmed. Payment will be collected on delivery.",
     });
   } catch (error) {
-    console.error("[COD] Error:", error);
+    logger.error("COD", "Error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

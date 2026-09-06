@@ -4,15 +4,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import ProductForm from '@/components/seller/ProductForm';
+import ProductForm, { type ProductFormData } from '@/components/seller/ProductForm';
 
 export default function AddProductPage() {
   const router = useRouter();
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: ProductFormData) => {
     try {
       const imageUrls = data.images
-        .map((img: any) => img.preview)
+        .map((img) => img.preview)
         .filter(Boolean);
       const res = await fetch('/api/v1/seller/products', {
         method: 'POST',

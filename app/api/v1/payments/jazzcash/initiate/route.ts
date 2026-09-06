@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 interface JazzCashInitiateRequest {
   orderId: string;
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       returnUrls: process.env.JAZZCASH_RETURN_URLS || "",
     };
 
-    console.log("[JazzCash Initiate] Initiating payment for order:", order.order_number, "Amount: PKR", amount);
+    logger.info("JazzCashInitiate", "Initiating payment for order:", order.order_number, "Amount: PKR", amount);
 
     // Real JazzCash integration:
     // const dateNow = new Date();
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", orderId);
 
-    console.log("[JazzCash Initiate] Demo payment initiated. Transaction:", mockTransactionId);
+    logger.info("JazzCashInitiate", "Demo payment initiated. Transaction:", mockTransactionId);
 
     return NextResponse.json({
       success: true,
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
       message: "JazzCash payment initiated (demo mode — no gateway configured)",
     });
   } catch (error) {
-    console.error("[JazzCash Initiate] Error:", error);
+    logger.error("JazzCashInitiate", "Error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

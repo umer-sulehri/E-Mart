@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import ProductForm from '@/components/seller/ProductForm';
+import ProductForm, { type ProductFormData } from '@/components/seller/ProductForm';
 
 interface LoadedProduct {
   id: string;
@@ -52,10 +52,10 @@ export default function EditProductPage() {
     };
   }, [productId]);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: ProductFormData) => {
     try {
       const imageUrls = data.images
-        .map((img: any) => img.preview)
+        .map((img) => img.preview)
         .filter(Boolean);
       const res = await fetch(`/api/v1/seller/products/${productId}`, {
         method: 'PUT',

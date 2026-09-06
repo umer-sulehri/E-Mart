@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 interface EasypaisaInitiateRequest {
   orderId: string;
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       returnUrls: process.env.EASYPAISA_RETURN_URLS || "",
     };
 
-    console.log("[Easypaisa Initiate] Initiating payment for order:", order.order_number, "Amount: PKR", amount);
+    logger.info("EasypaisaInitiate", "Initiating payment for order:", order.order_number, "Amount: PKR", amount);
 
     // Real Easypaisa integration:
     // const easypaisaPayload = {
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", orderId);
 
-    console.log("[Easypaisa Initiate] Demo payment initiated. Transaction:", mockTransactionId);
+    logger.info("EasypaisaInitiate", "Demo payment initiated. Transaction:", mockTransactionId);
 
     return NextResponse.json({
       success: true,
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
       message: "Easypaisa payment initiated (demo mode — no gateway configured)",
     });
   } catch (error) {
-    console.error("[Easypaisa Initiate] Error:", error);
+    logger.error("EasypaisaInitiate", "Error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

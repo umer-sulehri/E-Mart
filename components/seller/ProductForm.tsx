@@ -16,7 +16,7 @@ interface ImageEntry {
   alt: string;
 }
 
-interface ProductFormData {
+export interface ProductFormData {
   name: string;
   description: string;
   category: string;

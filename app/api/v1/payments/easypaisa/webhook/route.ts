@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 interface EasypaisaCallbackPayload {
   orderId: string;
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.EASYPAISA_API_KEY;
 
     if (!merchantId || !apiKey) {
-      console.warn("[Easypaisa Webhook] Payment credentials not configured. Rejecting webhook.");
+      logger.warn("EasypaisaWebhook", "Payment credentials not configured. Rejecting webhook.");
       return NextResponse.json(
         { success: false, error: "Webhook not configured" },
         { status: 501 }
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     const body: EasypaisaCallbackPayload = await request.json();
     const { orderId, transactionId, status, amount, responseCode, responseMessage } = body;
 
-    console.log("[Easypaisa Webhook] Callback received:", {
+    logger.info("EasypaisaWebhook", "Callback received:", {
       orderId,
       transactionId,
       status,
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!orderId || !transactionId || !status) {
-      console.warn("[Easypaisa Webhook] Missing required fields");
+      logger.warn("EasypaisaWebhook", "Missing required fields");
       return NextResponse.json(
         { success: false, error: "Missing required fields: orderId, transactionId, status" },
         { status: 400 }
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
         }
       );
       if (!verificationResponse.ok) {
-        console.error("[Easypaisa Webhook] Transaction verification request failed");
+        logger.error("EasypaisaWebhook", "Transaction verification request failed");
         return NextResponse.json(
           { success: false, error: "Transaction verification failed" },
           { status: 400 }
@@ -64,14 +65,14 @@ export async function POST(request: NextRequest) {
       }
       const verificationResult = await verificationResponse.json();
       if (verificationResult.responseCode !== "0000") {
-        console.error("[Easypaisa Webhook] Transaction verification failed");
+        logger.error("EasypaisaWebhook", "Transaction verification failed");
         return NextResponse.json(
           { success: false, error: "Transaction verification failed" },
           { status: 400 }
         );
       }
     } catch (verifyError) {
-      console.error("[Easypaisa Webhook] Verification error:", verifyError);
+      logger.error("EasypaisaWebhook", "Verification error:", verifyError);
       return NextResponse.json(
         { success: false, error: "Transaction verification failed" },
         { status: 400 }
@@ -94,14 +95,14 @@ export async function POST(request: NextRequest) {
         .eq("id", orderId);
 
       if (error) {
-        console.error("[Easypaisa Webhook] Failed to update order:", error.message);
+        logger.error("EasypaisaWebhook", "Failed to update order:", error.message);
         return NextResponse.json(
           { success: false, error: "Failed to update order" },
           { status: 500 }
         );
       }
 
-      console.log("[Easypaisa Webhook] Order", orderId, "payment completed. Txn:", transactionId);
+      logger.info("EasypaisaWebhook", "Order payment completed. Txn:", transactionId);
     } else {
       const { error } = await supabase
         .from("orders")
@@ -112,19 +113,19 @@ export async function POST(request: NextRequest) {
         .eq("id", orderId);
 
       if (error) {
-        console.error("[Easypaisa Webhook] Failed to mark order as failed:", error.message);
+        logger.error("EasypaisaWebhook", "Failed to mark order as failed:", error.message);
         return NextResponse.json(
           { success: false, error: "Failed to update order" },
           { status: 500 }
         );
       }
 
-      console.log("[Easypaisa Webhook] Order", orderId, "payment failed. Reason:", responseMessage);
+      logger.info("EasypaisaWebhook", "Order payment failed. Reason:", responseMessage);
     }
 
     return NextResponse.json({ success: true, received: true });
   } catch (error) {
-    console.error("[Easypaisa Webhook] Error:", error);
+    logger.error("EasypaisaWebhook", "Error:", error);
     return NextResponse.json(
       { success: false, error: "Webhook handler failed" },
       { status: 500 }

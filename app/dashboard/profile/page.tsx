@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { resolveImage } from '@/lib/imageLoader';
 
 export default function ProfilePage() {
@@ -18,6 +19,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -106,11 +108,6 @@ export default function ProfilePage() {
   };
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      'Are you sure you want to permanently delete your account? This action cannot be undone.'
-    );
-    if (!confirmed) return;
-
     try {
       setDeleting(true);
       const res = await fetch('/api/v1/auth/delete-account', {
@@ -327,13 +324,27 @@ export default function ProfilePage() {
           variant="danger"
           size="sm"
           className="mt-4"
-          onClick={handleDeleteAccount}
+          onClick={() => setDeleteConfirmOpen(true)}
           loading={deleting}
         >
           <Trash2 className="h-4 w-4" />
           Delete Account
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setDeleteConfirmOpen(false);
+          handleDeleteAccount();
+        }}
+        title="Permanently delete your account?"
+        message="This action cannot be undone. All of your orders, reviews and saved data will be permanently removed."
+        variant="danger"
+        confirmLabel="Delete my account"
+        loading={deleting}
+      />
     </div>
   );
 }

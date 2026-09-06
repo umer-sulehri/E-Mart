@@ -105,9 +105,18 @@ const HeroBanner = () => {
   return (
     <section
       id="hero-banner"
-      className="bg-cover bg-no-repeat"
+      className="relative bg-cover bg-no-repeat"
       style={{ backgroundImage: `url('${active.image}')` }}
     >
+      {/* Invisible img to signal the hero to the browser's LCP detection */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={active.image}
+        alt=""
+        aria-hidden="true"
+        fetchPriority="high"
+        className="absolute h-0 w-0 opacity-0"
+      />
       <div className="container mx-auto px-4">
         <div className="lg:w-1/2">
           <div className="pt-5 mt-5">

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+const MIN_PAYOUT_AMOUNT = 5000;
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     const { data: vendor } = await supabase
       .from("vendors")
-      .select("id, commission_rate")
+      .select("id, status, commission_rate, verified_at")
       .eq("user_id", user.id)
       .single();
 
@@ -43,12 +45,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (vendor.status !== "approved") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            vendor.status === "pending"
+              ? "Your seller account is still pending approval. You can request payouts once your account is approved."
+              : "Your seller account is not eligible for payouts. Please contact support.",
+        },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     const { amount, method, account_details } = body;
 
     if (!amount || typeof amount !== "number" || amount <= 0) {
       return NextResponse.json(
         { success: false, error: "A positive amount is required" },
+        { status: 400 }
+      );
+    }
+
+    if (amount < MIN_PAYOUT_AMOUNT) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Minimum payout amount is Rs. ${MIN_PAYOUT_AMOUNT.toLocaleString()}.`,
+        },
         { status: 400 }
       );
     }

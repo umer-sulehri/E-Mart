@@ -45,7 +45,7 @@ const PopularTags = React.forwardRef<HTMLDivElement, { className?: string }>(
             <Link
               key={tag.slug}
               href={`/search?tag=${tag.slug}`}
-              className="inline-flex items-center rounded-[0.375rem] bg-[#FCF7EB] px-4 py-2 text-sm font-medium text-muted hover:bg-primary hover:text-white transition-colors"
+              className="inline-flex items-center rounded-[0.375rem] bg-primary-50 px-4 py-2 text-sm font-medium text-muted hover:bg-primary hover:text-white transition-colors"
             >
               {tag.label}
             </Link>

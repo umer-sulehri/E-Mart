@@ -29,7 +29,9 @@ export async function GET(
 
     let query = supabase
       .from("orders")
-      .select("*, order_items(*, products(id, name, slug, images)), shipping_address:addresses!shipping_address_id(*)")
+      .select(
+        "*, order_items(*, products(id, name, slug, images), vendors(name)), shipping_address:addresses!shipping_address_id(*)",
+      )
       .eq("id", id);
 
     if (profile?.role !== "admin") {

@@ -15,6 +15,7 @@ import {
 import { cn, formatPrice } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
+import type { ProductRow } from '@/types/supabase';
 
 function SkeletonRow() {
   return (
@@ -36,7 +37,7 @@ function SkeletonRow() {
 }
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -106,7 +107,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  const getModerationStatus = (product: any) => {
+  const getModerationStatus = (product: ProductRow) => {
     if (product.moderation_status === 'flagged') return <Badge variant="danger" size="sm">Flagged</Badge>;
     if (product.moderation_status === 'removed') return <Badge variant="danger" size="sm">Removed</Badge>;
     if (product.is_active) return <Badge variant="success" size="sm">Active</Badge>;
@@ -174,7 +175,7 @@ export default function AdminProductsPage() {
             <tbody className="divide-y divide-muted-50">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-                : products.map((product: any) => (
+                : products.map((product: ProductRow) => (
                     <tr key={product.id} className="hover:bg-muted-50/50">
                       <td className="py-3">
                         <div className="flex items-center gap-3">

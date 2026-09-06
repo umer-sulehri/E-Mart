@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import crypto from "crypto";
 
 function verifyStripeSignature(
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
-      console.warn("[Stripe Webhook] Webhook secret not configured. Rejecting webhook.");
+      logger.warn("StripeWebhook", "Webhook secret not configured. Rejecting webhook.");
       return NextResponse.json(
         { success: false, error: "Webhook not configured" },
         { status: 501 }
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get("stripe-signature");
 
     if (!signature) {
-      console.warn("[Stripe Webhook] Missing stripe-signature header");
+      logger.warn("StripeWebhook", "Missing stripe-signature header");
       return NextResponse.json(
         { success: false, error: "Missing signature" },
         { status: 400 }
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!verifyStripeSignature(body, signature, webhookSecret)) {
-      console.error("[Stripe Webhook] Signature verification failed");
+      logger.error("StripeWebhook", "Signature verification failed");
       return NextResponse.json(
         { success: false, error: "Invalid signature" },
         { status: 400 }
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[Stripe Webhook] Received event:", event.type);
+    logger.info("StripeWebhook", "Received event:", event.type);
 
     const supabase = await createClient();
 
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
         const orderId = session.metadata?.orderId as string | undefined;
 
         if (!orderId) {
-          console.warn("[Stripe Webhook] checkout.session.completed missing orderId in metadata");
+          logger.warn("StripeWebhook", "checkout.session.completed missing orderId in metadata");
           break;
         }
 
@@ -94,9 +95,9 @@ export async function POST(request: NextRequest) {
           .eq("id", orderId);
 
         if (error) {
-          console.error("[Stripe Webhook] Failed to update order:", error.message);
+          logger.error("StripeWebhook", "Failed to update order:", error.message);
         } else {
-          console.log("[Stripe Webhook] Order", orderId, "marked as paid");
+          logger.info("StripeWebhook", "Order", orderId, "marked as paid");
         }
         break;
       }
@@ -116,9 +117,9 @@ export async function POST(request: NextRequest) {
             .eq("id", orderId);
 
           if (error) {
-            console.error("[Stripe Webhook] Failed to update order on payment_intent.succeeded:", error.message);
+            logger.error("StripeWebhook", "Failed to update order on payment_intent.succeeded:", error.message);
           } else {
-            console.log("[Stripe Webhook] Order", orderId, "payment confirmed via payment_intent");
+            logger.info("StripeWebhook", "Order", orderId, "payment confirmed via payment_intent");
           }
         }
         break;
@@ -138,21 +139,21 @@ export async function POST(request: NextRequest) {
             .eq("id", orderId);
 
           if (error) {
-            console.error("[Stripe Webhook] Failed to update order on payment_failure:", error.message);
+            logger.error("StripeWebhook", "Failed to update order on payment_failure:", error.message);
           } else {
-            console.log("[Stripe Webhook] Order", orderId, "payment marked as failed");
+            logger.info("StripeWebhook", "Order", orderId, "payment marked as failed");
           }
         }
         break;
       }
 
       default:
-        console.log("[Stripe Webhook] Unhandled event type:", event.type);
+        logger.info("StripeWebhook", "Unhandled event type:", event.type);
     }
 
     return NextResponse.json({ success: true, received: true });
   } catch (error) {
-    console.error("[Stripe Webhook] Error:", error);
+    logger.error("StripeWebhook", "Error:", error);
     return NextResponse.json(
       { success: false, error: "Webhook handler failed" },
       { status: 500 }

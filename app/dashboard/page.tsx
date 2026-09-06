@@ -227,7 +227,7 @@ export default function DashboardPage() {
               Track Order
             </Button>
           </Link>
-          <Link href="/products">
+          <Link href="/dashboard/orders">
             <Button variant="outline" size="sm">
               <PenLine className="h-4 w-4" />
               Write Review

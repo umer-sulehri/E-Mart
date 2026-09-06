@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 import { cn, formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
+import type { OrderRow } from '@/types/supabase';
 
 type OrderStatusType = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -34,7 +35,7 @@ function SkeletonRow() {
 }
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -158,7 +159,7 @@ export default function AdminOrdersPage() {
             <tbody className="divide-y divide-muted-50">
               {loading
                 ? Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
-                : orders.map((order: any) => {
+                : orders.map((order: OrderRow) => {
                     const status = order.status as OrderStatusType;
                     const cfg = statusConfig[status] || { variant: 'default' as const };
                     return (

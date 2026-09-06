@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import type { ReviewRow } from '@/types/supabase';
 
 const filterTabs = ['All', '5-star', '4-star', '3-star', '2-star', '1-star'];
 
@@ -26,7 +27,7 @@ function SkeletonReview() {
 }
 
 export default function SellerReviewsPage() {
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -172,7 +173,7 @@ export default function SellerReviewsPage() {
       <div className="space-y-4">
         {loading
           ? Array.from({ length: 3 }).map((_, i) => <SkeletonReview key={i} />)
-          : filtered.map((review: any) => (
+          : filtered.map((review: ReviewRow) => (
               <div key={review.id} className="rounded-xl bg-white p-6 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">

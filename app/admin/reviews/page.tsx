@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 
 type ReviewStatus = 'pending' | 'approved' | 'flagged';
@@ -54,6 +55,7 @@ export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminReview | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -83,10 +85,6 @@ export default function AdminReviewsPage() {
     setActing(id);
     try {
       if (action === 'delete') {
-        if (!confirm('Are you sure you want to delete this review?')) {
-          setActing(null);
-          return;
-        }
         const res = await fetch(`/api/v1/admin/reviews/${id}`, { method: 'DELETE' });
         const json = await res.json();
         if (json.success) toast.success('Review deleted');
@@ -299,7 +297,7 @@ export default function AdminReviewsPage() {
                       </button>
                     )}
                     <button
-                      onClick={() => act(review.id, 'delete')}
+                      onClick={() => setDeleteTarget(review)}
                       disabled={acting === review.id}
                       className="rounded px-2.5 py-1 text-xs font-medium text-danger transition-colors hover:bg-danger-50 disabled:opacity-50"
                     >
@@ -317,6 +315,27 @@ export default function AdminReviewsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            act(deleteTarget.id, 'delete').finally(() => setDeleteTarget(null));
+          } else {
+            setDeleteTarget(null);
+          }
+        }}
+        title="Delete review?"
+        message={
+          deleteTarget
+            ? `This will permanently remove the review by ${deleteTarget.user_name}. This action cannot be undone.`
+            : ''
+        }
+        variant="danger"
+        confirmLabel="Delete review"
+        loading={deleteTarget !== null && acting === deleteTarget.id}
+      />
     </div>
   );
 }

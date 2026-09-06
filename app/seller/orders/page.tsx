@@ -8,6 +8,7 @@ import { formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import type { OrderRow } from '@/types/supabase';
 
 type OrderTab = 'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -47,7 +48,7 @@ function SkeletonRow() {
 export default function SellerOrdersPage() {
   const [activeTab, setActiveTab] = useState<OrderTab>('all');
   const [page, setPage] = useState(1);
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -159,7 +160,7 @@ export default function SellerOrdersPage() {
                         </td>
                       </tr>
                     )
-                  : orders.map((order: any) => (
+                  : orders.map((order: OrderRow) => (
                       <tr key={order.id} className="border-b border-muted-50 transition-colors hover:bg-muted-50/50">
                         <td className="px-6 py-4 font-medium text-secondary-800">
                           {order.order_number}

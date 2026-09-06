@@ -15,6 +15,8 @@ import {
 import { cn, formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import type { CouponRow } from '@/types/supabase';
 
 function SkeletonRow() {
   return (
@@ -31,11 +33,12 @@ function SkeletonRow() {
 }
 
 export default function AdminCouponsPage() {
-  const [coupons, setCoupons] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<CouponRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<CouponRow | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -155,7 +158,6 @@ export default function AdminCouponsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this coupon?')) return;
     try {
       const res = await fetch(`/api/v1/admin/coupons/${id}`, { method: 'DELETE' });
       const data = await res.json();
@@ -170,13 +172,13 @@ export default function AdminCouponsPage() {
     }
   };
 
-  const startEdit = (coupon: any) => {
+  const startEdit = (coupon: CouponRow) => {
     setEditingId(coupon.id);
     setForm({
       code: coupon.code || '',
       description: coupon.description || '',
-      type: coupon.type || 'percentage',
-      value: String(coupon.value || ''),
+      type: coupon.discount_type === 'fixed_amount' ? 'fixed' : 'percentage',
+      value: String(coupon.discount_value || ''),
       minimumOrderAmount: String(coupon.minimum_order_amount || ''),
       usageLimit: String(coupon.usage_limit || ''),
       startsAt: coupon.starts_at ? coupon.starts_at.split('T')[0] : '',
@@ -362,19 +364,19 @@ export default function AdminCouponsPage() {
                         </td>
                       </tr>
                     )
-                  : coupons.map((coupon: any) => {
+                  : coupons.map((coupon: CouponRow) => {
                       const isExpired = coupon.expires_at && new Date(coupon.expires_at) < new Date();
                       return (
                         <tr key={coupon.id} className="hover:bg-muted-50/50">
                           <td className="px-6 py-4 font-mono font-bold text-secondary-800">{coupon.code}</td>
                           <td className="hidden px-6 py-4 text-muted-600 md:table-cell">{coupon.description || '-'}</td>
                           <td className="px-6 py-4">
-                            <Badge variant={coupon.type === 'percentage' ? 'primary' : 'success'} size="sm">
-                              {coupon.type === 'percentage' ? `${coupon.value}%` : formatPrice(coupon.value)}
+                            <Badge variant={coupon.discount_type === 'percentage' ? 'primary' : 'success'} size="sm">
+                              {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatPrice(coupon.discount_value)}
                             </Badge>
                           </td>
                           <td className="px-6 py-4 font-medium text-secondary-800">
-                            {coupon.type === 'percentage' ? `${coupon.value}% off` : `${formatPrice(coupon.value)} off`}
+                            {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% off` : `${formatPrice(coupon.discount_value)} off`}
                           </td>
                           <td className="hidden px-6 py-4 lg:table-cell">
                             <Badge variant={isExpired ? 'danger' : coupon.is_active ? 'success' : 'default'} size="sm">
@@ -393,7 +395,7 @@ export default function AdminCouponsPage() {
                                 <Edit3 className="h-4 w-4" />
                               </button>
                               <button
-                                onClick={() => handleDelete(coupon.id)}
+                                onClick={() => setDeleteTarget(coupon)}
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -426,6 +428,26 @@ export default function AdminCouponsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            handleDelete(deleteTarget.id).finally(() => setDeleteTarget(null));
+          } else {
+            setDeleteTarget(null);
+          }
+        }}
+        title="Delete coupon?"
+        message={
+          deleteTarget
+            ? `This will permanently delete coupon "${deleteTarget.code}". This action cannot be undone.`
+            : ''
+        }
+        variant="danger"
+        confirmLabel="Delete coupon"
+      />
     </div>
   );
 }

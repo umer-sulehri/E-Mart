@@ -51,7 +51,7 @@ const FeaturesStrip = React.forwardRef<HTMLDivElement, FeaturesStripProps>(
               return (
                 <div
                   key={feature.title}
-                  className="mb-3 rounded-[0.375rem] border border-[#dee2e6] bg-white p-4"
+                  className="mb-3 rounded-[0.375rem] border border-muted-100 bg-white p-4"
                 >
                   <div className="mb-3 text-secondary-800">
                     <Icon size={32} strokeWidth={1.5} />

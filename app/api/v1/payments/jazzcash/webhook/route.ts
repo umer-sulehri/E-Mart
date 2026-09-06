@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import crypto from "crypto";
 
 interface JazzCashCallbackPayload {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     const password = process.env.JAZZCASH_PASSWORD;
 
     if (!merchantId || !password) {
-      console.warn("[JazzCash Webhook] Payment credentials not configured. Rejecting webhook.");
+      logger.warn("JazzCashWebhook", "Payment credentials not configured. Rejecting webhook.");
       return NextResponse.json(
         { success: false, error: "Webhook not configured" },
         { status: 501 }
@@ -28,14 +29,14 @@ export async function POST(request: NextRequest) {
     const body: JazzCashCallbackPayload = await request.json();
     const { orderId, transactionId, responseCode, responseMessage, pp_SecureHash } = body;
 
-    console.log("[JazzCash Webhook] Callback received:", {
+    logger.info("JazzCashWebhook", "Callback received:", {
       orderId,
       transactionId,
       responseCode,
     });
 
     if (!orderId || !transactionId || !responseCode) {
-      console.warn("[JazzCash Webhook] Missing required fields");
+      logger.warn("JazzCashWebhook", "Missing required fields");
       return NextResponse.json(
         { success: false, error: "Missing required fields: orderId, transactionId, responseCode" },
         { status: 400 }
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!pp_SecureHash) {
-      console.error("[JazzCash Webhook] Missing pp_SecureHash");
+      logger.error("JazzCashWebhook", "Missing pp_SecureHash");
       return NextResponse.json(
         { success: false, error: "Missing signature" },
         { status: 400 }
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
 
     if (!signatureValid) {
-      console.error("[JazzCash Webhook] Signature verification failed");
+      logger.error("JazzCashWebhook", "Signature verification failed");
       return NextResponse.json(
         { success: false, error: "Invalid signature" },
         { status: 400 }
@@ -85,14 +86,14 @@ export async function POST(request: NextRequest) {
         .eq("id", orderId);
 
       if (error) {
-        console.error("[JazzCash Webhook] Failed to update order:", error.message);
+        logger.error("JazzCashWebhook", "Failed to update order:", error.message);
         return NextResponse.json(
           { success: false, error: "Failed to update order" },
           { status: 500 }
         );
       }
 
-      console.log("[JazzCash Webhook] Order", orderId, "payment completed. Txn:", transactionId);
+      logger.info("JazzCashWebhook", "Order payment completed. Txn:", transactionId);
     } else {
       const { error } = await supabase
         .from("orders")
@@ -103,19 +104,19 @@ export async function POST(request: NextRequest) {
         .eq("id", orderId);
 
       if (error) {
-        console.error("[JazzCash Webhook] Failed to mark order as failed:", error.message);
+        logger.error("JazzCashWebhook", "Failed to mark order as failed:", error.message);
         return NextResponse.json(
           { success: false, error: "Failed to update order" },
           { status: 500 }
         );
       }
 
-      console.log("[JazzCash Webhook] Order", orderId, "payment failed. Reason:", responseMessage);
+      logger.info("JazzCashWebhook", "Order payment failed. Reason:", responseMessage);
     }
 
     return NextResponse.json({ success: true, received: true });
   } catch (error) {
-    console.error("[JazzCash Webhook] Error:", error);
+    logger.error("JazzCashWebhook", "Error:", error);
     return NextResponse.json(
       { success: false, error: "Webhook handler failed" },
       { status: 500 }

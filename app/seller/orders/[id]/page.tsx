@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import OrderTimeline from '@/components/ui/OrderTimeline';
 import { formatPrice, formatDate } from '@/lib/utils';
+import type { OrderRow, OrderItemRow } from '@/types/supabase';
 
 const statusVariant: Record<string, 'success' | 'warning' | 'primary' | 'danger' | 'default'> = {
   delivered: 'success',
@@ -37,7 +38,7 @@ function SkeletonBlock({ className = 'h-4 w-full' }: { className?: string }) {
 export default function SellerOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<OrderRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -71,7 +72,7 @@ export default function SellerOrderDetailPage() {
       const data = await res.json();
       if (data.success) {
         toast.success('Order status updated');
-        setOrder((prev: any) => ({ ...prev, status: newStatus }));
+        setOrder((prev) => ({ ...(prev as OrderRow), status: newStatus }));
       } else {
         toast.error(data.error || 'Failed to update status');
       }
@@ -158,7 +159,7 @@ export default function SellerOrderDetailPage() {
             <h3 className="text-lg font-bold text-secondary-800">Order Items</h3>
           </div>
           <div className="divide-y divide-muted-50">
-            {items.map((item: any) => (
+            {items.map((item: OrderItemRow) => (
               <div key={item.id} className="flex items-center gap-4 p-6">
                 <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted-100">
                   {item.products?.images?.[0] && (
@@ -180,7 +181,7 @@ export default function SellerOrderDetailPage() {
                   </p>
                 </div>
                 <p className="font-semibold text-secondary-800">
-                  {formatPrice(item.total_price)}
+                  {formatPrice(item.total_price ?? item.unit_price * item.quantity)}
                 </p>
               </div>
             ))}

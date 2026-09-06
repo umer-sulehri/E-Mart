@@ -14,10 +14,12 @@ import {
   RotateCcw,
   Download,
   X,
+  Star,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Skeleton from '@/components/ui/Skeleton';
 import { formatPrice, formatDate, cn } from '@/lib/utils';
 import { useCartStore } from '@/store';
@@ -66,6 +68,8 @@ export default function OrderDetailPage({
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [returning, setReturning] = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [returnConfirmOpen, setReturnConfirmOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -94,9 +98,6 @@ export default function OrderDetailPage({
 
   const handleCancel = async () => {
     if (!order) return;
-    const confirmed = window.confirm('Are you sure you want to cancel this order?');
-    if (!confirmed) return;
-
     try {
       setCancelling(true);
       const res = await fetch(`/api/v1/orders/${order.id}/cancel`, { method: 'POST' });
@@ -116,11 +117,6 @@ export default function OrderDetailPage({
 
   const handleReturn = async () => {
     if (!order) return;
-    const confirmed = window.confirm(
-      'Are you sure you want to request a return for this order?'
-    );
-    if (!confirmed) return;
-
     try {
       setReturning(true);
       const res = await fetch(`/api/v1/orders/${order.id}/return`, {
@@ -443,7 +439,7 @@ export default function OrderDetailPage({
           <Button
             variant="danger"
             loading={cancelling}
-            onClick={handleCancel}
+            onClick={() => setCancelConfirmOpen(true)}
           >
             <X className="h-4 w-4" />
             Cancel Order
@@ -453,10 +449,19 @@ export default function OrderDetailPage({
           <Button
             variant="danger"
             loading={returning}
-            onClick={handleReturn}
+            onClick={() => setReturnConfirmOpen(true)}
           >
             <RotateCcw className="h-4 w-4" />
             Request Return
+          </Button>
+        )}
+        {['delivered', 'shipped', 'out_for_delivery'].includes(order.status) && (
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/dashboard/orders/${orderId}/write-review`)}
+          >
+            <Star className="h-4 w-4" />
+            Write Review
           </Button>
         )}
         <Button variant="primary" onClick={handleReorder}>
@@ -468,6 +473,34 @@ export default function OrderDetailPage({
           Download Invoice
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        onClose={() => setCancelConfirmOpen(false)}
+        onConfirm={() => {
+          setCancelConfirmOpen(false);
+          handleCancel();
+        }}
+        title="Cancel this order?"
+        message="Once cancelled, this order cannot be restored. Any payment will be refunded."
+        variant="danger"
+        confirmLabel="Cancel order"
+        loading={cancelling}
+      />
+
+      <ConfirmDialog
+        open={returnConfirmOpen}
+        onClose={() => setReturnConfirmOpen(false)}
+        onConfirm={() => {
+          setReturnConfirmOpen(false);
+          handleReturn();
+        }}
+        title="Request a return?"
+        message="Your return request will be sent for review. You will be notified once it's processed."
+        variant="warning"
+        confirmLabel="Request return"
+        loading={returning}
+      />
     </div>
   );
 }

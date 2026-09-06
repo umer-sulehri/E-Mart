@@ -12,7 +12,7 @@ export interface LightProduct {
   image?: string;
 }
 
-function buildCartItem(product: LightProduct, quantity: number): CartItem {
+export function buildCartItem(product: LightProduct, quantity: number): CartItem {
   const unitPrice = product.discountPrice ?? product.price;
   const fullProduct = {
     id: product.id,

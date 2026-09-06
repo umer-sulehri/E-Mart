@@ -17,12 +17,21 @@ interface Payout {
   processed_at: string | null;
 }
 
+interface PayoutSummary {
+  total_paid: number;
+  pending_balance: number;
+  total_payouts: number;
+}
+
+const MIN_PAYOUT_AMOUNT = 5000;
+
 function SkeletonBlock({ className = 'h-4 w-full' }: { className?: string }) {
   return <div className={`animate-pulse rounded bg-muted-200 ${className}`} />;
 }
 
 export default function SellerPayoutsPage() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [summary, setSummary] = useState<PayoutSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
   const [amount, setAmount] = useState('');
@@ -42,6 +51,7 @@ export default function SellerPayoutsPage() {
             ? data.data
             : [];
         setPayouts(payoutArray);
+        if (data.data?.summary) setSummary(data.data.summary);
       } else {
         toast.error(data.error || 'Failed to load payouts');
       }
@@ -56,10 +66,22 @@ export default function SellerPayoutsPage() {
     fetchPayouts();
   }, [fetchPayouts]);
 
+  const availableBalance = summary?.pending_balance ?? 0;
+
   const handleRequest = async () => {
     const amt = Number(amount);
     if (!amt || amt <= 0) {
       toast.error('Enter a valid amount');
+      return;
+    }
+    if (amt < MIN_PAYOUT_AMOUNT) {
+      toast.error(`Minimum payout amount is Rs. ${MIN_PAYOUT_AMOUNT.toLocaleString()}`);
+      return;
+    }
+    if (amt > availableBalance) {
+      toast.error(
+        `Insufficient balance. Available: Rs. ${availableBalance.toLocaleString()}`
+      );
       return;
     }
     if (!accountDetails.trim()) {
@@ -119,6 +141,30 @@ export default function SellerPayoutsPage() {
           <Plus className="h-4 w-4" />
           Request Payout
         </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl bg-white p-4 shadow-sm">
+          <p className="text-xs text-muted-500">Available Balance</p>
+          <p className="mt-1 text-2xl font-bold text-success">
+            {formatPrice(availableBalance)}
+          </p>
+          <p className="mt-1 text-xs text-muted-400">Earnings available to withdraw</p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm">
+          <p className="text-xs text-muted-500">Total Paid Out</p>
+          <p className="mt-1 text-2xl font-bold text-secondary-800">
+            {formatPrice(summary?.total_paid ?? 0)}
+          </p>
+          <p className="mt-1 text-xs text-muted-400">Lifetime payouts received</p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm">
+          <p className="text-xs text-muted-500">Payouts</p>
+          <p className="mt-1 text-2xl font-bold text-secondary-800">
+            {summary?.total_payouts ?? payouts.length}
+          </p>
+          <p className="mt-1 text-xs text-muted-400">Total payout requests</p>
+        </div>
       </div>
 
       <div className="rounded-xl bg-white shadow-sm">
@@ -198,10 +244,14 @@ export default function SellerPayoutsPage() {
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter amount"
-              min={100}
+              placeholder={`Min Rs. ${MIN_PAYOUT_AMOUNT.toLocaleString()}`}
+              min={MIN_PAYOUT_AMOUNT}
               className="w-full rounded-lg border border-muted-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
+            <p className="mt-1 text-xs text-muted-400">
+              Minimum withdraw amount is Rs. {MIN_PAYOUT_AMOUNT.toLocaleString()}. Available
+              balance: <span className="font-medium text-success">{formatPrice(availableBalance)}</span>.
+            </p>
             <label className="mb-1 mt-4 block text-sm font-medium text-secondary-700">Payout Method</label>
             <select
               value={method}

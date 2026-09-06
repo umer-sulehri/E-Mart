@@ -5,6 +5,7 @@ import { ShoppingCart, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import { useCartStore } from '@/store';
+import { buildCartItem } from '@/hooks/useAddToCart';
 
 interface MoveToCartProps {
   itemId: string;
@@ -27,21 +28,12 @@ export default function MoveToCart({
   const [moved, setMoved] = useState(false);
 
   function handleMove() {
-    addItem({
-      id: `cart-${productId}-${Date.now()}`,
-      productId,
-      product: {
-        id: productId,
-        name,
-        slug: '',
-        price,
-        images: [image],
-      } as any,
-      quantity: 1,
-      unitPrice: price,
-      totalPrice: price,
-      addedAt: new Date().toISOString(),
-    });
+    addItem(
+      buildCartItem(
+        { id: productId, name, slug: '', price, image },
+        1
+      )
+    );
 
     fetch(`/api/v1/wishlist/${itemId}`, { method: 'DELETE' }).catch(() => {});
 

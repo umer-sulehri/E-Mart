@@ -15,6 +15,7 @@ import { cn, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
+import type { ProfileRow } from '@/types/supabase';
 
 type UserRole = 'customer' | 'seller' | 'admin';
 
@@ -41,7 +42,7 @@ function SkeletonRow() {
 }
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -217,7 +218,7 @@ export default function AdminUsersPage() {
             <tbody className="divide-y divide-muted-50">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-                : users.map((user: any) => (
+                : users.map((user: ProfileRow) => (
                     <React.Fragment key={user.id}>
                       <tr className="hover:bg-muted-50/50">
                         <td className="py-3">
@@ -234,7 +235,7 @@ export default function AdminUsersPage() {
                           </div>
                         </td>
                         <td className="hidden py-3 md:table-cell">{getRoleBadge(user.role)}</td>
-                        <td className="hidden py-3 lg:table-cell">{getStatusBadge(user.is_blocked)}</td>
+                        <td className="hidden py-3 lg:table-cell">{getStatusBadge(user.is_blocked ?? false)}</td>
                         <td className="hidden whitespace-nowrap py-3 text-muted-600 xl:table-cell">
                           {formatDate(user.created_at)}
                         </td>

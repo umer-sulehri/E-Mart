@@ -7,7 +7,7 @@ import ProductDetailClient from './ProductDetailClient';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import { calculateDiscount, formatPrice } from '@/lib/utils';
 import { generateProductMetadata } from '@/lib/seo';
-import { apiProductToCardProduct } from '@/lib/api';
+import { apiProductToCardProduct, type ApiProduct } from '@/lib/api';
 import type { Product } from '@/types';
 
 interface ProductDetailPageProps {
@@ -133,8 +133,8 @@ async function fetchRelatedProducts(slug: string) {
     if (!res.ok) return [];
     const json = await res.json();
     if (!json.success || !json.data) return [];
-    return (json.data as any[])
-      .filter((p: any) => p.slug !== slug)
+    return (json.data as ApiProduct[])
+      .filter((p) => p.slug !== slug)
       .slice(0, 5)
       .map(apiProductToCardProduct);
   } catch {

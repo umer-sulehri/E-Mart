@@ -14,6 +14,7 @@ import {
 import { formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface Coupon {
   id: string;
@@ -55,6 +56,7 @@ export default function SellerCouponsPage() {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Coupon | null>(null);
   const [form, setForm] = useState(defaultForm);
 
   const load = useCallback(async () => {
@@ -149,7 +151,6 @@ export default function SellerCouponsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this coupon?')) return;
     try {
       const res = await fetch(`/api/v1/seller/coupons/${id}`, { method: 'DELETE' });
       const json = await res.json();
@@ -393,7 +394,7 @@ export default function SellerCouponsPage() {
                           <RefreshCw className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(coupon.id)}
+                          onClick={() => setDeleteTarget(coupon)}
                           className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-danger-50 hover:text-danger"
                           title="Delete"
                         >
@@ -408,6 +409,26 @@ export default function SellerCouponsPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            handleDelete(deleteTarget.id).finally(() => setDeleteTarget(null));
+          } else {
+            setDeleteTarget(null);
+          }
+        }}
+        title="Delete coupon?"
+        message={
+          deleteTarget
+            ? `This will permanently delete coupon "${deleteTarget.code}".`
+            : ''
+        }
+        variant="danger"
+        confirmLabel="Delete coupon"
+      />
     </div>
   );
 }

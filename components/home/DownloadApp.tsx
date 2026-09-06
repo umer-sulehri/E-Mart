@@ -47,7 +47,6 @@ const DownloadApp = React.forwardRef<HTMLDivElement, { className?: string }>(
                   width={320}
                   height={280}
                   className="h-auto w-full max-w-[280px] object-contain md:max-w-[320px]"
-                  priority
                 />
               </div>
             </div>

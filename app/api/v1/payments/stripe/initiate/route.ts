@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 interface StripeInitiateRequest {
   orderId: string;
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
     if (!stripeSecretKey) {
-      console.log("[Stripe Initiate] Stripe not configured — returning mock session for demo");
+      logger.info("StripeInitiate", "Stripe not configured — returning mock session for demo");
 
       const mockSessionId = `cs_mock_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
     // not wired up yet. Do NOT fabricate an external payment URL — instead return
     // a clearly-labelled demo session so the checkout falls through to the app's
     // own success flow rather than sending users to a dead gateway page.
-    console.log("[Stripe Initiate] Stripe integration not configured — returning demo session");
+    logger.info("StripeInitiate", "Stripe integration not configured — returning demo session");
 
     const mockSessionId = `cs_demo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       message: "Stripe checkout is running in demo mode (no gateway configured)",
     });
   } catch (error) {
-    console.error("[Stripe Initiate] Error:", error);
+    logger.error("StripeInitiate", "Error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

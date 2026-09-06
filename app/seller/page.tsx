@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
+import type { OrderRow, ProductRow } from '@/types/supabase';
 import {
   ResponsiveContainer,
   LineChart,
@@ -66,8 +67,8 @@ export default function SellerDashboardPage() {
     monthlyRevenue: 0,
     totalProductsSold: 0,
   });
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
-  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [recentOrders, setRecentOrders] = useState<OrderRow[]>([]);
+  const [topProducts, setTopProducts] = useState<ProductRow[]>([]);
   const [trend, setTrend] = useState<{ label: string; revenue: number; orders: number }[]>([]);
 
   useEffect(() => {
@@ -205,7 +206,7 @@ export default function SellerDashboardPage() {
                         <td className="px-6 py-4"><SkeletonLine className="h-4 w-20" /></td>
                       </tr>
                     ))
-                  : recentOrders.map((order: any) => (
+                  : recentOrders.map((order: OrderRow) => (
                       <tr key={order.id} className="border-b border-muted-50 transition-colors hover:bg-muted-50/50">
                         <td className="px-6 py-4 font-medium text-secondary-800">{order.order_number}</td>
                         <td className="px-6 py-4 text-muted-600">
@@ -257,7 +258,7 @@ export default function SellerDashboardPage() {
                     <SkeletonLine className="h-4 w-16" />
                   </div>
                 ))
-              : topProducts.map((product: any, index: number) => (
+              : topProducts.map((product: ProductRow, index: number) => (
                   <div key={product.id} className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-muted-50/50">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
                       {index + 1}

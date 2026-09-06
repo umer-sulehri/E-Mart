@@ -18,7 +18,9 @@ import { formatPrice } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { cn } from '@/lib/utils';
+import type { ProductRow } from '@/types/supabase';
 
 const statusVariant: Record<string, 'success' | 'warning' | 'default'> = {
   active: 'success',
@@ -46,7 +48,7 @@ function SkeletonRow() {
 
 export default function SellerProductsPage() {
   const router = useRouter();
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -54,6 +56,7 @@ export default function SellerProductsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProductRow | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const ITEMS_PER_PAGE = 10;
 
@@ -95,7 +98,6 @@ export default function SellerProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to deactivate this product?')) return;
     setDeleting(id);
     try {
       const res = await fetch(`/api/v1/seller/products/${id}`, { method: 'DELETE' });
@@ -234,7 +236,7 @@ export default function SellerProductsPage() {
                               <Edit className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => handleDelete(product.id)}
+                              onClick={() => setDeleteTarget(product)}
                               disabled={deleting === product.id}
                               className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
                             >
@@ -290,6 +292,26 @@ export default function SellerProductsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            handleDelete(deleteTarget.id).finally(() => setDeleteTarget(null));
+          } else {
+            setDeleteTarget(null);
+          }
+        }}
+        title="Deactivate product?"
+        message={
+          deleteTarget
+            ? `"${deleteTarget.name}" will be removed from your storefront. You can re-activate it later.`
+            : ''
+        }
+        variant="danger"
+        confirmLabel="Deactivate"
+      />
     </div>
   );
 }
