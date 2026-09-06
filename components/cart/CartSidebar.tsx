@@ -188,7 +188,7 @@ export default function CartSidebar() {
                 </div>
                 {currentShipping > 0 && (
                   <p className="text-xs text-muted-500">
-                    Free shipping above {formatPrice(5000)}
+                    Free shipping above {formatPrice(2000)}
                   </p>
                 )}
                 <div className="border-t border-muted-200 pt-2">

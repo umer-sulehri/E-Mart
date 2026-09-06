@@ -38,8 +38,8 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
 
         toast.success('Thanks for subscribing!');
         setEmail('');
-      } catch (err: any) {
-        toast.error(err.message || 'Something went wrong. Please try again.');
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       } finally {
         setIsSubmitting(false);
       }

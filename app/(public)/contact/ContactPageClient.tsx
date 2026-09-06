@@ -117,8 +117,8 @@ export default function ContactPageClient() {
       toast.success('Message sent successfully! We will get back to you soon.');
       setFormData({ name: '', email: '', subject: '', message: '' });
       setErrors({});
-    } catch (err: any) {
-      toast.error(err.message || 'Something went wrong. Please try again.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

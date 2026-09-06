@@ -177,7 +177,7 @@ export const SITE_CONFIG = {
   },
 } as const;
 
-export const SHIPPMET_METHODS = [
+export const SHIPPING_METHODS = [
   { id: "standard", name: "Standard Delivery", days: "3-5 days", price: 0 },
   { id: "express", name: "Express Delivery", days: "1-2 days", price: 150 },
   { id: "same_day", name: "Same Day Delivery", days: "Within 24 hours", price: 250 },

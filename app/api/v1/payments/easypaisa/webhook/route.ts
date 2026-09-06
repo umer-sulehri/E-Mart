@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.EASYPAISA_API_KEY;
 
     if (!merchantId || !apiKey) {
-      console.warn("[Easypaisa Webhook] Easypaisa merchant/API key not configured. Rejecting webhook.");
+      console.warn("[Easypaisa Webhook] Payment credentials not configured. Rejecting webhook.");
       return NextResponse.json(
         { success: false, error: "Webhook not configured" },
         { status: 501 }
@@ -113,6 +113,10 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         console.error("[Easypaisa Webhook] Failed to mark order as failed:", error.message);
+        return NextResponse.json(
+          { success: false, error: "Failed to update order" },
+          { status: 500 }
+        );
       }
 
       console.log("[Easypaisa Webhook] Order", orderId, "payment failed. Reason:", responseMessage);

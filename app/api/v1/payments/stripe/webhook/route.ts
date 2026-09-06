@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
-      console.warn("[Stripe Webhook] STRIPE_WEBHOOK_SECRET is not configured. Rejecting webhook.");
+      console.warn("[Stripe Webhook] Webhook secret not configured. Rejecting webhook.");
       return NextResponse.json(
         { success: false, error: "Webhook not configured" },
         { status: 501 }

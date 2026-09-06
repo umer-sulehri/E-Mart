@@ -13,8 +13,5 @@ out/
 next-env.d.ts
 .DS_Store
 
-# Stale lockfile from removed Next.js app
-package-lock.json
-
 # Local template reference only - never commit
 organic-1.0.0/

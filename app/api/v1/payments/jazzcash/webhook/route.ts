@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const password = process.env.JAZZCASH_PASSWORD;
 
     if (!merchantId || !password) {
-      console.warn("[JazzCash Webhook] JAZZCASH_MERCHANT_ID/PASSWORD not configured. Rejecting webhook.");
+      console.warn("[JazzCash Webhook] Payment credentials not configured. Rejecting webhook.");
       return NextResponse.json(
         { success: false, error: "Webhook not configured" },
         { status: 501 }
@@ -104,6 +104,10 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         console.error("[JazzCash Webhook] Failed to mark order as failed:", error.message);
+        return NextResponse.json(
+          { success: false, error: "Failed to update order" },
+          { status: 500 }
+        );
       }
 
       console.log("[JazzCash Webhook] Order", orderId, "payment failed. Reason:", responseMessage);

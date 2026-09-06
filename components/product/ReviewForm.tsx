@@ -79,8 +79,8 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
         setComment('');
         setErrors({});
         onSuccess?.();
-      } catch (err: any) {
-        toast.error(err.message || 'Something went wrong. Please try again.');
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       } finally {
         setIsSubmitting(false);
       }

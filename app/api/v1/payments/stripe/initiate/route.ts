@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
     if (!stripeSecretKey) {
-      console.log("[Stripe Initiate] No STRIPE_SECRET_KEY configured — returning mock session for demo");
+      console.log("[Stripe Initiate] Stripe not configured — returning mock session for demo");
 
       const mockSessionId = `cs_mock_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 

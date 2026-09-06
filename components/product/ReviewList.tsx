@@ -107,8 +107,8 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
         setReviews(fetched);
         setTotalReviews(json.meta?.totalItems || fetched.length);
         onReviewCountChange?.(json.meta?.totalItems || fetched.length);
-      } catch (err: any) {
-        setError(err.message || 'Something went wrong');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Something went wrong');
       } finally {
         setLoading(false);
       }

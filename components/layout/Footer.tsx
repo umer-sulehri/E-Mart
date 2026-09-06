@@ -97,8 +97,8 @@ export default function Footer() {
 
       toast.success('Thanks for subscribing!');
       setEmail('');
-    } catch (err: any) {
-      toast.error(err.message || 'Something went wrong. Please try again.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -226,7 +226,7 @@ export default function Footer() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-12 py-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-muted">
             <div className="copyright">
-              &copy; 2024 E-Mart. All rights reserved.
+              &copy; {new Date().getFullYear()} E-Mart. All rights reserved.
             </div>
             <div className="credit-link text-start md:text-end">
               HTML Template by <a href="https://templatesjungle.com/" className="hover:text-dark">TemplatesJungle</a> Distributed By <a href="https://themewagon.com" className="hover:text-dark">ThemeWagon</a>

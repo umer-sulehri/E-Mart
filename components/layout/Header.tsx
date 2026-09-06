@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useDebounce } from '@/hooks/useDebounce';
 import {
   Menu,
   Search,
@@ -33,14 +34,7 @@ interface Suggestion {
   price?: number;
 }
 
-function useDebounce(value: string, delay: number) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
-}
+
 
 function SearchBar({ className }: { className?: string }) {
   const router = useRouter();
