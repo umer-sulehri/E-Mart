@@ -33,6 +33,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
             className={cn(
               "w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800",
               "placeholder:text-muted-400",
@@ -49,10 +51,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
         {error && (
-          <p className="mt-1.5 text-xs text-danger">{error}</p>
+          <p id={`${inputId}-error`} className="mt-1.5 text-xs text-danger">
+            {error}
+          </p>
         )}
         {!error && helperText && (
-          <p className="mt-1.5 text-xs text-muted-500">{helperText}</p>
+          <p id={`${inputId}-helper`} className="mt-1.5 text-xs text-muted-500">
+            {helperText}
+          </p>
         )}
       </div>
     );

@@ -168,3 +168,7 @@ Fixed:
   + `aria-label` ("Rated X out of 5 stars").
 - **Product card quantity input** (`components/product/ProductCard.tsx`) — missing
   accessible name; added `aria-label`.
+- **Shared `Input`** (`components/ui/Input.tsx`) — form fields with validation errors now
+  expose `aria-invalid` and `aria-describedby` wired to the error/helper text element ids
+  (WCAG 3.3.1 Error Identification + 4.1.2 Name/Value/State). Benefits every labelled form
+  (checkout, dashboard profile/orders, etc.), not just this component.
