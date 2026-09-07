@@ -72,15 +72,17 @@ function GoogleIcon({ className }: { className?: string }) {
 
 function RoleSelector({
   onStart,
+  loadingRole,
 }: {
   onStart: (r: Role) => void;
+  loadingRole: Role | null;
 }) {
   return (
     <div className="space-y-6">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-bold font-heading text-secondary">Welcome to E-Mart</h1>
         <p className="text-sm text-muted-500">
-          Select your role to sign in
+          Choose a role to jump straight into its dashboard
         </p>
       </div>
 
@@ -88,18 +90,20 @@ function RoleSelector({
         {(Object.keys(ROLE_META) as Role[]).map((role) => {
           const meta = ROLE_META[role];
           const Icon = meta.icon;
+          const loading = loadingRole === role;
           return (
             <button
               key={role}
               type="button"
+              disabled={loading}
               onClick={() => onStart(role)}
               className={cn(
-                'group flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all',
+                'group flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all disabled:pointer-events-none disabled:opacity-60',
                 meta.accent
                   ? 'border-muted-200 hover:border-danger hover:bg-danger/5'
                   : 'border-muted-200 hover:border-primary hover:bg-primary-50'
               )}
-              aria-label={`Sign in as ${meta.label}`}
+              aria-label={`Open ${meta.label} dashboard`}
             >
               <span
                 className={cn(
@@ -107,10 +111,10 @@ function RoleSelector({
                   meta.accent ? 'bg-danger/10 text-danger group-hover:bg-danger group-hover:text-white' : 'bg-primary-50 text-primary group-hover:bg-primary group-hover:text-white'
                 )}
               >
-                <Icon className="h-6 w-6" />
+                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Icon className="h-6 w-6" />}
               </span>
               <span className="flex-1">
-                <span className="block font-semibold text-secondary">Login as {meta.label}</span>
+                <span className="block font-semibold text-secondary">Open {meta.label} dashboard</span>
                 <span className="block text-xs text-muted-500">{meta.tagline}</span>
               </span>
               <span
@@ -119,12 +123,17 @@ function RoleSelector({
                   meta.accent ? 'text-danger group-hover:text-danger' : 'text-primary'
                 )}
               >
-                Continue →
+                {loading ? 'Signing in…' : 'Enter →'}
               </span>
             </button>
           );
         })}
       </div>
+
+      <p className="text-center text-xs text-muted-400">
+        Demo accounts are created automatically &mdash; sign in instantly, no password needed.
+        Real account sign-in is still available <Link href="/login" className="font-medium text-primary hover:text-primary-500">here</Link>.
+      </p>
     </div>
   );
 }
@@ -237,22 +246,24 @@ function RoleLoginForm() {
     }
   };
 
-  // Role selector step (no role chosen yet) — pick a role to reveal the
-  // credential form for that role.
+  // Role selector step (no role chosen yet) — direct demo entry into dashboards.
   if (!role) {
     return (
       <div className="space-y-4">
-        <RoleSelector onStart={(r) => setRole(r)} />
-        <div className="pt-2 text-center">
-          {typeof window !== 'undefined' && window.location.search.includes('demo') ? (
-            <button
-              type="button"
-              onClick={() => handleDemoLogin('buyer')}
-              className="text-sm font-medium text-primary hover:text-primary-500"
-            >
-              One-click demo login
-            </button>
-          ) : null}
+        <RoleSelector onStart={handleDemoLogin} loadingRole={demoLoading} />
+        {demoError && (
+          <p className="rounded-lg bg-danger/5 px-3 py-2 text-center text-xs font-medium text-danger">
+            {demoError}. Showing the sign-in form instead.
+          </p>
+        )}
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setRole('buyer')}
+            className="text-sm font-medium text-primary hover:text-primary-500"
+          >
+            Sign in with email &amp; password
+          </button>
         </div>
       </div>
     );
@@ -350,32 +361,6 @@ function RoleLoginForm() {
         <GoogleIcon className="h-5 w-5" />
         Continue with Google
       </button>
-
-      {typeof window !== 'undefined' && window.location.search.includes('demo') && (
-        <button
-          type="button"
-          onClick={() => handleDemoLogin(role)}
-          disabled={demoLoading === role}
-          className={cn(
-            'flex w-full items-center justify-center gap-2 rounded-xl border-2 py-2.5 text-sm font-semibold transition-colors disabled:opacity-60',
-            meta.accent
-              ? 'border-muted-200 text-danger hover:border-danger'
-              : 'border-muted-200 text-primary hover:border-primary'
-          )}
-        >
-          {demoLoading === role ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <CheckCircle2 className="h-4 w-4" />
-          )}
-          Try the {meta.label} demo
-        </button>
-      )}
-      {demoError && (
-        <p className="rounded-lg bg-danger/5 px-3 py-2 text-center text-xs font-medium text-danger">
-          {demoError}
-        </p>
-      )}
 
       <p
         className={cn(
