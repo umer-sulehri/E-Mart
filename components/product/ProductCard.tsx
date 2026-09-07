@@ -99,6 +99,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 <input
                   type="number"
                   name="quantity"
+                  aria-label={`Quantity for ${product.name}`}
                   value={quantity}
                   onChange={(e) =>
                     setQuantity(Math.max(1, parseInt(e.target.value) || 1))

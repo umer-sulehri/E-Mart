@@ -90,6 +90,8 @@ const StarRating = React.forwardRef<HTMLDivElement, StarRatingProps>(
     return (
       <div
         ref={ref}
+        role="img"
+        aria-label={`Rated ${clampedRating.toFixed(1)} out of 5 stars`}
         className={cn("inline-flex items-center gap-0.5", className)}
       >
         {stars.map((fill, i) => (
