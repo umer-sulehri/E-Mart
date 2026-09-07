@@ -12,14 +12,13 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import type { OrderRow } from '@/types/supabase';
 
 function EasypaisaConfirmContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId') || '';
   const status = searchParams.get('status') || 'pending';
 
-  const [orderDetails, setOrderDetails] = useState<OrderRow | null>(null);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const isSuccess = status === 'success';
