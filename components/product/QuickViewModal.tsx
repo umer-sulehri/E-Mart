@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { X, Heart, ShoppingCart, Star, Eye, Check } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -47,6 +47,18 @@ export default function QuickViewModal({
     wishlistLoading,
   } = useAddToWishlist(product?.id ?? '', product?.name ?? '', { isAuthenticated });
 
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    panelRef.current?.focus();
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, onClose]);
+
   if (!open || !product) return null;
 
   const hasDiscount =
@@ -61,7 +73,14 @@ export default function QuickViewModal({
         className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-3xl rounded-2xl bg-white shadow-xl">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={product.name}
+        tabIndex={-1}
+        className="relative w-full max-w-3xl rounded-2xl bg-white shadow-xl outline-none"
+      >
         <button
           onClick={onClose}
           className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-muted-500 shadow-sm transition-colors hover:text-secondary"

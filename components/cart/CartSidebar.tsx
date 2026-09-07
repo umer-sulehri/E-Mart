@@ -46,6 +46,15 @@ export default function CartSidebar() {
     };
   }, [isCartOpen]);
 
+  useEffect(() => {
+    if (!isCartOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') toggleCart();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isCartOpen, toggleCart]);
+
   const currentSubtotal = subtotal();
   const currentShipping = shippingCost();
   const currentTotal = total();
@@ -69,6 +78,10 @@ export default function CartSidebar() {
 
       {/* Sidebar */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Shopping cart"
+        aria-hidden={!isCartOpen}
         className={`fixed right-0 top-0 z-[70] flex h-full w-full max-w-md flex-col bg-white shadow-xl transition-transform duration-300 ease-in-out ${
           isCartOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
