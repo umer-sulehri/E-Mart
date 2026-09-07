@@ -73,7 +73,10 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
               category: post.category || 'General',
               title: post.title,
               excerpt: post.excerpt || '',
-              authorName: post.author || 'Admin',
+              authorName:
+                typeof post.author === 'string'
+                  ? post.author
+                  : post.author?.name || 'Admin',
               authorAvatar: `/images/reviewer-${(i % 3) + 1}.jpg`,
               date: post.published_at
                 ? new Date(post.published_at).toLocaleDateString('en-GB', {
