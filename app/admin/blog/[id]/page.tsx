@@ -59,18 +59,24 @@ export default function EditBlogPostPage() {
   }, [postId]);
 
   const handleSubmit = async (data: BlogFormData) => {
-    const res = await fetch(`/api/v1/admin/blog-posts/${postId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    const json = await res.json();
-    if (json.success) {
-      toast.success('Blog post updated');
-      router.push('/admin/blog');
-    } else {
-      toast.error(json.error || 'Failed to update post');
-      throw new Error(json.error);
+    try {
+      const res = await fetch(`/api/v1/admin/blog-posts/${postId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success('Blog post updated');
+        router.push('/admin/blog');
+      } else {
+        toast.error(json.error || 'Failed to update post');
+        throw new Error(json.error);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message) throw err;
+      toast.error('Network error. Please try again.');
+      throw new Error('Network error');
     }
   };
 

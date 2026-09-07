@@ -1,9 +1,9 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Check,
@@ -57,12 +57,9 @@ const paymentMethodLabel: Record<string, string> = {
   bank_transfer: 'Bank Transfer',
 };
 
-export default function OrderDetailPage({
-  params,
-}: {
-  params: Promise<{ orderId: string }>;
-}) {
-  const { orderId } = use(params);
+export default function OrderDetailPage() {
+  const params = useParams<{ orderId: string }>();
+  const orderId = params.orderId;
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);

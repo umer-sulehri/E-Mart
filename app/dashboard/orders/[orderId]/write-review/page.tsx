@@ -1,8 +1,8 @@
 'use client';
 
-import { use, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, Package, Star, Loader2 } from 'lucide-react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import Button from '@/components/ui/Button';
@@ -44,12 +44,9 @@ const ratingLabels: Record<number, string> = {
   5: 'Excellent',
 };
 
-export default function WriteReviewPage({
-  params,
-}: {
-  params: Promise<{ orderId: string }>;
-}) {
-  const { orderId } = use(params);
+export default function WriteReviewPage() {
+  const params = useParams<{ orderId: string }>();
+  const orderId = params.orderId;
   const router = useRouter();
 
   const [order, setOrder] = useState<OrderPayload | null>(null);

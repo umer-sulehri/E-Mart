@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -342,7 +343,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id);
     if (cartError) {
       // Stock is already decremented; leaving the cart is non-fatal.
-      console.error("[orders] Failed to clear cart:", cartError.message);
+      logger.error("orders", "Failed to clear cart:", cartError.message);
     }
 
     // Redeem the coupon so its usage count reflects this order.
@@ -352,7 +353,7 @@ export async function POST(request: NextRequest) {
         .update({ used_count: couponUsedCount + 1 })
         .eq("id", couponId);
       if (couponError) {
-        console.error("[orders] Failed to increment coupon used_count:", couponError.message);
+        logger.error("orders", "Failed to increment coupon used_count:", couponError.message);
       }
     }
 

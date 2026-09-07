@@ -2,6 +2,16 @@ import type { MetadataRoute } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk';
 
+// Some products/blog rows have null or missing timestamp columns. Guard the
+// value so sitemap serialization (Date.toISOString) never receives an invalid
+// Date, which throws RangeError and 500s the whole sitemap.
+function safeLastModified(value: unknown): Date | undefined {
+  if (!value) return undefined;
+  const date = new Date(value as string | number | Date);
+  if (Number.isNaN(date.getTime())) return undefined;
+  return date;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
@@ -26,9 +36,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const products = await productsRes.value.json();
       if (products.data) {
         for (const product of products.data) {
+          const lastModified = safeLastModified(product.updated_at || product.created_at);
           staticPages.push({
             url: `${BASE_URL}/products/${product.slug}`,
-            lastModified: new Date(product.updated_at || product.created_at),
+            lastModified,
             changeFrequency: 'weekly',
             priority: 0.8,
           });
@@ -40,9 +51,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const posts = await blogRes.value.json();
       if (posts.data) {
         for (const post of posts.data) {
+          const lastModified = safeLastModified(post.updated_at || post.published_at || post.created_at);
           staticPages.push({
             url: `${BASE_URL}/blog/${post.slug}`,
-            lastModified: new Date(post.updated_at || post.published_at || post.created_at),
+            lastModified,
             changeFrequency: 'monthly',
             priority: 0.6,
           });

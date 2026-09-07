@@ -38,6 +38,7 @@ export default function SellerPayoutsPage() {
   const [method, setMethod] = useState('bank');
   const [accountDetails, setAccountDetails] = useState('');
   const [requesting, setRequesting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const fetchPayouts = useCallback(async () => {
     setLoading(true);
@@ -69,23 +70,23 @@ export default function SellerPayoutsPage() {
   const availableBalance = summary?.pending_balance ?? 0;
 
   const handleRequest = async () => {
+    const validation: Record<string, string> = {};
     const amt = Number(amount);
-    if (!amt || amt <= 0) {
-      toast.error('Enter a valid amount');
-      return;
-    }
-    if (amt < MIN_PAYOUT_AMOUNT) {
-      toast.error(`Minimum payout amount is Rs. ${MIN_PAYOUT_AMOUNT.toLocaleString()}`);
-      return;
-    }
-    if (amt > availableBalance) {
-      toast.error(
-        `Insufficient balance. Available: Rs. ${availableBalance.toLocaleString()}`
-      );
-      return;
+    if (!amount.trim() || !amt || amt <= 0) {
+      validation.amount = 'Enter a valid amount';
+    } else if (amt < MIN_PAYOUT_AMOUNT) {
+      validation.amount = `Minimum payout amount is Rs. ${MIN_PAYOUT_AMOUNT.toLocaleString()}`;
+    } else if (amt > availableBalance) {
+      validation.amount = `Insufficient balance. Available: Rs. ${availableBalance.toLocaleString()}`;
     }
     if (!accountDetails.trim()) {
-      toast.error('Enter your account details');
+      validation.accountDetails = 'Enter your account details';
+    } else if (method !== 'bank' && !/^(\+92|0)3\d{9}$/.test(accountDetails.trim())) {
+      validation.accountDetails = 'Enter a valid mobile number (e.g. 0300-1234567)';
+    }
+    setFieldErrors(validation);
+    if (Object.keys(validation).length > 0) {
+      toast.error('Please fix the highlighted fields');
       return;
     }
     setRequesting(true);
@@ -101,17 +102,18 @@ export default function SellerPayoutsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Payout request submitted');
+        toast.success(data.message || 'Payout request submitted successfully');
         setAmount('');
         setMethod('bank');
         setAccountDetails('');
+        setFieldErrors({});
         setRequestOpen(false);
         fetchPayouts();
       } else {
         toast.error(data.error || 'Failed to request payout');
       }
     } catch {
-      toast.error('Failed to request payout');
+      toast.error('Failed to request payout. Please try again.');
     } finally {
       setRequesting(false);
     }
@@ -243,11 +245,21 @@ export default function SellerPayoutsPage() {
             <input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, amount: '' }));
+              }}
               placeholder={`Min Rs. ${MIN_PAYOUT_AMOUNT.toLocaleString()}`}
               min={MIN_PAYOUT_AMOUNT}
-              className="w-full rounded-lg border border-muted-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                fieldErrors.amount
+                  ? 'border-danger focus:border-danger focus:ring-danger/20'
+                  : 'border-muted-200 focus:border-primary focus:ring-primary/20'
+              }`}
             />
+            {fieldErrors.amount && (
+              <p className="mt-1 text-xs text-danger">{fieldErrors.amount}</p>
+            )}
             <p className="mt-1 text-xs text-muted-400">
               Minimum withdraw amount is Rs. {MIN_PAYOUT_AMOUNT.toLocaleString()}. Available
               balance: <span className="font-medium text-success">{formatPrice(availableBalance)}</span>.
@@ -268,14 +280,24 @@ export default function SellerPayoutsPage() {
             <input
               type="text"
               value={accountDetails}
-              onChange={(e) => setAccountDetails(e.target.value)}
+              onChange={(e) => {
+                setAccountDetails(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, accountDetails: '' }));
+              }}
               placeholder={
                 method === 'bank'
                   ? 'Account name / IBAN'
                   : 'Mobile number (03xx-xxxxxxx)'
               }
-              className="w-full rounded-lg border border-muted-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                fieldErrors.accountDetails
+                  ? 'border-danger focus:border-danger focus:ring-danger/20'
+                  : 'border-muted-200 focus:border-primary focus:ring-primary/20'
+              }`}
             />
+            {fieldErrors.accountDetails && (
+              <p className="mt-1 text-xs text-danger">{fieldErrors.accountDetails}</p>
+            )}
             <p className="mt-1 text-xs text-muted-400">Enter the account details for receiving the payout.</p>
             <div className="mt-6 flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setRequestOpen(false)}>

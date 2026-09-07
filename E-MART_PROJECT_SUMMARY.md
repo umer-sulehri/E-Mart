@@ -96,6 +96,11 @@ E-Mart/
 - Session management via Supabase SSR cookies
 - Admin action logging (`admin_logs`)
 
+> **Known limitation:** the rate limiter (`lib/rate-limit.ts`) is **in-memory** (module-level `Map`). It
+> is effective per single Node process but is **not shared across multiple instances/containers**, so
+> under horizontal scaling each instance enforces its own budget. For a multi-instance production
+> deployment, move the bucket store to a shared store (e.g. **Redis**) — see `lib/rate-limit.ts`.
+
 ### 5.3 Seller Panel (`/seller`)
 - Product CRUD (create, edit, delete)
 - Order management (view/update status)

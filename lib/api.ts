@@ -17,6 +17,27 @@ export async function fetchAPI<T>(endpoint: string, options?: RequestInit): Prom
   return res.json();
 }
 
+const RETRY_DELAYS = [1000, 2000, 4000];
+
+export async function fetchWithRetry<T>(
+  endpoint: string,
+  options?: RequestInit,
+  maxRetries = 3,
+): Promise<T> {
+  let lastError: Error | undefined;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fetchAPI<T>(endpoint, options);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS[attempt]));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export const api = {
   products: {
     list: (params?: Record<string, string>) =>

@@ -23,7 +23,6 @@ import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import MobileNav from './MobileNav';
-import NotificationBell from '@/components/ui/NotificationBell';
 import VoiceSearch from './VoiceSearch';
 
 interface Suggestion {
@@ -482,9 +481,6 @@ export default function Header() {
             </nav>
 
             <ul className="flex items-center gap-5 justify-end m-0 list-none">
-              <li>
-                <NotificationBell />
-              </li>
               <li>
                 <UserMenu
                   user={user}

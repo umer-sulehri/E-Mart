@@ -14,6 +14,12 @@ interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Product detail renders live DB data with `no-store` fetches, so it must
+// always be dynamic. Without this, the page is built as SSG (generateStaticParams
+// returns []) and the runtime no-store fetch throws "Page changed from static
+// to dynamic at runtime" (app-static-to-dynamic-error in Next 14.2).
+export const dynamic = 'force-dynamic';
+
 async function fetchProductBySlug(slug: string): Promise<Product | null> {
   try {
     const res = await fetch(
@@ -142,12 +148,6 @@ async function fetchRelatedProducts(slug: string) {
   }
 }
 
-export async function generateStaticParams() {
-  // No static pre-generation — product slugs come from the live database,
-  // so pages are rendered on-demand (ISR/dynamic).
-  return [];
-}
-
 export async function generateMetadata({
   params,
 }: ProductDetailPageProps): Promise<Metadata> {
@@ -223,7 +223,7 @@ export default async function ProductDetailPage({
                     reviewCount: product.reviewCount,
                   }
                 : undefined,
-          }),
+          }).replace(/</g, '\\u003c'),
         }}
       />
 

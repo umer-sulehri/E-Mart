@@ -54,11 +54,13 @@ export default function AdminReviewsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [acting, setActing] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminReview | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.set('status', statusFilter);
@@ -66,9 +68,15 @@ export default function AdminReviewsPage() {
       const res = await fetch(`/api/v1/admin/reviews?${params.toString()}`);
       const json = await res.json();
       if (json.success) setReviews(json.data || []);
-      else toast.error(json.error || 'Failed to load reviews');
+      else {
+        const msg = json.error || 'Failed to load reviews';
+        setError(msg);
+        toast.error(msg);
+      }
     } catch {
-      toast.error('Failed to load reviews');
+      const msg = 'Network error. Please check your connection.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -213,6 +221,18 @@ export default function AdminReviewsPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <div className="py-16 text-center">
+            <AlertTriangle className="mx-auto mb-3 h-10 w-10 text-danger" />
+            <p className="font-medium text-secondary-800">Failed to load reviews</p>
+            <p className="mt-1 text-sm text-muted-500">{error}</p>
+            <button
+              onClick={load}
+              className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-600"
+            >
+              Try Again
+            </button>
           </div>
         ) : reviews.length === 0 ? (
           <div className="py-16 text-center text-muted-500">No reviews found</div>

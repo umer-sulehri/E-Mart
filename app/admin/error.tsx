@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { AlertTriangle, RefreshCw, LayoutDashboard } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { logger } from '@/lib/logger';
 
 export default function AdminError({
   error,
@@ -13,7 +14,11 @@ export default function AdminError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[Admin Error Boundary]', error);
+    logger.error('AdminErrorBoundary', {
+      message: error.message,
+      digest: error.digest,
+      stack: error.stack,
+    });
   }, [error]);
 
   return (

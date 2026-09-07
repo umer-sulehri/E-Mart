@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { AlertTriangle, RefreshCw, Store } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { logger } from '@/lib/logger';
 
 export default function SellerError({
   error,
@@ -13,7 +14,11 @@ export default function SellerError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[Seller Error Boundary]', error);
+    logger.error('SellerErrorBoundary', {
+      message: error.message,
+      digest: error.digest,
+      stack: error.stack,
+    });
   }, [error]);
 
   return (
