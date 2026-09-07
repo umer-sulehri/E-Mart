@@ -59,6 +59,15 @@ export default function NotificationBell({ className }: NotificationBellProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen]);
+
   async function markAllRead() {
     try {
       await fetch('/api/v1/notifications', {
@@ -79,6 +88,8 @@ export default function NotificationBell({ className }: NotificationBellProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="relative flex h-10 w-10 items-center justify-center rounded-full text-secondary-700 transition-colors hover:bg-muted-100"
         aria-label="Notifications"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
         <Bell size={20} />
         {unreadCount > 0 && (

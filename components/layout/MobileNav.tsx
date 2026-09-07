@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   X,
@@ -69,6 +69,19 @@ interface MobileNavProps {
 export default function MobileNav({ open, onClose }: MobileNavProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [open, onClose]);
+
   return (
     <>
       <div
@@ -83,9 +96,10 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
       <nav
         role="navigation"
         aria-label="Mobile navigation"
+        aria-hidden={!open}
         className={cn(
           'fixed top-0 left-0 z-[121] h-full w-[300px] max-w-[85vw] bg-white shadow-xl transition-transform duration-300 ease-in-out overflow-y-auto',
-          open ? 'translate-x-0' : '-translate-x-full'
+          open ? 'translate-x-0' : '-translate-x-full invisible'
         )}
       >
         <div className="flex items-center justify-between p-4 border-b border-muted-200">
