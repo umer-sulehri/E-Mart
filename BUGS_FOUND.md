@@ -90,3 +90,20 @@ Bug findings, root causes, and fixes from the comprehensive fix & enhancement pa
   `next/font/google` in `app/layout.tsx`.
 - No token changes required. Deeper audit items (55-component sweep, dark mode, GA4, Swagger,
   Lighthouse) remain open scope and are tracked separately.
+
+## Phase 5 — SEO & Analytics additions
+
+### 5.2 Missing per-page SEO on seller pages
+- **Files:** `app/(public)/sellers/page.tsx`, `app/(public)/sellers/[slug]/page.tsx`
+- **Root cause:** Both were client-only components — App Router cannot export `metadata` /
+  `generateMetadata` from `'use client'` modules, so `/sellers` and `/sellers/[slug]` had no
+  per-page title/description/OG tags (fell back to the generic root template).
+- **Fix:** Split each into a server wrapper (`page.tsx` exporting metadata) + client component
+  (`SellersClient.tsx`, `SellerStoreClient.tsx`). The storefront's `generateMetadata` does a
+  server-side `vendors` lookup by slug (name, description, logo) and calls `notFound()` for
+  unknown slugs; transient DB errors fall back to the client render so the page never breaks.
+
+### 5.3 Google Analytics 4
+- **File:** `components/analytics/GoogleAnalytics.tsx` (added to `app/layout.tsx`)
+- Gated behind `NEXT_PUBLIC_GA_ID` (added to `.env.example`); renders `next/script`
+  `gtag` with `anonymize_ip` when set, no-op otherwise. Nothing loads when unset.

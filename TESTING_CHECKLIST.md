@@ -116,3 +116,9 @@ Checkout lives in `app/(public)/checkout/CheckoutPageClient.tsx` (self-contained
 - [ ] Quick-view modal heart reflects saved wishlist state too
 - [ ] Seller + Admin pages show exactly one breadcrumb trail (no duplicate Home)
 - [ ] Seller Payouts: available balance matches server-side `Insufficient balance` check
+
+## 13. SEO & Analytics
+
+- [ ] `/sellers` page has its own title/description/OG metadata
+- [ ] `/sellers/[slug]` has dynamic metadata (seller name/description/logo) and 404s on unknown slugs
+- [ ] Setting `NEXT_PUBLIC_GA_ID` injects the gtag snippet; leaving it unset loads nothing

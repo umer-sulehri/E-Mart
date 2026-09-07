@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Nunito, Open_Sans } from 'next/font/google';
 import '@/styles/globals.css';
 import { Providers } from '@/components/providers';
+import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -98,6 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${nunito.variable} ${openSans.variable}`}>
       <body className="font-body">
         <Providers>{children}</Providers>
+        <GoogleAnalytics />
       </body>
     </html>
   );
