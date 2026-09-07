@@ -52,8 +52,9 @@ interface UsersData {
 
 type ReportType = 'sales' | 'products' | 'users';
 
-function formatCurrency(amount: number): string {
-  return `₨${amount.toLocaleString()}`;
+function formatCurrency(amount: number | undefined | null): string {
+  const n = Number(amount);
+  return Number.isFinite(n) ? `₨${n.toLocaleString()}` : '₨0';
 }
 
 function SkeletonBox({ className }: { className?: string }) {
@@ -138,9 +139,10 @@ export default function AdminReportsPage() {
       const res = await fetch(`/api/v1/admin/reports?type=${type}&period=${p}`);
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
-      if (type === 'sales') setSalesData(data);
-      else if (type === 'products') setProductsData(data);
-      else setUsersData(data);
+      const report = data.data ?? data;
+      if (type === 'sales') setSalesData(report);
+      else if (type === 'products') setProductsData(report);
+      else setUsersData(report);
     } catch {
       if (type === 'sales') {
         setSalesData({

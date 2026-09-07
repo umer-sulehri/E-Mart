@@ -82,9 +82,10 @@ Error/not-found boundaries:
 - [ ] Product detail page additional images render (no `as any` crash)
 - [ ] Move-to-cart from wishlist works
 
-## 9. Phase 4 — Checkout Refactor
+## 9. Phase 4 — Checkout (restored monolithic flow)
 
-Extracted to `lib/checkout.ts` (schemas/labels/fieldErrors) + `components/checkout/*`:
+Checkout lives in `app/(public)/checkout/CheckoutPageClient.tsx` (self-contained; no
+`lib/checkout.ts` / `components/checkout/*`):
 
 - [ ] Step flow: Shipping → Payment → Review, with Edit/Back navigation
 - [ ] Validation errors per-field on each step; clearing on change
@@ -104,3 +105,14 @@ Extracted to `lib/checkout.ts` (schemas/labels/fieldErrors) + `components/checko
 - [ ] Signup → email/phone verify → login → logout
 - [ ] Demo login off (no `NEXT_PUBLIC_ENABLE_DEMO_LOGIN`): demo buttons hidden
 - [ ] Role-based access: buyer cannot reach admin/seller routes; admin cannot reach seller
+
+## 12. Comprehensive Fix Pass (see BUGS_FOUND.md)
+
+- [ ] Admin Settings: social links list renders (no `map` crash); save → reload persists
+- [ ] Admin Reports: all 3 tabs render currency without `toLocaleString` crash
+- [ ] Admin Reviews: table loads (profiles join no longer references `avatar_url`)
+- [ ] Admin Coupons: create/edit/delete persist; list refreshes
+- [ ] Home/product-grid hearts reflect saved wishlist for a signed-in user (seed on mount)
+- [ ] Quick-view modal heart reflects saved wishlist state too
+- [ ] Seller + Admin pages show exactly one breadcrumb trail (no duplicate Home)
+- [ ] Seller Payouts: available balance matches server-side `Insufficient balance` check

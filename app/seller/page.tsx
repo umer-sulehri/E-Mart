@@ -12,6 +12,7 @@ import {
   Star,
   ChevronRight,
   TrendingUp,
+  Home,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { formatPrice, formatDate } from '@/lib/utils';
@@ -122,6 +123,15 @@ export default function SellerDashboardPage() {
 
   return (
     <div className="space-y-6">
+      <nav className="flex items-center gap-2 text-sm text-muted-500">
+        <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary">
+          <Home className="h-3.5 w-3.5" />
+          Home
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="text-secondary-800">Seller Dashboard</span>
+      </nav>
+
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-bold text-secondary-800">
           Welcome back, {user?.firstName ?? 'Seller'}!

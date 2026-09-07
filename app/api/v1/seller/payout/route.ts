@@ -80,6 +80,11 @@ export async function GET(request: NextRequest) {
       .eq("seller_id", user.id);
 
     const allPayouts = totalData || [];
+    // Money already paid OR reserved by an in-flight request cannot be
+    // requested again. Matches the balance check in payout/request.
+    const reserved = allPayouts
+      .filter((p) => ["pending", "processing", "completed"].includes(p.status))
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
     const totalPaid = allPayouts
       .filter((p) => p.status === "completed")
       .reduce((sum, p) => sum + Number(p.amount || 0), 0);
@@ -103,7 +108,7 @@ export async function GET(request: NextRequest) {
         const grossTotal = earnings.reduce((sum, item) => sum + (item.total || 0), 0);
         const commissionRate = vendor?.commission_rate || 0;
         const netTotal = grossTotal * (1 - commissionRate / 100);
-        pendingBalance = netTotal - totalPaid;
+        pendingBalance = netTotal - reserved;
       }
     }
 

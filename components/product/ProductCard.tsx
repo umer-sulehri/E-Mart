@@ -9,6 +9,7 @@ import { useAddToCart } from "@/hooks/useAddToCart";
 import { useAddToWishlist } from "@/hooks/useAddToWishlist";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 
 export interface Product {
   id: string;
@@ -32,11 +33,12 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
     const [quantity, setQuantity] = React.useState(1);
     const [quickViewOpen, setQuickViewOpen] = React.useState(false);
     const { addToCart } = useAddToCart();
+    const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
     const {
       isWishlisted,
       toggleWishlist,
       wishlistLoading,
-    } = useAddToWishlist(product.id, product.name);
+    } = useAddToWishlist(product.id, product.name, { isAuthenticated });
     const discount = product.discountPrice
       ? calculateDiscount(product.price, product.discountPrice)
       : 0;

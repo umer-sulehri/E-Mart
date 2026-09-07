@@ -9,6 +9,7 @@ import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useAddToCart } from '@/hooks/useAddToCart';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
+import { useAuthStore } from '@/store/authStore';
 import { formatPrice, calculateDiscount } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
@@ -39,11 +40,12 @@ export default function QuickViewModal({
 }: QuickViewModalProps) {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useAddToCart();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const {
     isWishlisted,
     toggleWishlist,
     wishlistLoading,
-  } = useAddToWishlist(product?.id ?? '', product?.name ?? '');
+  } = useAddToWishlist(product?.id ?? '', product?.name ?? '', { isAuthenticated });
 
   if (!open || !product) return null;
 

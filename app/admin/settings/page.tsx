@@ -215,9 +215,10 @@ export default function AdminSettingsPage() {
       const res = await fetch('/api/v1/admin/settings');
       if (res.ok) {
         const data = await res.json();
-        if (data.general) setGeneral(data.general);
-        if (data.payments) setPayments(data.payments);
-        if (data.shipping) setShipping(data.shipping);
+        const settings = data.data ?? data;
+        if (settings.general) setGeneral(settings.general);
+        if (settings.payments) setPayments(settings.payments);
+        if (settings.shipping) setShipping(settings.shipping);
       }
     } catch {
       showToast('Failed to load settings', 'error');
@@ -234,7 +235,14 @@ export default function AdminSettingsPage() {
       const res = await fetch('/api/v1/admin/social-links');
       if (res.ok) {
         const data = await res.json();
-        setSocialLinks(data.links || data || []);
+        const links = Array.isArray(data.data)
+          ? data.data
+          : Array.isArray(data.links)
+            ? data.links
+            : Array.isArray(data)
+              ? data
+              : [];
+        setSocialLinks(links);
       }
     } catch {
       showToast('Failed to load social links', 'error');

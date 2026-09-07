@@ -16,6 +16,8 @@ import {
   UserPlus,
   Clock,
   ArrowRight,
+  Home,
+  ChevronRight,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -184,6 +186,15 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
+      <nav className="flex items-center gap-2 text-sm text-muted-500">
+        <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary">
+          <Home className="h-3.5 w-3.5" />
+          Home
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="text-secondary-800">Admin</span>
+      </nav>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-secondary-800">Admin Dashboard</h1>

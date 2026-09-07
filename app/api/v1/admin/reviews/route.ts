@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("reviews")
       .select(
-        "*, products(name, slug), profiles(id, first_name, last_name, email, avatar_url)",
+        "*, products(name, slug), profiles(id, first_name, last_name, email, profile_image_url)",
         { count: "exact" }
       );
 
