@@ -66,9 +66,9 @@ const TestimonialSection = React.forwardRef<
                 />
               </div>
               <div>
-                <h4 className="font-heading text-base font-semibold text-secondary-800">
+                <h3 className="font-heading text-base font-semibold text-secondary-800">
                   {testimonial.name}
-                </h4>
+                </h3>
                 <StarRating rating={testimonial.rating} size="sm" />
               </div>
             </div>

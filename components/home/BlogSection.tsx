@@ -143,9 +143,10 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
 
                 <Link
                   href={`/blog/${post.slug}`}
-                  className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary-500"
+                  className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
                 >
                   Read More
+                  <span className="sr-only"> about {post.title}</span>
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </Link>
 

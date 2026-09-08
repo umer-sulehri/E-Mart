@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("banners")
       .select("*")
-      .order("display_order", { ascending: true });
+      .order("priority", { ascending: true });
 
     if (error) {
       return NextResponse.json(
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, subtitle, image_url, link_url, position, display_order, is_active, start_date, end_date } = body;
+    const { title, subtitle, image_url, link_url, position, sort_order, priority, is_active, start_date, end_date } = body;
 
     if (!title || !image_url) {
       return NextResponse.json(
@@ -98,10 +98,10 @@ export async function POST(request: NextRequest) {
         image_url,
         link_url: link_url || null,
         position: position || "home_top",
-        display_order: display_order || 0,
+        priority: priority ?? sort_order ?? 0,
         is_active: is_active ?? true,
-        start_date: start_date || null,
-        end_date: end_date || null,
+        starts_at: start_date ? new Date(start_date).toISOString() : null,
+        expires_at: end_date ? new Date(end_date).toISOString() : null,
       })
       .select()
       .single();

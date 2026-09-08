@@ -141,7 +141,7 @@ export default function Footer() {
 
           {/* Column 2: Organic */}
           <div>
-            <h5 className="widget-title text-lg font-bold mb-4">Organic</h5>
+            <h3 className="widget-title text-lg font-bold mb-4">Organic</h3>
             <ul className="menu-list list-none space-y-2">
               {organicLinks.map((link) => (
                 <li key={link.label}>
@@ -158,7 +158,7 @@ export default function Footer() {
 
           {/* Column 3: Quick Links */}
           <div>
-            <h5 className="widget-title text-lg font-bold mb-4">Quick Links</h5>
+            <h3 className="widget-title text-lg font-bold mb-4">Quick Links</h3>
             <ul className="menu-list list-none space-y-2">
               {quickLinks.map((link) => (
                 <li key={link.label}>
@@ -175,7 +175,7 @@ export default function Footer() {
 
           {/* Column 4: Customer Service */}
           <div>
-            <h5 className="widget-title text-lg font-bold mb-4">Customer Service</h5>
+            <h3 className="widget-title text-lg font-bold mb-4">Customer Service</h3>
             <ul className="menu-list list-none space-y-2">
               {customerServiceLinks.map((link) => (
                 <li key={link.label}>
@@ -193,7 +193,7 @@ export default function Footer() {
 
         <div className="mt-8 pt-8 border-t border-muted-200">
           <div className="mx-auto max-w-xl text-center">
-            <h5 className="widget-title text-lg font-bold mb-2">Subscribe Us</h5>
+            <h3 className="widget-title text-lg font-bold mb-2">Subscribe Us</h3>
             <p className="text-muted text-sm mb-4">
               Subscribe to our newsletter to get updates about our grand offers.
             </p>
@@ -213,7 +213,7 @@ export default function Footer() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-full bg-primary px-8 py-2.5 text-sm font-medium text-white transition-colors hover:bg-secondary-800 disabled:pointer-events-none disabled:opacity-50"
+                className="rounded-full bg-primary-600 px-8 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:pointer-events-none disabled:opacity-50"
               >
                 {isSubmitting ? 'Submitting...' : 'Subscribe'}
               </button>

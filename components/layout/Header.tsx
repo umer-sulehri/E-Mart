@@ -507,7 +507,7 @@ export default function Header() {
                 >
                   <ShoppingBag className="h-6 w-6" />
                   {mounted && itemCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+                    <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
                       {itemCount > 99 ? '99+' : itemCount}
                     </span>
                   )}

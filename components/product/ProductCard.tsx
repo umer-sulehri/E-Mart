@@ -111,7 +111,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
               <div className="w-7/12">
                 <button
                   onClick={() => addToCart(product, quantity)}
-                  className="btn-cart flex w-full items-center justify-center gap-2 rounded-1 bg-primary p-2 text-xs text-white hover:bg-primary-500"
+                  className="btn-cart flex w-full items-center justify-center gap-2 rounded-1 bg-primary-600 p-2 text-xs text-white hover:bg-primary-700"
                   aria-label={`Add ${product.name} to cart`}
                 >
                   <ShoppingCart size={16} />

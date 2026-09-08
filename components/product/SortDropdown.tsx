@@ -23,6 +23,7 @@ export default function SortDropdown({ value, onChange }: SortDropdownProps) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as SortValue)}
+        aria-label="Sort products"
         className="appearance-none rounded-lg border border-muted-200 bg-white py-2 pl-3 pr-8 text-sm text-secondary-800 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
       >
         {SORT_OPTIONS.map((option) => (

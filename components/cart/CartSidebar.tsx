@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { X, Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
@@ -22,8 +22,19 @@ export default function CartSidebar() {
   const shippingCost = useCartStore((s) => s.shippingCost);
   const total = useCartStore((s) => s.total);
   const itemCount = useCartStore((s) => s.itemCount);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const hydrated = useHydrated();
+
+  // The drawer stays mounted off-canvas so the open/close transition can
+  // animate. While closed it must be inert so its focusable content is not
+  // reachable via keyboard/screen reader (WCAG 2.4.3 + aria-hidden contract).
+  useEffect(() => {
+    const el = sidebarRef.current;
+    if (!el) return;
+    if (isCartOpen) el.removeAttribute('inert');
+    else el.setAttribute('inert', '');
+  }, [isCartOpen]);
 
   const handleToggle = useCallback(() => {
     toggleCart();
@@ -78,6 +89,7 @@ export default function CartSidebar() {
 
       {/* Sidebar */}
       <div
+        ref={sidebarRef}
         role="dialog"
         aria-modal="true"
         aria-label="Shopping cart"
@@ -207,7 +219,7 @@ export default function CartSidebar() {
                 <div className="border-t border-muted-200 pt-2">
                   <div className="flex items-center justify-between">
                     <span className="text-base font-bold text-secondary-800">Total</span>
-                    <span className="text-base font-bold text-primary">
+                    <span className="text-base font-bold text-primary-600">
                       {formatPrice(currentTotal)}
                     </span>
                   </div>

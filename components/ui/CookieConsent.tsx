@@ -31,11 +31,11 @@ export default function CookieConsent() {
             href="/privacy-policy"
             className="text-sm text-white/60 underline hover:text-white transition-colors"
           >
-            Learn More
+            Learn more about cookies and privacy
           </Link>
           <button
             onClick={accept}
-            className="rounded bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary-500 transition-colors"
+            className="rounded bg-primary-600 px-5 py-2 text-sm font-medium text-white hover:bg-primary-700 transition-colors"
           >
             Accept
           </button>

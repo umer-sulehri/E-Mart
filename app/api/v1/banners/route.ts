@@ -9,7 +9,7 @@ export async function GET() {
       .from("banners")
       .select("*")
       .eq("is_active", true)
-      .order("display_order", { ascending: true });
+      .order("priority", { ascending: true });
 
     if (error) {
       return NextResponse.json(

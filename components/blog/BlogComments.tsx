@@ -135,7 +135,7 @@ export default function BlogComments({ postId }: { postId: string }) {
           <button
             onClick={handlePost}
             disabled={submitting}
-            className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
+            className="rounded-lg bg-primary-600 px-5 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
           >
             {submitting ? 'Posting...' : 'Post Comment'}
           </button>

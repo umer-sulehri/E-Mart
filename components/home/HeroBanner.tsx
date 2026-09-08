@@ -37,7 +37,7 @@ const features = [
     icon: Sprout,
     title: "Fresh from farm",
     description: "Harvested and delivered the same day",
-    bgColor: "bg-primary",
+    bgColor: "bg-primary-600",
   },
   {
     icon: Leaf,
@@ -49,7 +49,7 @@ const features = [
     icon: Truck,
     title: "Free delivery",
     description: "On all orders above Rs. 2000",
-    bgColor: "bg-danger",
+    bgColor: "bg-danger-600",
   },
 ];
 
@@ -130,7 +130,7 @@ const HeroBanner = () => {
             <div className="mt-3 flex gap-3">
               <Link
                 href={displayLinkUrl}
-                className="mt-3 rounded-full bg-primary px-4 py-3 text-sm font-bold uppercase text-white hover:bg-primary-hover"
+                className="mt-3 rounded-full bg-primary-600 px-4 py-3 text-sm font-bold uppercase text-white hover:bg-primary-hover"
               >
                 {displayCta}
               </Link>
@@ -168,7 +168,7 @@ const HeroBanner = () => {
                     <feature.icon size={48} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h5 className="text-white">{feature.title}</h5>
+                    <h3 className="text-white">{feature.title}</h3>
                     <p className="mb-0 text-sm">{feature.description}</p>
                   </div>
                 </div>

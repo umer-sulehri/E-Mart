@@ -30,7 +30,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, subtitle, image_url, link_url, position, display_order, is_active, start_date, end_date } = body;
+    const { title, subtitle, image_url, link_url, position, sort_order, priority, is_active, start_date, end_date } = body;
 
     const updates: Record<string, unknown> = {};
     if (title !== undefined) updates.title = title;
@@ -38,10 +38,11 @@ export async function PUT(
     if (image_url !== undefined) updates.image_url = image_url;
     if (link_url !== undefined) updates.link_url = link_url;
     if (position !== undefined) updates.position = position;
-    if (display_order !== undefined) updates.display_order = display_order;
+    if (priority !== undefined) updates.priority = priority;
+    else if (sort_order !== undefined) updates.priority = sort_order;
     if (is_active !== undefined) updates.is_active = is_active;
-    if (start_date !== undefined) updates.start_date = start_date;
-    if (end_date !== undefined) updates.end_date = end_date;
+    if (start_date !== undefined) updates.starts_at = start_date ? new Date(start_date).toISOString() : null;
+    if (end_date !== undefined) updates.expires_at = end_date ? new Date(end_date).toISOString() : null;
     updates.updated_at = new Date().toISOString();
 
     const { data: banner, error } = await supabase

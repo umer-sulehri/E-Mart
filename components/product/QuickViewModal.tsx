@@ -113,7 +113,7 @@ export default function QuickViewModal({
           {/* Info */}
           <div className="flex flex-col">
             {product.category && (
-              <p className="text-xs font-medium uppercase tracking-wide text-primary">
+              <p className="text-xs font-medium uppercase tracking-wide text-primary-600">
                 {product.category}
               </p>
             )}
@@ -221,7 +221,7 @@ export default function QuickViewModal({
               <Link
                 href={`/products/${product.slug}`}
                 onClick={onClose}
-                className="flex items-center justify-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary-500"
+                className="flex items-center justify-center gap-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
               >
                 <Eye size={14} />
                 View Full Details

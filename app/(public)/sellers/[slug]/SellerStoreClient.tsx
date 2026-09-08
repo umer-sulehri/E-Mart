@@ -111,7 +111,7 @@ function SellerStoreContent() {
           </p>
           <Link
             href="/products"
-            className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-500"
+            className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
           >
             Browse Products
           </Link>
@@ -177,6 +177,7 @@ function SellerStoreContent() {
           {/* Products */}
           <section className="py-8">
             <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
+              <h2 className="sr-only">Products</h2>
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-muted-500">
                   {loading ? (

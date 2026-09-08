@@ -7,7 +7,7 @@ type ButtonRounded = "rounded" | "pill";
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-white hover:bg-primary-500 active:bg-primary-600 focus-visible:ring-primary/40",
+    "bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 focus-visible:ring-primary/40",
   secondary:
     "bg-secondary text-white hover:bg-secondary-600 active:bg-secondary-700 focus-visible:ring-secondary/40",
   outline:
