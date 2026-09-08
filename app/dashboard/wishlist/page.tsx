@@ -38,7 +38,41 @@ export default function WishlistPage() {
         }
         const data = await res.json();
         if (data.success) {
-          setItems(data.data || []);
+          // The API returns rows shaped `{ id, product_id, created_at,
+          // products: { id, name, slug, price, discount_price, images, ... } }`.
+          // Map them into the camelCase `WishlistEntry`/`Product` shape the rest
+          // of the dashboard consumes so the grid renders instead of dropping
+          // every item (entry.product was undefined before).
+          setItems(
+            (Array.isArray(data.data) ? data.data : []).map((row: any) => {
+              const p = row?.products;
+              if (!p) return null;
+              return {
+                id: row.id,
+                productId: row.product_id ?? row.productId,
+                createdAt: row.created_at ?? row.createdAt,
+                product: {
+                  id: p.id ?? p.product_id,
+                  name: p.name,
+                  slug: p.slug,
+                  description: p.description ?? '',
+                  price: Number(p.price ?? 0),
+                  discountPrice: p.discount_price ?? p.discountPrice ?? undefined,
+                  stockQuantity: Number(p.stock_quantity ?? p.stockQuantity ?? 0),
+                  sku: p.sku ?? '',
+                  categoryId: p.category_id ?? '',
+                  rating: Number(p.rating ?? p.rating_value ?? 0),
+                  reviewCount: Number(p.review_count ?? p.reviewCount ?? 0),
+                  isActive: !!p.is_active,
+                  isFeatured: !!p.is_featured,
+                  isNew: false,
+                  images: Array.isArray(p.images) ? p.images : [],
+                  createdAt: p.created_at ?? '',
+                  updatedAt: p.updated_at ?? '',
+                } as Product,
+              } as WishlistEntry;
+            }).filter(Boolean) as WishlistEntry[]
+          );
         } else {
           toast.error(data.error || 'Failed to load wishlist');
         }

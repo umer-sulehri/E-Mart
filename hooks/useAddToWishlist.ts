@@ -25,11 +25,14 @@ export function useAddToWishlist(
         if (!res.ok) return;
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
-          const has = data.data.some(
-            (entry: any) =>
-              (entry?.product_id ?? entry?.productId) === productId ||
-              (entry?.product && (entry.product.id || entry.product.product_id)) === productId
-          );
+          // API rows are `{ product_id, products: { id, ... } }`. Detect whether
+          // this product is already saved in any supported shape.
+          const has = data.data.some((entry: any) => {
+            const pid = entry?.product_id ?? entry?.productId;
+            const nested =
+              entry?.products?.id ?? entry?.products?.product_id ?? entry?.product?.id;
+            return pid === productId || nested === productId;
+          });
           if (!cancelled) setIsWishlisted(Boolean(has));
         }
       } catch {

@@ -125,6 +125,81 @@ function BarChartSimple({ data, color }: { data: { label: string; value: number 
   );
 }
 
+// Fallback demo sets so the UI still renders meaningful content even if the
+// analytics API is unreachable or returns an unexpected (but truthy) payload.
+const FALLBACK: Record<ReportType, SalesData | ProductsData | UsersData> = {
+  sales: {
+    totalRevenue: 2450000,
+    totalOrders: 4560,
+    averageOrderValue: 537,
+    revenueChange: 18,
+    ordersChange: 22,
+    topProducts: [
+      { name: 'Basmati Rice 5kg', revenue: 320000, quantity: 640 },
+      { name: 'Organic Milk 1L', revenue: 185000, quantity: 1850 },
+      { name: 'Chicken Breast 1kg', revenue: 156000, quantity: 520 },
+      { name: 'Fresh Apples 1kg', revenue: 98000, quantity: 980 },
+      { name: 'Whole Wheat Bread', revenue: 72000, quantity: 1200 },
+    ],
+    dailyRevenue: [
+      { date: 'Mon', amount: 85000 },
+      { date: 'Tue', amount: 92000 },
+      { date: 'Wed', amount: 78000 },
+      { date: 'Thu', amount: 110000 },
+      { date: 'Fri', amount: 125000 },
+      { date: 'Sat', amount: 140000 },
+      { date: 'Sun', amount: 95000 },
+    ],
+  },
+  products: {
+    totalProducts: 2340,
+    activeProducts: 2180,
+    inactiveProducts: 160,
+    lowStockAlerts: [
+      { name: 'Organic Quinoa 500g', stock: 3, threshold: 20 },
+      { name: 'Almond Milk Unsweetened', stock: 5, threshold: 15 },
+      { name: 'Himalayan Pink Salt', stock: 8, threshold: 25 },
+    ],
+    topRated: [
+      { name: 'Basmati Rice 5kg', rating: 4.8, reviews: 342 },
+      { name: 'Organic Honey 500g', rating: 4.7, reviews: 218 },
+      { name: 'Extra Virgin Olive Oil', rating: 4.6, reviews: 189 },
+      { name: 'Green Tea Matcha', rating: 4.5, reviews: 156 },
+    ],
+    categoryBreakdown: [
+      { name: 'Fruits & Vegetables', count: 480, percentage: 20 },
+      { name: 'Meat & Poultry', count: 320, percentage: 14 },
+      { name: 'Dairy & Eggs', count: 290, percentage: 12 },
+      { name: 'Beverages', count: 350, percentage: 15 },
+      { name: 'Snacks', count: 280, percentage: 12 },
+      { name: 'Bakery', count: 190, percentage: 8 },
+      { name: 'Other', count: 430, percentage: 19 },
+    ],
+  },
+  users: {
+    totalUsers: 12500,
+    newUsersThisPeriod: 320,
+    activeSellers: 85,
+    activeBuyers: 8900,
+    newUsersChange: 15,
+    topBuyers: [
+      { name: 'Ahmed Khan', orders: 47, spent: 185000 },
+      { name: 'Fatima Ali', orders: 38, spent: 142000 },
+      { name: 'Hassan Raza', orders: 35, spent: 128000 },
+      { name: 'Sara Malik', orders: 31, spent: 115000 },
+    ],
+    userGrowth: [
+      { date: 'Jan', count: 8200 },
+      { date: 'Feb', count: 8800 },
+      { date: 'Mar', count: 9500 },
+      { date: 'Apr', count: 10200 },
+      { date: 'May', count: 11000 },
+      { date: 'Jun', count: 11800 },
+      { date: 'Jul', count: 12500 },
+    ],
+  },
+};
+
 export default function AdminReportsPage() {
   const [period, setPeriod] = useState('30d');
   const [activeTab, setActiveTab] = useState<ReportType>('sales');
@@ -133,95 +208,70 @@ export default function AdminReportsPage() {
   const [productsData, setProductsData] = useState<ProductsData | null>(null);
   const [usersData, setUsersData] = useState<UsersData | null>(null);
 
+  // The backend returns a compact snake_case object for each report type. These
+  // normalizers build the exact camelCase shape the UI renderers expect, filling
+  // in defaults for the display-only arrays so no `.map`/`.toLocaleString` call
+  // ever hits an undefined value.
+  const normalizeSales = useCallback((r: any): SalesData => {
+    const totalRevenue = Number(r?.total_revenue ?? r?.totalRevenue ?? 0);
+    const totalOrders = Number(r?.total_orders ?? r?.totalOrders ?? 0);
+    const averageOrderValue =
+      Number(r?.average_order_value ?? r?.averageOrderValue) ||
+      (totalOrders > 0 ? totalRevenue / totalOrders : 0);
+    return {
+      totalRevenue,
+      totalOrders,
+      averageOrderValue,
+      revenueChange: Number(r?.revenue_change ?? r?.revenueChange ?? 0),
+      ordersChange: Number(r?.orders_change ?? r?.ordersChange ?? 0),
+      topProducts: Array.isArray(r?.topProducts) ? r.topProducts : [],
+      dailyRevenue: Array.isArray(r?.dailyRevenue) ? r.dailyRevenue : [],
+    };
+  }, []);
+
+  const normalizeProducts = useCallback((r: any): ProductsData => {
+    const totalProducts = Number(r?.total_products ?? r?.totalProducts ?? 0);
+    const activeProducts = Number(r?.active_products ?? r?.activeProducts ?? 0);
+    return {
+      totalProducts,
+      activeProducts,
+      inactiveProducts:
+        Number(r?.inactive_products ?? r?.inactiveProducts) || totalProducts - activeProducts,
+      lowStockAlerts: Array.isArray(r?.lowStockAlerts) ? r.lowStockAlerts : [],
+      topRated: Array.isArray(r?.topRated) ? r.topRated : [],
+      categoryBreakdown: Array.isArray(r?.categoryBreakdown) ? r.categoryBreakdown : [],
+    };
+  }, []);
+
+  const normalizeUsers = useCallback((r: any): UsersData => ({
+    totalUsers: Number(r?.total_users ?? r?.totalUsers ?? 0),
+    newUsersThisPeriod:
+      Number(r?.new_users ?? r?.newUsers ?? r?.new_customers ?? r?.newUsersThisPeriod ?? 0),
+    activeSellers: Number(r?.active_sellers ?? r?.activeSellers ?? r?.new_sellers ?? 0),
+    activeBuyers: Number(r?.active_buyers ?? r?.activeBuyers ?? r?.new_customers ?? 0),
+    newUsersChange: Number(r?.new_users_change ?? r?.newUsersChange ?? 0),
+    topBuyers: Array.isArray(r?.topBuyers) ? r.topBuyers : [],
+    userGrowth: Array.isArray(r?.userGrowth) ? r.userGrowth : [],
+  }), []);
+
   const fetchReport = useCallback(async (type: ReportType, p: string) => {
     setLoading(true);
     try {
       const res = await fetch(`/api/v1/admin/reports?type=${type}&period=${p}`);
       if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      const report = data.data ?? data;
-      if (type === 'sales') setSalesData(report);
-      else if (type === 'products') setProductsData(report);
-      else setUsersData(report);
+      const json = await res.json();
+      const raw = json.data ?? json;
+      if (type === 'sales') setSalesData(normalizeSales(raw));
+      else if (type === 'products') setProductsData(normalizeProducts(raw));
+      else setUsersData(normalizeUsers(raw));
     } catch {
-      if (type === 'sales') {
-        setSalesData({
-          totalRevenue: 2450000,
-          totalOrders: 4560,
-          averageOrderValue: 537,
-          revenueChange: 18,
-          ordersChange: 22,
-          topProducts: [
-            { name: 'Basmati Rice 5kg', revenue: 320000, quantity: 640 },
-            { name: 'Organic Milk 1L', revenue: 185000, quantity: 1850 },
-            { name: 'Chicken Breast 1kg', revenue: 156000, quantity: 520 },
-            { name: 'Fresh Apples 1kg', revenue: 98000, quantity: 980 },
-            { name: 'Whole Wheat Bread', revenue: 72000, quantity: 1200 },
-          ],
-          dailyRevenue: [
-            { date: 'Mon', amount: 85000 },
-            { date: 'Tue', amount: 92000 },
-            { date: 'Wed', amount: 78000 },
-            { date: 'Thu', amount: 110000 },
-            { date: 'Fri', amount: 125000 },
-            { date: 'Sat', amount: 140000 },
-            { date: 'Sun', amount: 95000 },
-          ],
-        });
-      } else if (type === 'products') {
-        setProductsData({
-          totalProducts: 2340,
-          activeProducts: 2180,
-          inactiveProducts: 160,
-          lowStockAlerts: [
-            { name: 'Organic Quinoa 500g', stock: 3, threshold: 20 },
-            { name: 'Almond Milk Unsweetened', stock: 5, threshold: 15 },
-            { name: 'Himalayan Pink Salt', stock: 8, threshold: 25 },
-          ],
-          topRated: [
-            { name: 'Basmati Rice 5kg', rating: 4.8, reviews: 342 },
-            { name: 'Organic Honey 500g', rating: 4.7, reviews: 218 },
-            { name: 'Extra Virgin Olive Oil', rating: 4.6, reviews: 189 },
-            { name: 'Green Tea Matcha', rating: 4.5, reviews: 156 },
-          ],
-          categoryBreakdown: [
-            { name: 'Fruits & Vegetables', count: 480, percentage: 20 },
-            { name: 'Meat & Poultry', count: 320, percentage: 14 },
-            { name: 'Dairy & Eggs', count: 290, percentage: 12 },
-            { name: 'Beverages', count: 350, percentage: 15 },
-            { name: 'Snacks', count: 280, percentage: 12 },
-            { name: 'Bakery', count: 190, percentage: 8 },
-            { name: 'Other', count: 430, percentage: 19 },
-          ],
-        });
-      } else {
-        setUsersData({
-          totalUsers: 12500,
-          newUsersThisPeriod: 320,
-          activeSellers: 85,
-          activeBuyers: 8900,
-          newUsersChange: 15,
-          topBuyers: [
-            { name: 'Ahmed Khan', orders: 47, spent: 185000 },
-            { name: 'Fatima Ali', orders: 38, spent: 142000 },
-            { name: 'Hassan Raza', orders: 35, spent: 128000 },
-            { name: 'Sara Malik', orders: 31, spent: 115000 },
-          ],
-          userGrowth: [
-            { date: 'Jan', count: 8200 },
-            { date: 'Feb', count: 8800 },
-            { date: 'Mar', count: 9500 },
-            { date: 'Apr', count: 10200 },
-            { date: 'May', count: 11000 },
-            { date: 'Jun', count: 11800 },
-            { date: 'Jul', count: 12500 },
-          ],
-        });
-      }
+      if (type === 'sales') setSalesData(FALLBACK.sales as SalesData);
+      else if (type === 'products') setProductsData(FALLBACK.products as ProductsData);
+      else setUsersData(FALLBACK.users as UsersData);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [normalizeSales, normalizeProducts, normalizeUsers]);
 
   useEffect(() => {
     fetchReport(activeTab, period);

@@ -14,12 +14,17 @@ Bug findings, root causes, and fixes from the comprehensive fix & enhancement pa
 
 ### 1.2 `Cannot read properties of undefined (reading 'toLocaleString')` (reports page)
 - **File:** `app/admin/reports/page.tsx` (`formatCurrency`, fetch handler)
-- **Root cause:** `/api/v1/admin/reports` returns `{ success, data: {...reportData} }` but the page
-  stored the **whole response** via `setSalesData(data)`. `salesData.totalRevenue` etc. were
-  `undefined`; `amount.toLocaleString()` threw. The render guards (`salesData && ...`) passed because
-  the object was truthy.
-- **Fix:** Unwrap `data.data ?? data` before storing, and made `formatCurrency` null-safe
-  (`Number.isFinite` guard, displays `₨0`).
+- **Root cause:** `/api/v1/admin/reports` returns a compact **snake_case** object per type
+  (`total_orders`, `total_revenue`, ...) but the page UI consumes a rich **camelCase** shape
+  (`totalOrders`, `totalRevenue`, `topProducts`, `dailyRevenue`, ...). Assigning the raw response
+  meant `salesData.totalOrders` etc. stayed `undefined`, so `salesData.totalOrders.toLocaleString()`
+  / `salesData.dailyRevenue.map(...)` threw at render time. The `salesData && ...` guards passed
+  because the object was truthy.
+- **Fix:** Added per-type normalizers (`normalizeSales`/`normalizeProducts`/`normalizeUsers`) that
+  map the snake_case response into the exact camelCase UI shape with safe numeric/array defaults, so
+  no `.map`/`.toLocaleString` call ever hits an undefined value. `formatCurrency` remains null-safe
+  (`Number.isFinite` guard, displays `₨0`). Moved the fallback demo sets to module scope and kept
+  them as a catch-branch so the page still renders meaningful content if the API is unreachable.
 
 ### 1.3 Admin reviews: `column profiles.avatar_url does not exist`
 - **File:** `app/api/v1/admin/reviews/route.ts` (SELECT join)
@@ -50,6 +55,11 @@ Bug findings, root causes, and fixes from the comprehensive fix & enhancement pa
   did not → hearts on grids/home/quick-view never reflected the user's saved items ("wishlist not
   working/displaying correctly").
 - **Fix:** Passed `{ isAuthenticated }` from `useAuthStore` in both components.
+- `app/dashboard/wishlist/page.tsx` also mis-mapped the API rows (read `entry.productId`/
+  `entry.product`/camelCase props, but the API returns `product_id`/`products`/snake_case), so the
+  dashboard grid rendered empty. Now maps each row into the camelCase `WishlistEntry`/`Product`
+  shape; `hooks/useAddToWishlist.ts` seed detection likewise now matches `products` on the row
+  (`entry?.products?.id`) instead of `entry?.product`.
 - Backend `/api/v1/wishlist` GET/POST/DELETE verified correct; page (`app/(public)/wishlist`,
   `app/dashboard/wishlist`) handles auth-gate, empty state, loading skeleton, move-to-cart, remove.
 
