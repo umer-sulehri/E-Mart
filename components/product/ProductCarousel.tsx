@@ -37,7 +37,7 @@ const ProductCarousel = React.forwardRef<HTMLDivElement, ProductCarouselProps>(
             <div className="flex items-center gap-2">
               <Link
                 href={viewAllLink}
-                className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-500"
               >
                 View All
               </Link>

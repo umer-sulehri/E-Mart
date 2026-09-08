@@ -25,7 +25,7 @@ const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
           {viewAllLink && (
             <Link
               href={viewAllLink}
-              className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
+              className="text-sm font-medium text-primary transition-colors hover:text-primary-500"
             >
               {viewAllText}
             </Link>

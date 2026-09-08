@@ -45,7 +45,7 @@ const CategoryCarousel = ({ categories: propCategories }: CategoryCarouselProps 
           <div className="flex items-center">
             <Link
               href="/categories"
-              className="me-2 rounded bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+              className="me-2 rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-500"
             >
               View All
             </Link>
