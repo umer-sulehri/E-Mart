@@ -218,14 +218,24 @@ export default function AdminReportsPage() {
     const averageOrderValue =
       Number(r?.average_order_value ?? r?.averageOrderValue) ||
       (totalOrders > 0 ? totalRevenue / totalOrders : 0);
+    const topProducts = Array.isArray(r?.topProducts)
+      ? r.topProducts
+      : Array.isArray(r?.top_products)
+        ? r.top_products
+        : [];
+    const dailyRevenue = Array.isArray(r?.dailyRevenue)
+      ? r.dailyRevenue
+      : Array.isArray(r?.daily_revenue)
+        ? r.daily_revenue
+        : [];
     return {
       totalRevenue,
       totalOrders,
       averageOrderValue,
       revenueChange: Number(r?.revenue_change ?? r?.revenueChange ?? 0),
       ordersChange: Number(r?.orders_change ?? r?.ordersChange ?? 0),
-      topProducts: Array.isArray(r?.topProducts) ? r.topProducts : [],
-      dailyRevenue: Array.isArray(r?.dailyRevenue) ? r.dailyRevenue : [],
+      topProducts,
+      dailyRevenue,
     };
   }, []);
 
@@ -237,9 +247,21 @@ export default function AdminReportsPage() {
       activeProducts,
       inactiveProducts:
         Number(r?.inactive_products ?? r?.inactiveProducts) || totalProducts - activeProducts,
-      lowStockAlerts: Array.isArray(r?.lowStockAlerts) ? r.lowStockAlerts : [],
-      topRated: Array.isArray(r?.topRated) ? r.topRated : [],
-      categoryBreakdown: Array.isArray(r?.categoryBreakdown) ? r.categoryBreakdown : [],
+      lowStockAlerts: Array.isArray(r?.lowStockAlerts)
+        ? r.lowStockAlerts
+        : Array.isArray(r?.low_stock_alerts)
+          ? r.low_stock_alerts
+          : [],
+      topRated: Array.isArray(r?.topRated)
+        ? r.topRated
+        : Array.isArray(r?.top_rated)
+          ? r.top_rated
+          : [],
+      categoryBreakdown: Array.isArray(r?.categoryBreakdown)
+        ? r.categoryBreakdown
+        : Array.isArray(r?.category_breakdown)
+          ? r.category_breakdown
+          : [],
     };
   }, []);
 
@@ -250,8 +272,16 @@ export default function AdminReportsPage() {
     activeSellers: Number(r?.active_sellers ?? r?.activeSellers ?? r?.new_sellers ?? 0),
     activeBuyers: Number(r?.active_buyers ?? r?.activeBuyers ?? r?.new_customers ?? 0),
     newUsersChange: Number(r?.new_users_change ?? r?.newUsersChange ?? 0),
-    topBuyers: Array.isArray(r?.topBuyers) ? r.topBuyers : [],
-    userGrowth: Array.isArray(r?.userGrowth) ? r.userGrowth : [],
+    topBuyers: Array.isArray(r?.topBuyers)
+      ? r.topBuyers
+      : Array.isArray(r?.top_buyers)
+        ? r.top_buyers
+        : [],
+    userGrowth: Array.isArray(r?.userGrowth)
+      ? r.userGrowth
+      : Array.isArray(r?.user_growth)
+        ? r.user_growth
+        : [],
   }), []);
 
   const fetchReport = useCallback(async (type: ReportType, p: string) => {

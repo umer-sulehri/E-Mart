@@ -25,6 +25,11 @@ Bug findings, root causes, and fixes from the comprehensive fix & enhancement pa
   no `.map`/`.toLocaleString` call ever hits an undefined value. `formatCurrency` remains null-safe
   (`Number.isFinite` guard, displays `₨0`). Moved the fallback demo sets to module scope and kept
   them as a catch-branch so the page still renders meaningful content if the API is unreachable.
+- **Enhancement (continuation):** `/api/v1/admin/reports` now also returns the derived display
+  arrays the UI renders — `daily_revenue`, `top_products` (sales); `low_stock_alerts`, `top_rated`,
+  `category_breakdown` (products); `user_growth`, `top_buyers`, `new_users_change` (users). Each
+  supplementary query is wrapped defensively so a failure degrades to an empty array rather than a 500.
+  Frontend normalizers read both camelCase and snake_case keys.
 
 ### 1.3 Admin reviews: `column profiles.avatar_url does not exist`
 - **File:** `app/api/v1/admin/reviews/route.ts` (SELECT join)
