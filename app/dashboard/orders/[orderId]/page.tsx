@@ -152,7 +152,11 @@ export default function OrderDetailPage() {
   };
 
   const getOrderItems = (ord: Order): OrderItem[] => {
-    return (ord as unknown as { order_items?: OrderItem[] }).order_items || ord.items || [];
+    return (
+      ord.items ||
+      (ord as unknown as { order_items?: OrderItem[] }).order_items ||
+      []
+    );
   };
 
   const getShippingAddress = (ord: Order): Address | null => {

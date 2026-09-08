@@ -50,6 +50,7 @@ function activeFilterCount(filters: FilterState): number {
   if (filters.minRating > 0) count++;
   if (filters.brands.length > 0) count++;
   if (filters.inStockOnly) count++;
+  if (filters.featuredOnly) count++;
   return count;
 }
 
@@ -77,6 +78,7 @@ function ProductsContent() {
     minRating: Number(searchParams.get('minRating') || 0),
     brands: searchParams.get('brand') ? [searchParams.get('brand')!] : [],
     inStockOnly: searchParams.get('inStock') === 'true',
+    featuredOnly: searchParams.get('featured') === 'true',
   }));
   const [sort, setSort] = useState<SortValue>(
     (searchParams.get('sort') as SortValue) || 'newest'
@@ -103,6 +105,7 @@ function ProductsContent() {
       minRating: Number(searchParams.get('minRating') || 0),
       brands: searchParams.get('brand') ? [searchParams.get('brand')!] : [],
       inStockOnly: searchParams.get('inStock') === 'true',
+      featuredOnly: searchParams.get('featured') === 'true',
     });
     setSort((searchParams.get('sort') as SortValue) || 'newest');
     setCurrentPage(Number(searchParams.get('page') || 1));
@@ -122,6 +125,7 @@ function ProductsContent() {
       setIf('minRating', next.minRating > 0 ? String(next.minRating) : undefined);
       setIf('brand', next.brands[0]);
       setIf('inStock', next.inStockOnly ? 'true' : undefined);
+      setIf('featured', next.featuredOnly ? 'true' : undefined);
       params.delete('page');
 
       const theSort = nextSort ?? sort;
@@ -140,6 +144,7 @@ function ProductsContent() {
     params.delete('minRating');
     params.delete('brand');
     params.delete('inStock');
+    params.delete('featured');
     params.delete('page');
     router.push(`${pathname}?${params.toString()}`);
     toast.success('All filters cleared');
@@ -197,6 +202,10 @@ function ProductsContent() {
 
         if (filters.brands.length > 0) {
           params.brand = filters.brands[0];
+        }
+
+        if (filters.featuredOnly) {
+          params.featured = 'true';
         }
 
         const res = await api.products.list(params) as ApiListResponse<ApiProduct>;
@@ -273,7 +282,8 @@ function ProductsContent() {
           filters.maxPrice !== '' ||
           filters.minRating > 0 ||
           filters.brands.length > 0 ||
-          filters.inStockOnly) && (
+          filters.inStockOnly ||
+          filters.featuredOnly) && (
           <div className="mb-4 flex flex-wrap items-center gap-2">
             {filters.categories.map((slug) => (
               <button
@@ -334,6 +344,15 @@ function ProductsContent() {
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
               >
                 In stock
+                <X size={13} />
+              </button>
+            )}
+            {filters.featuredOnly && (
+              <button
+                onClick={() => applyFilters({ ...filters, featuredOnly: false })}
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                Featured
                 <X size={13} />
               </button>
             )}

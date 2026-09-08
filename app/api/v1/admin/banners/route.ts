@@ -90,6 +90,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const ALLOWED_POSITIONS = ["home_top", "home_middle", "home_bottom", "category_page", "sidebar"];
+
+    if (position && !ALLOWED_POSITIONS.includes(position)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid position. Allowed: ${ALLOWED_POSITIONS.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     const { data: banner, error } = await supabase
       .from("banners")
       .insert({

@@ -53,6 +53,10 @@ export async function GET(request: NextRequest) {
       query = query.eq("brands.slug", brand);
     }
 
+    if (searchParams.get("featured") === "true") {
+      query = query.eq("is_featured", true);
+    }
+
     if (minPrice !== undefined) {
       query = query.gte("price", minPrice);
     }

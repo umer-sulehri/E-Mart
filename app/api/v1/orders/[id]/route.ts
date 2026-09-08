@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeOrder } from "@/lib/orders";
 
 export async function GET(
   _request: NextRequest,
@@ -66,7 +67,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
-        ...order,
+        ...normalizeOrder(order as Record<string, unknown>),
         shippingAddress,
       },
     });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { normalizeOrder } from "@/lib/orders";
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("orders")
-      .select("*, order_items(*, products(name, images))", { count: "exact" })
+      .select("*, order_items(*, products(id, name, slug, images), vendors(name))", { count: "exact" })
       .eq("user_id", user.id);
 
     if (status) {
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: orders || [],
+      data: (orders || []).map(normalizeOrder),
       meta: {
         currentPage: page,
         totalPages: Math.ceil((count || 0) / limit),

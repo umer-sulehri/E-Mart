@@ -75,8 +75,8 @@ export default function HomePage() {
         const [bestRes, featuredRes, popularRes, newRes, catRes] =
           await Promise.allSettled([
             api.products.list({ sort: 'popular', limit: '8', status: 'active' }),
+            api.products.list({ featured: 'true', limit: '8', status: 'active' }),
             api.products.list({ sort: 'rating', limit: '8', status: 'active' }),
-            api.products.list({ sort: 'popular', limit: '8', status: 'active' }),
             api.products.list({ sort: 'newest', limit: '8', status: 'active' }),
             api.categories.list(),
           ]);
@@ -174,7 +174,7 @@ export default function HomePage() {
         <ProductCarousel
           title="Featured products"
           products={featured}
-          viewAllLink="/products?sort=rating"
+          viewAllLink="/products?featured=true"
         />
       )}
 

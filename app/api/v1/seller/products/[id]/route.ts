@@ -51,7 +51,7 @@ export async function GET(
     const { data: product, error } = await supabase
       .from("products")
       .select(
-        "*, category:categories!products_category_id_fkey(id, name, slug), subcategory:categories!products_subcategory_id_fkey(id, name, slug)"
+        "*, category:categories!products_category_id_fkey(id, name, slug), subcategory:categories!products_subcategory_id_fkey(id, name, slug), brand:brands(id, name, slug)"
       )
       .eq("id", id)
       .eq("vendor_id", vendor.id)

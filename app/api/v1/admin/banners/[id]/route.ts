@@ -32,6 +32,15 @@ export async function PUT(
     const body = await request.json();
     const { title, subtitle, image_url, link_url, position, sort_order, priority, is_active, start_date, end_date } = body;
 
+    const ALLOWED_POSITIONS = ["home_top", "home_middle", "home_bottom", "category_page", "sidebar"];
+
+    if (position !== undefined && !ALLOWED_POSITIONS.includes(position)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid position. Allowed: ${ALLOWED_POSITIONS.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     const updates: Record<string, unknown> = {};
     if (title !== undefined) updates.title = title;
     if (subtitle !== undefined) updates.subtitle = subtitle;

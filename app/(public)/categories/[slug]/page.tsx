@@ -58,6 +58,7 @@ function CategoryDetailContent() {
     minRating: 0,
     brands: [],
     inStockOnly: false,
+    featuredOnly: false,
   });
   const [sort, setSort] = useState<SortValue>('newest');
   const [currentPage, setCurrentPage] = useState(1);

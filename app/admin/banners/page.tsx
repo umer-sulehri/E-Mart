@@ -16,15 +16,16 @@ interface Banner {
   position: string;
   link_url: string;
   is_active: boolean;
-  sort_order: number;
+  priority: number;
 }
 
-const POSITIONS = ['hero', 'promo', 'category', 'sidebar'];
+const POSITIONS = ['home_top', 'home_middle', 'home_bottom', 'category_page', 'sidebar'];
 const POSITION_LABELS: Record<string, string> = {
-  hero: 'Hero Banner',
-  promo: 'Promo Banner',
-  category: 'Category Banner',
-  sidebar: 'Sidebar Banner',
+  home_top: 'Home Top',
+  home_middle: 'Home Middle',
+  home_bottom: 'Home Bottom',
+  category_page: 'Category Page',
+  sidebar: 'Sidebar',
 };
 
 function SkeletonRow() {
@@ -51,7 +52,7 @@ export default function AdminBannersPage() {
   // Form state
   const [title, setTitle] = useState('');
   const [imageUrl, setImageUrl] = useState('');
-  const [position, setPosition] = useState('hero');
+  const [position, setPosition] = useState('home_top');
   const [linkUrl, setLinkUrl] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [sortOrder, setSortOrder] = useState(0);
@@ -82,7 +83,7 @@ export default function AdminBannersPage() {
     setEditing(null);
     setTitle('');
     setImageUrl('');
-    setPosition('hero');
+    setPosition('home_top');
     setLinkUrl('');
     setIsActive(true);
     setSortOrder(0);
@@ -96,7 +97,7 @@ export default function AdminBannersPage() {
     setPosition(banner.position);
     setLinkUrl(banner.link_url);
     setIsActive(banner.is_active);
-    setSortOrder(banner.sort_order);
+    setSortOrder(banner.priority);
     setFormOpen(true);
   };
 
@@ -120,7 +121,7 @@ export default function AdminBannersPage() {
           position,
           link_url: linkUrl,
           is_active: isActive,
-          sort_order: sortOrder,
+          priority: sortOrder,
         }),
       });
       const data = await res.json();
@@ -298,7 +299,7 @@ export default function AdminBannersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-secondary-700">Sort Order</label>
+                  <label className="mb-1 block text-sm font-medium text-secondary-700">Priority</label>
                   <input
                     type="number"
                     value={sortOrder}

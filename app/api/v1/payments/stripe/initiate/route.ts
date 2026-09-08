@@ -8,6 +8,11 @@ interface StripeInitiateRequest {
   cancelUrl: string;
 }
 
+function appendQuery(baseUrl: string, params: string): string {
+  const sep = baseUrl.includes("?") ? "&" : "?";
+  return `${baseUrl}${sep}${params}`;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -66,7 +71,7 @@ export async function POST(request: NextRequest) {
         success: true,
         data: {
           sessionId: mockSessionId,
-          url: `${successUrl}?session_id=${mockSessionId}&order_id=${orderId}`,
+          url: appendQuery(successUrl, `session_id=${mockSessionId}&order_id=${orderId}`),
           mode: "demo",
         },
         message: "Mock Stripe session created (Stripe key not configured)",
@@ -85,7 +90,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         sessionId: mockSessionId,
-        url: `${successUrl}?session_id=${mockSessionId}&order_id=${orderId}`,
+        url: appendQuery(successUrl, `session_id=${mockSessionId}&order_id=${orderId}`),
         mode: "demo",
       },
       message: "Stripe checkout is running in demo mode (no gateway configured)",

@@ -17,6 +17,7 @@ interface LoadedProduct {
   sku?: string;
   category_id?: string;
   subcategory_id?: string;
+  brand?: { name: string } | null;
   images?: string[];
   weight?: number;
   is_active?: boolean;
@@ -70,6 +71,7 @@ export default function EditProductPage() {
           sku: data.sku,
           categoryId: data.category,
           subcategoryId: data.subcategory || undefined,
+          brand: data.brand.trim() || undefined,
           images: imageUrls,
           weight: data.weight ? parseInt(data.weight, 10) : undefined,
           isActive: data.status === 'active',
@@ -93,6 +95,7 @@ export default function EditProductPage() {
         description: product.description || '',
         category: product.category_id || '',
         subcategory: product.subcategory_id || '',
+        brand: product.brand?.name || '',
         sku: product.sku || '',
         price: product.price != null ? String(product.price) : '',
         salePrice: product.discount_price != null ? String(product.discount_price) : '',

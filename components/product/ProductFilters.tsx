@@ -15,6 +15,7 @@ export interface FilterState {
   minRating: number;
   brands: string[];
   inStockOnly: boolean;
+  featuredOnly: boolean;
 }
 
 export const EMPTY_FILTERS: FilterState = {
@@ -24,6 +25,7 @@ export const EMPTY_FILTERS: FilterState = {
   minRating: 0,
   brands: [],
   inStockOnly: false,
+  featuredOnly: false,
 };
 
 interface ProductFiltersProps {
@@ -124,7 +126,8 @@ export default function ProductFilters({
     draft.maxPrice !== '' ||
     draft.minRating > 0 ||
     draft.brands.length > 0 ||
-    draft.inStockOnly;
+    draft.inStockOnly ||
+    draft.featuredOnly;
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm">

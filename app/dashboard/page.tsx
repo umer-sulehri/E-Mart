@@ -39,13 +39,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const reviewableOrders = recentOrders.filter((o) =>
-    ['delivered', 'shipped', 'out_for_delivery'].includes(o.status)
-  );
-  const writeReviewHref = reviewableOrders[0]
-    ? `/dashboard/orders/${reviewableOrders[0].id}/write-review`
-    : '/dashboard/orders';
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -234,7 +227,7 @@ export default function DashboardPage() {
               Track Order
             </Button>
           </Link>
-          <Link href={writeReviewHref}>
+          <Link href="/dashboard/reviews">
             <Button variant="outline" size="sm">
               <PenLine className="h-4 w-4" />
               Write Review

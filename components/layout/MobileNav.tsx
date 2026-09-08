@@ -43,22 +43,13 @@ const categories: Category[] = [
   { label: 'Pasta & Rice', icon: Utensils, href: '/products?category=pasta-rice' },
   { label: 'Breakfast', icon: Coffee, href: '/products?category=breakfast' },
   { label: 'Snacks', icon: Cookie, href: '/products?category=snacks' },
-  {
-    label: 'Beverages',
-    icon: Wine,
-    children: [
-      { label: 'Water', href: '/products?category=beverages-water' },
-      { label: 'Juice', href: '/products?category=beverages-juice' },
-      { label: 'Soda', href: '/products?category=beverages-soda' },
-      { label: 'Tea', href: '/products?category=beverages-tea' },
-    ],
-  },
-  { label: 'Spices & Seasonings', icon: Flame, href: '/products?category=spices' },
-  { label: 'Baby Food', icon: Baby, href: '/products?category=baby-food' },
-  { label: 'Health & Wellness', icon: Heart, href: '/products?category=health' },
-  { label: 'Household', icon: Home, href: '/products?category=household' },
+  { label: 'Beverages', icon: Wine, href: '/products?category=beverages' },
+  { label: 'Spices & Seasonings', icon: Flame, href: '/products?category=spices-seasonings' },
+  { label: 'Baby Food & Formula', icon: Baby, href: '/products?category=baby-food-formula' },
+  { label: 'Health & Wellness', icon: Heart, href: '/products?category=health-wellness' },
+  { label: 'Household Supplies', icon: Home, href: '/products?category=household-supplies' },
   { label: 'Personal Care', icon: User, href: '/products?category=personal-care' },
-  { label: 'Pet Food', icon: PawPrint, href: '/products?category=pet-food' },
+  { label: 'Pet Food & Supplies', icon: PawPrint, href: '/products?category=pet-food-supplies' },
 ];
 
 interface MobileNavProps {

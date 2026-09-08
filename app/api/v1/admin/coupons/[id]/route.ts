@@ -40,8 +40,18 @@ export async function PUT(
 
     if (body.code !== undefined) updates.code = body.code.toUpperCase();
     if (body.description !== undefined) updates.description = body.description;
-    if (body.type !== undefined) updates.type = body.type;
-    if (body.value !== undefined) updates.value = body.value;
+    if (body.type !== undefined) {
+      const validTypes = ["percentage", "fixed_amount", "free_shipping"];
+      const discountType = body.type === "fixed" ? "fixed_amount" : body.type;
+      if (!validTypes.includes(discountType)) {
+        return NextResponse.json(
+          { success: false, error: "type must be percentage, fixed_amount or free_shipping" },
+          { status: 400 }
+        );
+      }
+      updates.discount_type = discountType;
+    }
+    if (body.value !== undefined) updates.discount_value = Number(body.value);
     if (body.minimumOrderAmount !== undefined) updates.minimum_order_amount = body.minimumOrderAmount;
     if (body.maximumDiscountAmount !== undefined) updates.maximum_discount_amount = body.maximumDiscountAmount;
     if (body.usageLimit !== undefined) updates.usage_limit = body.usageLimit;

@@ -113,6 +113,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const validTypes = ["percentage", "fixed_amount", "free_shipping"];
+    const discountType = type === "fixed" ? "fixed_amount" : type;
+    if (!validTypes.includes(discountType)) {
+      return NextResponse.json(
+        { success: false, error: "type must be percentage, fixed_amount or free_shipping" },
+        { status: 400 }
+      );
+    }
+
     const { data: existingCoupon } = await supabase
       .from("coupons")
       .select("id")
@@ -131,8 +140,8 @@ export async function POST(request: NextRequest) {
       .insert({
         code: code.toUpperCase(),
         description,
-        type,
-        value,
+        discount_type: discountType,
+        discount_value: parseFloat(value),
         minimum_order_amount: minimumOrderAmount,
         maximum_discount_amount: maximumDiscountAmount,
         usage_limit: usageLimit,

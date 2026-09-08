@@ -8,7 +8,7 @@ import { useCartStore } from '@/store';
 import { buildCartItem } from '@/hooks/useAddToCart';
 
 interface MoveToCartProps {
-  itemId: string;
+  itemId?: string;
   productId: string;
   name: string;
   price: number;
@@ -17,7 +17,6 @@ interface MoveToCartProps {
 }
 
 export default function MoveToCart({
-  itemId,
   productId,
   name,
   price,
@@ -35,7 +34,7 @@ export default function MoveToCart({
       )
     );
 
-    fetch(`/api/v1/wishlist/${itemId}`, { method: 'DELETE' }).catch(() => {});
+    fetch(`/api/v1/wishlist/${productId}`, { method: 'DELETE' }).catch(() => {});
 
     setMoved(true);
     toast.success('Moved to cart');
