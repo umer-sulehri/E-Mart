@@ -15,7 +15,7 @@ import seedAccounts from "@/data/seed-accounts.json";
 //    Creates every account in seed-accounts.json (admin-only in production).
 
 interface SeedAccount {
-  role: "admin" | "seller" | "buyer";
+  role: "admin" | "seller" | "customer";
   email: string;
   password: string;
   firstName: string;
@@ -34,7 +34,7 @@ const emailMap = new Map(accounts.map((a) => [a.email.toLowerCase(), a]));
 
 // Build role-based first-match map for shorthand mode
 const roleFirst = {
-  buyer: accounts.find((a) => a.role === "buyer")!,
+  buyer: accounts.find((a) => a.role === "customer")!,
   seller: accounts.find((a) => a.role === "seller")!,
   admin: accounts.find((a) => a.role === "admin")!,
 };

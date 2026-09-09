@@ -11,7 +11,7 @@ import seedAccounts from "@/data/seed-accounts.json";
 //     -H "Content-Type: application/json"
 
 interface SeedAccount {
-  role: "admin" | "seller" | "buyer";
+  role: "admin" | "seller" | "customer";
   email: string;
   password: string;
   firstName: string;
