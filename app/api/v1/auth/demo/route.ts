@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import seedAccounts from "@/data/seed-accounts.json";
+import { loadSeedAccounts, type SeedAccount } from "@/lib/seed-accounts";
 
 // Demo / tour-mode login. Supports two modes:
 //
@@ -14,29 +14,16 @@ import seedAccounts from "@/data/seed-accounts.json";
 // 3. Bulk seed — POST { "seedAll": true }
 //    Creates every account in seed-accounts.json (admin-only in production).
 
-interface SeedAccount {
-  role: "admin" | "seller" | "customer";
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  vendorName?: string;
-  vendorSlug?: string;
-  vendorStatus?: string;
-  commissionRate?: number;
-  description?: string;
-}
-
-const accounts = seedAccounts.accounts as SeedAccount[];
+const accounts = loadSeedAccounts();
 
 // Build a lookup map: email → account
 const emailMap = new Map(accounts.map((a) => [a.email.toLowerCase(), a]));
 
 // Build role-based first-match map for shorthand mode
 const roleFirst = {
-  buyer: accounts.find((a) => a.role === "customer")!,
-  seller: accounts.find((a) => a.role === "seller")!,
-  admin: accounts.find((a) => a.role === "admin")!,
+  buyer: accounts.find((a) => a.role === "customer"),
+  seller: accounts.find((a) => a.role === "seller"),
+  admin: accounts.find((a) => a.role === "admin"),
 };
 
 async function ensureAuthUser(admin: ReturnType<typeof createAdminClient>, acct: SeedAccount) {
@@ -148,6 +135,13 @@ export async function POST(request: NextRequest) {
 
   // ── Mode 3: Bulk seed all accounts ──────────────────────────────────────
   if (body.seedAll === true) {
+    if (accounts.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Seed accounts are not configured on this environment (data/seed-accounts.json missing)." },
+        { status: 503 }
+      );
+    }
+
     const results: { email: string; role: string; status: string; error?: string }[] = [];
 
     for (const acct of accounts) {

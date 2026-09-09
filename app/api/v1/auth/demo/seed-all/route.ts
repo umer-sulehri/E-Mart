@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import seedAccounts from "@/data/seed-accounts.json";
+import { loadSeedAccounts, type SeedAccount } from "@/lib/seed-accounts";
 
 // POST /api/v1/auth/demo/seed-all
 // Bulk-creates all seed accounts in Supabase Auth + profiles + vendor rows.
@@ -10,19 +10,7 @@ import seedAccounts from "@/data/seed-accounts.json";
 //   curl -X POST http://localhost:3000/api/v1/auth/demo/seed-all \
 //     -H "Content-Type: application/json"
 
-interface SeedAccount {
-  role: "admin" | "seller" | "customer";
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  vendorName?: string;
-  vendorSlug?: string;
-  vendorStatus?: string;
-  commissionRate?: number;
-}
-
-const accounts = seedAccounts.accounts as SeedAccount[];
+const accounts = loadSeedAccounts();
 
 interface SeedResult {
   email: string;
@@ -40,6 +28,13 @@ export async function POST(_request: NextRequest) {
     return NextResponse.json(
       { success: false, error: "Seed is not enabled on this environment." },
       { status: 403 }
+    );
+  }
+
+  if (accounts.length === 0) {
+    return NextResponse.json(
+      { success: false, error: "Seed accounts are not configured on this environment (data/seed-accounts.json missing)." },
+      { status: 503 }
     );
   }
 
