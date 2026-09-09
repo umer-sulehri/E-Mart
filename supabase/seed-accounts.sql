@@ -40,7 +40,9 @@ WITH new_users (id, email, password, first_name, last_name, role) AS (
 )
 INSERT INTO auth.users
   (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-   last_sign_in_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+   last_sign_in_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+   confirmation_token, recovery_token, email_change_token_new, email_change_token_current,
+   email_change, phone_change_token, phone_change, reauthentication_token, email_change_confirm_status)
 SELECT
   '00000000-0000-0000-0000-000000000000',
   nu.id::uuid, 'authenticated', 'authenticated', nu.email,
@@ -48,7 +50,8 @@ SELECT
   now(), now(),
   jsonb_build_object('provider', 'email', 'providers', ARRAY['email'], 'role', nu.role),
   jsonb_build_object('first_name', nu.first_name, 'last_name', nu.last_name, 'role', nu.role),
-  now(), now()
+  now(), now(),
+  '', '', '', '', '', '', '', '', 0
 FROM new_users nu
 WHERE NOT EXISTS (SELECT 1 FROM auth.users u WHERE u.email = nu.email);
 

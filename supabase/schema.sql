@@ -1421,7 +1421,11 @@ CREATE TRIGGER update_translations_updated_at
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
   INSERT INTO public.profiles (id, email, first_name, last_name, role)
   VALUES (
@@ -1429,11 +1433,11 @@ BEGIN
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
     COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'customer')
+    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'customer')
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created

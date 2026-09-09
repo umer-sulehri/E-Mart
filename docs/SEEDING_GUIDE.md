@@ -2,6 +2,36 @@
 
 All credentials live in `data/seed-accounts.json` (gitignored — contains passwords).
 
+## When Auth Is Corrupted — Fresh Supabase Project
+
+If the Auth service returns `Database error creating/finding users` even after
+Pause → Restore, the project's GoTrue state is corrupted (this happened on the
+original project). The deterministic fix is a fresh project — the repo is
+seed-driven, so nothing of value is lost.
+
+Execution order in the **new project's SQL Editor**:
+
+| Step | File | Purpose |
+|------|------|---------|
+| 1 | `supabase/schema.sql` | Full 28-table schema + RLS + triggers |
+| 2 | `supabase/2026-fix-migrations.sql` | RLS fixes, `notification_preferences`, payout migration |
+| 3 | `supabase/seed.sql` | Settings, categories, banners, tags, translations |
+| 4 | `supabase/seed-accounts.sql` | 16 role-based accounts (users + identities + profiles + vendors) |
+| 5 | `supabase/seed-products.sql` | 5 sample products (needs an approved vendor from step 4) |
+
+Then:
+
+6. Create storage buckets per `supabase/storage-buckets.sql` (or via Dashboard → Storage):
+   `avatars`, `product-images`, `certificates`.
+7. Update `.env.local` with the new project's `NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+8. Restart `npm run dev` and log in with `admin.super@emart.com` /
+   `SuperAdmin@E2025#`.
+
+> The Demo login buttons (`/api/v1/auth/demo` + `seed-all`) work normally on a fresh project.
+
+---
+
 ## Two Ways to Seed
 
 | Method | When to use | Requirements |
