@@ -15,3 +15,6 @@ next-env.d.ts
 
 # Local template reference only - never commit
 organic-1.0.0/
+
+# Seed credentials (contains passwords)
+data/seed-accounts.json
