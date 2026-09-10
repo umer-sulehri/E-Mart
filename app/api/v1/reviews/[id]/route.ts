@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { reviewSchema } from "@/lib/validators";
 
 export async function PATCH(
   request: NextRequest,
@@ -21,13 +22,13 @@ export async function PATCH(
       );
     }
 
-    const { data: review } = await supabase
+    const { data: review, error: fetchError } = await supabase
       .from("reviews")
-      .select("user_id")
+      .select("user_id, status, created_at")
       .eq("id", id)
       .single();
 
-    if (!review) {
+    if (fetchError || !review) {
       return NextResponse.json(
         { success: false, error: "Review not found" },
         { status: 404 }
@@ -41,14 +42,39 @@ export async function PATCH(
       );
     }
 
-    const body = await request.json();
-    const { rating, title, comment } = body;
+    if (review.status === "rejected") {
+      return NextResponse.json(
+        { success: false, error: "This review was not approved and cannot be edited." },
+        { status: 403 }
+      );
+    }
 
-    const updates: Record<string, unknown> = {};
-    if (rating !== undefined) updates.rating = rating;
-    if (title !== undefined) updates.title = title;
-    if (comment !== undefined) updates.comment = comment;
-    updates.updated_at = new Date().toISOString();
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const createdAt = new Date(review.created_at).getTime();
+    if (Date.now() - createdAt > THIRTY_DAYS_MS) {
+      return NextResponse.json(
+        { success: false, error: "Reviews can only be edited within 30 days of posting." },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const parsed = reviewSchema.partial().safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0].message },
+        { status: 400 }
+      );
+    }
+
+    const input = parsed.data;
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (input.rating !== undefined) updates.rating = input.rating;
+    if (input.title !== undefined) updates.title = input.title;
+    if (input.comment !== undefined) updates.comment = input.comment;
+    // Editing puts the review back through moderation.
+    updates.status = "pending";
 
     const { data: updated, error } = await supabase
       .from("reviews")
@@ -64,7 +90,11 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ success: true, data: updated, message: "Review updated" });
+    return NextResponse.json({
+      success: true,
+      data: { ...updated, requires_approval: true },
+      message: "Review updated and sent for approval",
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },

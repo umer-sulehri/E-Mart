@@ -13,13 +13,14 @@ import {
   ThumbsUp,
   AlertTriangle,
   Loader2,
+  Ban,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 
-type ReviewStatus = 'pending' | 'approved' | 'flagged';
+type ReviewStatus = 'pending' | 'approved' | 'flagged' | 'rejected';
 
 interface AdminReview {
   id: string;
@@ -41,6 +42,7 @@ const getStatusBadge = (status: ReviewStatus) => {
     pending: { variant: 'warning', label: 'Pending' },
     approved: { variant: 'success', label: 'Approved' },
     flagged: { variant: 'danger', label: 'Flagged' },
+    rejected: { variant: 'danger', label: 'Rejected' },
   };
   return (
     <Badge variant={map[status].variant} size="sm">
@@ -88,7 +90,7 @@ export default function AdminReviewsPage() {
 
   const act = async (
     id: string,
-    action: 'approve' | 'flag' | 'delete'
+    action: 'approve' | 'flag' | 'reject' | 'delete'
   ) => {
     setActing(id);
     try {
@@ -98,7 +100,8 @@ export default function AdminReviewsPage() {
         if (json.success) toast.success('Review deleted');
         else toast.error(json.error || 'Failed to delete review');
       } else {
-        const status = action === 'approve' ? 'approved' : 'flagged';
+        const status =
+          action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'flagged';
         const res = await fetch(`/api/v1/admin/reviews/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -106,7 +109,13 @@ export default function AdminReviewsPage() {
         });
         const json = await res.json();
         if (json.success)
-          toast.success(action === 'approve' ? 'Review approved' : 'Review flagged');
+          toast.success(
+            action === 'approve'
+              ? 'Review approved'
+              : action === 'reject'
+                ? 'Review rejected'
+                : 'Review flagged'
+          );
         else toast.error(json.error || 'Update failed');
       }
       await load();
@@ -215,6 +224,7 @@ export default function AdminReviewsPage() {
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="flagged">Flagged</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
 
@@ -314,6 +324,16 @@ export default function AdminReviewsPage() {
                       >
                         <Flag className="mr-1 inline h-3.5 w-3.5" />
                         Flag
+                      </button>
+                    )}
+                    {review.status !== 'rejected' && (
+                      <button
+                        onClick={() => act(review.id, 'reject')}
+                        disabled={acting === review.id}
+                        className="rounded px-2.5 py-1 text-xs font-medium text-secondary-700 transition-colors hover:bg-muted-100 disabled:opacity-50"
+                      >
+                        <Ban className="mr-1 inline h-3.5 w-3.5" />
+                        Reject
                       </button>
                     )}
                     <button

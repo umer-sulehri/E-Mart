@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   images TEXT[] DEFAULT '{}',
 is_verified_purchase BOOLEAN DEFAULT FALSE,
   helpful_count INTEGER DEFAULT 0,
-  status TEXT DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'flagged')),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'flagged', 'rejected')),
   seller_reply TEXT,
   seller_reply_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -819,7 +819,8 @@ CREATE POLICY "Authenticated users can insert reviews"
 DROP POLICY IF EXISTS "Users can update own reviews" ON reviews;
 CREATE POLICY "Users can update own reviews"
   ON reviews FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id AND status = 'pending');
 
 DROP POLICY IF EXISTS "Users can delete own reviews" ON reviews;
 CREATE POLICY "Users can delete own reviews"

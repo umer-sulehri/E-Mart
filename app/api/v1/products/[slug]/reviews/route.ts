@@ -61,7 +61,8 @@ export async function GET(
     const { data: ratingBreakdown } = await supabase
       .from("reviews")
       .select("rating")
-      .eq("product_id", product.id);
+      .eq("product_id", product.id)
+      .eq("status", "approved");
 
     const breakdown = [1, 2, 3, 4, 5].map((star) => ({
       rating: star,
@@ -169,6 +170,8 @@ export async function POST(
         comment: parsed.data.comment,
         is_verified_purchase: isVerified,
         helpful_count: 0,
+        // Moderation-first: an admin must approve before the review is public.
+        status: "pending",
       })
       .select()
       .single();
@@ -183,8 +186,11 @@ export async function POST(
     const { data: allReviews } = await supabase
       .from("reviews")
       .select("rating")
-      .eq("product_id", product.id);
+      .eq("product_id", product.id)
+      .eq("status", "approved");
 
+    // Only approved reviews contribute to the product rating, matching the
+    // update_product_rating() trigger. Pending reviews wait for approval.
     if (allReviews && allReviews.length > 0) {
       const avgRating =
         allReviews.reduce((sum, r) => sum + r.rating, 0) /
@@ -202,7 +208,11 @@ export async function POST(
     }
 
     return NextResponse.json(
-      { success: true, data: review, message: "Review created successfully" },
+      {
+        success: true,
+        data: { ...review, requires_approval: true },
+        message: "Review submitted and is pending approval",
+      },
       { status: 201 }
     );
   } catch (error) {

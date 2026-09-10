@@ -33,7 +33,8 @@ export async function GET(
     const { data: reviewStats } = await supabase
       .from("reviews")
       .select("rating")
-      .eq("product_id", product.id);
+      .eq("product_id", product.id)
+      .eq("status", "approved");
 
     const avgRating =
       reviewStats && reviewStats.length > 0

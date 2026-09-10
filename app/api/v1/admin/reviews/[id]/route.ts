@@ -37,7 +37,7 @@ export async function PATCH(
     const body = await request.json();
     const { status } = body;
 
-    if (!status || !["pending", "approved", "flagged"].includes(status)) {
+    if (!status || !["pending", "approved", "flagged", "rejected"].includes(status)) {
       return NextResponse.json(
         { success: false, error: "Invalid status" },
         { status: 400 }

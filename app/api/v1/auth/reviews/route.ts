@@ -21,15 +21,32 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const offset = (page - 1) * limit;
+    const status = searchParams.get("status") || "";
+    const sort = searchParams.get("sort") || "recent";
 
-    const { data, error, count } = await supabase
+    let query = supabase
       .from("reviews")
       .select(
         "*, products(id, name, slug, images, price)",
         { count: "exact" }
       )
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
+      .eq("user_id", user.id);
+
+    if (status) {
+      // Supports both single and comma-separated statuses (e.g. pending,approved).
+      const statuses = status.split(",").map((s) => s.trim()).filter(Boolean);
+      query = query.in("status", statuses);
+    }
+
+    if (sort === "highest") {
+      query = query.order("rating", { ascending: false });
+    } else if (sort === "lowest") {
+      query = query.order("rating", { ascending: true });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    const { data, error, count } = await query
       .range(offset, offset + limit - 1);
 
     if (error) {
