@@ -55,7 +55,17 @@ export async function PUT(
     }
 
     if (body.platform !== undefined) links[index].platform = body.platform;
-    if (body.url !== undefined) links[index].url = body.url;
+    if (body.url !== undefined) {
+      try {
+        new URL(body.url);
+      } catch {
+        return NextResponse.json(
+          { success: false, error: "url must be a valid URL" },
+          { status: 400 }
+        );
+      }
+      links[index].url = body.url;
+    }
     if (body.is_active !== undefined) links[index].is_active = body.is_active;
 
     const { error } = await supabase

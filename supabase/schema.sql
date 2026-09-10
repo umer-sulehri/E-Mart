@@ -155,7 +155,8 @@ CREATE TABLE IF NOT EXISTS products (
   status product_status DEFAULT 'draft',
   rating DECIMAL(3,2) DEFAULT 0,
   review_count INTEGER DEFAULT 0,
-  is_active BOOLEAN DEFAULT TRUE,
+is_active BOOLEAN DEFAULT TRUE,
+  moderation_status TEXT DEFAULT 'pending' CHECK (moderation_status IN ('pending', 'approved', 'flagged', 'removed')),
   is_featured BOOLEAN DEFAULT FALSE,
   is_new BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -900,6 +901,21 @@ CREATE POLICY "Admins can manage coupons"
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+-- Sellers manage coupons they created (the seller API sets created_by
+-- server-side from auth.uid(), so seller_id = created_by).
+DROP POLICY IF EXISTS "Sellers can manage own coupons" ON coupons;
+CREATE POLICY "Sellers can manage own coupons"
+  ON coupons FOR ALL
+  USING (auth.uid() = created_by)
+  WITH CHECK (auth.uid() = created_by);
+
+-- Sellers see their own (even inactive) coupons; active ones are already
+-- covered by the public SELECT policy above.
+DROP POLICY IF EXISTS "Sellers can view own coupons" ON coupons;
+CREATE POLICY "Sellers can view own coupons"
+  ON coupons FOR SELECT
+  USING (auth.uid() = created_by);
+
 -- ============================================================
 -- RLS POLICIES: orders
 -- ============================================================
@@ -1124,6 +1140,36 @@ DROP POLICY IF EXISTS "Users can delete own notifications" ON notifications;
 CREATE POLICY "Users can delete own notifications"
   ON notifications FOR DELETE
   USING (auth.uid() = user_id);
+
+-- ============================================================
+-- notification_preferences (per-user opt-in/out flags)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.notification_preferences (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  email_orders BOOLEAN DEFAULT TRUE,
+  email_promotions BOOLEAN DEFAULT TRUE,
+  email_newsletter BOOLEAN DEFAULT TRUE,
+  push_orders BOOLEAN DEFAULT TRUE,
+  push_promotions BOOLEAN DEFAULT FALSE,
+  sms_orders BOOLEAN DEFAULT TRUE,
+  sms_promotions BOOLEAN DEFAULT FALSE,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.notification_preferences ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own notification preferences" ON public.notification_preferences;
+CREATE POLICY "Users can view own notification preferences"
+  ON public.notification_preferences FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can manage own notification preferences" ON public.notification_preferences;
+CREATE POLICY "Users can manage own notification preferences"
+  ON public.notification_preferences FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================
 -- RLS POLICIES: settings

@@ -134,12 +134,15 @@ export async function PATCH(request: NextRequest) {
     if (action === "approve") {
       updates.status = "active";
       updates.is_active = true;
+      updates.moderation_status = "approved";
     } else if (action === "flag") {
       updates.status = "inactive";
       updates.is_active = false;
+      updates.moderation_status = "flagged";
     } else if (action === "remove") {
       updates.status = "archived";
       updates.is_active = false;
+      updates.moderation_status = "removed";
     } else {
       return NextResponse.json(
         { success: false, error: "Invalid action. Use: approve, flag, remove" },

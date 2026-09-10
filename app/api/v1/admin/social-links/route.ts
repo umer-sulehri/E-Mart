@@ -94,6 +94,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    try {
+      new URL(url);
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "url must be a valid URL" },
+        { status: 400 }
+      );
+    }
+
     const { data: existing } = await supabase
       .from("settings")
       .select("value")

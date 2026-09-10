@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Only allow known storage buckets so callers can't write into arbitrary
     // buckets (e.g. "storage.objects") or misspelled ones.
-    const allowedBuckets = ["avatars", "product-images", "certificates"];
+    const allowedBuckets = ["avatars", "uploads", "products", "blog", "vendor-assets"];
     if (!allowedBuckets.includes(bucket)) {
       return NextResponse.json(
         {

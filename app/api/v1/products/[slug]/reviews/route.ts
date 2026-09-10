@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { reviewSchema } from "@/lib/validators";
 
 export async function GET(
@@ -188,7 +189,10 @@ export async function POST(
       const avgRating =
         allReviews.reduce((sum, r) => sum + r.rating, 0) /
         allReviews.length;
-      await supabase
+      // Buyers cannot UPDATE products (RLS), so this runs with the
+      // service-role client. It is redundant with the update_product_rating()
+      // trigger but keeps the counters correct even on schemas without it.
+      await createAdminClient()
         .from("products")
         .update({
           rating: Math.round(avgRating * 10) / 10,

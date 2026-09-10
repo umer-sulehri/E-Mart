@@ -55,6 +55,7 @@ export async function PUT(
 
     const updates: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
+      moderation_status: moderationStatus,
     };
 
     if (moderationStatus === "approved") {
@@ -65,6 +66,9 @@ export async function PUT(
       updates.is_active = false;
     } else if (moderationStatus === "flagged") {
       updates.status = "inactive";
+      updates.is_active = false;
+    } else if (moderationStatus === "pending") {
+      updates.status = "draft";
       updates.is_active = false;
     }
 
