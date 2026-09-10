@@ -39,12 +39,17 @@
   }
 
   .product-item .button-area {
-    @apply absolute bottom-0 left-0 z-10 hidden w-full bg-white text-center;
     box-shadow: 0px 20px 44px rgba(0, 0, 0, 0.08);
   }
 
-  .product-item:hover .button-area {
-    @apply block;
+  @media (min-width: 1024px) {
+    .product-item .button-area {
+      @apply absolute bottom-0 left-0 z-10 hidden w-full bg-white text-center;
+    }
+
+    .product-item:hover .button-area {
+      @apply block;
+    }
   }
 
   .product-item figure {

@@ -8,6 +8,7 @@ import QuickViewModal from "@/components/product/QuickViewModal";
 import { useAddToCart } from "@/hooks/useAddToCart";
 import { useAddToWishlist } from "@/hooks/useAddToWishlist";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
+import QuantitySelector from "@/components/ui/QuantitySelector";
 import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 
@@ -21,6 +22,7 @@ export interface Product {
   reviewCount: number;
   image: string;
   badge?: string;
+  stockQuantity?: number;
 }
 
 export interface ProductCardProps {
@@ -44,25 +46,32 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
       : 0;
 
     return (
-      <div ref={ref} className={cn("product-item", className)}>
-        <figure className="image-container mx-auto mb-3 h-[210px] rounded-xl">
+      <div
+        ref={ref}
+        className={cn("product-item flex h-full flex-col", className)}
+      >
+        <figure className="image-container mx-auto mb-3 h-[210px] w-full rounded-xl">
           <Link href={`/products/${product.slug}`} title={product.name}>
             <ImageWithFallback
               src={product.image}
               alt={product.name}
               width={210}
               height={210}
-              className="max-h-[210px] w-auto object-contain"
+              className="h-full w-full object-contain"
             />
           </Link>
         </figure>
 
-        <div className="flex flex-col items-center text-center">
-          <h3 className="text-base font-normal text-dark">
+        <div className="flex flex-1 flex-col items-center text-center">
+          <h3 className="line-clamp-2 min-h-[48px] text-base font-normal text-dark">
             {product.name}
           </h3>
 
-          <div className="mt-1">
+          {/* Visual separator between product info and rating/price */}
+          <div className="mt-2 h-px w-full bg-muted-100" />
+
+          {/* Fixed-height rating row keeps every card aligned */}
+          <div className="mt-2 flex h-5 items-center">
             <StarRating
               rating={product.rating}
               size="sm"
@@ -70,81 +79,81 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
             />
           </div>
 
-          <div className="mt-1 flex items-center justify-center gap-2">
-            {product.discountPrice && (
-              <del className="text-sm text-muted-500">
-                {formatPrice(product.price)}
-              </del>
-            )}
-            <span className="text-sm font-semibold text-dark">
-              {product.discountPrice
-                ? formatPrice(product.discountPrice)
-                : formatPrice(product.price)}
-            </span>
-            {discount > 0 && (
-              <span className="rounded-none border border-dark-subtle px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
-                {discount}% OFF
+          {/* Footer zone — mt-auto pins price/buttons to the bottom */}
+          <div className="mt-auto w-full pt-2">
+            <div className="flex min-h-[22px] items-center justify-center gap-2">
+              {product.discountPrice && (
+                <del className="text-sm text-muted-500">
+                  {formatPrice(product.price)}
+                </del>
+              )}
+              <span className="text-sm font-semibold text-dark">
+                {product.discountPrice
+                  ? formatPrice(product.discountPrice)
+                  : formatPrice(product.price)}
               </span>
-            )}
-            {product.badge && (
-              <span className="rounded-none border border-dark-subtle px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
-                {product.badge}
-              </span>
-            )}
-          </div>
+              {discount > 0 && (
+                <span className="rounded-none border border-dark-subtle px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
+                  {discount}% OFF
+                </span>
+              )}
+              {product.badge && (
+                <span className="rounded-none border border-dark-subtle px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
+                  {product.badge}
+                </span>
+              )}
+            </div>
 
-          <div className="button-area p-3 pt-0">
-            <div className="mt-2 flex items-center gap-1">
-              <div className="w-3/12">
-                <input
-                  type="number"
-                  name="quantity"
-                  aria-label={`Quantity for ${product.name}`}
-                  value={quantity}
-                  onChange={(e) =>
-                    setQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                  }
-                  min={1}
-                  className="w-full rounded border border-dark-subtle p-2 text-sm"
-                />
-              </div>
-              <div className="w-7/12">
-                <button
-                  onClick={() => addToCart(product, quantity)}
-                  className="btn-cart flex w-full items-center justify-center gap-2 rounded-1 bg-primary p-2 text-xs text-white hover:bg-primary-500"
-                  aria-label={`Add ${product.name} to cart`}
-                >
-                  <ShoppingCart size={16} />
-                  Add to Cart
-                </button>
-              </div>
-              <div className="w-2/12">
-                <button
-                  className="flex w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white"
-                  aria-label={`Quick view ${product.name}`}
-                  onClick={() => setQuickViewOpen(true)}
-                >
-                  <Eye size={16} />
-                </button>
-              </div>
-              <div className="w-2/12">
-                <button
-                  className="flex w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white disabled:opacity-50"
-                  aria-label={
-                    isWishlisted
-                      ? `Remove ${product.name} from wishlist`
-                      : `Add ${product.name} to wishlist`
-                  }
-                  aria-pressed={isWishlisted}
-                  onClick={toggleWishlist}
-                  disabled={wishlistLoading}
-                >
-                  {isWishlisted ? (
-                    <Check size={16} className="text-primary" />
-                  ) : (
-                    <Heart size={16} />
-                  )}
-                </button>
+            <div className="button-area w-full pt-3 lg:px-0 lg:pb-3">
+              <div className="flex items-center gap-1">
+                <div className="w-[104px] shrink-0">
+                  <QuantitySelector
+                    value={quantity}
+                    onChange={setQuantity}
+                    min={1}
+                    max={product.stockQuantity ?? 99}
+                    disabled={product.stockQuantity != null && product.stockQuantity <= 0}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <button
+                    onClick={() => addToCart(product, quantity)}
+                    className="btn-cart flex h-9 w-full items-center justify-center gap-2 rounded-1 bg-primary p-2 text-xs text-white hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label={`Add ${product.name} to cart`}
+                    disabled={product.stockQuantity != null && product.stockQuantity <= 0}
+                  >
+                    <ShoppingCart size={16} />
+                    Add to Cart
+                  </button>
+                </div>
+                <div className="w-9 shrink-0">
+                  <button
+                    className="flex h-9 w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white"
+                    aria-label={`Quick view ${product.name}`}
+                    onClick={() => setQuickViewOpen(true)}
+                  >
+                    <Eye size={16} />
+                  </button>
+                </div>
+                <div className="w-9 shrink-0">
+                  <button
+                    className="flex h-9 w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white disabled:opacity-50"
+                    aria-label={
+                      isWishlisted
+                        ? `Remove ${product.name} from wishlist`
+                        : `Add ${product.name} to wishlist`
+                    }
+                    aria-pressed={isWishlisted}
+                    onClick={toggleWishlist}
+                    disabled={wishlistLoading}
+                  >
+                    {isWishlisted ? (
+                      <Check size={16} className="text-primary" />
+                    ) : (
+                      <Heart size={16} />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
