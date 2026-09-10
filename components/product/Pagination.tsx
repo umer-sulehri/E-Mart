@@ -54,54 +54,62 @@ export default function Pagination({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-lg border transition-colors',
+            'flex h-11 w-11 items-center justify-center rounded-lg border transition-colors sm:h-9 sm:w-9',
             currentPage === 1
               ? 'cursor-not-allowed border-muted-200 text-muted-300'
               : 'border-muted-200 text-secondary-800 hover:border-primary hover:text-primary'
           )}
+          aria-label="Previous page"
         >
           <ChevronLeft size={16} />
         </button>
 
-        {pages.map((page, index) =>
-          page === '...' ? (
-            <span
-              key={`ellipsis-${index}`}
-              className="flex h-9 w-9 items-center justify-center text-sm text-muted-400"
-            >
-              ...
-            </span>
-          ) : (
-            <button
-              key={page}
-              onClick={() => onPageChange(page)}
-              className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium transition-colors',
-                currentPage === page
-                  ? 'border-primary-600 bg-primary-600 text-white'
-                  : 'border-muted-200 text-secondary-800 hover:border-primary hover:text-primary'
-              )}
-            >
-              {page}
-            </button>
-          )
-        )}
+        <div className="sm:hidden px-2 text-xs font-medium text-muted-600">
+          {currentPage} / {totalPages}
+        </div>
+
+        <div className="hidden items-center gap-1 sm:flex">
+          {pages.map((page, index) =>
+            page === '...' ? (
+              <span
+                key={`ellipsis-${index}`}
+                className="flex h-9 w-9 items-center justify-center text-sm text-muted-400"
+              >
+                ...
+              </span>
+            ) : (
+              <button
+                key={page}
+                onClick={() => onPageChange(page)}
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium transition-colors',
+                  currentPage === page
+                    ? 'border-primary-600 bg-primary-600 text-white'
+                    : 'border-muted-200 text-secondary-800 hover:border-primary hover:text-primary'
+                )}
+              >
+                {page}
+              </button>
+            )
+          )}
+        </div>
 
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-lg border transition-colors',
+            'flex h-11 w-11 items-center justify-center rounded-lg border transition-colors sm:h-9 sm:w-9',
             currentPage === totalPages
               ? 'cursor-not-allowed border-muted-200 text-muted-300'
               : 'border-muted-200 text-secondary-800 hover:border-primary hover:text-primary'
           )}
+          aria-label="Next page"
         >
           <ChevronRight size={16} />
         </button>
       </div>
 
-      <p className="text-xs text-muted-500">
+      <p className="hidden text-xs text-muted-500 sm:block">
         Page {currentPage} of {totalPages}
       </p>
     </div>

@@ -68,6 +68,7 @@ function ProductsContent() {
   );
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [brandNames, setBrandNames] = useState<Record<string, string>>({});
+  const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -122,6 +123,18 @@ function ProductsContent() {
             map[b.slug] = b.name;
           });
           setBrandNames(map);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Real min/max product price keeps the slider aligned with the catalog.
+  useEffect(() => {
+    fetch('/api/v1/products/price-range')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          setPriceBounds({ min: json.data.min, max: json.data.max });
         }
       })
       .catch(() => {});
@@ -189,7 +202,11 @@ function ProductsContent() {
   }, [currentPage, sort, initialSearch, initialCategory, filters]);
 
   const filtersSidebar = (
-    <ProductFilters filters={filters} onFilterChange={applyFilters} />
+    <ProductFilters
+      filters={filters}
+      onFilterChange={applyFilters}
+      priceBounds={priceBounds}
+    />
   );
 
   const mobileFiltersPanel = (
@@ -197,6 +214,7 @@ function ProductsContent() {
       filters={filters}
       onFilterChange={applyFilters}
       onApplied={() => setMobileFiltersOpen(false)}
+      priceBounds={priceBounds}
     />
   );
 
@@ -365,7 +383,7 @@ function ProductsContent() {
                 {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
                   <div key={i} className="animate-pulse">
                     <div className="rounded-2xl bg-white p-3 text-center shadow-sm">
-                      <div className="mx-auto h-[210px] w-[210px] rounded-lg bg-muted-100" />
+                      <div className="mx-auto aspect-square w-full rounded-lg bg-muted-100" />
                       <div className="mt-3 mx-auto h-4 w-3/4 rounded bg-muted-100" />
                       <div className="mt-2 mx-auto h-3 w-1/2 rounded bg-muted-100" />
                     </div>

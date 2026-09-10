@@ -12,6 +12,18 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get("q") || "";
     const category = searchParams.get("category") || "";
     const brand = searchParams.get("brand") || "";
+    const categories =
+      searchParams
+        .get("categories")
+        ?.split(",")
+        .map((s) => s.trim())
+        .filter(Boolean) || [];
+    const brands =
+      searchParams
+        .get("brands")
+        ?.split(",")
+        .map((s) => s.trim())
+        .filter(Boolean) || [];
     const minPrice = searchParams.get("minPrice") ? parseFloat(searchParams.get("minPrice")!) : undefined;
     const maxPrice = searchParams.get("maxPrice") ? parseFloat(searchParams.get("maxPrice")!) : undefined;
     const minRating = searchParams.get("minRating") ? parseFloat(searchParams.get("minRating")!) : undefined;
@@ -21,7 +33,12 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("products")
-      .select("*, categories!products_category_id_fkey(name, slug), brands(name, slug)", { count: "exact" })
+      .select(
+        brand || brands.length > 0
+          ? "*, categories!products_category_id_fkey(name, slug), brands!inner(name, slug)"
+          : "*, categories!products_category_id_fkey(name, slug), brands(name, slug)",
+        { count: "exact" }
+      )
       .eq("is_active", true);
 
     if (q) {
@@ -29,11 +46,15 @@ export async function GET(request: NextRequest) {
       query = query.or(`name.ilike.%${escaped}%,description.ilike.%${escaped}%,sku.ilike.%${escaped}%`);
     }
 
-    if (category) {
+    if (categories.length > 0) {
+      query = query.in("categories.slug", categories);
+    } else if (category) {
       query = query.eq("categories.slug", category);
     }
 
-    if (brand) {
+    if (brands.length > 0) {
+      query = query.in("brands.slug", brands);
+    } else if (brand) {
       query = query.eq("brands.slug", brand);
     }
 

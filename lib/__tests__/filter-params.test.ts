@@ -134,6 +134,19 @@ describe("filtersToSearchParams", () => {
     expect(params.get("categories")).toBe("fruits");
     expect(params.get("sort")).toBe("price_asc");
   });
+
+  it("clearing all filters preserves sort and search", () => {
+    const params = filtersToSearchParams(
+      EMPTY_FILTERS,
+      p("categories=fruits&minPrice=10&inStock=true&sort=rating&q=apples&page=2")
+    );
+    expect(params.get("sort")).toBe("rating");
+    expect(params.get("q")).toBe("apples");
+    expect(params.has("page")).toBe(false);
+    for (const key of ["categories", "minPrice", "inStock"]) {
+      expect(params.has(key)).toBe(false);
+    }
+  });
 });
 
 describe("filtersToApiParams", () => {

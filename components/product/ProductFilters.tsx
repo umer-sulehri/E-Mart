@@ -19,6 +19,7 @@ interface ProductFiltersProps {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
   onApplied?: () => void;
+  priceBounds?: { min: number; max: number };
 }
 
 function FilterSection({
@@ -50,6 +51,7 @@ export default function ProductFilters({
   filters,
   onFilterChange,
   onApplied,
+  priceBounds,
 }: ProductFiltersProps) {
   // Local draft state — edits are not applied until "Apply Filters" is pressed.
   const [draft, setDraft] = useState<FilterState>(filters);
@@ -89,11 +91,15 @@ export default function ProductFilters({
     Math.max(minPriceVal, maxPriceVal),
   ];
 
+  // Default bounds when the caller hasn't resolved real product prices yet.
+  const boundsMin = priceBounds?.min ?? 0;
+  const boundsMax = priceBounds?.max ?? 100000;
+
   const handlePriceSliderChange = (range: [number, number]) => {
     setDraft({
       ...draft,
-      minPrice: range[0] > 0 ? String(range[0]) : '',
-      maxPrice: range[1] < 100000 ? String(range[1]) : '',
+      minPrice: range[0] > boundsMin ? String(range[0]) : '',
+      maxPrice: range[1] < boundsMax ? String(range[1]) : '',
     });
   };
 
@@ -156,8 +162,8 @@ export default function ProductFilters({
 
       <FilterSection title="Price Range">
         <PriceRangeSlider
-          min={0}
-          max={100000}
+          min={boundsMin}
+          max={boundsMax}
           step={500}
           value={priceRange}
           onChange={handlePriceSliderChange}

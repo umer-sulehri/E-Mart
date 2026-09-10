@@ -48,22 +48,22 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
     return (
       <div
         ref={ref}
-        className={cn("product-item flex h-full flex-col", className)}
+        className={cn("product-item flex h-full max-w-full flex-col", className)}
       >
-        <figure className="image-container mx-auto mb-3 h-[210px] w-full rounded-xl">
+        <figure className="image-container mx-auto mb-3 aspect-square w-full max-w-full overflow-hidden rounded-xl bg-white">
           <Link href={`/products/${product.slug}`} title={product.name}>
             <ImageWithFallback
               src={product.image}
               alt={product.name}
-              width={210}
-              height={210}
-              className="h-full w-full object-contain"
+              width={420}
+              height={420}
+              className="h-full w-full object-contain p-2 sm:p-3"
             />
           </Link>
         </figure>
 
         <div className="flex flex-1 flex-col items-center text-center">
-          <h3 className="line-clamp-2 min-h-[48px] text-base font-normal text-dark">
+          <h3 className="line-clamp-2 min-h-[40px] text-sm font-normal text-dark sm:min-h-[48px] sm:text-base">
             {product.name}
           </h3>
 
@@ -81,13 +81,13 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
 
           {/* Footer zone — mt-auto pins price/buttons to the bottom */}
           <div className="mt-auto w-full pt-2">
-            <div className="flex min-h-[22px] items-center justify-center gap-2">
+            <div className="flex min-h-[28px] flex-wrap items-center justify-center gap-x-2 gap-y-1">
               {product.discountPrice && (
-                <del className="text-sm text-muted-500">
+                <del className="text-xs text-muted-500 sm:text-sm">
                   {formatPrice(product.price)}
                 </del>
               )}
-              <span className="text-sm font-semibold text-dark">
+              <span className="text-base font-semibold text-dark sm:text-lg">
                 {product.discountPrice
                   ? formatPrice(product.discountPrice)
                   : formatPrice(product.price)}
@@ -104,9 +104,22 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
               )}
             </div>
 
+            {product.stockQuantity != null && product.stockQuantity <= 0 && (
+              <p className="mt-1.5 text-[11px] font-medium text-danger">
+                Out of stock
+              </p>
+            )}
+            {product.stockQuantity != null &&
+              product.stockQuantity > 0 &&
+              product.stockQuantity < 10 && (
+                <p className="mt-1.5 text-[11px] font-medium text-warning-600">
+                  Only {product.stockQuantity} left — low stock
+                </p>
+              )}
+
             <div className="button-area w-full pt-3 lg:px-0 lg:pb-3">
-              <div className="flex items-center gap-1">
-                <div className="w-[104px] shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <div className="w-20 shrink-0 sm:w-[104px]">
                   <QuantitySelector
                     value={quantity}
                     onChange={setQuantity}
@@ -118,26 +131,26 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 <div className="min-w-0 flex-1">
                   <button
                     onClick={() => addToCart(product, quantity)}
-                    className="btn-cart flex h-9 w-full items-center justify-center gap-2 rounded-1 bg-primary p-2 text-xs text-white hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="btn-cart flex h-11 w-full items-center justify-center gap-2 rounded-1 bg-primary p-2 text-xs text-white transition-all duration-200 hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label={`Add ${product.name} to cart`}
                     disabled={product.stockQuantity != null && product.stockQuantity <= 0}
                   >
-                    <ShoppingCart size={16} />
-                    Add to Cart
+                    <ShoppingCart size={16} className="shrink-0" />
+                    <span className="truncate sm:text-sm">Add to Cart</span>
                   </button>
                 </div>
-                <div className="w-9 shrink-0">
+                <div className="w-11 shrink-0 sm:w-9">
                   <button
-                    className="flex h-9 w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white"
+                    className="flex h-11 w-full items-center justify-center rounded-1 border border-dark p-2 text-dark transition-all duration-200 hover:bg-dark hover:text-white"
                     aria-label={`Quick view ${product.name}`}
                     onClick={() => setQuickViewOpen(true)}
                   >
                     <Eye size={16} />
                   </button>
                 </div>
-                <div className="w-9 shrink-0">
+                <div className="w-11 shrink-0 sm:w-9">
                   <button
-                    className="flex h-9 w-full items-center justify-center rounded-1 border border-dark p-2 text-dark hover:bg-dark hover:text-white disabled:opacity-50"
+                    className="flex h-11 w-full items-center justify-center rounded-1 border border-dark p-2 text-dark transition-all duration-200 hover:bg-dark hover:text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50"
                     aria-label={
                       isWishlisted
                         ? `Remove ${product.name} from wishlist`
