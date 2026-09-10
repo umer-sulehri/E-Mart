@@ -67,12 +67,12 @@ export async function POST(request: NextRequest) {
         type: "system",
         title: "SMS Notification",
         message,
-        data: JSON.stringify({
+        data: {
           channel: "sms",
           to: targetUser.phone,
           message,
           sent_by: user.id,
-        }),
+        },
       })
       .select()
       .single();

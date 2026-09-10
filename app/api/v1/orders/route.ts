@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 import { normalizeOrder } from "@/lib/orders";
 
@@ -304,6 +305,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Buyers hold no UPDATE rights on products/coupons, so these internal
+    // inventory/usage mutations run with the admin client.
+    const admin = createAdminClient();
+
     // Decrement stock; if any decrement fails, restore stock from this order
     // and remove the order so inventory stays accurate.
     let stockError = false;
@@ -311,7 +316,7 @@ export async function POST(request: NextRequest) {
     for (const item of cartItems) {
       const product = item.products as unknown as { id: string; stock_quantity: number };
       const original = product.stock_quantity;
-      const { error } = await supabase
+      const { error } = await admin
         .from("products")
         .update({ stock_quantity: original - item.quantity })
         .eq("id", product.id);
@@ -325,7 +330,7 @@ export async function POST(request: NextRequest) {
     if (stockError) {
       // Restore only the products that were actually decremented, then clean up.
       for (const d of decremented) {
-        await supabase
+        await admin
           .from("products")
           .update({ stock_quantity: d.original })
           .eq("id", d.id);
@@ -349,7 +354,7 @@ export async function POST(request: NextRequest) {
 
     // Redeem the coupon so its usage count reflects this order.
     if (couponId) {
-      const { error: couponError } = await supabase
+      const { error: couponError } = await admin
         .from("coupons")
         .update({ used_count: couponUsedCount + 1 })
         .eq("id", couponId);

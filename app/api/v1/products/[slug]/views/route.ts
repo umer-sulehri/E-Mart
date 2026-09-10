@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
   _request: NextRequest,
@@ -7,7 +7,9 @@ export async function POST(
 ) {
   try {
     const { slug } = await params;
-    const supabase = await createClient();
+    // Anonymous visitors hit this route, and products UPDATE is admin/seller
+    // only, so the increment runs with the admin client.
+    const supabase = createAdminClient();
 
     const { data: product } = await supabase
       .from("products")

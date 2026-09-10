@@ -88,16 +88,35 @@ function AuthCallbackContent() {
                 : '/dashboard'
             );
           } else {
-            // Route based on the user's ACTUAL role so an existing buyer is
+            // The handle_new_user trigger auto-creates a customer profile for
+            // brand-new OAuth accounts, so the !profile branch above is rarely
+            // hit. Reconcile the role here: if this sign-in explicitly targeted
+            // a seller/admin area and the account is still just a "customer"
+            // (i.e. it was auto-created moments ago), provision the requested
+            // role. Admin stays gated behind the allow-list.
+            const requestedRole = roleFromPath(requestedRedirect);
+
+            let role = profile.role;
+            if (
+              profile.role === 'customer' &&
+              requestedRole !== 'customer' &&
+              requestedRole !== role
+            ) {
+              if (requestedRole === 'admin' && !canSelfProvisionAdmin(user.email)) {
+                role = 'customer';
+              } else {
+                role = requestedRole;
+                await supabase
+                  .from('profiles')
+                  .update({ role })
+                  .eq('id', user.id);
+              }
+            }
+
+            // Route based on the account's ACTUAL role so an existing buyer is
             // never dumped into a seller/admin area (and bounced by guards).
-            // Role selection only applies to brand-new Google accounts; an
-            // existing account always lands on its own dashboard.
             router.push(
-              profile.role === 'seller'
-                ? '/seller'
-                : profile.role === 'admin'
-                ? '/admin'
-                : '/dashboard'
+              role === 'seller' ? '/seller' : role === 'admin' ? '/admin' : '/dashboard'
             );
           }
         } else {

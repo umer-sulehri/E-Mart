@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
   request: NextRequest,
@@ -70,7 +71,11 @@ export async function POST(
       );
     }
 
-    const { data: updatedReview, error } = await supabase
+    // Sellers aren't the review author, so the reply update is admin-only RLS.
+    // Ownership was verified above via the user-scoped client.
+    const admin = createAdminClient();
+
+    const { data: updatedReview, error } = await admin
       .from("reviews")
       .update({
         seller_reply: reply,

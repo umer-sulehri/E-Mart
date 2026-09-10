@@ -17,6 +17,8 @@ export interface SeedAccount {
 // data/seed-accounts.json is gitignored (contains plaintext passwords), so it is
 // NOT shipped to production builds. Load it at runtime and degrade gracefully
 // when absent (e.g. Vercel) so the build never breaks on the missing module.
+// The demo routes additionally require NEXT_PUBLIC_ENABLE_DEMO_LOGIN=true in
+// production, and .vercelignore excludes data/ from every deployment.
 export function loadSeedAccounts(): SeedAccount[] {
   try {
     const file = path.join(process.cwd(), "data", "seed-accounts.json");

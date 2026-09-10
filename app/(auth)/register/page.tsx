@@ -94,16 +94,19 @@ function RegisterContent() {
         throw new Error(result.error || 'Registration failed');
       }
 
-      const dashboardRole = data.role;
-      toast.success('Account created!');
-
-      if (result.data?.user) {
-        login(result.data.user);
+      if (result.data?.session) {
+        // Session present: email confirmation is disabled, log the user in.
+        if (result.data.user) {
+          login(result.data.user);
+        }
+        toast.success('Account created!');
+        setTimeout(() => {
+          router.push(dashboardForRole(data.role));
+        }, 800);
+      } else if (result.data?.user) {
+        // No session: email confirmation is enabled. Tell the user to verify.
+        toast.success('Account created! Please check your email to verify your account.');
       }
-
-      setTimeout(() => {
-        router.push(dashboardForRole(dashboardRole));
-      }, 800);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Something went wrong');
     } finally {

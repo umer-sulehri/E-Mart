@@ -1,0 +1,4 @@
+# Keep seed/demo credentials out of every Vercel deployment.
+# data/seed-accounts.json contains plaintext passwords and is gitignored;
+# this rule is a belt-and-suspenders guard for the demo routes.
+data/

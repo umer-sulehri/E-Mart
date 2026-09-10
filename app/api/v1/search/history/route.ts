@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+const MAX_HISTORY = 50;
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -18,19 +20,34 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const limit = Math.min(
+      parseInt(searchParams.get("limit") || "20", 10) || 20,
+      50
+    );
 
-    const { data: setting } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", `search_history_${user.id}`)
-      .single();
+    const { data: history, error } = await supabase
+      .from("search_history")
+      .select("id, query, results_count, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
-    const history =
-      ((setting?.value as Record<string, unknown>)?.queries as Array<Record<string, unknown>>) || [];
-    const trimmed = history.slice(0, limit);
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
 
-    return NextResponse.json({ success: true, data: trimmed });
+    return NextResponse.json({
+      success: true,
+      data:
+        (history || []).map((h) => ({
+          query: h.query,
+          searched_at: h.created_at,
+          results_count: h.results_count,
+        })) || [],
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
@@ -56,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { query } = body;
+    const { query, results_count } = body;
 
     if (!query || typeof query !== "string" || query.trim().length === 0) {
       return NextResponse.json(
@@ -65,32 +82,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const settingKey = `search_history_${user.id}`;
+    // Home the query: drop any previous identical entry so it moves to the top.
+    await supabase
+      .from("search_history")
+      .delete()
+      .eq("user_id", user.id)
+      .ilike("query", query.trim());
 
-    const { data: existing } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", settingKey)
+    const { data: entry, error } = await supabase
+      .from("search_history")
+      .insert({
+        user_id: user.id,
+        query: query.trim(),
+        results_count: typeof results_count === "number" ? results_count : 0,
+      })
+      .select("query, results_count, created_at")
       .single();
-
-    const current =
-      ((existing?.value as Record<string, unknown>)?.queries as Array<Record<string, unknown>>) || [];
-
-    const filtered = current.filter(
-      (item) => (item.query as string).toLowerCase() !== query.trim().toLowerCase()
-    );
-
-    const updated = [
-      { query: query.trim(), searched_at: new Date().toISOString() },
-      ...filtered,
-    ].slice(0, 50);
-
-    const { error } = await supabase
-      .from("settings")
-      .upsert(
-        { key: settingKey, value: { queries: updated } },
-        { onConflict: "key" }
-      );
 
     if (error) {
       return NextResponse.json(
@@ -99,9 +106,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Trim to the most recent MAX_HISTORY rows.
+    const { data: ids } = await supabase
+      .from("search_history")
+      .select("id")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .range(MAX_HISTORY, 100000);
+
+    if (ids && ids.length > 0) {
+      const staleIds = ids.map((i) => i.id);
+      await supabase
+        .from("search_history")
+        .delete()
+        .in("id", staleIds);
+    }
+
     return NextResponse.json({
       success: true,
-      data: updated,
+      data: { query: entry.query, searched_at: entry.created_at },
       message: "Search saved to history",
     });
   } catch (error) {

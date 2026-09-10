@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { parseCsv } from "@/lib/csv";
 
 interface ImportRow {
@@ -136,13 +137,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Resolve categories and brands by name (create them if missing).
+    // categories/brands INSERT is admin-only RLS, so creating missing rows
+    // runs with the admin client.
     const categoryCache = new Map<string, string | null>();
     const brandCache = new Map<string, string | null>();
+    const admin = createAdminClient();
 
     const resolveCategory = async (name: string): Promise<string | null> => {
       if (!name) return null;
       if (categoryCache.has(name)) return categoryCache.get(name) ?? null;
-      const { data: existing } = await supabase
+      const { data: existing } = await admin
         .from("categories")
         .select("id")
         .eq("name", name)
@@ -151,7 +155,7 @@ export async function POST(request: NextRequest) {
         categoryCache.set(name, existing.id);
         return existing.id;
       }
-      const { data: created } = await supabase
+      const { data: created } = await admin
         .from("categories")
         .insert({ name, slug: slugify(name), is_active: true })
         .select("id")
@@ -164,7 +168,7 @@ export async function POST(request: NextRequest) {
     const resolveBrand = async (name: string): Promise<string | null> => {
       if (!name) return null;
       if (brandCache.has(name)) return brandCache.get(name) ?? null;
-      const { data: existing } = await supabase
+      const { data: existing } = await admin
         .from("brands")
         .select("id")
         .eq("name", name)
@@ -173,7 +177,7 @@ export async function POST(request: NextRequest) {
         brandCache.set(name, existing.id);
         return existing.id;
       }
-      const { data: created } = await supabase
+      const { data: created } = await admin
         .from("brands")
         .insert({ name, slug: slugify(name), is_active: true })
         .select("id")

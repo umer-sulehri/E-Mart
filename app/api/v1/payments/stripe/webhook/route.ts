@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 import crypto from "crypto";
 
@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
 
     logger.info("StripeWebhook", "Received event:", event.type);
 
-    const supabase = await createClient();
+    // Webhooks run without a user session, so use the admin client to bypass RLS.
+    const supabase = createAdminClient();
 
     switch (event.type) {
       case "checkout.session.completed": {

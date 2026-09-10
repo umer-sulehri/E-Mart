@@ -60,13 +60,13 @@ export async function POST(request: NextRequest) {
         type: "system",
         title: subject,
         message: emailBody,
-        data: JSON.stringify({
+        data: {
           channel: "email",
           to: targetUser.email,
           subject,
           body: emailBody,
           sent_by: user.id,
-        }),
+        },
       })
       .select()
       .single();

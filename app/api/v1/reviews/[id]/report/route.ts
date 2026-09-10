@@ -35,8 +35,8 @@ export async function POST(
       .from("review_reports")
       .select("id")
       .eq("review_id", id)
-      .eq("user_id", user.id)
-      .single();
+      .eq("reporter_user_id", user.id)
+      .maybeSingle();
 
     if (existing) {
       return NextResponse.json(
@@ -47,7 +47,7 @@ export async function POST(
 
     const { error } = await supabase.from("review_reports").insert({
       review_id: id,
-      user_id: user.id,
+      reporter_user_id: user.id,
       reason,
     });
 

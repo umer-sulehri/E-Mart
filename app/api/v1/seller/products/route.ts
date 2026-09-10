@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/utils";
 import { safeSearchPattern, safeOrTerm } from "@/lib/search-safe";
 
@@ -160,6 +161,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Resolve brand by name (or provided id) into brands.brand_id.
+    // brands INSERT is admin-only RLS, so creating a new brand must go through
+    // the admin client (the seller is authenticated and owns the product).
     let resolvedBrandId: string | null = brandId || null;
     if (!resolvedBrandId && typeof brand === "string" && brand.trim()) {
       const brandName = brand.trim();
@@ -171,7 +174,8 @@ export async function POST(request: NextRequest) {
       if (existingBrand) {
         resolvedBrandId = existingBrand.id;
       } else {
-        const { data: createdBrand } = await supabase
+        const admin = createAdminClient();
+        const { data: createdBrand } = await admin
           .from("brands")
           .insert({ name: brandName, slug: slugify(brandName), is_active: true })
           .select("id")

@@ -179,9 +179,11 @@ CREATE TABLE IF NOT EXISTS reviews (
   title TEXT,
   comment TEXT,
   images TEXT[] DEFAULT '{}',
-  is_verified_purchase BOOLEAN DEFAULT FALSE,
+is_verified_purchase BOOLEAN DEFAULT FALSE,
   helpful_count INTEGER DEFAULT 0,
   status TEXT DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'flagged')),
+  seller_reply TEXT,
+  seller_reply_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(product_id, user_id)
@@ -449,7 +451,8 @@ CREATE TABLE IF NOT EXISTS review_reports (
   reason TEXT,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'dismissed')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(review_id, reporter_user_id)
 );
 
 -- ============================================================
@@ -925,6 +928,18 @@ CREATE POLICY "Admins can update all orders"
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+-- Buyers update their own orders (COD confirmation, cancellation, etc.)
+DROP POLICY IF EXISTS "Users can update own orders" ON orders;
+CREATE POLICY "Users can update own orders"
+  ON orders FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Buyers delete their own orders (transaction rollback in the create-order route)
+DROP POLICY IF EXISTS "Users can delete own orders" ON orders;
+CREATE POLICY "Users can delete own orders"
+  ON orders FOR DELETE
+  USING (auth.uid() = user_id);
+
 -- Break the recursive order_items <-> orders dependency: a SECURITY DEFINER
 -- function runs the cross-table lookup with the definer's privileges so RLS
 -- is not re-evaluated, avoiding PostgreSQL ERROR 42P17 (infinite recursion).
@@ -953,6 +968,13 @@ GRANT EXECUTE ON FUNCTION public.user_can_view_order(UUID) TO anon;
 DROP POLICY IF EXISTS "Sellers can view orders containing their products" ON orders;
 CREATE POLICY "Sellers can view orders containing their products"
   ON orders FOR SELECT
+  USING (public.user_can_view_order(orders.id));
+
+-- Sellers update order/status rows containing their products (seller dashboard,
+-- fulfillment flow). Admin and buyer policies are defined above.
+DROP POLICY IF EXISTS "Sellers can update orders containing their products" ON orders;
+CREATE POLICY "Sellers can update orders containing their products"
+  ON orders FOR UPDATE
   USING (public.user_can_view_order(orders.id));
 
 -- ----------------------------------------------------------------------------
@@ -1202,6 +1224,11 @@ CREATE POLICY "Users can insert own search history"
   ON search_history FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own search history" ON search_history;
+CREATE POLICY "Users can delete own search history"
+  ON search_history FOR DELETE
+  USING (auth.uid() = user_id);
+
 DROP POLICY IF EXISTS "Admins can view all search history" ON search_history;
 CREATE POLICY "Admins can view all search history"
   ON search_history FOR SELECT
@@ -1280,6 +1307,11 @@ DROP POLICY IF EXISTS "Users can create review reports" ON review_reports;
 CREATE POLICY "Users can create review reports"
   ON review_reports FOR INSERT
   WITH CHECK (auth.uid() = reporter_user_id);
+
+DROP POLICY IF EXISTS "Users can view own review reports" ON review_reports;
+CREATE POLICY "Users can view own review reports"
+  ON review_reports FOR SELECT
+  USING (auth.uid() = reporter_user_id);
 
 DROP POLICY IF EXISTS "Admins can manage review reports" ON review_reports;
 CREATE POLICY "Admins can manage review reports"

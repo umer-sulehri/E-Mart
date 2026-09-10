@@ -19,12 +19,34 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const bucket = (formData.get("bucket") as string) || "uploads";
+    const bucket = (formData.get("bucket") as string) || "product-images";
     const folder = (formData.get("folder") as string) || "";
 
     if (!file) {
       return NextResponse.json(
         { success: false, error: "No file provided" },
+        { status: 400 }
+      );
+    }
+
+    // Only allow known storage buckets so callers can't write into arbitrary
+    // buckets (e.g. "storage.objects") or misspelled ones.
+    const allowedBuckets = ["avatars", "product-images", "certificates"];
+    if (!allowedBuckets.includes(bucket)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Bucket "${bucket}" not allowed. Allowed buckets: ${allowedBuckets.join(", ")}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize the folder: strip slashes, reject path traversal.
+    let safeFolder = folder.replace(/\/+/g, "/").replace(/^\/+|\/+$/g, "");
+    if (safeFolder === "." || safeFolder.split("/").some((seg) => seg === "..")) {
+      return NextResponse.json(
+        { success: false, error: "Invalid folder" },
         { status: 400 }
       );
     }
@@ -52,8 +74,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ext = file.name.split(".").pop();
-    const fileName = `${user.id}/${folder ? folder + "/" : ""}${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    // Derive the extension from the verified MIME type, never the client-supplied name.
+    const extByType: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/gif": "gif",
+      "application/pdf": "pdf",
+    };
+    const ext = extByType[file.type];
+    const fileName = `${user.id}/${safeFolder ? safeFolder + "/" : ""}${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
 

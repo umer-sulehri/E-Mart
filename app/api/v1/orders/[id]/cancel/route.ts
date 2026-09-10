@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
   _request: NextRequest,
@@ -60,15 +61,18 @@ export async function POST(
       );
     }
 
+    // Buyers hold no UPDATE rights on products, so inventory restore uses the
+    // admin client.
+    const admin = createAdminClient();
     for (const item of order.order_items || []) {
-      const { data: product } = await supabase
+      const { data: product } = await admin
         .from("products")
         .select("stock_quantity")
         .eq("id", item.product_id)
         .single();
 
       if (product) {
-        await supabase
+        await admin
           .from("products")
           .update({ stock_quantity: product.stock_quantity + item.quantity })
           .eq("id", item.product_id);

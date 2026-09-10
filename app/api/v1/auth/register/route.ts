@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { registerSchema } from "@/lib/validators";
 import { slugify } from "@/lib/utils";
 import { rateLimitByIp } from "@/lib/rate-limit";
@@ -57,21 +58,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: authData.user.id,
-      email,
-      first_name: firstName,
-      last_name: lastName,
-      role,
-      is_email_verified: false,
-    });
+    // The handle_new_user trigger (schema.sql) already creates the profiles row
+    // from user_metadata, so no manual insert is required here.
 
-    if (profileError) {
-      return NextResponse.json(
-        { success: false, error: "Failed to create profile" },
-        { status: 500 }
-      );
-    }
+    const admin = createAdminClient();
 
     // Seller registration: create the vendors record (status pending) so the
     // seller has a store to onboard. Admin verifies/approves it later.
@@ -84,7 +74,7 @@ export async function POST(request: NextRequest) {
       const baseSlug = slug;
       let counter = 1;
       while (true) {
-        const { data: existing } = await supabase
+        const { data: existing } = await admin
           .from("vendors")
           .select("id")
           .eq("slug", slug)
@@ -97,7 +87,7 @@ export async function POST(request: NextRequest) {
       const displayName =
         (storeName && storeName.trim()) || `${firstName} ${lastName}`.trim();
 
-      const { error: vendorError } = await supabase.from("vendors").insert({
+      const { error: vendorError } = await admin.from("vendors").insert({
         user_id: authData.user.id,
         name: displayName,
         slug,
@@ -123,6 +113,7 @@ export async function POST(request: NextRequest) {
             firstName,
             lastName,
             role,
+            isEmailVerified: authData.session ? true : false,
           },
           session: authData.session,
         },

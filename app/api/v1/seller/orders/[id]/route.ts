@@ -62,8 +62,16 @@ export async function GET(
       );
     }
 
-    const items = (order.order_items as Array<{ products: { vendor_id: string } }> | undefined) || [];
-    const hasSellerProduct = items.some((item) => item.products?.vendor_id === vendor.id);
+    const items = (order.order_items as Array<Record<string, unknown>> | undefined) || [];
+    const hasSellerProduct = items.some((item) => {
+      const prod = item.products as unknown;
+      const entries = Array.isArray(prod)
+        ? (prod as Array<{ vendor_id?: string | null }>)
+        : prod && typeof prod === "object"
+        ? [prod as { vendor_id?: string | null }]
+        : [];
+      return entries.some((p) => p.vendor_id === vendor.id);
+    });
 
     if (!hasSellerProduct && profile.role !== "admin") {
       return NextResponse.json(
@@ -160,10 +168,18 @@ export async function PATCH(
       );
     }
 
-    const items = (order.order_items as Array<{ products?: Array<{ vendor_id: string }> }> | undefined) || [];
-    const hasSellerProduct = items.some((item) =>
-      (item.products || []).some((p) => p.vendor_id === vendor?.id)
-    );
+    // PostgREST may embed `products` as an object (one-to-one) or an array
+    // (nullable FK), so normalize before checking vendor ownership.
+    const items = (order.order_items as Array<Record<string, unknown>> | undefined) || [];
+    const hasSellerProduct = items.some((item) => {
+      const prod = item.products as unknown;
+      const entries = Array.isArray(prod)
+        ? (prod as Array<{ vendor_id?: string | null }>)
+        : prod && typeof prod === "object"
+        ? [prod as { vendor_id?: string | null }]
+        : [];
+      return entries.some((p) => p.vendor_id === vendor?.id);
+    });
 
     if (!hasSellerProduct && profile?.role !== "admin") {
       return NextResponse.json(

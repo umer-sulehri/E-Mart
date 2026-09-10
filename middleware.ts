@@ -1,4 +1,4 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 const PUBLIC_ROUTES = [
@@ -12,6 +12,7 @@ const PUBLIC_ROUTES = [
   "/register",
   "/forgot-password",
   "/reset-password",
+  "/auth/callback",
 ];
 
 const PUBLIC_PREFIXES = [
@@ -56,12 +57,26 @@ function isProtectedRoute(
 }
 
 // Supabase SSR stores the auth session cookie either as the legacy "sb:token"
-// or the v2 format "sb-<project-ref>-auth-token". Check for either so that a
-// validly signed-in session is recognized regardless of format.
+// or the v2 format "sb-<project-ref>-auth-token" (which may be chunked into
+// "sb-<project-ref>-auth-token.0", ".1", ... for large JWTs). Detect any of
+// these so a validly signed-in session is recognized regardless of format.
 function hasSupabaseSession(request: NextRequest): boolean {
   return request.cookies
     .getAll()
-    .some((c) => c.name === "sb:token" || (c.name.startsWith("sb-") && c.name.endsWith("-auth-token")));
+    .some((c) => c.name === "sb:token" || c.name.includes("-auth-token"));
+}
+
+// Preserve the refreshed auth cookies (and the role cookie) that
+// updateSession set on supabaseResponse when performing a redirect.
+function redirectWithCookies(
+  url: URL,
+  supabaseResponse: NextResponse
+): NextResponse {
+  const res = NextResponse.redirect(url);
+  for (const cookie of supabaseResponse.cookies.getAll()) {
+    res.cookies.set(cookie);
+  }
+  return res;
 }
 
 export async function middleware(request: NextRequest) {
@@ -82,12 +97,12 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("redirect", pathname);
-      return Response.redirect(url);
+      return redirectWithCookies(url, supabaseResponse);
     }
     if (userRole !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/";
-      return Response.redirect(url);
+      return redirectWithCookies(url, supabaseResponse);
     }
   }
 
@@ -96,12 +111,12 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("redirect", pathname);
-      return Response.redirect(url);
+      return redirectWithCookies(url, supabaseResponse);
     }
     if (userRole !== "seller" && userRole !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/";
-      return Response.redirect(url);
+      return redirectWithCookies(url, supabaseResponse);
     }
   }
 
@@ -110,7 +125,7 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("redirect", pathname);
-      return Response.redirect(url);
+      return redirectWithCookies(url, supabaseResponse);
     }
   }
 
@@ -119,7 +134,7 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("redirect", "/checkout");
-      return Response.redirect(url);
+      return redirectWithCookies(url, supabaseResponse);
     }
   }
 
