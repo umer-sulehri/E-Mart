@@ -128,8 +128,15 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    console.error("[uploads] Unexpected error:", error);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? `Upload failed: ${error.message}`
+            : "Internal server error",
+      },
       { status: 500 }
     );
   }
