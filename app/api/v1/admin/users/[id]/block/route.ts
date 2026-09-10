@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { writeAdminLog } from "@/lib/audit";
 
 export async function POST(
   _request: NextRequest,
@@ -54,9 +56,9 @@ export async function POST(
       );
     }
 
-    const { error } = await supabase
+    const { error } = await createAdminClient()
       .from("profiles")
-      .update({ is_blocked: true })
+      .update({ is_blocked: true, updated_at: new Date().toISOString() })
       .eq("id", id);
 
     if (error) {
@@ -66,15 +68,11 @@ export async function POST(
       );
     }
 
-    const { error: logError } = await supabase.from("admin_logs").insert({
-      admin_id: user.id,
+    await writeAdminLog(supabase, user.id, {
       action: "block_user",
-      entity_type: "user",
-      entity_id: id,
+      entityType: "user",
+      entityId: id,
     });
-    if (logError) {
-      // Non-fatal
-    }
 
     return NextResponse.json({
       success: true,

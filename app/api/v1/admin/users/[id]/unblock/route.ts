@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAdminLog } from "@/lib/audit";
 
 export async function POST(
@@ -35,7 +36,7 @@ export async function POST(
       );
     }
 
-    const { error } = await supabase
+    const { error } = await createAdminClient()
       .from("profiles")
       .update({ is_blocked: false, updated_at: new Date().toISOString() })
       .eq("id", id);

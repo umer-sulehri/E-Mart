@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { safeOrTerm } from "@/lib/search-safe";
+import { writeAdminLog } from "@/lib/audit";
 
 export async function GET(request: NextRequest) {
   try {
@@ -124,11 +126,55 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    if (userId === user.id) {
+      return NextResponse.json(
+        { success: false, error: "You cannot update your own user record from this panel" },
+        { status: 400 }
+      );
+    }
+
+    // profiles has no admin UPDATE RLS policy, so admin edits to other users
+    // must run through the service-role client (identity already verified above).
+    const admin = createAdminClient();
+
+    const { data: target } = await admin
+      .from("profiles")
+      .select("id, role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!target) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    if (target.role === "admin" && role && role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Cannot change another admin's role" },
+        { status: 400 }
+      );
+    }
+
+    if (role && role !== "admin") {
+      const { count } = await admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "admin");
+      if ((count ?? 0) <= 1) {
+        return NextResponse.json(
+          { success: false, error: "Cannot demote the last remaining admin" },
+          { status: 400 }
+        );
+      }
+    }
+
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (role) updates.role = role;
     if (isBlocked !== undefined) updates.is_blocked = isBlocked;
 
-    const { data: updatedUser, error } = await supabase
+    const { data: updatedUser, error } = await admin
       .from("profiles")
       .update(updates)
       .eq("id", userId)
@@ -141,6 +187,13 @@ export async function PATCH(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "update_user",
+      entityType: "user",
+      entityId: userId,
+      details: { updates },
+    });
 
     return NextResponse.json({
       success: true,

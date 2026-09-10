@@ -7,6 +7,7 @@ import {
   Eye,
   UserX,
   UserCheck,
+  Trash2,
   ChevronLeft,
   ChevronRight,
   Users,
@@ -14,6 +15,7 @@ import {
 import { cn, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
 import type { ProfileRow } from '@/types/supabase';
 
@@ -51,6 +53,8 @@ export default function AdminUsersPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProfileRow | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const itemsPerPage = 10;
 
@@ -146,6 +150,28 @@ export default function AdminUsersPage() {
       toast.error('Failed to update role');
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/v1/admin/users/${deleteTarget.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('User deleted');
+        setDeleteTarget(null);
+        fetchUsers();
+      } else {
+        toast.error(data.error || 'Failed to delete user');
+      }
+    } catch {
+      toast.error('Failed to delete user');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -267,6 +293,16 @@ export default function AdminUsersPage() {
                                 <UserX className="h-4 w-4" />
                               </button>
                             )}
+                            {user.role !== 'admin' && (
+                              <button
+                                onClick={() => setDeleteTarget(user)}
+                                disabled={actionLoading === user.id}
+                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
+                                title="Delete User"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -351,6 +387,20 @@ export default function AdminUsersPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => !deleteLoading && setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete user?"
+        message={
+          deleteTarget
+            ? `This permanently deletes ${deleteTarget.first_name || ''} ${deleteTarget.last_name || ''} (${deleteTarget.email}) along with their cart, wishlist, reviews, addresses and orders history. This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete user"
+        loading={deleteLoading}
+      />
     </div>
   );
 }

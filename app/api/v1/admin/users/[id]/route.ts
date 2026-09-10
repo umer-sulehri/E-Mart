@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAdminLog } from "@/lib/audit";
 
 async function verifyAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -76,7 +77,53 @@ export async function PATCH(
     if (body.lastName) updates.last_name = body.lastName;
     if (body.phone !== undefined) updates.phone = body.phone;
 
-    const { data: user, error } = await supabase
+    // Profile updates on other users are admin-only, but the profiles table
+    // has no admin UPDATE policy (RLS only allows `auth.uid() = id`), so
+    // mutations run with the service-role client. The admin identity was
+    // already verified at the top of this handler.
+    const admin = createAdminClient();
+    const { data: target } = await admin
+      .from("profiles")
+      .select("id, role")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (!target) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    if (id === auth.userId) {
+      return NextResponse.json(
+        { success: false, error: "You cannot change your own user record from this panel" },
+        { status: 400 }
+      );
+    }
+
+    if (target.role === "admin" && updates.role && updates.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Cannot change another admin's role" },
+        { status: 400 }
+      );
+    }
+
+    // Do not allow demoting or blocking the very last admin.
+    if (updates.role && updates.role !== "admin") {
+      const { count } = await admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "admin");
+      if ((count ?? 0) <= 1) {
+        return NextResponse.json(
+          { success: false, error: "Cannot demote the last remaining admin" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const { data: user, error } = await admin
       .from("profiles")
       .update(updates)
       .eq("id", id)
@@ -120,40 +167,75 @@ export async function DELETE(
     const auth = await verifyAdmin(supabase);
     if ("error" in auth) return auth.error;
 
+    if (id === auth.userId) {
+      return NextResponse.json(
+        { success: false, error: "You cannot delete your own account" },
+        { status: 400 }
+      );
+    }
+
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("id, role, email, first_name, last_name")
       .eq("id", id)
-      .single();
+      .maybeSingle();
 
-    if (profile?.role === "admin") {
+    if (!profile) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    if (profile.role === "admin") {
       return NextResponse.json(
         { success: false, error: "Cannot delete admin users" },
         { status: 400 }
       );
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_blocked: true, updated_at: new Date().toISOString() })
-      .eq("id", id);
+    // Admin-controlled mutations on profiles must use the service-role client:
+    // the profiles table has no admin UPDATE/DELETE RLS policy.
+    const admin = createAdminClient();
 
-    if (error) {
+    // coupons.created_by references profiles(id) WITHOUT a delete action, so a
+    // coupon this user created would block the auth.user deletion below.
+    // Null it out first (idempotent).
+    const { error: couponError } = await admin
+      .from("coupons")
+      .update({ created_by: null, updated_at: new Date().toISOString() })
+      .eq("created_by", id);
+
+    if (couponError) {
       return NextResponse.json(
-        { success: false, error: error.message },
+        { success: false, error: couponError.message },
         { status: 500 }
       );
     }
 
+    // Record the audit trail before removing the auth user. admin_logs.admin_id
+    // references profiles with ON DELETE SET NULL, so the log survives.
     await writeAdminLog(supabase, auth.userId, {
-      action: "deactivate_user",
+      action: "delete_user",
       entityType: "user",
       entityId: id,
+      details: { email: profile.email, name: `${profile.first_name} ${profile.last_name}` },
     });
+
+    // Deleting the auth user cascades to profiles (ON DELETE CASCADE) and then
+    // to all user-owned rows (wishlist, cart, reviews, addresses, etc.).
+    const { error: deleteError } = await admin.auth.admin.deleteUser(id);
+
+    if (deleteError) {
+      return NextResponse.json(
+        { success: false, error: deleteError.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: "User deactivated successfully",
+      message: "User deleted successfully",
     });
   } catch (error) {
     return NextResponse.json(
