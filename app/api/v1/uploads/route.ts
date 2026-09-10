@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const bucket = (formData.get("bucket") as string) || "product-images";
+    const bucket = (formData.get("bucket") as string) || "uploads";
     const folder = (formData.get("folder") as string) || "";
 
     if (!file) {

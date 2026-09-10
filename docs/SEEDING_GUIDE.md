@@ -22,7 +22,8 @@ Execution order in the **new project's SQL Editor**:
 Then:
 
 6. Create storage buckets per `supabase/storage-buckets.sql` (or via Dashboard → Storage):
-   `avatars`, `product-images`, `certificates`.
+   `products`, `blog`, `vendor-assets`, `avatars`, `uploads`. (These are the only
+   buckets the app references — `product-images`/`certificates` are obsolete.)
 7. Update `.env.local` with the new project's `NEXT_PUBLIC_SUPABASE_URL`,
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 8. Restart `npm run dev` and log in with `admin.super@emart.com` /
