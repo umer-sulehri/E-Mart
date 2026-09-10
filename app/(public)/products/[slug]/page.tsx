@@ -5,9 +5,11 @@ import ProductCarousel from '@/components/product/ProductCarousel';
 import ProductTabs from '@/components/product/ProductTabs';
 import ProductDetailClient from './ProductDetailClient';
 import Breadcrumb from '@/components/ui/Breadcrumb';
-import { calculateDiscount, formatPrice } from '@/lib/utils';
+import { calculateDiscount } from '@/lib/utils';
 import { generateProductMetadata } from '@/lib/seo';
 import { apiProductToCardProduct, type ApiProduct } from '@/lib/api';
+import { getSiteUrl } from '@/lib/absolute-url';
+import logger from '@/lib/logger';
 import type { Product } from '@/types';
 
 interface ProductDetailPageProps {
@@ -21,14 +23,35 @@ interface ProductDetailPageProps {
 export const dynamic = 'force-dynamic';
 
 async function fetchProductBySlug(slug: string): Promise<Product | null> {
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/v1/products/${slug}`,
-      { cache: 'no-store' }
-    );
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (!json.success || !json.data) return null;
+  // Same-origin self-fetch. The base URL MUST come from the request Host header,
+  // otherwise any host other than localhost:3000 (production, a different dev
+  // port, etc.) causes the fetch to fail and valid products render a 404.
+  const res = await fetch(
+    `${await getSiteUrl()}/api/v1/products/${encodeURIComponent(slug)}`,
+    { cache: 'no-store' }
+  );
+
+  // Distinguish a genuine 404 (product missing) from operational failures so
+  // infrastructure errors surface via the error boundary instead of a 404.
+  if (res.status === 404) {
+    logger.warn('product:not_found', { slug });
+    return null;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    logger.error('product:fetch_error', {
+      slug,
+      status: res.status,
+      error: body?.error ?? res.statusText,
+    });
+    throw new Error(body?.error || `Failed to load product (HTTP ${res.status})`);
+  }
+
+  const json = await res.json();
+  if (!json.success || !json.data) {
+    logger.warn('product:invalid_payload', { slug });
+    return null;
+  }
 
     const p = json.data;
     return {
@@ -125,15 +148,12 @@ async function fetchProductBySlug(slug: string): Promise<Product | null> {
       createdAt: p.created_at || '',
       updatedAt: p.updated_at || '',
     } as Product;
-  } catch {
-    return null;
-  }
 }
 
 async function fetchRelatedProducts(slug: string) {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/v1/products?limit=8&status=active`,
+      `${await getSiteUrl()}/api/v1/products?limit=8&status=active`,
       { cache: 'no-store' }
     );
     if (!res.ok) return [];
@@ -143,7 +163,9 @@ async function fetchRelatedProducts(slug: string) {
       .filter((p) => p.slug !== slug)
       .slice(0, 5)
       .map(apiProductToCardProduct);
-  } catch {
+  } catch (err) {
+    // Related products are progressive enhancement; never fail the page.
+    logger.warn('product:related_fetch_error', { slug, error: err });
     return [];
   }
 }

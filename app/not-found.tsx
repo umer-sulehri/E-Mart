@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Home, ShoppingCart, BookOpen, Tag, Phone } from 'lucide-react';
+import NotFoundSearch from '@/components/ui/NotFoundSearch';
 
 const suggestedLinks = [
   { label: 'Home', href: '/', icon: Home },
@@ -27,6 +28,8 @@ export default function NotFound() {
       >
         Back to Home
       </Link>
+
+      <NotFoundSearch />
 
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
         {suggestedLinks.map((link) => {
