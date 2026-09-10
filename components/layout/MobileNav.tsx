@@ -112,7 +112,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 { label: 'Shop', href: '/products' },
                 { label: 'Cart', href: '/cart' },
                 { label: 'Wishlist', href: '/wishlist' },
-                { label: 'My Account', href: '/account' },
+                { label: 'My Account', href: '/dashboard' },
               ] as const
             ).map((link) => (
               <li key={link.label}>

@@ -217,7 +217,7 @@ function PagesDropdown() {
     { label: 'Blog', href: '/blog' },
     { label: 'Contact', href: '/contact' },
     { label: 'Help Center', href: '/help' },
-    { label: 'My Account', href: '/account' },
+    { label: 'My Account', href: '/dashboard' },
     { label: 'Seller Dashboard', href: '/seller' },
     { label: 'Admin', href: '/admin' },
   ];
@@ -271,14 +271,25 @@ function UserMenu({
 
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape' && open) {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [open]);
 
   if (!mounted || !isAuthenticated || !user) {
     return (
@@ -295,11 +306,10 @@ function UserMenu({
   const dashboard =
     user.role === 'seller' ? '/seller' : user.role === 'admin' ? '/admin' : '/dashboard';
 
-  const DisplayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
-
   return (
     <div ref={ref} className="relative">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 p-1.5 hover:text-primary transition-colors rounded-full"
@@ -314,10 +324,6 @@ function UserMenu({
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-muted-200 bg-white p-2 shadow-lg">
-          <div className="border-b border-muted-100 px-3 py-2">
-            <p className="truncate text-sm font-semibold text-secondary">{DisplayName}</p>
-            <p className="truncate text-xs capitalize text-muted-500">{user.role}</p>
-          </div>
           <Link
             href={dashboard}
             onClick={() => setOpen(false)}
@@ -344,7 +350,7 @@ function UserMenu({
             </Link>
           )}
           <Link
-            href="/account"
+            href="/dashboard"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
           >
