@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { writeAdminLog } from "@/lib/audit";
+import { mutateSettingBlob } from "@/lib/settings-merge";
 
 export async function GET() {
   try {
@@ -103,15 +104,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: existing } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", "social_links")
-      .single();
-
-    const currentLinks =
-      (existing?.value as Record<string, unknown>)?.links || [];
-
     const newLink = {
       id: crypto.randomUUID(),
       platform,
@@ -120,19 +112,19 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString(),
     };
 
-    const updatedLinks = [...(currentLinks as Array<Record<string, unknown>>), newLink];
+    const outcome = await mutateSettingBlob(
+      supabase,
+      "social_links",
+      (current) => {
+        const links = (current.links as Array<Record<string, unknown>>) || [];
+        return { ok: true, value: { links: [...links, newLink] } };
+      }
+    );
 
-    const { error } = await supabase
-      .from("settings")
-      .upsert(
-        { key: "social_links", value: { links: updatedLinks } },
-        { onConflict: "key" }
-      );
-
-    if (error) {
+    if (!outcome.ok) {
       return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
+        { success: false, error: outcome.error.message },
+        { status: outcome.error.status }
       );
     }
 

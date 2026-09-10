@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { writeAdminLog } from "@/lib/audit";
+import { mutateSettingBlob } from "@/lib/settings-merge";
 
 export async function PUT(
   request: NextRequest,
@@ -37,24 +38,8 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const { data: existing } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", "social_links")
-      .single();
-
-    const links =
-      ((existing?.value as Record<string, unknown>)?.links as Array<Record<string, unknown>>) || [];
-
-    const index = links.findIndex((l) => l.id === id);
-    if (index === -1) {
-      return NextResponse.json(
-        { success: false, error: "Social link not found" },
-        { status: 404 }
-      );
-    }
-
-    if (body.platform !== undefined) links[index].platform = body.platform;
+    const parsedUpdates: Record<string, unknown> = {};
+    if (body.platform !== undefined) parsedUpdates.platform = body.platform;
     if (body.url !== undefined) {
       try {
         new URL(body.url);
@@ -64,21 +49,41 @@ export async function PUT(
           { status: 400 }
         );
       }
-      links[index].url = body.url;
+      parsedUpdates.url = body.url;
     }
-    if (body.is_active !== undefined) links[index].is_active = body.is_active;
+    if (body.is_active !== undefined) parsedUpdates.is_active = body.is_active;
 
-    const { error } = await supabase
-      .from("settings")
-      .upsert(
-        { key: "social_links", value: { links } },
-        { onConflict: "key" }
-      );
+    const outcome = await mutateSettingBlob(
+      supabase,
+      "social_links",
+      (current) => {
+        const links = (current.links as Array<Record<string, unknown>>) || [];
+        const index = links.findIndex((l) => l.id === id);
+        if (index === -1) return { ok: false, notFound: true };
+        const updatedLinks = links.map((l, i) =>
+          i === index ? { ...l, ...parsedUpdates } : l
+        );
+        return { ok: true, value: { links: updatedLinks } };
+      }
+    );
 
-    if (error) {
+    if (!outcome.ok) {
       return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
+        { success: false, error: outcome.error.message },
+        { status: outcome.error.status }
+      );
+    }
+
+    const savedLinks =
+      ((outcome.saved.value as Record<string, unknown>)?.links as Array<Record<string, unknown>>) ||
+      [];
+    const updatedLink = savedLinks.find((l) => l.id === id);
+    const linkNotFound = !updatedLink;
+
+    if (linkNotFound) {
+      return NextResponse.json(
+        { success: false, error: "Social link not found" },
+        { status: 404 }
       );
     }
 
@@ -86,12 +91,12 @@ export async function PUT(
       action: "update_social_link",
       entityType: "social_link",
       entityId: id,
-      details: { platform: links[index].platform },
+      details: { platform: updatedLink.platform },
     });
 
     return NextResponse.json({
       success: true,
-      data: links[index],
+      data: updatedLink,
       message: "Social link updated successfully",
     });
   } catch (error) {
@@ -143,35 +148,23 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const { data: existing } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", "social_links")
-      .single();
+    const outcome = await mutateSettingBlob(
+      supabase,
+      "social_links",
+      (current) => {
+        const links = (current.links as Array<Record<string, unknown>>) || [];
+        const filteredLinks = links.filter((l) => l.id !== id);
+        if (filteredLinks.length === links.length) {
+          return { ok: false, notFound: true };
+        }
+        return { ok: true, value: { links: filteredLinks } };
+      }
+    );
 
-    const links =
-      ((existing?.value as Record<string, unknown>)?.links as Array<Record<string, unknown>>) || [];
-
-    const filteredLinks = links.filter((l) => l.id !== id);
-
-    if (filteredLinks.length === links.length) {
+    if (!outcome.ok) {
       return NextResponse.json(
-        { success: false, error: "Social link not found" },
-        { status: 404 }
-      );
-    }
-
-    const { error } = await supabase
-      .from("settings")
-      .upsert(
-        { key: "social_links", value: { links: filteredLinks } },
-        { onConflict: "key" }
-      );
-
-    if (error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
+        { success: false, error: outcome.error.message },
+        { status: outcome.error.status }
       );
     }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { writeAdminLog } from "@/lib/audit";
+import { mutateSettingBlob } from "@/lib/settings-merge";
 
 export async function GET() {
   try {
@@ -94,31 +95,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: existing } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", "translations")
-      .single();
+    const outcome = await mutateSettingBlob(
+      supabase,
+      "translations",
+      (current) => {
+        const all = current as Record<string, Record<string, string>>;
+        all[key] = { ...(all[key] || {}), [locale]: value };
+        return { ok: true, value: all };
+      }
+    );
 
-    const allTranslations =
-      (existing?.value as Record<string, Record<string, string>>) || {};
-
-    if (!allTranslations[key]) {
-      allTranslations[key] = {};
-    }
-    allTranslations[key][locale] = value;
-
-    const { error } = await supabase
-      .from("settings")
-      .upsert(
-        { key: "translations", value: allTranslations },
-        { onConflict: "key" }
-      );
-
-    if (error) {
+    if (!outcome.ok) {
       return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
+        { success: false, error: outcome.error.message },
+        { status: outcome.error.status }
       );
     }
 
