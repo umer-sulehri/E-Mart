@@ -88,6 +88,7 @@ Authentication and account management.
 | POST | /api/v1/auth/change-password |
 | POST | /api/v1/auth/delete-account |
 | POST | /api/v1/auth/demo |
+| POST | /api/v1/auth/demo/seed-all |
 | POST | /api/v1/auth/forgot-password |
 | POST | /api/v1/auth/login |
 | POST | /api/v1/auth/logout |
@@ -116,6 +117,14 @@ Blog articles (public GET, admin/seller CRUD).
 | GET | /api/v1/blog-posts |
 | GET | /api/v1/blog-posts/[id] |
 | GET, POST | /api/v1/blog-posts/[id]/comments |
+
+## /brands
+
+Endpoints in the brands group.
+
+| Method(s) | Endpoint |
+|-----------|----------|
+| GET | /api/v1/brands |
 
 ## /cart
 
@@ -206,6 +215,7 @@ Product catalog and merchandising.
 | Method(s) | Endpoint |
 |-----------|----------|
 | GET | /api/v1/products |
+| GET | /api/v1/products/price-range |
 | GET | /api/v1/products/search |
 | GET | /api/v1/products/[slug] |
 | GET | /api/v1/products/[slug]/related |
@@ -299,4 +309,24 @@ Buyer wishlist.
 | GET, POST | /api/v1/wishlist |
 | POST | /api/v1/wishlist/share |
 | DELETE | /api/v1/wishlist/[productId] |
+
+## Review status semantics
+
+Product reviews are moderation-first. Every new or edited review starts as `pending` and only becomes visible publicly after an admin approves it.
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | Awaiting admin approval; not counted in product rating/breakdown |
+| `approved` | Publicly visible and counted in product ratings |
+| `rejected` | Denied by an admin; owners can delete but can no longer edit the row |
+| `flagged` | Flagged for review (admin/moderation); reduced visibility through RLS |
+
+Enforced in the API and by RLS:
+
+- `POST /api/v1/products/[slug]/reviews` inserts with `status = 'pending'` and returns `requires_approval: true`.
+- `PATCH /api/v1/reviews/[id]` validates with the review schema, rejects edits of `rejected` reviews and edits older than 30 days, and re-queues the review (`status -> 'pending'`). RLS guarantees a buyer can only end a review in `pending`, so self-approval is impossible.
+- `PATCH /api/v1/admin/reviews/[id]` accepts `pending | approved | flagged | rejected` (admin only).
+- Product rating, rating breakdown, and `review_count` only count `approved` reviews (see the `update_product_rating()` trigger).
+
+`GET /api/v1/products/price-range` returns `{ min, max }` across active products to bound the shop's price filter slider.
 
