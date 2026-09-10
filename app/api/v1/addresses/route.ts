@@ -32,9 +32,9 @@ export async function POST(request: NextRequest) {
     } = body;
     const saveDefault = !!isDefault || !!body.saveDefault;
 
-    if (!firstName || !lastName || !addressLine1 || !city || !state || !postalCode || !country) {
+    if (!firstName || !lastName || !phone || !addressLine1 || !city || !state || !postalCode || !country) {
       return NextResponse.json(
-        { success: false, error: "Missing required address fields" },
+        { success: false, error: "Missing required address fields (firstName, lastName, phone, addressLine1, city, state, postalCode, country)" },
         { status: 400 }
       );
     }

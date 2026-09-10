@@ -56,7 +56,7 @@ export async function PUT(
     if ("label" in body && body.label != null) patch.label = body.label;
     if ("first_name" in body) patch.first_name = body.first_name;
     if ("last_name" in body) patch.last_name = body.last_name;
-    if ("phone" in body) patch.phone = body.phone ?? null;
+    if ("phone" in body) patch.phone = body.phone ?? "";
     if ("address_line1" in body) patch.address_line1 = body.address_line1;
     if ("address_line2" in body) patch.address_line2 = body.address_line2 ?? null;
     if ("city" in body) patch.city = body.city;

@@ -90,10 +90,20 @@ export async function POST(request: NextRequest) {
           .from("orders")
           .update({
             payment_status: "completed",
-            status: "processing",
             updated_at: new Date().toISOString(),
           })
           .eq("id", orderId);
+
+        // Advance a fresh order into fulfillment, but never regress one that
+        // a seller has already moved past processing (late webhook retry).
+        await supabase
+          .from("orders")
+          .update({
+            status: "processing",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", orderId)
+          .in("status", ["pending", "confirmed", "processing"]);
 
         if (error) {
           logger.error("StripeWebhook", "Failed to update order:", error.message);
@@ -112,10 +122,19 @@ export async function POST(request: NextRequest) {
             .from("orders")
             .update({
               payment_status: "completed",
-              status: "processing",
               updated_at: new Date().toISOString(),
             })
             .eq("id", orderId);
+
+          // Same non-regressive advance as checkout.session.completed.
+          await supabase
+            .from("orders")
+            .update({
+              status: "processing",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", orderId)
+            .in("status", ["pending", "confirmed", "processing"]);
 
           if (error) {
             logger.error("StripeWebhook", "Failed to update order on payment_intent.succeeded:", error.message);

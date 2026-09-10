@@ -316,10 +316,17 @@ export async function POST(request: NextRequest) {
     for (const item of cartItems) {
       const product = item.products as unknown as { id: string; stock_quantity: number };
       const original = product.stock_quantity;
+      // Conditional update: only decrement while the current stock still has
+      // enough units, so two concurrent orders cannot both take the last item.
+      // `.single()` turns a 0-row match into an error, which is treated below
+      // as a failed decrement and rolls the order back.
       const { error } = await admin
         .from("products")
         .update({ stock_quantity: original - item.quantity })
-        .eq("id", product.id);
+        .eq("id", product.id)
+        .gte("stock_quantity", item.quantity)
+        .select("id")
+        .single();
       if (error) {
         stockError = true;
         break;

@@ -100,6 +100,25 @@ export async function PATCH(
     const body = await request.json();
     const { status, tracking_number, shipping_carrier, notes } = body;
 
+    const ORDER_STATUSES = [
+      "pending",
+      "confirmed",
+      "processing",
+      "shipped",
+      "out_for_delivery",
+      "delivered",
+      "cancelled",
+      "returned",
+      "refunded",
+    ];
+
+    if (status !== undefined && !ORDER_STATUSES.includes(status)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid status value" },
+        { status: 400 }
+      );
+    }
+
     const updateFields: Record<string, unknown> = {};
     if (status !== undefined) updateFields.status = status;
     if (tracking_number !== undefined) updateFields.tracking_number = tracking_number;

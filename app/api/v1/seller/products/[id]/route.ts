@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/utils";
 
 export async function GET(
@@ -160,7 +161,9 @@ export async function PUT(
       if (existingBrand) {
         updates.brand_id = existingBrand.id;
       } else {
-        const { data: createdBrand } = await supabase
+        // brands INSERT is admin-only under RLS, so creating a new brand goes
+        // through the service-role client (the seller already owns this product).
+        const { data: createdBrand } = await createAdminClient()
           .from("brands")
           .insert({ name: brandName, slug: slugify(brandName), is_active: true })
           .select("id")

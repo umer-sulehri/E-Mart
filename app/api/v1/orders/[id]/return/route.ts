@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
   request: NextRequest,
@@ -56,8 +57,11 @@ export async function POST(
     const { reason } = body;
 
     // Record the return (with the buyer's reason) in the refunds table, then
-    // move the order to the "returned" state.
-    const { error: refundError } = await supabase.from("refunds").insert({
+    // move the order to the "returned" state. The refunds table is admin-only
+    // under RLS, so the INSERT runs with the service-role client
+    // (ownership of the order was already verified above).
+    const admin = createAdminClient();
+    const { error: refundError } = await admin.from("refunds").insert({
       order_id: id,
       amount: order.total,
       reason: reason || "Customer return",

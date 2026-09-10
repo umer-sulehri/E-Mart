@@ -72,9 +72,9 @@ export async function POST(request: NextRequest) {
     const country = body.country ?? "Pakistan";
     const is_default = !!body.is_default;
 
-    if (!first_name || !last_name || !address_line1 || !city) {
+    if (!first_name || !last_name || !phone || !address_line1 || !city) {
       return NextResponse.json(
-        { success: false, error: "Missing required address fields" },
+        { success: false, error: "Missing required address fields (first_name, last_name, phone, address_line1, city)" },
         { status: 400 }
       );
     }
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         label: label || "Home",
         first_name,
         last_name,
-        phone: phone || null,
+        phone,
         address_line1,
         address_line2: address_line2 || null,
         city,

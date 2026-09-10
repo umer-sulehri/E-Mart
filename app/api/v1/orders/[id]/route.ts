@@ -31,7 +31,7 @@ export async function GET(
     let query = supabase
       .from("orders")
       .select(
-        "*, order_items(*, products(id, name, slug, images), vendors(name)), shipping_address:addresses!shipping_address_id(*)",
+        "*, order_items(*, products(id, name, slug, images), vendors(name)), shipping_address:addresses!shipping_address_id(*), profile:profiles!orders_user_id_fkey(email)",
       )
       .eq("id", id);
 
@@ -53,7 +53,7 @@ export async function GET(
           id: order.shipping_address.id,
           firstName: order.shipping_address.first_name,
           lastName: order.shipping_address.last_name,
-          email: order.shipping_address.email,
+          email: order.shipping_address.email ?? order.profile?.email ?? null,
           phone: order.shipping_address.phone,
           addressLine1: order.shipping_address.address_line1,
           addressLine2: order.shipping_address.address_line2,

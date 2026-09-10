@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { writeAdminLog } from "@/lib/audit";
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       .select("*")
       .order("priority", { ascending: true });
 
-    if (error) {
+if (error) {
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 500 }
@@ -121,6 +122,13 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    await writeAdminLog(supabase, user.id, {
+      action: "create_banner",
+      entityType: "banner",
+      entityId: banner.id,
+      details: { title, position: banner.position },
+    });
 
     return NextResponse.json(
       { success: true, data: banner, message: "Banner created successfully" },

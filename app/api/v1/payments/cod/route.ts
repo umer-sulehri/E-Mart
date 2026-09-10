@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("id, order_number, payment_method, payment_status")
+      .select("id, order_number, payment_method, payment_status, status")
       .eq("id", orderId)
       .eq("user_id", user.id)
       .single();
@@ -56,6 +56,15 @@ export async function POST(request: NextRequest) {
     if (order.payment_method !== "cod") {
       return NextResponse.json(
         { success: false, error: "This order is not a Cash on Delivery order" },
+        { status: 400 }
+      );
+    }
+
+    // Only a fresh order (still pending/confirmed/processing) may be confirmed
+    // for COD; never regress an order that has already moved into fulfillment.
+    if (!["pending", "confirmed", "processing"].includes(order.status)) {
+      return NextResponse.json(
+        { success: false, error: "This order is already shipped or delivered and cannot be confirmed" },
         { status: 400 }
       );
     }

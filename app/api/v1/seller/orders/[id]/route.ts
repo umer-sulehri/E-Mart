@@ -125,17 +125,26 @@ export async function PATCH(
     const body = await request.json();
     const { status } = body;
 
-    const validStatuses = [
-      "pending",
-      "confirmed",
-      "processing",
-      "shipped",
-      "out_for_delivery",
-      "delivered",
-      "cancelled",
-    ];
+    // Sellers drive fulfillment forward. "pending" is the order-creation state
+    // set by the system, so it is not a valid seller target. Terminal states
+    // (delivered/cancelled/returned/refunded) are final.
+    const FULFILLMENT_RANK: Record<string, number> = {
+      confirmed: 0,
+      processing: 1,
+      shipped: 2,
+      out_for_delivery: 3,
+      delivered: 4,
+    };
+    const TERMINAL_STATUSES = ["delivered", "cancelled", "returned", "refunded"];
 
-    if (!status || !validStatuses.includes(status)) {
+    if (!status) {
+      return NextResponse.json(
+        { success: false, error: "status is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!TERMINAL_STATUSES.includes(status) && !(status in FULFILLMENT_RANK)) {
       return NextResponse.json(
         { success: false, error: "Invalid status value" },
         { status: 400 }
@@ -157,7 +166,7 @@ export async function PATCH(
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("order_items(products(vendor_id))")
+      .select("id, status, order_items(products(vendor_id))")
       .eq("id", id)
       .maybeSingle();
 
@@ -166,6 +175,33 @@ export async function PATCH(
         { success: false, error: "Order not found" },
         { status: 404 }
       );
+    }
+
+    const currentStatus = String(order.status || "pending");
+
+    // Terminal orders can never change again (protects delivered history from
+    // being reset to "processing").
+    if (TERMINAL_STATUSES.includes(currentStatus)) {
+      return NextResponse.json(
+        { success: false, error: "This order is already final and cannot be changed" },
+        { status: 400 }
+      );
+    }
+
+    // Cancellation is allowed from any non-terminal state.
+    if (status !== "cancelled") {
+      const currentRank = FULFILLMENT_RANK[currentStatus];
+      const nextRank = FULFILLMENT_RANK[status];
+      // "pending" has no rank (rank 0 belongs to "confirmed"), so treat it as
+      // one step behind confirmed to allow sellers to advance a fresh order.
+      const currentRankValue =
+        currentRank !== undefined ? currentRank : FULFILLMENT_RANK.confirmed - 1;
+      if (nextRank !== undefined && currentRankValue > nextRank) {
+        return NextResponse.json(
+          { success: false, error: "Cannot move the order backwards" },
+          { status: 400 }
+        );
+      }
     }
 
     // PostgREST may embed `products` as an object (one-to-one) or an array

@@ -181,7 +181,7 @@ export default function SellerOrderDetailPage() {
                   </p>
                 </div>
                 <p className="font-semibold text-secondary-800">
-                  {formatPrice(item.total_price ?? item.unit_price * item.quantity)}
+                  {formatPrice(item.total ?? item.price * item.quantity)}
                 </p>
               </div>
             ))}

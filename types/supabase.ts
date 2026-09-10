@@ -122,9 +122,9 @@ export interface OrderItemRow {
   product_name: string;
   product_image?: string | null;
   quantity: number;
-  unit_price: number;
+  price: number;
   discount: number;
-  total_price?: number;
+  total: number;
   created_at: string;
   // Embedded joins:
   products?: { id: string; name: string; slug: string; sku?: string | null; images: string[]; price: number } | null;
