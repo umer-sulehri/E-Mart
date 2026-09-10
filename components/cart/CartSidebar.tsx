@@ -21,7 +21,8 @@ export default function CartSidebar() {
   const subtotal = useCartStore((s) => s.subtotal);
   const shippingCost = useCartStore((s) => s.shippingCost);
   const total = useCartStore((s) => s.total);
-  const itemCount = useCartStore((s) => s.itemCount);
+  const itemCount = useCartStore((s) => s.uniqueItemCount);
+  const totalQuantity = useCartStore((s) => s.itemCount);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   const hydrated = useHydrated();
@@ -70,6 +71,7 @@ export default function CartSidebar() {
   const currentShipping = shippingCost();
   const currentTotal = total();
   const currentItemCount = itemCount();
+  const currentTotalQuantity = totalQuantity();
 
   // Persisted cart state rehydrates on the client before React hydrates, which
   // otherwise causes a "hydration failed" mismatch. Until mounted, treat the
@@ -107,6 +109,11 @@ export default function CartSidebar() {
             {hydrated && currentItemCount > 0 && (
               <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">
                 {currentItemCount}
+              </span>
+            )}
+            {hydrated && currentTotalQuantity > currentItemCount && (
+              <span className="text-xs text-muted-500">
+                ({currentTotalQuantity} units)
               </span>
             )}
           </div>

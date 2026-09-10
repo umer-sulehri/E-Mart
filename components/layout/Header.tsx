@@ -370,7 +370,7 @@ export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [categories, setCategories] = useState<{ name: string; slug: string }[]>([]);
-  const itemCount = useCartStore((s) => s.itemCount());
+  const itemCount = useCartStore((s) => s.uniqueItemCount());
   const navButtonRef = useRef<HTMLButtonElement>(null);
   const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();

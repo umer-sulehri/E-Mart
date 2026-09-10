@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import toast from 'react-hot-toast';
+import { computeCartMetrics } from '@/lib/cartMetrics';
 import type { CartItem } from '@/types';
 
 interface CartState {
@@ -27,6 +29,7 @@ interface CartState {
   discountAmount: () => number;
   total: () => number;
   itemCount: () => number;
+  uniqueItemCount: () => number;
 }
 
 const FREE_SHIPPING_THRESHOLD = 2000;
@@ -42,27 +45,47 @@ export const useCartStore = create<CartState>()(
       freeShipping: false,
       isLoading: false,
 
-      addItem: (item) =>
+      addItem: (item) => {
+        const stock = item.product?.stockQuantity;
+        if (stock != null && item.quantity > stock) {
+          toast.error(`Only ${stock} ${stock === 1 ? 'unit' : 'units'} in stock`);
+          return;
+        }
         set((state) => {
           const existing = state.items.find(
             (i) => i.productId === item.productId
           );
           if (existing) {
+            const combined = existing.quantity + item.quantity;
+            if (stock != null && combined > stock && stock > 0) {
+              toast.error(`Only ${stock} ${stock === 1 ? 'unit' : 'units'} in stock`);
+              return {
+                items: state.items.map((i) =>
+                  i.productId === item.productId
+                    ? {
+                        ...i,
+                        quantity: stock,
+                        totalPrice: stock * i.unitPrice,
+                      }
+                    : i
+                ),
+              };
+            }
             return {
               items: state.items.map((i) =>
                 i.productId === item.productId
                   ? {
                       ...i,
-                      quantity: i.quantity + item.quantity,
-                      totalPrice:
-                        (i.quantity + item.quantity) * i.unitPrice,
+                      quantity: combined,
+                      totalPrice: combined * i.unitPrice,
                     }
                   : i
               ),
             };
           }
           return { items: [...state.items, item] };
-        }),
+        });
+      },
 
       removeItem: (productId) => {
         const item = get().items.find((i) => i.productId === productId);
@@ -77,6 +100,13 @@ export const useCartStore = create<CartState>()(
       updateQuantity: (productId, quantity) => {
         const item = get().items.find((i) => i.productId === productId);
         if (item) {
+          const stock = item.product?.stockQuantity;
+          if (stock != null && quantity > stock) {
+            toast.error(
+              `Only ${stock} ${stock === 1 ? 'unit' : 'units'} in stock`
+            );
+            return;
+          }
           if (quantity <= 0) {
             get().removeFromServer(item.id);
           } else if (item.id.startsWith('cart-')) {
@@ -162,9 +192,14 @@ export const useCartStore = create<CartState>()(
           });
           if (res.ok) {
             await get().syncWithServer();
+            return;
           }
+          if (res.status === 401) return; // Guest cart: local state is truth
+          const data = await res.json().catch(() => null);
+          toast.error(data?.error || 'Unable to add item to cart');
+          await get().syncWithServer();
         } catch {
-          // Silently fail - local cart already updated
+          // Network failure — keep the local optimistic cart state.
         }
       },
 
@@ -190,8 +225,7 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      subtotal: () =>
-        get().items.reduce((sum, item) => sum + item.totalPrice, 0),
+      subtotal: () => computeCartMetrics(get().items).subtotal,
 
       taxAmount: () => Math.round(get().subtotal() * TAX_RATE),
 
@@ -218,8 +252,9 @@ export const useCartStore = create<CartState>()(
         );
       },
 
-      itemCount: () =>
-        get().items.reduce((count, item) => count + item.quantity, 0),
+      itemCount: () => computeCartMetrics(get().items).totalQuantity,
+
+      uniqueItemCount: () => computeCartMetrics(get().items).uniqueItemCount,
     }),
     {
       name: 'emart-cart',

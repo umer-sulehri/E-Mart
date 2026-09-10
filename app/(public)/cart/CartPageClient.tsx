@@ -17,9 +17,13 @@ export default function CartPage() {
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
   const clearCart = useCartStore((s) => s.clearCart);
+  const itemCount = useCartStore((s) => s.uniqueItemCount);
+  const totalQuantity = useCartStore((s) => s.itemCount);
 
   const hydrated = useHydrated();
   const shownItems = hydrated ? items : [];
+  const shownItemCount = hydrated ? itemCount() : 0;
+  const shownTotalQuantity = hydrated ? totalQuantity() : 0;
 
   const handleClearCart = () => {
     setClearing(true);
@@ -82,6 +86,18 @@ export default function CartPage() {
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
               {/* Left: Cart Items Table */}
               <div className="lg:col-span-8">
+                {/* Count summary */}
+                <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-600">
+                  <span className="font-semibold text-secondary-800">
+                    {shownItemCount} {shownItemCount === 1 ? 'item' : 'items'}
+                  </span>
+                  <span className="text-muted-400">·</span>
+                  <span>
+                    {shownTotalQuantity}{' '}
+                    {shownTotalQuantity === 1 ? 'unit' : 'units'} total
+                  </span>
+                </div>
+
                 {/* Table Header (desktop) */}
                 <div className="hidden border-b border-muted-200 pb-3 md:grid md:grid-cols-12 md:gap-4">
                   <div className="col-span-5 text-xs font-semibold uppercase tracking-wider text-muted-500">

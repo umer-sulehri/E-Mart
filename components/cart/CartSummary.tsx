@@ -35,6 +35,8 @@ export default function CartSummary({
   const shippingCost = useCartStore((s) => s.shippingCost);
   const discountAmount = useCartStore((s) => s.discountAmount);
   const total = useCartStore((s) => s.total);
+  const itemCount = useCartStore((s) => s.uniqueItemCount);
+  const totalQuantity = useCartStore((s) => s.itemCount);
 
   const currentSubtotal = subtotal();
   const currentTax = taxAmount();
@@ -54,6 +56,8 @@ export default function CartSummary({
   const shownDiscount = hydrated ? currentDiscount : 0;
   const shownTotal = hydrated ? currentTotal : 0;
   const shownCouponCode = hydrated ? couponCode : null;
+  const shownItemCount = hydrated ? itemCount() : 0;
+  const shownTotalQuantity = hydrated ? totalQuantity() : 0;
 
   const handleApplyPromo = async () => {
     const code = promoCode.trim();
@@ -108,9 +112,15 @@ export default function CartSummary({
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm">
-      <h2 className="mb-4 font-heading text-lg font-bold text-secondary-800">
-        Order Summary
-      </h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="font-heading text-lg font-bold text-secondary-800">
+          Order Summary
+        </h2>
+        <span className="text-xs text-muted-500">
+          {shownItemCount} {shownItemCount === 1 ? 'item' : 'items'} ·{' '}
+          {shownTotalQuantity} {shownTotalQuantity === 1 ? 'unit' : 'units'}
+        </span>
+      </div>
 
       {/* Items List */}
       <ul className="mb-4 max-h-48 space-y-3 overflow-y-auto">

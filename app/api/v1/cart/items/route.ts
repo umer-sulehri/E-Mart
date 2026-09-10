@@ -50,6 +50,7 @@ export async function GET() {
       success: true,
       data: {
         items: cartItems,
+        item_count: cartItems.length,
         totalItems: cartItems.reduce((sum, item) => sum + item.quantity, 0),
         subtotal,
       },
