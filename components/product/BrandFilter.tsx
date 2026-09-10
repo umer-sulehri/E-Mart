@@ -1,17 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const BRANDS = [
-  { id: 'nature-best', name: 'Nature\'s Best', count: 24 },
-  { id: 'farm-fresh', name: 'Farm Fresh', count: 18 },
-  { id: 'organic-valley', name: 'Organic Valley', count: 15 },
-  { id: 'green-harvest', name: 'Green Harvest', count: 12 },
-  { id: 'pure-earth', name: 'Pure Earth', count: 9 },
-  { id: 'meadow-gold', name: 'Meadow Gold', count: 7 },
-];
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 interface BrandFilterProps {
   selectedBrands: string[];
@@ -23,12 +20,35 @@ export default function BrandFilter({
   onChange,
 }: BrandFilterProps) {
   const [isOpen, setIsOpen] = useState(true);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleBrand = (brandId: string) => {
-    if (selectedBrands.includes(brandId)) {
-      onChange(selectedBrands.filter((id) => id !== brandId));
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/v1/brands')
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (json.success && Array.isArray(json.data)) {
+          setBrands(json.data);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading || brands.length === 0) return null;
+
+  const toggleBrand = (brandSlug: string) => {
+    if (selectedBrands.includes(brandSlug)) {
+      onChange(selectedBrands.filter((slug) => slug !== brandSlug));
     } else {
-      onChange([...selectedBrands, brandId]);
+      onChange([...selectedBrands, brandSlug]);
     }
   };
 
@@ -43,22 +63,19 @@ export default function BrandFilter({
       </button>
       {isOpen && (
         <div className="mt-3 space-y-2">
-          {BRANDS.map((brand) => (
+          {brands.map((brand) => (
             <label
               key={brand.id}
-              className="flex cursor-pointer items-center gap-2.5"
+              className={cn('flex cursor-pointer items-center gap-2.5')}
             >
               <input
                 type="checkbox"
-                checked={selectedBrands.includes(brand.id)}
-                onChange={() => toggleBrand(brand.id)}
+                checked={selectedBrands.includes(brand.slug)}
+                onChange={() => toggleBrand(brand.slug)}
                 className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
               />
               <span className="text-sm text-muted-600 transition-colors hover:text-secondary-800">
                 {brand.name}
-              </span>
-              <span className="ml-auto text-xs text-muted-400">
-                {brand.count}
               </span>
             </label>
           ))}

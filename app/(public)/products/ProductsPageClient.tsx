@@ -5,14 +5,20 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Product } from '@/components/product/ProductCard';
-import ProductFilters, {
-  type FilterState,
-} from '@/components/product/ProductFilters';
+import ProductFilters from '@/components/product/ProductFilters';
 import ProductGrid from '@/components/product/ProductGrid';
 import Pagination from '@/components/product/Pagination';
 import SortDropdown, { type SortValue } from '@/components/product/SortDropdown';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { CATEGORIES } from '@/lib/constants';
+import {
+  EMPTY_FILTERS,
+  activeFilterCount,
+  filtersFromSearchParams,
+  filtersToApiParams,
+  filtersToSearchParams,
+  type FilterState,
+} from '@/lib/filterParams';
 import {
   api,
   apiProductToCardProduct,
@@ -21,15 +27,6 @@ import {
 } from '@/lib/api';
 
 const ITEMS_PER_PAGE = 15;
-
-const BRAND_NAMES: Record<string, string> = {
-  'nature-best': "Nature's Best",
-  'farm-fresh': 'Farm Fresh',
-  'organic-valley': 'Organic Valley',
-  'green-harvest': 'Green Harvest',
-  'pure-earth': 'Pure Earth',
-  'meadow-gold': 'Meadow Gold',
-};
 
 const RATING_LABELS: Record<number, string> = {
   1: '1★ & up',
@@ -41,17 +38,6 @@ const RATING_LABELS: Record<number, string> = {
 
 function categoryName(slug: string) {
   return CATEGORIES.find((c) => c.slug === slug)?.name ?? slug;
-}
-
-function activeFilterCount(filters: FilterState): number {
-  let count = 0;
-  if (filters.categories.length > 0) count++;
-  if (filters.minPrice !== '' || filters.maxPrice !== '') count++;
-  if (filters.minRating > 0) count++;
-  if (filters.brands.length > 0) count++;
-  if (filters.inStockOnly) count++;
-  if (filters.featuredOnly) count++;
-  return count;
 }
 
 export default function ProductsPage() {
@@ -71,15 +57,9 @@ function ProductsContent() {
 
   // URL query params are the source of truth for committed filters/sort, so
   // they survive navigation, are shareable, and drive browser back/forward.
-  const [filters, setFilters] = useState<FilterState>(() => ({
-    categories: searchParams.get('category') ? [searchParams.get('category')!] : [],
-    minPrice: searchParams.get('minPrice') ?? '',
-    maxPrice: searchParams.get('maxPrice') ?? '',
-    minRating: Number(searchParams.get('minRating') || 0),
-    brands: searchParams.get('brand') ? [searchParams.get('brand')!] : [],
-    inStockOnly: searchParams.get('inStock') === 'true',
-    featuredOnly: searchParams.get('featured') === 'true',
-  }));
+  const [filters, setFilters] = useState<FilterState>(() =>
+    filtersFromSearchParams(searchParams)
+  );
   const [sort, setSort] = useState<SortValue>(
     (searchParams.get('sort') as SortValue) || 'newest'
   );
@@ -87,6 +67,7 @@ function ProductsContent() {
     Number(searchParams.get('page') || 1)
   );
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [brandNames, setBrandNames] = useState<Record<string, string>>({});
 
   const [products, setProducts] = useState<Product[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -96,40 +77,18 @@ function ProductsContent() {
   // Keep state in sync when the user navigates via back/forward or a link
   // that carries new query params.
   useEffect(() => {
-    setFilters({
-      categories: searchParams.get('category')
-        ? [searchParams.get('category')!]
-        : [],
-      minPrice: searchParams.get('minPrice') ?? '',
-      maxPrice: searchParams.get('maxPrice') ?? '',
-      minRating: Number(searchParams.get('minRating') || 0),
-      brands: searchParams.get('brand') ? [searchParams.get('brand')!] : [],
-      inStockOnly: searchParams.get('inStock') === 'true',
-      featuredOnly: searchParams.get('featured') === 'true',
-    });
+    setFilters(filtersFromSearchParams(searchParams));
     setSort((searchParams.get('sort') as SortValue) || 'newest');
     setCurrentPage(Number(searchParams.get('page') || 1));
   }, [searchParams]);
 
   const applyFilters = useCallback(
     (next: FilterState, nextSort?: SortValue) => {
-      const params = new URLSearchParams(searchParams.toString());
-      const setIf = (key: string, value: string | undefined) => {
-        if (value) params.set(key, value);
-        else params.delete(key);
-      };
-
-      setIf('category', next.categories[0]);
-      setIf('minPrice', next.minPrice || undefined);
-      setIf('maxPrice', next.maxPrice || undefined);
-      setIf('minRating', next.minRating > 0 ? String(next.minRating) : undefined);
-      setIf('brand', next.brands[0]);
-      setIf('inStock', next.inStockOnly ? 'true' : undefined);
-      setIf('featured', next.featuredOnly ? 'true' : undefined);
-      params.delete('page');
+      const params = filtersToSearchParams(next, searchParams);
 
       const theSort = nextSort ?? sort;
-      setIf('sort', theSort !== 'newest' ? theSort : undefined);
+      if (theSort !== 'newest') params.set('sort', theSort);
+      else params.delete('sort');
 
       router.push(`${pathname}?${params.toString()}`);
     },
@@ -137,15 +96,7 @@ function ProductsContent() {
   );
 
   const clearAllFilters = useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('category');
-    params.delete('minPrice');
-    params.delete('maxPrice');
-    params.delete('minRating');
-    params.delete('brand');
-    params.delete('inStock');
-    params.delete('featured');
-    params.delete('page');
+    const params = filtersToSearchParams(EMPTY_FILTERS, searchParams);
     router.push(`${pathname}?${params.toString()}`);
     toast.success('All filters cleared');
   }, [searchParams, pathname, router]);
@@ -162,6 +113,21 @@ function ProductsContent() {
   );
 
   useEffect(() => {
+    fetch('/api/v1/brands')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          const map: Record<string, string> = {};
+          json.data.forEach((b: { slug: string; name: string }) => {
+            map[b.slug] = b.name;
+          });
+          setBrandNames(map);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     setCurrentPage(1);
   }, [filters, sort, initialSearch]);
 
@@ -176,36 +142,15 @@ function ProductsContent() {
           limit: String(ITEMS_PER_PAGE),
           sort: sort === 'popularity' ? 'popular' : sort,
           status: 'active',
+          ...filtersToApiParams(filters),
         };
 
         if (initialSearch.trim()) {
           params.search = initialSearch.trim();
         }
 
-        if (filters.categories.length > 0) {
-          params.category = filters.categories[0];
-        } else if (initialCategory) {
+        if (filters.categories.length === 0 && initialCategory) {
           params.category = initialCategory;
-        }
-
-        if (filters.minPrice !== '') {
-          params.minPrice = filters.minPrice;
-        }
-
-        if (filters.maxPrice !== '') {
-          params.maxPrice = filters.maxPrice;
-        }
-
-        if (filters.minRating > 0) {
-          params.minRating = String(filters.minRating);
-        }
-
-        if (filters.brands.length > 0) {
-          params.brand = filters.brands[0];
-        }
-
-        if (filters.featuredOnly) {
-          params.featured = 'true';
         }
 
         const res = await api.products.list(params) as ApiListResponse<ApiProduct>;
@@ -289,7 +234,10 @@ function ProductsContent() {
               <button
                 key={slug}
                 onClick={() => {
-                  applyFilters({ ...filters, categories: [] });
+                  applyFilters({
+                    ...filters,
+                    categories: filters.categories.filter((c) => c !== slug),
+                  });
                   toast.success('Filter removed');
                 }}
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
@@ -329,12 +277,15 @@ function ProductsContent() {
               <button
                 key={brand}
                 onClick={() => {
-                  applyFilters({ ...filters, brands: [] });
+                  applyFilters({
+                    ...filters,
+                    brands: filters.brands.filter((b) => b !== brand),
+                  });
                   toast.success('Filter removed');
                 }}
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
               >
-                {BRAND_NAMES[brand] || brand}
+                {brandNames[brand] || brand}
                 <X size={13} />
               </button>
             ))}

@@ -7,26 +7,13 @@ import { cn } from '@/lib/utils';
 import BrandFilter from '@/components/product/BrandFilter';
 import AvailabilityToggle from '@/components/ui/AvailabilityToggle';
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider';
+import {
+  EMPTY_FILTERS,
+  type FilterState,
+} from '@/lib/filterParams';
 
-export interface FilterState {
-  categories: string[];
-  minPrice: string;
-  maxPrice: string;
-  minRating: number;
-  brands: string[];
-  inStockOnly: boolean;
-  featuredOnly: boolean;
-}
-
-export const EMPTY_FILTERS: FilterState = {
-  categories: [],
-  minPrice: '',
-  maxPrice: '',
-  minRating: 0,
-  brands: [],
-  inStockOnly: false,
-  featuredOnly: false,
-};
+export type { FilterState };
+export { EMPTY_FILTERS };
 
 interface ProductFiltersProps {
   filters: FilterState;
@@ -150,13 +137,13 @@ export default function ProductFilters({
         <div className="space-y-2">
           {CATEGORIES.map((category) => (
             <label
-              key={category.id}
+              key={category.slug}
               className="flex cursor-pointer items-center gap-2.5"
             >
               <input
                 type="checkbox"
-                checked={draft.categories.includes(category.id)}
-                onChange={() => handleCategoryToggle(category.id)}
+                checked={draft.categories.includes(category.slug)}
+                onChange={() => handleCategoryToggle(category.slug)}
                 className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
               />
               <span className="text-sm text-muted-600 transition-colors hover:text-secondary-800">

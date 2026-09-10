@@ -11,6 +11,20 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "12", 10);
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
+    const brand = searchParams.get("brand") || "";
+    const categories =
+      searchParams
+        .get("categories")
+        ?.split(",")
+        .map((s) => s.trim())
+        .filter(Boolean) || [];
+    const brands =
+      searchParams
+        .get("brands")
+        ?.split(",")
+        .map((s) => s.trim())
+        .filter(Boolean) || [];
+    const inStockOnly = searchParams.get("inStock") === "true";
     const minPrice = searchParams.get("minPrice")
       ? parseFloat(searchParams.get("minPrice")!)
       : undefined;
@@ -20,7 +34,6 @@ export async function GET(request: NextRequest) {
     const minRating = searchParams.get("minRating")
       ? parseFloat(searchParams.get("minRating")!)
       : undefined;
-    const brand = searchParams.get("brand") || "";
     const sort = searchParams.get("sort") || "newest";
     const status = searchParams.get("status") || "active";
     const offset = (page - 1) * limit;
@@ -28,7 +41,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("products")
       .select(
-        brand
+        brand || brands.length > 0
           ? "*, categories!products_category_id_fkey(name, slug), brands!inner(name, slug), vendors(name, slug)"
           : "*, categories!products_category_id_fkey(name, slug), brands(name, slug), vendors(name, slug)",
         { count: "exact" }
@@ -45,16 +58,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (category) {
+    if (categories.length > 0) {
+      query = query.in("categories.slug", categories);
+    } else if (category) {
       query = query.eq("categories.slug", category);
     }
 
-    if (brand) {
+    if (brands.length > 0) {
+      query = query.in("brands.slug", brands);
+    } else if (brand) {
       query = query.eq("brands.slug", brand);
+    }
+
+    if (inStockOnly) {
+      query = query.gt("stock_quantity", 0);
     }
 
     if (searchParams.get("featured") === "true") {
       query = query.eq("is_featured", true);
+    }
+
+    if (searchParams.get("on_sale") === "true") {
+      query = query.not("discount_price", "is", null);
     }
 
     if (minPrice !== undefined) {
