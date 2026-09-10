@@ -11,9 +11,11 @@ import {
   RotateCcw,
   Navigation,
   PenLine,
+  ShoppingBag,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { formatPrice, formatDate } from '@/lib/utils';
+import { trackEvent } from '@/lib/analytics';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
@@ -214,7 +216,15 @@ export default function DashboardPage() {
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <h3 className="mb-4 text-lg font-bold text-secondary-800">Quick Actions</h3>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <Link
+            href="/products"
+            onClick={() => trackEvent({ action: 'cta_click', label: 'start_shopping' })}
+            className="inline-flex w-full items-center justify-center gap-2.5 rounded-lg bg-primary px-6 py-4 text-base font-bold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:bg-primary-500 hover:shadow-lg sm:w-auto sm:py-3"
+          >
+            <ShoppingBag className="h-5 w-5" />
+            Start Shopping
+          </Link>
           <Link href="/dashboard/orders">
             <Button variant="outline" size="sm">
               <RotateCcw className="h-4 w-4" />
