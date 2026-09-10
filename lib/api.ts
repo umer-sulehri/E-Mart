@@ -177,6 +177,7 @@ export function apiProductToCardProduct(p: ApiProduct) {
     rating: p.rating,
     reviewCount: p.review_count,
     image: resolveImage(p.images?.[0]),
+    stockQuantity: p.stock_quantity,
   };
 }
 

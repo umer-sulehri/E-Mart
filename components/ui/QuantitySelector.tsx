@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface QuantitySelectorProps {
@@ -7,13 +8,25 @@ export interface QuantitySelectorProps {
   min?: number;
   max?: number;
   disabled?: boolean;
+  isLoading?: boolean;
   className?: string;
 }
 
 const QuantitySelector = React.forwardRef<HTMLDivElement, QuantitySelectorProps>(
-  ({ value, onChange, min = 1, max = 99, disabled = false, className }, ref) => {
-    const canDecrement = value > min && !disabled;
-    const canIncrement = value < max && !disabled;
+  (
+    {
+      value,
+      onChange,
+      min = 1,
+      max = 99,
+      disabled = false,
+      isLoading = false,
+      className,
+    },
+    ref
+  ) => {
+    const canDecrement = value > min && !disabled && !isLoading;
+    const canIncrement = value < max && !disabled && !isLoading;
 
     return (
       <div
@@ -41,12 +54,12 @@ const QuantitySelector = React.forwardRef<HTMLDivElement, QuantitySelectorProps>
           type="number"
           value={value}
           readOnly
+          aria-label={isLoading ? "Updating quantity" : "Quantity"}
           className={cn(
             "h-9 w-12 border-x border-muted-200 bg-white text-center text-sm font-medium",
             "text-secondary-800 outline-none",
             "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           )}
-          aria-label="Quantity"
         />
         <button
           type="button"
@@ -59,7 +72,11 @@ const QuantitySelector = React.forwardRef<HTMLDivElement, QuantitySelectorProps>
           )}
           aria-label="Increase quantity"
         >
-          +
+          {isLoading ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            "+"
+          )}
         </button>
       </div>
     );

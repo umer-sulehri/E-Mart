@@ -10,6 +10,7 @@ export interface LightProduct {
   price: number;
   discountPrice?: number;
   image?: string;
+  stockQuantity?: number;
 }
 
 export function buildCartItem(product: LightProduct, quantity: number): CartItem {
@@ -21,7 +22,7 @@ export function buildCartItem(product: LightProduct, quantity: number): CartItem
     description: '',
     price: product.price,
     discountPrice: product.discountPrice,
-    stockQuantity: 999,
+    stockQuantity: product.stockQuantity ?? 99,
     sku: '',
     category: { id: '', name: '', slug: '' },
     categoryId: '',
@@ -59,6 +60,10 @@ export function useAddToCart() {
   const addToCart = useCallback(
     (product: LightProduct, quantity = 1) => {
       if (quantity < 1 || !product.id) return;
+      if (product.stockQuantity != null && quantity > product.stockQuantity) {
+        toast.error('Insufficient stock available');
+        return;
+      }
       const item = buildCartItem(product, quantity);
       addItem(item);
       addToServer(product.id, quantity);

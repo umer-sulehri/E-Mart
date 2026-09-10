@@ -27,6 +27,7 @@ export default function ProductDetailClient({
   discount,
 }: ProductDetailClientProps) {
   const [quantity, setQuantity] = React.useState(1);
+  const [addingToCart, setAddingToCart] = React.useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const addToServer = useCartStore((s) => s.addToServer);
   const compareItems = useCompareStore((s) => s.items);
@@ -67,22 +68,32 @@ export default function ProductDetailClient({
     toast.success('Added to compare');
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     const price = hasDiscount ? product.discountPrice! : product.price;
 
-    addItem({
-      id: `cart-${product.id}-${Date.now()}`,
-      productId: product.id,
-      product,
-      quantity,
-      unitPrice: price,
-      totalPrice: price * quantity,
-      addedAt: new Date().toISOString(),
-    });
+    if (product.stockQuantity <= 0) {
+      toast.error('This product is out of stock');
+      return;
+    }
 
-    addToServer(product.id, quantity);
+    setAddingToCart(true);
+    try {
+      addItem({
+        id: `cart-${product.id}-${Date.now()}`,
+        productId: product.id,
+        product,
+        quantity,
+        unitPrice: price,
+        totalPrice: price * quantity,
+        addedAt: new Date().toISOString(),
+      });
 
-    toast.success(`${product.name} added to cart!`);
+      await addToServer(product.id, quantity);
+
+      toast.success(`${product.name} added to cart!`);
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   const handleShare = () => {
@@ -188,7 +199,8 @@ export default function ProductDetailClient({
           variant="primary"
           size="lg"
           onClick={handleAddToCart}
-          disabled={product.stockQuantity <= 0}
+          disabled={product.stockQuantity <= 0 || addingToCart}
+          loading={addingToCart}
           className="flex-1 sm:flex-none"
         >
           <ShoppingCart size={18} />

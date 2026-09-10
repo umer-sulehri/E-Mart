@@ -6,6 +6,7 @@ import { X, Heart, ShoppingCart, Star, Eye, Check } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
+import QuantitySelector from '@/components/ui/QuantitySelector';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useAddToCart } from '@/hooks/useAddToCart';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
@@ -174,23 +175,13 @@ export default function QuickViewModal({
             {/* Quantity + Actions */}
             <div className="mt-auto flex flex-col gap-3 pt-6">
               <div className="flex items-center gap-3">
-                <div className="flex items-center rounded-lg border border-muted-200">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3 py-2 text-muted-500 transition-colors hover:text-secondary"
-                  >
-                    -
-                  </button>
-                  <span className="min-w-[40px] text-center text-sm font-medium">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="px-3 py-2 text-muted-500 transition-colors hover:text-secondary"
-                  >
-                    +
-                  </button>
-                </div>
+                <QuantitySelector
+                  value={quantity}
+                  onChange={setQuantity}
+                  min={1}
+                  max={product.stockQuantity ?? 99}
+                  disabled={product.stockQuantity != null && product.stockQuantity <= 0}
+                />
                 <Button
                   className="flex-1"
                   size="md"
@@ -198,6 +189,10 @@ export default function QuickViewModal({
                     addToCart(product, quantity);
                     onClose();
                   }}
+                  disabled={
+                    product.stockQuantity != null &&
+                    product.stockQuantity <= 0
+                  }
                 >
                   <ShoppingCart size={16} />
                   Add to Cart
