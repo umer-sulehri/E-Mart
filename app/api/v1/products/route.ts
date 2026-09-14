@@ -7,8 +7,13 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "12", 10);
+    const rawPage = parseInt(searchParams.get("page") || "1", 10);
+    const rawLimit = parseInt(searchParams.get("limit") || "12", 10);
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+    const limit =
+      Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(rawLimit, 100)
+        : 12;
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
     const brand = searchParams.get("brand") || "";
@@ -25,15 +30,12 @@ export async function GET(request: NextRequest) {
         .map((s) => s.trim())
         .filter(Boolean) || [];
     const inStockOnly = searchParams.get("inStock") === "true";
-    const minPrice = searchParams.get("minPrice")
-      ? parseFloat(searchParams.get("minPrice")!)
-      : undefined;
-    const maxPrice = searchParams.get("maxPrice")
-      ? parseFloat(searchParams.get("maxPrice")!)
-      : undefined;
-    const minRating = searchParams.get("minRating")
-      ? parseFloat(searchParams.get("minRating")!)
-      : undefined;
+    const rawMinPrice = parseFloat(searchParams.get("minPrice") || "");
+    const rawMaxPrice = parseFloat(searchParams.get("maxPrice") || "");
+    const rawMinRating = parseFloat(searchParams.get("minRating") || "");
+    const minPrice = Number.isFinite(rawMinPrice) ? rawMinPrice : undefined;
+    const maxPrice = Number.isFinite(rawMaxPrice) ? rawMaxPrice : undefined;
+    const minRating = Number.isFinite(rawMinRating) ? rawMinRating : undefined;
     const sort = searchParams.get("sort") || "newest";
     const status = searchParams.get("status") || "active";
     const offset = (page - 1) * limit;
@@ -128,11 +130,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Safety net: a product related to multiple matching categories/brands can
+    // surface more than once; keep the first occurrence per product id.
+    const seen = new Set<string>();
+    const deduped = (data || []).filter((product) => {
+      const id = (product as { id?: string }).id;
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+
     const totalPages = Math.ceil((count || 0) / limit);
 
     return NextResponse.json({
       success: true,
-      data: data || [],
+      data: deduped,
       meta: {
         currentPage: page,
         totalPages,

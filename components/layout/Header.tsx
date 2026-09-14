@@ -14,7 +14,6 @@ import {
   Loader2,
   X,
   ChevronDown,
-  LayoutDashboard,
   Shield,
   Store,
   LogOut,
@@ -303,9 +302,6 @@ function UserMenu({
     );
   }
 
-  const dashboard =
-    user.role === 'seller' ? '/seller' : user.role === 'admin' ? '/admin' : '/dashboard';
-
   return (
     <div ref={ref} className="relative">
       <button
@@ -324,17 +320,11 @@ function UserMenu({
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-muted-200 bg-white p-2 shadow-lg">
-          <Link
-            href={dashboard}
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
-          >
-            <LayoutDashboard className="h-4 w-4" /> Dashboard
-          </Link>
           {user.role === 'admin' && (
             <Link
               href="/admin"
               onClick={() => setOpen(false)}
+              aria-label="Admin Panel"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
             >
               <Shield className="h-4 w-4" /> Admin Panel
@@ -344,6 +334,7 @@ function UserMenu({
             <Link
               href="/seller"
               onClick={() => setOpen(false)}
+              aria-label="Seller Dashboard"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
             >
               <Store className="h-4 w-4" /> Seller Dashboard
@@ -352,6 +343,7 @@ function UserMenu({
           <Link
             href="/dashboard"
             onClick={() => setOpen(false)}
+            aria-label="My Account"
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
           >
             <User className="h-4 w-4" /> My Account
@@ -362,6 +354,7 @@ function UserMenu({
               setOpen(false);
               onLogout();
             }}
+            aria-label="Logout"
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger hover:bg-danger/5 transition-colors"
           >
             <LogOut className="h-4 w-4" /> Logout

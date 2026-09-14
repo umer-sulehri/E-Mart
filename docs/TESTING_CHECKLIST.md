@@ -10,13 +10,14 @@ Automated tests and manual QA sign-off for the platform.
 | Lint | `npm run lint` |
 | Unit tests | `npm test` (Vitest) |
 
-Expected baseline: **7 test files, 67 tests, all passing.**
+Expected baseline: **8 test files, 81 tests, all passing.**
 
 | File | Coverage |
 |------|----------|
-| `lib/__tests__/filter-params.test.ts` | 20 — shop search/query parsing, multi-select categories/brands, clearing filters preserving sort+search |
+| `lib/__tests__/filter-params.test.ts` | 25 — shop search/query parsing, multi-select categories/brands, clearing filters preserving sort+search, combined AND filters, malformed-param edge cases |
 | `lib/__tests__/search-safe.test.ts` | 13 — user-search input sanitization |
 | `lib/__tests__/utils.test.ts` | 10 — formatting/helpers |
+| `lib/__tests__/dashboard.test.ts` | 9 — order-item normalization, quick-action eligibility (reorder/track/review) for empty/active/cancelled/delivered orders |
 | `lib/__tests__/csv.test.ts` | 8 — CSV export escaping |
 | `lib/__tests__/cart-metrics.test.ts` | 6 — cart totals/counts |
 | `lib/__tests__/sanitize-html.test.ts` | 6 — HTML sanitization |
@@ -49,10 +50,14 @@ Apply before manual testing (new DB or existing):
 - [ ] Mobile (≈390px): cards full-width, touch targets ≥ 44px, low-stock bead, page-number pagination hidden, prev/next usable; shop text scales.
 - [ ] Product back-link shows "Out of stock" and disables add-to-cart when `stock=0`.
 
-### Buyer dashboard quick action (Issue #3)
+### Buyer dashboard quick actions (unified ActionButton pass)
 
-- [ ] `/dashboard` first quick action is a prominent "Start Shopping" (green) button → `/products`.
-- [ ] Click fires `cta_click`/`start_shopping` analytics event; touch target large on mobile.
+- [ ] `/dashboard` shows 4 cards in a `grid-cols-2 sm:grid-cols-4` layout, all with identical gradient styling, radius, and icon sizes.
+- [ ] "Start Shopping" → `/products`; click fires `cta_click`/`start_shopping` analytics event; touch target large on mobile.
+- [ ] "Re-Order" disabled when the user has no eligible (non-cancelled) order; enabled otherwise → re-adds last order items to cart, toast, redirect to `/cart`.
+- [ ] "Track Order" disabled with no trackable (confirmed/processing/shipped/out_for_delivery) order; enabled → links to the latest order detail.
+- [ ] "Write Review" disabled without a delivered order; enabled → `/dashboard/reviews`.
+- [ ] All four cards: Tab-reachable, Enter/Space activates, `disabled` cards skipped in the tab order (links) / `disabled` (buttons), visible focus ring.
 
 ### Reviews moderation + CRUD (Issue #4)
 
@@ -70,11 +75,23 @@ DB/applies via migration above.
 - [ ] "My Reviews" tab: sort (recent/highest/lowest) + pagination work with `status` filter; "Pending Moderation" tab filters `status=pending` only.
 - [ ] Unauthenticated GET `/api/v1/auth/reviews` → 401.
 
-### Auth dropdown (Issue #5)
+### Auth dropdown (Issue #5 + dup-navigation pass)
 
 - [ ] Logged-in header menu has no name/role header block.
-- [ ] Menu: Dashboard (role-based) + role-gated Admin/Seller link + My Account → `/dashboard` + Logout.
+- [ ] Menu shows: role-gated Admin/Seller link (admin/seller only) + My Account → `/dashboard` + Logout. **No "Dashboard" row.**
+- [ ] Absent roles see exactly two items: My Account + Logout.
+- [ ] Clicking My Account → `/dashboard`; clicking Logout clears session, redirects home, protected routes blocked.
 - [ ] Escape closes menu and returns focus to the trigger; click-outside closes.
+
+### Shop filters + responsive (2026 pass additions)
+
+- [ ] Category sidebar lists live `/api/v1/categories` (sub-categories indented); active-filter chips use live names.
+- [ ] "Featured Only" checkbox filters `is_featured=true` and renders a removable "Featured" chip.
+- [ ] Land on `/products?category=X`, apply more filters, then "Clear all" → **no products remain filtered** (no phantom category re-added).
+- [ ] Malformed params (`page=abc`, `limit=99999`, `minPrice=foo`) return valid pagination/defaults, never 500.
+- [ ] Landing on the long category/product list never shows duplicate cards.
+- [ ] Keyboard focus: quick-view/view, cart, and wishlist buttons show a visible focus ring; "View" label appears at ≥640px; grid is 1/2/3/4 columns across 320/640/1024/1280px.
+- [ ] Tab-through: first Tab focuses "Skip to main content" link which jumps to content past the header.
 
 ### Regression
 

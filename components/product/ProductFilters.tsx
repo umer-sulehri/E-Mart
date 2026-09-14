@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ChevronDown, ChevronUp, Star, X, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronUp, Star, Sparkles, X, SlidersHorizontal } from 'lucide-react';
 import { CATEGORIES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import BrandFilter from '@/components/product/BrandFilter';
@@ -14,6 +14,32 @@ import {
 
 export type { FilterState };
 export { EMPTY_FILTERS };
+
+interface CategoryOption {
+  slug: string;
+  name: string;
+  depth: number;
+}
+
+interface ApiCategory {
+  name: string;
+  slug: string;
+  subcategories?: ApiCategory[];
+}
+
+function flattenCategories(
+  categories: ApiCategory[],
+  depth = 0
+): CategoryOption[] {
+  const out: CategoryOption[] = [];
+  for (const c of categories) {
+    out.push({ slug: c.slug, name: c.name, depth });
+    if (c.subcategories?.length) {
+      out.push(...flattenCategories(c.subcategories, depth + 1));
+    }
+  }
+  return out;
+}
 
 interface ProductFiltersProps {
   filters: FilterState;
@@ -56,6 +82,22 @@ export default function ProductFilters({
   // Local draft state — edits are not applied until "Apply Filters" is pressed.
   const [draft, setDraft] = useState<FilterState>(filters);
 
+  // Live category list from the DB, falling back to the static catalog while
+  // loading or when the request fails.
+  const [categoryOptions, setCategoryOptions] =
+    useState<CategoryOption[]>(() => flattenCategories(CATEGORIES as unknown as ApiCategory[]));
+
+  useEffect(() => {
+    fetch('/api/v1/categories')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setCategoryOptions(flattenCategories(json.data));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Sync draft whenever the committed filters change externally (e.g. clearing
   // an active-filter chip or clicking "Reset" on the results header).
   useEffect(() => {
@@ -82,6 +124,10 @@ export default function ProductFilters({
 
   const handleAvailabilityChange = (inStockOnly: boolean) => {
     setDraft({ ...draft, inStockOnly });
+  };
+
+  const handleFeaturedChange = (featuredOnly: boolean) => {
+    setDraft({ ...draft, featuredOnly });
   };
 
   const minPriceVal = Number(draft.minPrice) || 0;
@@ -141,10 +187,11 @@ export default function ProductFilters({
 
       <FilterSection title="Category">
         <div className="space-y-2">
-          {CATEGORIES.map((category) => (
+          {categoryOptions.map((category) => (
             <label
               key={category.slug}
               className="flex cursor-pointer items-center gap-2.5"
+              style={{ paddingLeft: category.depth > 0 ? `${category.depth * 16}px` : undefined }}
             >
               <input
                 type="checkbox"
@@ -209,6 +256,22 @@ export default function ProductFilters({
         inStockOnly={draft.inStockOnly}
         onChange={handleAvailabilityChange}
       />
+
+      <div className="border-b border-muted-100 py-4">
+        <p className="mb-3 text-sm font-semibold text-secondary-800">
+          Featured
+        </p>
+        <label className="flex cursor-pointer items-center gap-2.5">
+          <input
+            type="checkbox"
+            checked={draft.featuredOnly}
+            onChange={() => handleFeaturedChange(!draft.featuredOnly)}
+            className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
+          />
+          <Sparkles size={16} className="text-warning" />
+          <span className="text-sm text-muted-600">Featured Only</span>
+        </label>
+      </div>
 
       <div className="mt-4 flex flex-col gap-2">
         <button

@@ -198,3 +198,56 @@ describe("activeFilterCount", () => {
     expect(activeFilterCount(EMPTY_FILTERS)).toBe(0);
   });
 });
+
+describe("combined filters (AND semantics)", () => {
+  const combinedQuery = "categories=fruits-vegetables,dairy-eggs&brands=emart&minPrice=1000&maxPrice=5000&minRating=4&inStock=true";
+
+  it("reads every filter group from one URL", () => {
+    const filters = filtersFromSearchParams(p(combinedQuery));
+    expect(filters).toEqual({
+      categories: ["fruits-vegetables", "dairy-eggs"],
+      minPrice: "1000",
+      maxPrice: "5000",
+      minRating: 4,
+      brands: ["emart"],
+      inStockOnly: true,
+      featuredOnly: false,
+    });
+  });
+
+  it("serializes all groups into AND-style API params", () => {
+    const filters = filtersFromSearchParams(p(combinedQuery));
+    expect(filtersToApiParams(filters)).toEqual({
+      categories: "fruits-vegetables,dairy-eggs",
+      minPrice: "1000",
+      maxPrice: "5000",
+      minRating: "4",
+      brands: "emart",
+      inStock: "true",
+    });
+  });
+
+  it("round-trips the combined query through URL -> state -> URL", () => {
+    const filters = filtersFromSearchParams(p(combinedQuery));
+    const serialized = filtersToSearchParams(filters);
+    expect(filtersFromSearchParams(serialized)).toEqual(filters);
+  });
+});
+
+describe("empty filter edge cases", () => {
+  it("missing params never produce NaN or stale values", () => {
+    const filters = filtersFromSearchParams(p("minPrice=abc&minRating=xyz&maxPrice="));
+    expect(Number.isNaN(filters.minRating)).toBe(false);
+    expect(filters.minRating).toBe(0);
+    expect(filters.minPrice).toBe("abc");
+    expect(filters.maxPrice).toBe("");
+    expect(filters.categories).toEqual([]);
+    expect(filters.brands).toEqual([]);
+  });
+
+  it("a single-category URL applies just that category", () => {
+    const filters = filtersFromSearchParams(p("category=fruits-vegetables"));
+    expect(filters.categories).toEqual(["fruits-vegetables"]);
+    expect(filters.brands).toEqual([]);
+  });
+});

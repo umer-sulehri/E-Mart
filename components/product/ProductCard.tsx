@@ -131,7 +131,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 <div className="min-w-0 flex-1">
                   <button
                     onClick={() => addToCart(product, quantity)}
-                    className="btn-cart flex h-11 w-full items-center justify-center gap-2 rounded-1 bg-primary p-2 text-xs text-white transition-all duration-200 hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="btn-cart flex h-11 w-full items-center justify-center gap-2 rounded-1 bg-primary p-2 text-xs text-white transition-all duration-200 hover:bg-primary-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     aria-label={`Add ${product.name} to cart`}
                     disabled={product.stockQuantity != null && product.stockQuantity <= 0}
                   >
@@ -139,18 +139,19 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                     <span className="truncate sm:text-sm">Add to Cart</span>
                   </button>
                 </div>
-                <div className="w-11 shrink-0 sm:w-9">
+                <div className="w-11 shrink-0 sm:w-auto sm:flex-1">
                   <button
-                    className="flex h-11 w-full items-center justify-center rounded-1 border border-dark p-2 text-dark transition-all duration-200 hover:bg-dark hover:text-white"
+                    className="flex h-11 w-full items-center justify-center gap-1.5 rounded-1 border border-dark px-2 text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     aria-label={`Quick view ${product.name}`}
                     onClick={() => setQuickViewOpen(true)}
                   >
-                    <Eye size={16} />
+                    <Eye size={16} className="shrink-0" />
+                    <span className="hidden truncate sm:inline">View</span>
                   </button>
                 </div>
                 <div className="w-11 shrink-0 sm:w-9">
                   <button
-                    className="flex h-11 w-full items-center justify-center rounded-1 border border-dark p-2 text-dark transition-all duration-200 hover:bg-dark hover:text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50"
+                    className="flex h-11 w-full items-center justify-center rounded-1 border border-dark p-2 text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50"
                     aria-label={
                       isWishlisted
                         ? `Remove ${product.name} from wishlist`

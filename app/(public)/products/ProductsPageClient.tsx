@@ -36,8 +36,8 @@ const RATING_LABELS: Record<number, string> = {
   5: '5★ only',
 };
 
-function categoryName(slug: string) {
-  return CATEGORIES.find((c) => c.slug === slug)?.name ?? slug;
+function categoryName(slug: string, liveNames?: Record<string, string>) {
+  return liveNames?.[slug] ?? CATEGORIES.find((c) => c.slug === slug)?.name ?? slug;
 }
 
 export default function ProductsPage() {
@@ -53,7 +53,6 @@ function ProductsContent() {
   const router = useRouter();
   const pathname = usePathname();
   const initialSearch = searchParams.get('q') ?? '';
-  const initialCategory = searchParams.get('category') ?? '';
 
   // URL query params are the source of truth for committed filters/sort, so
   // they survive navigation, are shareable, and drive browser back/forward.
@@ -68,6 +67,7 @@ function ProductsContent() {
   );
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [brandNames, setBrandNames] = useState<Record<string, string>>({});
+  const [categoryNames, setCategoryNames] = useState<Record<string, string>>({});
   const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -128,6 +128,27 @@ function ProductsContent() {
       .catch(() => {});
   }, []);
 
+  // Live category names keep active-filter chips aligned with the DB catalog,
+  // even when new categories were added since the static list shipped.
+  useEffect(() => {
+    fetch('/api/v1/categories')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          const map: Record<string, string> = {};
+          const visit = (items: { name: string; slug: string; subcategories?: unknown[] }[]) => {
+            for (const c of items) {
+              map[c.slug] = c.name;
+              if (Array.isArray(c.subcategories)) visit(c.subcategories as typeof items);
+            }
+          };
+          visit(json.data);
+          setCategoryNames(map);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Real min/max product price keeps the slider aligned with the catalog.
   useEffect(() => {
     fetch('/api/v1/products/price-range')
@@ -160,10 +181,6 @@ function ProductsContent() {
 
         if (initialSearch.trim()) {
           params.search = initialSearch.trim();
-        }
-
-        if (filters.categories.length === 0 && initialCategory) {
-          params.category = initialCategory;
         }
 
         const res = await api.products.list(params) as ApiListResponse<ApiProduct>;
@@ -199,7 +216,7 @@ function ProductsContent() {
     return () => {
       cancelled = true;
     };
-  }, [currentPage, sort, initialSearch, initialCategory, filters]);
+  }, [currentPage, sort, initialSearch, filters]);
 
   const filtersSidebar = (
     <ProductFilters
@@ -260,7 +277,7 @@ function ProductsContent() {
                 }}
                 className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
               >
-                {categoryName(slug)}
+                {categoryName(slug, categoryNames)}
                 <X size={13} />
               </button>
             ))}
@@ -379,7 +396,7 @@ function ProductsContent() {
           {/* Main content */}
           <div className="min-w-0 flex-1">
             {loading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
                 {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
                   <div key={i} className="animate-pulse">
                     <div className="rounded-2xl bg-white p-3 text-center shadow-sm">

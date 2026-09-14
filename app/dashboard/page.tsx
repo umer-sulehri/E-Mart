@@ -2,20 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   Package,
   DollarSign,
   Heart,
   Clock,
   RotateCcw,
-  Navigation,
-  PenLine,
+  MapPin,
+  Star,
   ShoppingBag,
 } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import { useAuthStore, useCartStore } from '@/store';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
+import { getOrderItems, getQuickActionState } from '@/lib/dashboard';
+import ActionButton from '@/components/ui/ActionButton';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
@@ -78,6 +81,34 @@ export default function DashboardPage() {
 
     fetchData();
   }, [setUser, router]);
+
+  const { lastOrder, canReorder, canTrack, canReview } =
+    getQuickActionState(recentOrders);
+
+  const [reordering, setReordering] = useState(false);
+
+  const handleReorder = async () => {
+    if (!lastOrder) return;
+    const items = getOrderItems(lastOrder);
+    const valid = items.filter((i) => i.productId);
+    if (valid.length === 0) return;
+
+    setReordering(true);
+    try {
+      await Promise.allSettled(
+        valid.map((item) =>
+          useCartStore.getState().addToServer(item.productId, item.quantity)
+        )
+      );
+      await useCartStore.getState().syncWithServer();
+      toast.success('Items from your last order added to cart');
+      router.push('/cart');
+    } catch {
+      toast.error('Unable to re-order items. Please try again.');
+    } finally {
+      setReordering(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -216,33 +247,32 @@ export default function DashboardPage() {
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <h3 className="mb-4 text-lg font-bold text-secondary-800">Quick Actions</h3>
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Link
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <ActionButton
+            icon={<ShoppingBag className="h-6 w-6 sm:h-8 sm:w-8" />}
+            label="Start Shopping"
             href="/products"
             onClick={() => trackEvent({ action: 'cta_click', label: 'start_shopping' })}
-            className="inline-flex w-full items-center justify-center gap-2.5 rounded-lg bg-primary px-6 py-4 text-base font-bold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:bg-primary-500 hover:shadow-lg sm:w-auto sm:py-3"
-          >
-            <ShoppingBag className="h-5 w-5" />
-            Start Shopping
-          </Link>
-          <Link href="/dashboard/orders">
-            <Button variant="outline" size="sm">
-              <RotateCcw className="h-4 w-4" />
-              Re-Order
-            </Button>
-          </Link>
-          <Link href="/dashboard/orders">
-            <Button variant="outline" size="sm">
-              <Navigation className="h-4 w-4" />
-              Track Order
-            </Button>
-          </Link>
-          <Link href="/dashboard/reviews">
-            <Button variant="outline" size="sm">
-              <PenLine className="h-4 w-4" />
-              Write Review
-            </Button>
-          </Link>
+          />
+          <ActionButton
+            icon={<RotateCcw className="h-6 w-6 sm:h-8 sm:w-8" />}
+            label="Re-Order"
+            onClick={handleReorder}
+            disabled={!canReorder}
+            loading={reordering}
+          />
+          <ActionButton
+            icon={<MapPin className="h-6 w-6 sm:h-8 sm:w-8" />}
+            label="Track Order"
+            href={canTrack && lastOrder ? `/dashboard/orders/${lastOrder.id}` : undefined}
+            disabled={!canTrack}
+          />
+          <ActionButton
+            icon={<Star className="h-6 w-6 sm:h-8 sm:w-8" />}
+            label="Write Review"
+            href="/dashboard/reviews"
+            disabled={!canReview}
+          />
         </div>
       </div>
     </div>

@@ -35,3 +35,36 @@ Living log of bugs found and their fixes. Each entry links the resolving commit.
 
 - **Settings blob read-modify-write race:** translations/social-links merged stale blobs, losing writes. `0748e66`
 - **Uploads masking failures:** catch blocks logged generic messages, hiding the real cause of 500s. `2eeb8ab`
+
+## FIX session 2026-09-14 (uncommitted)
+
+### A. Phantom category filter resurrected after "Clear all" — shop search/preview
+
+- **Found:** Landing on `/products?category=fruits-vegetables` then pressing "Clear all filters" still returned only that category's products, even though the URL no longer carried the param and no chip was shown.
+- **Root cause:** `ProductsPageClient.tsx` captured `initialCategory` from the first render's query params and re-added `params.category = initialCategory` to the API request whenever `filters.categories` was empty — so the cleaned URL was overridden with a stale value.
+- **Fix:** Removed the `initialCategory` state/fallback/effect-dependency entirely. The legacy `category`/`brand` params are already handled by `lib/filterParams.ts` (`filtersFromSearchParams`), so clearing filters no longer resurrects them.
+- **Commit:** pending.
+
+### B. Login dropdown duplicated navigation targets
+
+- **Found:** The `UserMenu` in `Header.tsx` showed "Dashboard" (role-mapped path) *and* "My Account" (`/dashboard`); for customers both resolved to `/dashboard`, and seller/admin roles got an extra near-duplicate in their role links.
+- **Fix:** Removed the "Dashboard" row (and its now-unused `LayoutDashboard` import). Menu is now: role links (Admin Panel / Seller Dashboard, role-gated) + "My Account" (`/dashboard`) + "Logout"; every item has an `aria-label`.
+- **Commit:** pending.
+
+### C. Dashboard quick actions were inconsistent plain links
+
+- **Found:** "Start Shopping" was a large solid-green pill while Re-Order / Track Order / Write Review were small outline buttons; all four were simple links with no disabled states, and Re-Order/Track didn't reflect real order data.
+- **Fix:** Added `components/ui/ActionButton.tsx` (unified gradient card styling, Link-or-button, `disabled`/`loading`, 44px+ targets, `active:scale-95`). Rebuilt the dashboard Quick Actions as a responsive `grid-cols-2 sm:grid-cols-4` block. Re-Order now re-adds the last order's items to the cart (per-item `cartStore.addToServer` + `syncWithServer`, then routes to `/cart`), Track links to the latest order detail, Write Review links to `/dashboard/reviews`; all three disable until a matching order exists (`lib/dashboard.ts` `getQuickActionState`, pure, unit-tested).
+- **Commit:** pending.
+
+### D. Shop feature & import hardening
+
+- **Found:** The `featuredOnly` filter had state/URL/chip support but no control in the sidebar; both product API routes parsed `page`/`limit`/price/rating with unchecked `parseInt`/`parseFloat`, so malformed query values could send `NaN` to PostgREST; a product related to multiple matching categories/brands could surface twice.
+- **Fix:** Added a "Featured Only" checkbox to `ProductFilters.tsx`; `app/api/v1/products/route.ts` and `products/search/route.ts` now clamp `page`/`limit` (1–100), guard price/rating with `Number.isFinite`, and de-duplicate results by `id`. The category sidebar and active-filter chips now use live `/api/v1/categories` data (with static-catalog fallback) instead of only the hardcoded list.
+- **Commit:** pending.
+
+### E. Product card interaction & a11y polish
+
+- **Found:** The quick-view control was an eye icon with no text label on any viewport, buttons lacked press feedback, and there was no way to keyboard-jump past the header.
+- **Fix:** Quick view now shows "View" text from `sm:` up (icon only below); `active:scale-95` press feedback and `focus-visible` rings added to cart/view/wishlist buttons; product grid capped at `xl:grid-cols-4`; skip-to-content link + `#main-content` anchor added to the public layout.
+- **Commit:** pending.
