@@ -7,21 +7,21 @@ export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const base = supabase
       .from("products")
-      .select("min(price), max(price)")
+      .select("price")
       .eq("is_active", true);
 
-    if (error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
-      );
-    }
+    const [minRes, maxRes] = await Promise.all([
+      base.order("price", { ascending: true }).limit(1),
+      base.order("price", { ascending: false }).limit(1),
+    ]);
 
-    const row = Array.isArray(data) ? data[0] : null;
-    const min = row?.min != null ? Math.floor(Number(row.min)) : 0;
-    const max = row?.max != null ? Math.ceil(Number(row.max)) : 100000;
+    const minRow = minRes.error ? null : minRes.data?.[0];
+    const maxRow = maxRes.error ? null : maxRes.data?.[0];
+
+    const min = minRow?.price != null ? Math.floor(Number(minRow.price)) : 0;
+    const max = maxRow?.price != null ? Math.ceil(Number(maxRow.price)) : 100000;
 
     return NextResponse.json({
       success: true,
