@@ -1,10 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
-import { AlertTriangle, RefreshCw, LayoutDashboard } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home, Shield } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { logger } from '@/lib/logger';
 
 export default function AdminError({
   error,
@@ -13,14 +11,6 @@ export default function AdminError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    logger.error('AdminErrorBoundary', {
-      message: error.message,
-      digest: error.digest,
-      stack: error.stack,
-    });
-  }, [error]);
-
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-sm">
@@ -31,8 +21,13 @@ export default function AdminError({
           Admin Panel Error
         </h1>
         <p className="mt-3 text-sm text-muted-500">
-          Something went wrong while loading this admin module. Please try again.
+          An error occurred in the admin dashboard. Your session is still active.
         </p>
+        {error.digest && (
+          <p className="mt-2 text-xs text-muted-400">
+            Error ID: {error.digest}
+          </p>
+        )}
         {error.message && (
           <p className="mt-4 rounded-lg bg-muted-50 p-3 text-xs text-muted-500">
             {error.message}
@@ -41,12 +36,12 @@ export default function AdminError({
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button variant="primary" size="lg" onClick={reset}>
             <RefreshCw size={16} />
-            Retry
+            Try Again
           </Button>
           <Link href="/admin">
             <Button variant="outline" size="lg">
-              <LayoutDashboard size={16} />
-              Admin Dashboard
+              <Shield size={16} />
+              Admin Home
             </Button>
           </Link>
         </div>

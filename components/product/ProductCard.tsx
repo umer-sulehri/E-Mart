@@ -57,6 +57,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
               alt={product.name}
               width={420}
               height={420}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="h-full w-full object-contain p-2 sm:p-3"
             />
           </Link>

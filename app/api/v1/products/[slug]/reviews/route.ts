@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { reviewSchema } from "@/lib/validators";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 export async function GET(
   request: NextRequest,
@@ -166,8 +167,8 @@ export async function POST(
         user_id: user.id,
         product_id: product.id,
         rating: parsed.data.rating,
-        title: parsed.data.title,
-        comment: parsed.data.comment,
+        title: sanitizeHtml(parsed.data.title),
+        comment: sanitizeHtml(parsed.data.comment),
         is_verified_purchase: isVerified,
         helpful_count: 0,
         // Moderation-first: an admin must approve before the review is public.

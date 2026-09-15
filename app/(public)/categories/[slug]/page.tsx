@@ -185,7 +185,7 @@ function CategoryDetailContent() {
             {/* Mobile filter toggle */}
             <button
               onClick={() => setMobileFiltersOpen(true)}
-              className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-secondary-800 px-5 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-secondary lg:hidden"
+              className="fixed bottom-20 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-secondary-800 px-5 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-secondary lg:hidden"
             >
               <SlidersHorizontal size={16} />
               Filters

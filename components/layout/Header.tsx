@@ -424,7 +424,7 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm shadow-sm">
-        <div className="container-fluid px-4 sm:px-6 lg:px-12">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12">
           <div className="flex flex-wrap items-center justify-between py-3 gap-4">
 
             <div className="flex items-center gap-2">
@@ -444,13 +444,13 @@ export default function Header() {
                   alt="E-Mart logo"
                   width={160}
                   height={48}
-                  className="h-auto w-auto"
+                  className="h-auto w-[120px] sm:w-auto"
                   priority
                 />
               </Link>
             </div>
 
-            <div className="order-last lg:order-none w-full lg:w-auto flex-1 max-w-xl mx-auto hidden sm:block">
+            <div className="hidden lg:block flex-1 max-w-xl mx-auto">
               <div className="flex items-center bg-muted-50 rounded-2xl p-2 border border-muted-200 focus-within:border-primary">
                 <div className="hidden md:block border-r border-muted-300 pr-2">
                   <select

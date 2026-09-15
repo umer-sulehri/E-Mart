@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/utils";
 import { safeSearchPattern, safeOrTerm } from "@/lib/search-safe";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 export async function GET(request: NextRequest) {
   try {
@@ -153,7 +154,13 @@ export async function POST(request: NextRequest) {
       isActive,
     } = body;
 
-    if (!name || !price || !sku || !categoryId || !images?.length) {
+    const safeName = typeof name === "string" ? sanitizeHtml(name.trim()) : "";
+    const safeDescription = typeof description === "string" ? sanitizeHtml(description) : "";
+    const safeShortDescription = typeof shortDescription === "string" ? sanitizeHtml(shortDescription) : "";
+    const safeSku = typeof sku === "string" ? sanitizeHtml(sku.trim()) : "";
+    const safeBrand = typeof brand === "string" ? sanitizeHtml(brand.trim()) : "";
+
+    if (!safeName || !price || !safeSku || !categoryId || !images?.length) {
       return NextResponse.json(
         { success: false, error: "Missing required fields: name, price, sku, categoryId, images" },
         { status: 400 }
@@ -164,8 +171,8 @@ export async function POST(request: NextRequest) {
     // brands INSERT is admin-only RLS, so creating a new brand must go through
     // the admin client (the seller is authenticated and owns the product).
     let resolvedBrandId: string | null = brandId || null;
-    if (!resolvedBrandId && typeof brand === "string" && brand.trim()) {
-      const brandName = brand.trim();
+    if (!resolvedBrandId && typeof safeBrand === "string" && safeBrand.trim()) {
+      const brandName = safeBrand.trim();
       const { data: existingBrand } = await supabase
         .from("brands")
         .select("id")
@@ -184,7 +191,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const baseSlug = slugify(name);
+    const baseSlug = slugify(safeName);
     let slug = baseSlug;
     let counter = 1;
     while (true) {
@@ -201,14 +208,14 @@ export async function POST(request: NextRequest) {
     const { data: product, error } = await supabase
       .from("products")
       .insert({
-        name,
+        name: safeName,
         slug,
-        description: description || "",
-        short_description: shortDescription,
+        description: safeDescription || "",
+        short_description: safeShortDescription,
         price,
         discount_price: discountPrice,
         stock_quantity: stockQuantity || 0,
-        sku,
+        sku: safeSku,
         category_id: categoryId,
         subcategory_id: subcategoryId,
         brand_id: resolvedBrandId,

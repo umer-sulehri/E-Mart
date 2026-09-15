@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { AlertTriangle, RefreshCw, LayoutDashboard } from 'lucide-react';
+import { AlertTriangle, RefreshCw, ShoppingCart } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
-export default function DashboardError({
+export default function CheckoutError({
   error,
   reset,
 }: {
@@ -18,10 +18,10 @@ export default function DashboardError({
           <AlertTriangle size={32} className="text-danger" />
         </div>
         <h1 className="font-heading text-2xl font-bold text-secondary-800">
-          Dashboard Error
+          Checkout Error
         </h1>
         <p className="mt-3 text-sm text-muted-500">
-          An error occurred in your dashboard. Your session is still active.
+          Something went wrong during checkout. Your cart items are safe.
         </p>
         {error.digest && (
           <p className="mt-2 text-xs text-muted-400">
@@ -38,10 +38,10 @@ export default function DashboardError({
             <RefreshCw size={16} />
             Try Again
           </Button>
-          <Link href="/dashboard">
+          <Link href="/cart">
             <Button variant="outline" size="lg">
-              <LayoutDashboard size={16} />
-              Dashboard
+              <ShoppingCart size={16} />
+              Back to Cart
             </Button>
           </Link>
         </div>

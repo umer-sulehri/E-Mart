@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { contactSchema } from "@/lib/validators";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,10 +18,10 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     const { error } = await supabase.from("contact_submissions").insert({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      subject: parsed.data.subject,
-      message: parsed.data.message,
+      name: sanitizeHtml(parsed.data.name),
+      email: sanitizeHtml(parsed.data.email),
+      subject: sanitizeHtml(parsed.data.subject),
+      message: sanitizeHtml(parsed.data.message),
       is_resolved: false,
     });
 

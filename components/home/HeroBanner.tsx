@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Truck, Leaf, Sprout } from "lucide-react";
 
 const stats = [
@@ -33,12 +34,17 @@ const features = [
 
 const HeroBanner = () => {
   return (
-    <section
-      id="hero-banner"
-      className="bg-cover bg-no-repeat"
-      style={{ backgroundImage: "url('/images/banner-1.jpg')" }}
-    >
-      <div className="container mx-auto px-4">
+    <section id="hero-banner" className="relative overflow-hidden">
+      <Image
+        src="/images/banner-1.jpg"
+        alt="E-Mart organic food banner"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+        quality={85}
+      />
+      <div className="relative container mx-auto px-4">
         <div className="lg:w-1/2">
           <div className="pt-5 mt-5">
             <h2 className="font-heading text-4xl leading-tight md:text-6xl">
@@ -66,7 +72,7 @@ const HeroBanner = () => {
             <div className="my-5 grid grid-cols-3 gap-4">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-dark">
-                  <p className="mb-0 text-5xl font-bold leading-tight">
+                  <p className="mb-0 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
                     {stat.value}
                   </p>
                   <p className="mb-0 text-xs uppercase leading-tight">

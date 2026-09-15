@@ -98,16 +98,16 @@ const config: Config = {
       maxWidth: {
         organic: '1600px',
       },
-      container: {
-        center: true,
-        padding: {
-          DEFAULT: '3rem',
-          sm: '3rem',
-          lg: '3rem',
-          xl: '3rem',
-          '2xl': '3rem',
-        },
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: '1rem',
+        sm: '1.5rem',
+        lg: '2rem',
+        xl: '3rem',
+        '2xl': '3rem',
       },
+    },
       borderRadius: {
         '4xl': '2rem',
       },

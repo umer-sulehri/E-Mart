@@ -15,21 +15,46 @@ const ProductGallery = React.forwardRef<HTMLDivElement, ProductGalleryProps>(
   ({ images, productName, className }, ref) => {
     const [selectedIndex, setSelectedIndex] = React.useState(0);
     const [isZoomed, setIsZoomed] = React.useState(false);
-    const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
+    const [isCoarsePointer, setIsCoarsePointer] = React.useState(false);
+    const [mousePosition, setMousePosition] = React.useState({ x: 50, y: 50 });
     const imageContainerRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+      setIsCoarsePointer(window.matchMedia('(pointer: coarse)').matches);
+    }, []);
 
     const selectedImage = images[selectedIndex] || images[0];
 
-    const handleMouseMove = React.useCallback(
-      (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!imageContainerRef.current) return;
+    const handlePointerMove = React.useCallback(
+      (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!imageContainerRef.current || (!isZoomed && e.pointerType === 'mouse')) return;
         const rect = imageContainerRef.current.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
-        setMousePosition({ x, y });
+        setMousePosition({
+          x: Math.min(100, Math.max(0, x)),
+          y: Math.min(100, Math.max(0, y)),
+        });
       },
-      []
+      [isZoomed]
     );
+
+    const handleTap = React.useCallback(() => {
+      if (isCoarsePointer) {
+        setIsZoomed((prev) => !prev);
+      }
+    }, [isCoarsePointer]);
+
+    const handleMouseEnter = React.useCallback(() => {
+      if (!isCoarsePointer) {
+        setIsZoomed(true);
+      }
+    }, [isCoarsePointer]);
+
+    const handleMouseLeave = React.useCallback(() => {
+      setIsZoomed(false);
+      setMousePosition({ x: 50, y: 50 });
+    }, []);
 
     return (
       <div ref={ref} className={cn('flex flex-col-reverse gap-3 lg:flex-row', className)}>
@@ -45,6 +70,8 @@ const ProductGallery = React.forwardRef<HTMLDivElement, ProductGalleryProps>(
                   ? 'border-primary'
                   : 'border-muted-200 hover:border-muted-400'
               )}
+              aria-pressed={selectedIndex === index}
+              aria-label={`View image ${index + 1} of ${productName}`}
             >
               <ImageWithFallback
                 src={image}
@@ -61,9 +88,12 @@ const ProductGallery = React.forwardRef<HTMLDivElement, ProductGalleryProps>(
         <div
           ref={imageContainerRef}
           className="relative flex-1 overflow-hidden rounded-xl bg-muted-50"
-          onMouseEnter={() => setIsZoomed(true)}
-          onMouseLeave={() => setIsZoomed(false)}
-          onMouseMove={handleMouseMove}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onPointerMove={handlePointerMove}
+          onClick={handleTap}
+          role="button"
+          aria-label={isCoarsePointer && !isZoomed ? 'Tap to zoom image' : 'Product image'}
         >
           <div className="relative aspect-square w-full overflow-hidden">
             <ImageWithFallback
@@ -94,7 +124,8 @@ const ProductGallery = React.forwardRef<HTMLDivElement, ProductGalleryProps>(
             )}
           >
             <ZoomIn size={14} />
-            Hover to zoom
+            <span className="hidden sm:inline">Hover to zoom</span>
+            <span className="sm:hidden">Tap to zoom</span>
           </div>
         </div>
       </div>

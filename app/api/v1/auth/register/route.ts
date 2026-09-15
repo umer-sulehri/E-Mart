@@ -3,15 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { registerSchema } from "@/lib/validators";
 import { slugify } from "@/lib/utils";
-import { rateLimitByIp } from "@/lib/rate-limit";
+import { rateLimitByIp, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
-    const limit = rateLimitByIp(request, 15, 60 * 1000);
+    const limit = await rateLimitByIp(request, 3, 60 * 60 * 1000);
     if (!limit.success) {
       return NextResponse.json(
         { success: false, error: "Too many sign-up attempts. Please try again later." },
-        { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } }
+        { status: 429, headers: rateLimitHeaders(limit) }
       );
     }
 

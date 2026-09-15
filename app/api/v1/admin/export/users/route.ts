@@ -5,7 +5,7 @@ import { rateLimitByIp } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   try {
-    const limit = rateLimitByIp(request, 30, 60 * 1000);
+    const limit = await rateLimitByIp(request, 30, 60 * 1000);
     if (!limit.success) {
       return NextResponse.json(
         { success: false, error: "Too many requests" },

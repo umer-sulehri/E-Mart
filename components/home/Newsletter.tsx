@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
@@ -48,18 +49,20 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
     return (
       <section ref={ref} className={cn('py-3', className)}>
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
-          <div
-            className="relative overflow-hidden bg-secondary my-5 py-5 text-white"
-            style={{
-              background: "url('/images/banner-newsletter.jpg') no-repeat",
-              backgroundSize: 'cover',
-            }}
-          >
+          <div className="relative overflow-hidden bg-secondary my-5 py-5 text-white">
+            <Image
+              src="/images/banner-newsletter.jpg"
+              alt="Newsletter subscription"
+              fill
+              sizes="100vw"
+              className="object-cover object-center"
+              quality={80}
+            />
             <div className="relative container mx-auto px-4">
               <div className="flex flex-col items-center justify-center gap-6 md:flex-row">
                 <div className="w-full p-3 md:w-5/12">
                   <div className="section-header">
-                    <h2 className="font-heading text-4xl font-bold text-white md:text-5xl">
+                    <h2 className="font-heading text-3xl font-bold text-white sm:text-4xl md:text-5xl">
                       Get 25% Discount on your first purchase
                     </h2>
                   </div>

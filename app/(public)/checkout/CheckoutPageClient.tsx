@@ -965,6 +965,9 @@ export default function CheckoutPage() {
       {/* Content */}
       <section className="pb-12 lg:pb-16">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
+          {/* Mobile order summary (collapsible) */}
+          <MobileOrderSummary />
+
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             {/* Left: Form */}
             <div className="lg:col-span-8">
@@ -1035,6 +1038,78 @@ export default function CheckoutPage() {
         </div>
       </section>
     </>
+  );
+}
+
+// Mobile-only collapsible order summary so users see their total without
+// scrolling past the entire form on small screens.
+function MobileOrderSummary() {
+  const [open, setOpen] = useState(false);
+  const hydrated = useHydrated();
+  const subtotal = useCartStore((s) => s.subtotal);
+  const shippingCost = useCartStore((s) => s.shippingCost);
+  const discountAmount = useCartStore((s) => s.discountAmount);
+  const total = useCartStore((s) => s.total);
+  const itemCount = useCartStore((s) => s.uniqueItemCount);
+
+  const count = hydrated ? itemCount() : 0;
+  const shownTotal = hydrated ? total() : 0;
+  const shownSubtotal = hydrated ? subtotal() : 0;
+  const shownShipping = hydrated ? shippingCost() : 0;
+  const shownDiscount = hydrated ? discountAmount() : 0;
+
+  return (
+    <div className="mb-4 rounded-xl border border-muted-200 bg-white shadow-sm lg:hidden">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex w-full items-center justify-between px-4 py-3 text-left"
+        aria-expanded={open}
+        aria-controls="mobile-order-summary"
+      >
+        <span className="flex items-center gap-2 text-sm font-semibold text-secondary-800">
+          <ShoppingBag size={18} className="text-primary" />
+          Order Summary
+          {count > 0 && (
+            <span className="rounded-full bg-muted-100 px-2 py-0.5 text-xs font-medium text-muted-600">
+              {count} {count === 1 ? 'item' : 'items'}
+            </span>
+          )}
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="text-sm font-bold text-secondary-800">{formatPrice(shownTotal)}</span>
+          <ChevronRight
+            size={16}
+            className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+          />
+        </span>
+      </button>
+      {open && (
+        <div id="mobile-order-summary" className="border-t border-muted-100 px-4 py-3">
+          <dl className="space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <dt className="text-muted-500">Subtotal</dt>
+              <dd className="font-medium text-secondary-800">{formatPrice(shownSubtotal)}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-muted-500">Shipping</dt>
+              <dd className="font-medium text-secondary-800">
+                {shownShipping === 0 ? 'Free' : formatPrice(shownShipping)}
+              </dd>
+            </div>
+            {shownDiscount > 0 && (
+              <div className="flex items-center justify-between">
+                <dt className="text-muted-500">Discount</dt>
+                <dd className="font-medium text-success">-{formatPrice(shownDiscount)}</dd>
+              </div>
+            )}
+            <div className="flex items-center justify-between border-t border-muted-100 pt-2">
+              <dt className="font-semibold text-secondary-800">Total</dt>
+              <dd className="font-bold text-primary">{formatPrice(shownTotal)}</dd>
+            </div>
+          </dl>
+        </div>
+      )}
+    </div>
   );
 }
 

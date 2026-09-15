@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 export async function GET(
   _request: NextRequest,
@@ -85,7 +86,7 @@ export async function POST(
 
     const { data: comment, error } = await supabase
       .from("blog_comments")
-      .insert({ post_id: id, user_id: user.id, content })
+      .insert({ post_id: id, user_id: user.id, content: sanitizeHtml(content) })
       .select("id, content, created_at")
       .single();
 

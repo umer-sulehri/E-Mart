@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { rateLimitByIp } from "@/lib/rate-limit";
+import { rateLimitByIp, rateLimitHeaders } from "@/lib/rate-limit";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -9,11 +9,11 @@ const forgotPasswordSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const limit = rateLimitByIp(request, 5, 60 * 1000);
+    const limit = await rateLimitByIp(request, 3, 60 * 60 * 1000);
     if (!limit.success) {
       return NextResponse.json(
         { success: false, error: "Too many requests. Please try again later." },
-        { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } }
+        { status: 429, headers: rateLimitHeaders(limit) }
       );
     }
 

@@ -6,6 +6,7 @@ import CartSidebar from '@/components/cart/CartSidebar';
 import BackToTop from '@/components/ui/BackToTop';
 import CookieConsent from '@/components/ui/CookieConsent';
 import Preloader from '@/components/layout/Preloader';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,13 +19,14 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className="flex-1 scroll-mt-24">
+      <main id="main-content" className="flex-1 scroll-mt-24 pb-16 lg:pb-0">
         <div className="mx-auto max-w-organic">{children}</div>
       </main>
       <Footer />
       <CartSidebar />
       <BackToTop />
       <CookieConsent />
+      <MobileBottomNav />
     </div>
   );
 }
