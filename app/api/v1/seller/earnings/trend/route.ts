@@ -23,7 +23,7 @@ export async function GET() {
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== "seller" && profile?.role !== "admin") {
       return NextResponse.json(
@@ -36,7 +36,7 @@ export async function GET() {
       .from("vendors")
       .select("id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!vendor) {
       return NextResponse.json(
@@ -98,7 +98,8 @@ export async function GET() {
       success: true,
       data: buckets.map((b) => ({ label: b.label, revenue: b.revenue, orders: b.orders })),
     });
-  } catch {
+  } catch (error) {
+    console.error("[seller/earnings/trend] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

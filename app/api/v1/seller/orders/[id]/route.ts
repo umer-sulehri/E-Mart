@@ -25,7 +25,7 @@ export async function GET(
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== "seller" && profile?.role !== "admin") {
       return NextResponse.json(
@@ -38,7 +38,7 @@ export async function GET(
       .from("vendors")
       .select("id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!vendor) {
       return NextResponse.json(
@@ -82,6 +82,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: order });
   } catch (error) {
+    console.error("[v1/seller/orders/[id]/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
@@ -113,7 +114,7 @@ export async function PATCH(
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== "seller" && profile?.role !== "admin") {
       return NextResponse.json(
@@ -155,7 +156,7 @@ export async function PATCH(
       .from("vendors")
       .select("id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!vendor && profile?.role !== "admin") {
       return NextResponse.json(
@@ -240,6 +241,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: updated, message: "Order status updated" });
   } catch (error) {
+    console.error("[v1/seller/orders/[id]/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

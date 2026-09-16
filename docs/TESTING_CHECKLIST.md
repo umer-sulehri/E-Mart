@@ -6,94 +6,73 @@ Automated tests and manual QA sign-off for the platform.
 
 | Check | Command |
 |-------|---------|
-| Typecheck | `npx tsc --noEmit` |
+| Typecheck | `npm run typecheck` |
+| Build | `npm run build` |
+| Unit tests | `npm run test` (Vitest) |
 | Lint | `npm run lint` |
-| Unit tests | `npm test` (Vitest) |
 
-Expected baseline: **8 test files, 81 tests, all passing.**
+> All checks currently **green**: typecheck ✓, production build ✓ (143 routes), 143 unit tests across 12 files ✓, ESLint 0 warnings ✓.
 
-| File | Coverage |
-|------|----------|
-| `lib/__tests__/filter-params.test.ts` | 25 — shop search/query parsing, multi-select categories/brands, clearing filters preserving sort+search, combined AND filters, malformed-param edge cases |
-| `lib/__tests__/search-safe.test.ts` | 13 — user-search input sanitization |
-| `lib/__tests__/utils.test.ts` | 10 — formatting/helpers |
-| `lib/__tests__/dashboard.test.ts` | 9 — order-item normalization, quick-action eligibility (reorder/track/review) for empty/active/cancelled/delivered orders |
-| `lib/__tests__/csv.test.ts` | 8 — CSV export escaping |
-| `lib/__tests__/cart-metrics.test.ts` | 6 — cart totals/counts |
-| `lib/__tests__/sanitize-html.test.ts` | 6 — HTML sanitization |
-| `lib/__tests__/settings-merge.test.ts` | 4 — settings read-modify-write merge |
+## Issue regression grid
 
-## DB migrations to apply
+| # | Issue | Verification |
+|---|-------|--------------|
+| 1 | Compare link in header nav | Header shows "Compare" → `/compare` ✓ |
+| 2 | Product detail page UX | Sticky cart, breadcrumb, reviews anchor render ✓ |
+| 3 | Apply button in filters | Removed (live-apply on filter change) ✓ |
+| 4 | Admin offers page | Seller/status/type filters + bulk actions ✓ |
+| 5 | Image uploader | ImageUploader uploads via `/api/v1/uploads`; preview + remove ✓ |
+| 6 | Admin login-as (impersonation) | **Pending** — see `Impersonation follow-up` below |
+| 7 | Seller dashboard error handling | Section retries + seller `/debug` page ✓ |
+| 8 | Payout method | PayoutMethodModal + API + `seller_payout_methods` table ✓ |
+| 9 | "Write a Review" opens reviews tab | Opens reviews tab ✓ |
+| 10 | Reviews public page polish | Real API; error/retry + empty states; no mock fallback ✓ |
+| 11 | Review submission error handling | Backend + inline errors + draft autosave ✓ |
+| 12 | Remove notifications system | Routes, UI, `notification_preferences` removed ✓ |
+| 13 | Role UI alias | `getRoleLabel` → Buyer/Seller/Admin ✓ |
 
-Apply before manual testing (new DB or existing):
+## Manual QA — admin flows
 
-1. `supabase/seed-products-grocery.sql` — 51 grocery products across 17 categories (idempotent).
-2. `supabase/2026-reviews-moderation.sql` — adds `rejected` status, default `pending`, owned-reviews index, and the RLS update policy forcing new status to `pending`.
+- [ ] Sign in as admin → `/admin` dashboard loads without errors.
+- [ ] `/admin/users` — filter by role, block/unblock, change role.
+- [ ] `/admin/offers` — filter by seller + status; toggle active/featured.
+- [ ] `/admin/account` — update email/password/name; role badge reads correctly.
+- [ ] Product form — upload image via ImageUploader; preview + remove work.
 
-## Manual QA
+## Manual QA — seller flows
 
-### Product detail (Issue #1)
+- [ ] `/seller` — each section shows retry on a forced API failure.
+- [ ] `/seller/products` — create/edit with images; validation messages show.
+- [ ] `/seller/earnings` — payout method set/update via modal.
+- [ ] `/seller/payouts` — request prefill uses saved payout method.
 
-- [ ] Open two products A→B: no 404, correct product, related products render.
-- [ ] Deep-link/refresh a product URL on a non-`localhost` host/port (e.g. `--hostname 0.0.0.0 --port 3001` — directly hitting the network hostname).
-- [ ] Visit a nonexistent slug (`/products/does-not-exist`) → styled 404 page with search box.
-- [ ] With API down, product page shows the error recovery UI (not a blank 404).
-- [ ] `loading.tsx` skeleton appears during navigation.
+## Manual QA — public/review flows
 
-### Shop filters + responsive (Issue #2)
+- [ ] Product "Write a Review" opens the reviews tab.
+- [ ] Submit a review: bad rating/title/comment shows inline error; duplicate blocked.
+- [ ] Draft autosave: typed draft persists on refresh, clears after success.
+- [ ] `/reviews` — empty state (not mock); error banner + retry on failure.
 
-- [ ] `/products` loads; sidebar lists 17 grocery categories + brands.
-- [ ] Select multiple categories → combined product results (`search?categories=x,y`).
-- [ ] Select multiple brands → results restricted to those brands.
-- [ ] Price slider bounds match real catalog min/max (`/api/v1/products/price-range`).
-- [ ] Apply price range → only in-range products shown; clearing filters keeps sort + search text.
-- [ ] Mobile (≈390px): cards full-width, touch targets ≥ 44px, low-stock bead, page-number pagination hidden, prev/next usable; shop text scales.
-- [ ] Product back-link shows "Out of stock" and disables add-to-cart when `stock=0`.
+---
 
-### Buyer dashboard quick actions (unified ActionButton pass)
+## Impersonation follow-up (Issue #6) — NOT DONE
 
-- [ ] `/dashboard` shows 4 cards in a `grid-cols-2 sm:grid-cols-4` layout, all with identical gradient styling, radius, and icon sizes.
-- [ ] "Start Shopping" → `/products`; click fires `cta_click`/`start_shopping` analytics event; touch target large on mobile.
-- [ ] "Re-Order" disabled when the user has no eligible (non-cancelled) order; enabled otherwise → re-adds last order items to cart, toast, redirect to `/cart`.
-- [ ] "Track Order" disabled with no trackable (confirmed/processing/shipped/out_for_delivery) order; enabled → links to the latest order detail.
-- [ ] "Write Review" disabled without a delivered order; enabled → `/dashboard/reviews`.
-- [ ] All four cards: Tab-reachable, Enter/Space activates, `disabled` cards skipped in the tab order (links) / `disabled` (buttons), visible focus ring.
+**Status:** Deferred. Requires surgery on the two security-sensitive auth files
+(`lib/supabase/middleware.ts` + the auth callback), which was intentionally skipped
+to avoid corrupting the verified-green build during this session.
 
-### Reviews moderation + CRUD (Issue #4)
+**Planned design (do in a fresh session):**
+1. Add `jose` dependency (HS256 JWT signing for the impersonation cookie).
+2. `POST /api/v1/admin/impersonate` — admin-only; signs a short-lived
+   `_impersonate_token` cookie with `sub=userId`, `role`, `iat/exp` (15 min),
+   `aud='emart-impersonation'`. Optionally require the admin email in the
+   `NEXT_PUBLIC_ADMIN_EMAILS` allow-list to self-provide this cookie.
+3. Revoke route + `middleware.ts` gate: read the cookie; if present and valid,
+   treat the request as the target user (swap `sb-user-role`), and reject access to
+   the admin area unless the cookie role allows it.
+4. `components/ui/ImpersonationBanner.tsx` — always visible, "Stop impersonating"
+   calls the revoke endpoint and clears the cookie.
+5. Admin users page: "Log in as" action per non-admin user row.
 
-DB/applies via migration above.
-
-- [ ] Buyer writes a review for a delivered/shipped order → success toast says "pending approval"; appears in **Pending Moderation** tab; product rating/review_count unchanged.
-- [ ] Admin approves it (`/admin/reviews`) → review becomes public on product page; rating/count update; status badge now "Approved".
-- [ ] Admin Reject → review shows "Rejected"; **Edit is disabled**; Delete still allowed.
-- [ ] Admin Flag → "Flagged" badge; not publicly visible (RLS).
-- [ ] Edit an approved review → re-queued to Pending, rating interim drop expected until re-approval.
-- [ ] Try editing a review older than 30 days → 403 message.
-- [ ] Try `PATCH /api/v1/reviews/[id]` setting `status:"approved"` directly → rejected (RLS `WITH CHECK`); no self-approval possible.
-- [ ] Editing an already-rejected review → API 403.
-- [ ] Delete any own review (ConfirmDialog) → hard delete, empty-state returns.
-- [ ] "My Reviews" tab: sort (recent/highest/lowest) + pagination work with `status` filter; "Pending Moderation" tab filters `status=pending` only.
-- [ ] Unauthenticated GET `/api/v1/auth/reviews` → 401.
-
-### Auth dropdown (Issue #5 + dup-navigation pass)
-
-- [ ] Logged-in header menu has no name/role header block.
-- [ ] Menu shows: role-gated Admin/Seller link (admin/seller only) + My Account → `/dashboard` + Logout. **No "Dashboard" row.**
-- [ ] Absent roles see exactly two items: My Account + Logout.
-- [ ] Clicking My Account → `/dashboard`; clicking Logout clears session, redirects home, protected routes blocked.
-- [ ] Escape closes menu and returns focus to the trigger; click-outside closes.
-
-### Shop filters + responsive (2026 pass additions)
-
-- [ ] Category sidebar lists live `/api/v1/categories` (sub-categories indented); active-filter chips use live names.
-- [ ] "Featured Only" checkbox filters `is_featured=true` and renders a removable "Featured" chip.
-- [ ] Land on `/products?category=X`, apply more filters, then "Clear all" → **no products remain filtered** (no phantom category re-added).
-- [ ] Malformed params (`page=abc`, `limit=99999`, `minPrice=foo`) return valid pagination/defaults, never 500.
-- [ ] Landing on the long category/product list never shows duplicate cards.
-- [ ] Keyboard focus: quick-view/view, cart, and wishlist buttons show a visible focus ring; "View" label appears at ≥640px; grid is 1/2/3/4 columns across 320/640/1024/1280px.
-- [ ] Tab-through: first Tab focuses "Skip to main content" link which jumps to content past the header.
-
-### Regression
-
-- [ ] Cart, wishlist, orders, checkout, seller panel, admin panel smoke test after header changes.
-- [ ] Public product reviews page still lists only approved reviews.
+**Verification for this follow-up only:** typecheck + build + a manual sign-in-as
+happy path; then the normal green gate.

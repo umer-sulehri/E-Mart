@@ -16,13 +16,68 @@ export interface ReviewFormProps {
 
 const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
   ({ productSlug, productName, onSuccess, className }, ref) => {
-    const [rating, setRating] = React.useState(0);
+    const draftKey = productSlug ? `emart-review-draft-${productSlug}` : '';
+
+    const loadDraft = React.useCallback((): {
+      rating: number;
+      title: string;
+      comment: string;
+    } | null => {
+      if (typeof window === 'undefined' || !draftKey) return null;
+      try {
+        const raw = window.localStorage.getItem(draftKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            rating: Number(parsed.rating) || 0,
+            title: typeof parsed.title === 'string' ? parsed.title : '',
+            comment: typeof parsed.comment === 'string' ? parsed.comment : '',
+          };
+        }
+      } catch {
+        // Ignore corrupt drafts.
+      }
+      return null;
+    }, [draftKey]);
+
+    const initialDraft = React.useMemo(loadDraft, [loadDraft]);
+
+    const [rating, setRating] = React.useState(initialDraft?.rating || 0);
     const [hoveredRating, setHoveredRating] = React.useState(0);
-    const [title, setTitle] = React.useState('');
-    const [comment, setComment] = React.useState('');
+    const [title, setTitle] = React.useState(initialDraft?.title || '');
+    const [comment, setComment] = React.useState(initialDraft?.comment || '');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [submitError, setSubmitError] = React.useState('');
     const [errors, setErrors] = React.useState<Record<string, string>>({});
     const { isAuthenticated } = useAuthStore();
+
+    const saveDraft = React.useCallback(
+      (next: { rating: number; title: string; comment: string }) => {
+        if (!draftKey) return;
+        try {
+          window.localStorage.setItem(draftKey, JSON.stringify(next));
+          window.dispatchEvent(new CustomEvent('emart:review-draft-saved', { detail: draftKey }));
+        } catch {
+          // Storage may be unavailable (private mode); ignore.
+        }
+      },
+      [draftKey]
+    );
+
+    const clearDraft = React.useCallback(() => {
+      if (!draftKey) return;
+      try {
+        window.localStorage.removeItem(draftKey);
+      } catch {}
+    }, [draftKey]);
+
+    // Autosave the draft whenever the user edits it.
+    React.useEffect(() => {
+      if (productSlug && (rating > 0 || title || comment)) {
+        saveDraft({ rating, title, comment });
+      }
+    }, [rating, title, comment, productSlug, saveDraft]);
 
     const validate = (): boolean => {
       const newErrors: Record<string, string> = {};
@@ -44,9 +99,10 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
 
+      setSubmitError('');
       if (!validate()) return;
       if (!productSlug) {
-        toast.error('Unable to submit review');
+        setSubmitError('Unable to submit review: product is missing.');
         return;
       }
 
@@ -74,13 +130,17 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
             : 'Review submitted successfully! Thank you.'
         );
 
+        clearDraft();
         setRating(0);
         setTitle('');
         setComment('');
         setErrors({});
         onSuccess?.();
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+        const message =
+          err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+        setSubmitError(message);
+        toast.error(message);
       } finally {
         setIsSubmitting(false);
       }
@@ -226,6 +286,12 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
           </p>
         </div>
 
+        {submitError && (
+          <div className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+            {submitError}
+          </div>
+        )}
+
         <Button
           type="submit"
           variant="primary"
@@ -235,6 +301,11 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
         >
           Submit Review
         </Button>
+        <p className="text-xs text-muted-400">
+          {rating > 0 || title || comment
+            ? 'Your draft is saved locally and will be restored if you leave the page.'
+            : 'Your review will be visible after an admin approves it.'}
+        </p>
       </form>
     );
   }

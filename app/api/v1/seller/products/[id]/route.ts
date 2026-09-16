@@ -27,7 +27,7 @@ export async function GET(
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== "seller" && profile?.role !== "admin") {
       return NextResponse.json(
@@ -40,7 +40,7 @@ export async function GET(
       .from("vendors")
       .select("id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!vendor) {
       return NextResponse.json(
@@ -67,6 +67,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: product });
   } catch (error) {
+    console.error("[v1/seller/products/[id]/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
@@ -98,7 +99,7 @@ export async function PUT(
       .from("vendors")
       .select("id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!vendor) {
       return NextResponse.json(
@@ -194,6 +195,7 @@ export async function PUT(
       message: "Product updated successfully",
     });
   } catch (error) {
+    console.error("[v1/seller/products/[id]/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
@@ -225,7 +227,7 @@ export async function DELETE(
       .from("vendors")
       .select("id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!vendor) {
       return NextResponse.json(
@@ -265,6 +267,7 @@ export async function DELETE(
       message: "Product deactivated successfully",
     });
   } catch (error) {
+    console.error("[v1/seller/products/[id]/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

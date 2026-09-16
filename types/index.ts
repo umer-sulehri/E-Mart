@@ -476,32 +476,6 @@ export interface BlogComment {
 }
 
 // ========================
-// Notification Types
-// ========================
-
-export type NotificationType =
-  | 'order_placed'
-  | 'order_shipped'
-  | 'order_delivered'
-  | 'order_cancelled'
-  | 'payment_received'
-  | 'payment_failed'
-  | 'promo'
-  | 'system'
-  | 'review_received';
-
-export interface Notification {
-  id: string;
-  userId: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  data?: Record<string, unknown>;
-  isRead: boolean;
-  createdAt: string;
-}
-
-// ========================
 // Product Tag Types
 // ========================
 
@@ -630,15 +604,6 @@ export interface OrderStatusBreakdown {
   percentage: number;
 }
 
-export interface RecentActivity {
-  id: string;
-  type: NotificationType;
-  title: string;
-  description: string;
-  timestamp: string;
-  metadata?: Record<string, unknown>;
-}
-
 // ========================
 // Search Types
 // ========================
@@ -754,11 +719,6 @@ export interface Database {
         Insert: Omit<Coupon, 'id' | 'usedCount' | 'createdAt' | 'updatedAt'>;
         Update: Partial<Omit<Coupon, 'id' | 'usedCount' | 'createdAt' | 'updatedAt'>>;
       };
-      notifications: {
-        Row: Notification;
-        Insert: Omit<Notification, 'id' | 'isRead' | 'createdAt'>;
-        Update: Partial<Pick<Notification, 'isRead'>>;
-      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -770,7 +730,6 @@ export interface Database {
       coupon_type: CouponType;
       banner_position: BannerPosition;
       blog_status: BlogStatus;
-      notification_type: NotificationType;
       vendor_status: VendorStatus;
     };
   };

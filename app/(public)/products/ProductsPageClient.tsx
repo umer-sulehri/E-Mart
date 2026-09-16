@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -230,10 +230,25 @@ function ProductsContent() {
     <ProductFilters
       filters={filters}
       onFilterChange={applyFilters}
-      onApplied={() => setMobileFiltersOpen(false)}
       priceBounds={priceBounds}
     />
   );
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const hasOpenedMobileFilters = useRef(false);
+
+  // When the mobile filter drawer closes, filters have already been applied
+  // live — scroll back to the grid so the user sees the updated results and
+  // the page doesn't appear to jump (reduces CLS perception). Skip the first
+  // render (drawer starts closed on page load).
+  useEffect(() => {
+    if (!mobileFiltersOpen) {
+      if (!hasOpenedMobileFilters.current) return;
+      gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      hasOpenedMobileFilters.current = true;
+    }
+  }, [mobileFiltersOpen]);
 
   return (
     <section className="py-8">
@@ -376,8 +391,8 @@ function ProductsContent() {
                 className="absolute inset-0 bg-black/40"
                 onClick={() => setMobileFiltersOpen(false)}
               />
-              <div className="absolute inset-y-0 left-0 w-80 max-w-full overflow-y-auto bg-white p-5 shadow-xl">
-                <div className="mb-4 flex items-center justify-between">
+              <div className="absolute inset-y-0 left-0 flex w-80 max-w-full flex-col bg-white shadow-xl">
+                <div className="mb-4 flex items-center justify-between border-b border-muted-100 p-5">
                   <h3 className="font-heading text-lg font-bold text-secondary-800">
                     Filters
                   </h3>
@@ -388,13 +403,20 @@ function ProductsContent() {
                     <X size={20} />
                   </button>
                 </div>
-                {mobileFiltersPanel}
+                <div className="flex-1 overflow-y-auto p-5">{mobileFiltersPanel}</div>
+                <button
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="m-4 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600"
+                >
+                  <SlidersHorizontal size={16} />
+                  Show Results ({totalItems})
+                </button>
               </div>
             </div>
           )}
 
           {/* Main content */}
-          <div className="min-w-0 flex-1">
+          <div ref={gridRef} className="min-w-0 flex-1">
             {loading ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
                 {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (

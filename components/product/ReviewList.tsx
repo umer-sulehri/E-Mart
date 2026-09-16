@@ -26,6 +26,7 @@ export interface ReviewListProps {
   productSlug?: string;
   onWriteReview?: () => void;
   onReviewCountChange?: (count: number) => void;
+  refreshSignal?: number;
   className?: string;
 }
 
@@ -56,7 +57,7 @@ function ReviewSkeleton() {
 }
 
 const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
-  ({ productSlug, onWriteReview, onReviewCountChange, className }, ref) => {
+  ({ productSlug, onWriteReview, onReviewCountChange, refreshSignal, className }, ref) => {
     const [sortBy, setSortBy] = React.useState<SortOption>('newest');
     const [showSortDropdown, setShowSortDropdown] = React.useState(false);
     const [helpfulClicked, setHelpfulClicked] = React.useState<Set<string>>(new Set());
@@ -117,6 +118,13 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
     React.useEffect(() => {
       fetchReviews();
     }, [fetchReviews]);
+
+    // Re-fetch when a sibling notifies us that a review was just submitted.
+    React.useEffect(() => {
+      if (refreshSignal && refreshSignal > 0) {
+        fetchReviews();
+      }
+    }, [refreshSignal, fetchReviews]);
 
     const handleHelpful = async (reviewId: string) => {
       const isCurrentlyHelpful = helpfulClicked.has(reviewId);

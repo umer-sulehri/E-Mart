@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ChevronDown, ChevronUp, Star, Sparkles, X, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, ChevronUp, Star, Sparkles, X, RotateCcw } from 'lucide-react';
 import { CATEGORIES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { useDebounce } from '@/hooks/useDebounce';
 import BrandFilter from '@/components/product/BrandFilter';
 import AvailabilityToggle from '@/components/ui/AvailabilityToggle';
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider';
 import {
   EMPTY_FILTERS,
+  activeFilterCount,
   type FilterState,
 } from '@/lib/filterParams';
 
@@ -44,7 +46,6 @@ function flattenCategories(
 interface ProductFiltersProps {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
-  onApplied?: () => void;
   priceBounds?: { min: number; max: number };
 }
 
@@ -76,16 +77,13 @@ function FilterSection({
 export default function ProductFilters({
   filters,
   onFilterChange,
-  onApplied,
   priceBounds,
 }: ProductFiltersProps) {
-  // Local draft state — edits are not applied until "Apply Filters" is pressed.
-  const [draft, setDraft] = useState<FilterState>(filters);
-
   // Live category list from the DB, falling back to the static catalog while
   // loading or when the request fails.
-  const [categoryOptions, setCategoryOptions] =
-    useState<CategoryOption[]>(() => flattenCategories(CATEGORIES as unknown as ApiCategory[]));
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>(() =>
+    flattenCategories(CATEGORIES as unknown as ApiCategory[])
+  );
 
   useEffect(() => {
     fetch('/api/v1/categories')
@@ -98,75 +96,91 @@ export default function ProductFilters({
       .catch(() => {});
   }, []);
 
-  // Sync draft whenever the committed filters change externally (e.g. clearing
-  // an active-filter chip or clicking "Reset" on the results header).
-  useEffect(() => {
-    setDraft(filters);
-  }, [filters]);
-
-  const handleCategoryToggle = (categoryId: string) => {
-    const updated = draft.categories.includes(categoryId)
-      ? draft.categories.filter((id) => id !== categoryId)
-      : [...draft.categories, categoryId];
-    setDraft({ ...draft, categories: updated });
-  };
-
-  const handleRatingSelect = (rating: number) => {
-    setDraft({
-      ...draft,
-      minRating: draft.minRating === rating ? 0 : rating,
-    });
-  };
-
-  const handleBrandsChange = (brands: string[]) => {
-    setDraft({ ...draft, brands });
-  };
-
-  const handleAvailabilityChange = (inStockOnly: boolean) => {
-    setDraft({ ...draft, inStockOnly });
-  };
-
-  const handleFeaturedChange = (featuredOnly: boolean) => {
-    setDraft({ ...draft, featuredOnly });
-  };
-
-  const minPriceVal = Number(draft.minPrice) || 0;
-  const maxPriceVal = Number(draft.maxPrice) || 100000;
-  const priceRange: [number, number] = [
-    Math.min(minPriceVal, maxPriceVal),
-    Math.max(minPriceVal, maxPriceVal),
-  ];
-
   // Default bounds when the caller hasn't resolved real product prices yet.
   const boundsMin = priceBounds?.min ?? 0;
   const boundsMax = priceBounds?.max ?? 100000;
 
-  const handlePriceSliderChange = (range: [number, number]) => {
-    setDraft({
-      ...draft,
-      minPrice: range[0] > boundsMin ? String(range[0]) : '',
-      maxPrice: range[1] < boundsMax ? String(range[1]) : '',
+  // Price keeps a local "live" value so the slider tracks the pointer during
+  // a drag, while the committed filter is debounced (300ms) into the URL.
+  const [price, setPrice] = useState<[number, number]>(() => {
+    const min = Number(filters.minPrice) || boundsMin;
+    const max = Number(filters.maxPrice) || boundsMax;
+    return [Math.min(min, max), Math.max(min, max)];
+  });
+  const debouncedPrice = useDebounce(price, 300);
+
+  // Remembers the last price range WE committed, so external changes (Reset,
+  // chip removal) can be detected and mirrored back into the slider.
+  const lastCommittedPrice = useRef<{ min: string; max: string }>({
+    min: filters.minPrice,
+    max: filters.maxPrice,
+  });
+
+  // Resync the slider only when the committed filter changed from the outside,
+  // never from our own debounced commits (which would fight the user mid-drag).
+  useEffect(() => {
+    const min = Number(filters.minPrice) || boundsMin;
+    const max = Number(filters.maxPrice) || boundsMax;
+    const next: [number, number] = [Math.min(min, max), Math.max(min, max)];
+    if (
+      filters.minPrice !== lastCommittedPrice.current.min ||
+      filters.maxPrice !== lastCommittedPrice.current.max
+    ) {
+      setPrice(next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.minPrice, filters.maxPrice, boundsMin, boundsMax]);
+
+  useEffect(() => {
+    const minPrice = debouncedPrice[0] > boundsMin ? String(debouncedPrice[0]) : '';
+    const maxPrice = debouncedPrice[1] < boundsMax ? String(debouncedPrice[1]) : '';
+    if (minPrice !== filters.minPrice || maxPrice !== filters.maxPrice) {
+      lastCommittedPrice.current = { min: minPrice, max: maxPrice };
+      onFilterChange({ ...filters, minPrice, maxPrice });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedPrice, boundsMin, boundsMax]);
+
+  // Filters commit immediately on every change so results update in real time.
+  const commit = (next: FilterState) => onFilterChange(next);
+
+  const handleCategoryToggle = (categoryId: string) => {
+    const categories = filters.categories.includes(categoryId)
+      ? filters.categories.filter((id) => id !== categoryId)
+      : [...filters.categories, categoryId];
+    commit({ ...filters, categories });
+  };
+
+  const handleRatingSelect = (rating: number) => {
+    commit({
+      ...filters,
+      minRating: filters.minRating === rating ? 0 : rating,
     });
   };
 
-  const apply = () => {
-    onFilterChange(draft);
-    onApplied?.();
+  const handleBrandsChange = (brands: string[]) => {
+    commit({ ...filters, brands });
+  };
+
+  const handleAvailabilityChange = (inStockOnly: boolean) => {
+    commit({ ...filters, inStockOnly });
+  };
+
+  const handleFeaturedChange = (featuredOnly: boolean) => {
+    commit({ ...filters, featuredOnly });
   };
 
   const clearAll = () => {
-    setDraft(EMPTY_FILTERS);
-    onFilterChange(EMPTY_FILTERS);
+    commit(EMPTY_FILTERS);
   };
 
-  const hasActiveFilters =
-    draft.categories.length > 0 ||
-    draft.minPrice !== '' ||
-    draft.maxPrice !== '' ||
-    draft.minRating > 0 ||
-    draft.brands.length > 0 ||
-    draft.inStockOnly ||
-    draft.featuredOnly;
+  const appliedCount = useMemo(() => activeFilterCount(filters), [filters]);
+  const hasActiveFilters = appliedCount > 0;
+
+  const priceRange: [number, number] = [
+    Math.min(price[0], price[1]),
+    Math.max(price[0], price[1]),
+  ];
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm">
@@ -185,6 +199,13 @@ export default function ProductFilters({
         )}
       </div>
 
+      {hasActiveFilters && (
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          <Sparkles size={13} />
+          Filters Applied: {appliedCount}
+        </div>
+      )}
+
       <FilterSection title="Category">
         <div className="space-y-2">
           {categoryOptions.map((category) => (
@@ -195,7 +216,7 @@ export default function ProductFilters({
             >
               <input
                 type="checkbox"
-                checked={draft.categories.includes(category.slug)}
+                checked={filters.categories.includes(category.slug)}
                 onChange={() => handleCategoryToggle(category.slug)}
                 className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
               />
@@ -213,7 +234,7 @@ export default function ProductFilters({
           max={boundsMax}
           step={500}
           value={priceRange}
-          onChange={handlePriceSliderChange}
+          onChange={setPrice}
         />
       </FilterSection>
 
@@ -225,7 +246,7 @@ export default function ProductFilters({
               onClick={() => handleRatingSelect(rating)}
               className={cn(
                 'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors',
-                draft.minRating === rating
+                filters.minRating === rating
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-600 hover:bg-muted-50'
               )}
@@ -248,24 +269,22 @@ export default function ProductFilters({
       </FilterSection>
 
       <BrandFilter
-        selectedBrands={draft.brands}
+        selectedBrands={filters.brands}
         onChange={handleBrandsChange}
       />
 
       <AvailabilityToggle
-        inStockOnly={draft.inStockOnly}
+        inStockOnly={filters.inStockOnly}
         onChange={handleAvailabilityChange}
       />
 
       <div className="border-b border-muted-100 py-4">
-        <p className="mb-3 text-sm font-semibold text-secondary-800">
-          Featured
-        </p>
+        <p className="mb-3 text-sm font-semibold text-secondary-800">Featured</p>
         <label className="flex cursor-pointer items-center gap-2.5">
           <input
             type="checkbox"
-            checked={draft.featuredOnly}
-            onChange={() => handleFeaturedChange(!draft.featuredOnly)}
+            checked={filters.featuredOnly}
+            onChange={() => handleFeaturedChange(!filters.featuredOnly)}
             className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
           />
           <Sparkles size={16} className="text-warning" />
@@ -273,23 +292,17 @@ export default function ProductFilters({
         </label>
       </div>
 
-      <div className="mt-4 flex flex-col gap-2">
-        <button
-          onClick={apply}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-        >
-          <SlidersHorizontal size={15} />
-          Apply Filters
-        </button>
-        {hasActiveFilters && (
+      {hasActiveFilters && (
+        <div className="mt-4">
           <button
             onClick={clearAll}
-            className="inline-flex w-full items-center justify-center rounded-lg border border-muted-200 px-4 py-2 text-sm font-medium text-muted-600 transition-colors hover:bg-muted-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-muted-200 px-4 py-2.5 text-sm font-medium text-muted-600 transition-colors hover:bg-muted-50"
           >
-            Reset
+            <RotateCcw size={15} />
+            Reset All Filters
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

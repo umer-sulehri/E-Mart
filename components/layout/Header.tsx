@@ -19,6 +19,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/lib/analytics';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import MobileNav from './MobileNav';
@@ -215,11 +216,19 @@ function PagesDropdown() {
     { label: 'Checkout', href: '/checkout' },
     { label: 'Blog', href: '/blog' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Compare Products', href: '/compare' },
     { label: 'Help Center', href: '/help' },
     { label: 'My Account', href: '/dashboard' },
     { label: 'Seller Dashboard', href: '/seller' },
     { label: 'Admin', href: '/admin' },
   ];
+
+  const handleItemClick = (href: string) => {
+    setOpen(false);
+    if (href === '/compare') {
+      trackEvent({ action: 'cta_click', category: 'navigation', label: 'compare' });
+    }
+  };
 
   return (
     <div ref={ref} className="relative">
@@ -236,13 +245,13 @@ function PagesDropdown() {
         />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-0 min-w-[220px] border-0 bg-white p-3 shadow-lg">
+        <div className="absolute left-0 top-full z-50 mt-0 min-w-[220px] rounded-xl border border-muted-100 bg-white p-2 shadow-lg">
           {items.map((item) => (
             <Link
               key={item.href + item.label}
               href={item.href}
-              onClick={() => setOpen(false)}
-              className="block px-3 py-2 text-sm text-secondary hover:text-primary transition-colors"
+              onClick={() => handleItemClick(item.href)}
+              className="block rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
             >
               {item.label}
             </Link>

@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ComparePage() {
-  return <ComparePageClient />;
+export default function ComparePage({
+  searchParams,
+}: {
+  searchParams: { products?: string };
+}) {
+  const initialProductSlugs = (searchParams.products || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+
+  return <ComparePageClient initialProductSlugs={initialProductSlugs} />;
 }

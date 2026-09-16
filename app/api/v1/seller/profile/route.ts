@@ -32,6 +32,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: vendor });
   } catch (error) {
+    console.error("[v1/seller/profile/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
@@ -100,6 +101,7 @@ export async function PUT(request: NextRequest) {
       message: "Seller profile updated successfully",
     });
   } catch (error) {
+    console.error("[v1/seller/profile/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

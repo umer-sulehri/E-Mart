@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allowedFields = ["is_active", "is_featured", "category_id", "status", "is_new"];
+    const allowedFields = ["is_active", "is_featured", "category_id", "status", "is_new", "discount_price", "updated_at"];
     const updateFields: Record<string, unknown> = {};
     for (const field of allowedFields) {
       if (updates[field] !== undefined) {

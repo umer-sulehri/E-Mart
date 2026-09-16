@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, X, Plus, BarChart3, Trash2, Star } from 'lucide-react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
@@ -8,6 +8,7 @@ import { useCompareStore } from '@/store/compareStore';
 import { useCartStore } from '@/store';
 import type { CartItem, Product } from '@/types';
 import type { Product as ProductCardType } from '@/components/product/ProductCard';
+import type { CompareItem } from '@/store/compareStore';
 
 interface SearchResult {
   id: string;
@@ -20,13 +21,63 @@ interface SearchResult {
   image: string;
 }
 
-export default function ComparePage() {
+export default function ComparePage({
+  initialProductSlugs = [],
+}: {
+  initialProductSlugs?: string[];
+}) {
   const { items, removeItem, clearAll } = useCompareStore();
   const addItemToCart = useCartStore((s) => s.addItem);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+
+  // Hydrate the compare list from a deep link (?products=slug1,slug2) so
+  // shared links work without requiring the local persisted store.
+  useEffect(() => {
+    if (initialProductSlugs.length === 0) return;
+    const existing = useCompareStore.getState().items;
+    const missing = initialProductSlugs.filter(
+      (slug) => !existing.some((i) => i.slug === slug)
+    );
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      await Promise.all(
+        missing.slice(0, 4 - existing.length).map(async (slug) => {
+          try {
+            const res = await fetch(`/api/v1/products/${encodeURIComponent(slug)}`);
+            if (!res.ok) return;
+            const json = await res.json();
+            if (!json.success || !json.data) return;
+            const p = json.data;
+            const item: CompareItem = {
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              price: p.price,
+              discountPrice: p.discount_price ?? undefined,
+              rating: p.rating || 0,
+              reviewCount: p.review_count || 0,
+              image: p.images?.[0] || '/images/product-thumb-1.webp',
+              category: p.category?.name || p.categories?.[0]?.name || '',
+              brand: p.brand?.name || p.brands?.[0]?.name || '',
+              inStock: (p.stock_quantity ?? 0) > 0,
+            };
+            if (!cancelled) useCompareStore.getState().addItem(item);
+          } catch {
+            // Ignore individual fetch failures so a single bad slug never
+            // blocks the rest of the deep-linked products.
+          }
+        })
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialProductSlugs]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;

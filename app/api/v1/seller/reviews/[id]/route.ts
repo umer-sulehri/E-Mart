@@ -26,7 +26,7 @@ export async function POST(
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== "seller" && profile?.role !== "admin") {
       return NextResponse.json(
@@ -39,7 +39,7 @@ export async function POST(
       .from("vendors")
       .select("id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!vendor) {
       return NextResponse.json(
@@ -99,6 +99,7 @@ export async function POST(
       message: "Reply added successfully",
     });
   } catch (error) {
+    console.error("[v1/seller/reviews/[id]/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

@@ -25,7 +25,7 @@ export async function PATCH(
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== "seller" && profile?.role !== "admin") {
       return NextResponse.json(
@@ -92,6 +92,7 @@ export async function PATCH(
       message: "Coupon updated successfully",
     });
   } catch (error) {
+    console.error("[v1/seller/coupons/[id]/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
@@ -123,7 +124,7 @@ export async function DELETE(
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== "seller" && profile?.role !== "admin") {
       return NextResponse.json(
@@ -166,6 +167,7 @@ export async function DELETE(
       message: "Coupon deleted successfully",
     });
   } catch (error) {
+    console.error("[v1/seller/coupons/[id]/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

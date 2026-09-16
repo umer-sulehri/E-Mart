@@ -22,7 +22,7 @@ export async function GET(
       .from("products")
       .select("id")
       .eq("slug", slug)
-      .single();
+      .maybeSingle();
 
     if (!product) {
       return NextResponse.json(
@@ -86,6 +86,7 @@ export async function GET(
       },
     });
   } catch (error) {
+    console.error("[products/slug/reviews] GET error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
@@ -127,7 +128,7 @@ export async function POST(
       .from("products")
       .select("id")
       .eq("slug", slug)
-      .single();
+      .maybeSingle();
 
     if (!product) {
       return NextResponse.json(
@@ -141,7 +142,7 @@ export async function POST(
       .select("id")
       .eq("user_id", user.id)
       .eq("product_id", product.id)
-      .single();
+      .maybeSingle();
 
     if (existingReview) {
       return NextResponse.json(
@@ -178,8 +179,21 @@ export async function POST(
       .single();
 
     if (insertError) {
+      // Map common database errors to actionable messages instead of leaking
+      // the raw PostgREST message.
+      if (insertError.code === "23505") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "You have already reviewed this product",
+            code: "REVIEW_EXISTS",
+          },
+          { status: 400 }
+        );
+      }
+      console.error("[products/slug/reviews] insert error:", insertError);
       return NextResponse.json(
-        { success: false, error: insertError.message },
+        { success: false, error: "Could not submit your review. Please try again.", code: insertError.code },
         { status: 500 }
       );
     }
@@ -217,6 +231,7 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
+    console.error("[products/slug/reviews] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

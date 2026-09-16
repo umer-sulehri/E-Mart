@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { SlidersHorizontal, X } from 'lucide-react';
 import type { Product } from '@/components/product/ProductCard';
 import ProductFilters, { type FilterState } from '@/components/product/ProductFilters';
+import { activeFilterCount } from '@/lib/filterParams';
 import ProductGrid from '@/components/product/ProductGrid';
 import Pagination from '@/components/product/Pagination';
 import SortDropdown, { type SortValue } from '@/components/product/SortDropdown';
@@ -96,6 +97,10 @@ function CategoryDetailContent() {
 
         if (filters.minPrice !== '') params.minPrice = filters.minPrice;
         if (filters.maxPrice !== '') params.maxPrice = filters.maxPrice;
+        if (filters.minRating > 0) params.minRating = String(filters.minRating);
+        if (filters.brands.length > 0) params.brands = filters.brands.join(',');
+        if (filters.inStockOnly) params.inStock = 'true';
+        if (filters.featuredOnly) params.featured = 'true';
 
         const res = await api.products.list(params) as ApiListResponse<ApiProduct>;
 
@@ -189,6 +194,11 @@ function CategoryDetailContent() {
             >
               <SlidersHorizontal size={16} />
               Filters
+              {activeFilterCount(filters) > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
+                  {activeFilterCount(filters)}
+                </span>
+              )}
             </button>
 
             {/* Mobile filter drawer */}

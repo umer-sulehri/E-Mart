@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { ShoppingCart, Heart, Share2, Truck, ShieldCheck, RotateCcw, GitCompareArrows } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StarRating from '@/components/ui/StarRating';
@@ -9,6 +10,7 @@ import Button from '@/components/ui/Button';
 import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
 import SellerInformationCard from '@/components/seller/SellerInformationCard';
 import { formatPrice, cn } from '@/lib/utils';
+import { trackEvent } from '@/lib/analytics';
 import { useCartStore } from '@/store/cartStore';
 import { useCompareStore } from '@/store/compareStore';
 import { useAuthStore } from '@/store/authStore';
@@ -34,6 +36,8 @@ export default function ProductDetailClient({
   const addCompare = useCompareStore((s) => s.addItem);
   const removeCompare = useCompareStore((s) => s.removeItem);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const router = useRouter();
+  const pathname = usePathname();
   const { isWishlisted, toggleWishlist, wishlistLoading } = useAddToWishlist(
     product.id,
     product.name,
@@ -42,9 +46,25 @@ export default function ProductDetailClient({
 
   const isCompared = compareItems.some((i) => i.id === product.id);
 
+  // Keep the /compare deep link (?products=slug1,slug2) shareable by syncing
+  // the URL whenever the persisted compare list changes.
+  const syncCompareUrl = (items: { slug: string }[]) => {
+    if (items.length === 0) {
+      router.replace('/compare', { scroll: false });
+    } else {
+      const slugs = items
+        .map((i) => i.slug)
+        .filter(Boolean)
+        .join(',');
+      router.replace(`/compare?products=${slugs}`, { scroll: false });
+    }
+  };
+
   const handleAddToCompare = () => {
     if (isCompared) {
+      const remaining = compareItems.filter((i) => i.id !== product.id);
       removeCompare(product.id);
+      syncCompareUrl(remaining);
       toast.success('Removed from compare');
       return;
     }
@@ -65,6 +85,8 @@ export default function ProductDetailClient({
       brand: product.brand?.name || '',
       inStock: product.stockQuantity > 0,
     });
+    syncCompareUrl([...compareItems, { slug: product.slug }]);
+    trackEvent({ action: 'compare_add', category: 'product', label: product.slug });
     toast.success('Added to compare');
   };
 
@@ -108,10 +130,66 @@ export default function ProductDetailClient({
     }
   };
 
+  const openReviewsTab = () => {
+    window.dispatchEvent(new CustomEvent('emart:open-reviews'));
+  };
+
+  const handleWriteReviewClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAuthenticated) {
+      openReviewsTab();
+    } else {
+      trackEvent({ action: 'cta_click', category: 'review', label: 'sign-in-to-review' });
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  };
+
+  // Sticky "Add to Cart": once the inline CTA scrolls out of view on small
+  // screens, surface a fixed bottom bar so the purchase action stays reachable.
+  const inlineCtaRef = React.useRef<HTMLDivElement>(null);
+  const [stickyVisible, setStickyVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = inlineCtaRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0, rootMargin: '0px 0px -80px 0px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleStickyAddToCart = () => {
+    if (product.stockQuantity <= 0) {
+      toast.error('This product is out of stock');
+      return;
+    }
+    setAddingToCart(true);
+    const price = hasDiscount ? product.discountPrice! : product.price;
+    addItem({
+      id: `cart-${product.id}-${Date.now()}`,
+      productId: product.id,
+      product,
+      quantity,
+      unitPrice: price,
+      totalPrice: price * quantity,
+      addedAt: new Date().toISOString(),
+    });
+    addToServer(product.id, quantity).finally(() => {
+      setAddingToCart(false);
+      toast.success(`${product.name} added to cart!`);
+    });
+  };
+
+  const priceDisplay = formatPrice(
+    hasDiscount ? product.discountPrice! : product.price
+  );
+
   return (
     <div className="flex flex-col gap-5">
       {/* Brand */}
-      {product.brand && (
+      {product.brand?.name && (
         <span className="text-sm font-medium text-primary">
           {product.brand.name}
         </span>
@@ -122,52 +200,52 @@ export default function ProductDetailClient({
         {product.name}
       </h1>
 
-      {/* Rating */}
-      <div className="flex items-center gap-3">
+      {/* Rating + review CTA */}
+      <div className="flex flex-wrap items-center gap-3">
         <StarRating rating={product.rating} size="md" showValue />
-        <span className="text-sm text-muted-500">
-          {product.reviewCount} reviews
-        </span>
+        <span className="text-sm text-muted-500">{product.reviewCount} reviews</span>
         <a
-          href="#tab-reviews"
-          onClick={(e) => {
-            e.preventDefault();
-            document
-              .getElementById('tab-reviews')
-              ?.scrollIntoView({ behavior: 'smooth' });
-            document.querySelectorAll('.tab-btn').forEach((btn) => {
-              btn.classList.remove('border-primary', 'text-primary', 'font-semibold');
-              btn.classList.add('border-transparent', 'text-muted-600', 'font-medium');
-            });
-            const reviewTab = document.querySelector('[data-tab="reviews"]');
-            if (reviewTab) {
-              reviewTab.classList.add('border-primary', 'text-primary', 'font-semibold');
-              reviewTab.classList.remove('border-transparent', 'text-muted-600', 'font-medium');
-            }
-            document.querySelectorAll('.tab-content').forEach((el) => el.classList.add('hidden'));
-            document.getElementById('tab-reviews')?.classList.remove('hidden');
-          }}
+          href={isAuthenticated ? '#reviews' : `/login?redirect=${encodeURIComponent(pathname)}`}
+          onClick={handleWriteReviewClick}
           className="text-sm font-medium text-primary transition-colors hover:text-primary-500"
         >
-          Write a Review
+          {isAuthenticated ? 'Write a Review' : 'Sign in to Review'}
         </a>
       </div>
 
-      {/* Price */}
+      {/* Sold by — shown above price so buyers see the store context early */}
+      {product.vendor?.id && (
+        <SellerInformationCard
+          seller={{
+            id: product.vendor.id,
+            name: product.vendor.name,
+            slug: product.vendor.slug,
+            rating: product.vendor.rating ?? 0,
+            totalSales: product.vendor.totalSales ?? 0,
+            joinedDate: product.vendor.createdAt
+              ? new Date(product.vendor.createdAt).toLocaleDateString()
+              : '',
+            isVerified: product.vendor.status === 'approved',
+          }}
+        />
+      )}
+
+      {/* Price + Stock */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-2xl font-bold text-secondary-800">
-          {formatPrice(hasDiscount ? product.discountPrice! : product.price)}
-        </span>
+        <span className="text-2xl font-bold text-secondary-800">{priceDisplay}</span>
         {hasDiscount && (
           <>
-            <del className="text-lg text-muted-500">
-              {formatPrice(product.price)}
-            </del>
+            <del className="text-lg text-muted-500">{formatPrice(product.price)}</del>
             <span className="rounded-full bg-danger-100 px-2.5 py-1 text-xs font-semibold text-danger-700">
               {discount}% OFF
             </span>
           </>
         )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-600">Availability:</span>
+        <StockStatusIndicator stock={product.stockQuantity} showQuantity />
       </div>
 
       {/* Short Description */}
@@ -180,14 +258,8 @@ export default function ProductDetailClient({
       {/* Divider */}
       <div className="border-t border-muted-100" />
 
-      {/* Stock Status */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-600">Availability:</span>
-        <StockStatusIndicator stock={product.stockQuantity} showQuantity />
-      </div>
-
       {/* Quantity + Add to Cart + Wishlist */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div ref={inlineCtaRef} className="flex flex-wrap items-center gap-3">
         <QuantitySelector
           value={quantity}
           onChange={setQuantity}
@@ -234,22 +306,21 @@ export default function ProductDetailClient({
       {/* Divider */}
       <div className="border-t border-muted-100" />
 
-      {/* SKU & Category */}
+      {/* SKU + Category (display-only badge below the product ID block) */}
       <div className="space-y-2 text-sm">
         <div className="flex gap-2">
           <span className="font-medium text-secondary-700">SKU:</span>
           <span className="text-muted-600">{product.sku}</span>
         </div>
-        <div className="flex gap-2">
-          <span className="font-medium text-secondary-700">Category:</span>
-          <a
-            href={`/products?category=${product.category.slug}`}
-            className="text-primary transition-colors hover:text-primary-500"
-          >
-            {product.category.name}
-          </a>
-        </div>
-        {product.brand && (
+        {product.category?.name && (
+          <div className="flex gap-2">
+            <span className="font-medium text-secondary-700">Category:</span>
+            <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-gray-700">
+              {product.category.name}
+            </span>
+          </div>
+        )}
+        {product.brand?.name && (
           <div className="flex gap-2">
             <span className="font-medium text-secondary-700">Brand:</span>
             <span className="text-muted-600">{product.brand.name}</span>
@@ -260,48 +331,51 @@ export default function ProductDetailClient({
       {/* Divider */}
       <div className="border-t border-muted-100" />
 
-      {/* Sold by */}
-      {product.vendor?.id && (
-        <SellerInformationCard
-          seller={{
-            id: product.vendor.id,
-            name: product.vendor.name,
-            slug: product.vendor.slug,
-            rating: product.vendor.rating ?? 0,
-            totalSales: product.vendor.totalSales ?? 0,
-            joinedDate: product.vendor.createdAt
-              ? new Date(product.vendor.createdAt).toLocaleDateString()
-              : '',
-            isVerified: product.vendor.status === 'approved',
-          }}
-        />
-      )}
-
       {/* Trust Badges */}
       <div className="grid grid-cols-3 gap-4">
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary">
             <Truck size={20} />
           </div>
-          <span className="text-xs font-medium text-secondary-700">
-            Free Delivery
-          </span>
+          <span className="text-xs font-medium text-secondary-700">Free Delivery</span>
         </div>
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary">
             <ShieldCheck size={20} />
           </div>
-          <span className="text-xs font-medium text-secondary-700">
-            Secure Payment
-          </span>
+          <span className="text-xs font-medium text-secondary-700">Secure Payment</span>
         </div>
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary">
             <RotateCcw size={20} />
           </div>
-          <span className="text-xs font-medium text-secondary-700">
-            Easy Returns
-          </span>
+          <span className="text-xs font-medium text-secondary-700">Easy Returns</span>
+        </div>
+      </div>
+
+      {/* Sticky Add to Cart (mobile) */}
+      <div
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-40 border-t border-muted-100 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm transition-transform duration-300 lg:hidden',
+          stickyVisible ? 'translate-y-0' : 'translate-y-full'
+        )}
+        aria-hidden={!stickyVisible}
+      >
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs text-muted-500">{product.name}</p>
+            <p className="text-lg font-bold text-secondary-800">{priceDisplay}</p>
+          </div>
+          <Button
+            variant="primary"
+            onClick={handleStickyAddToCart}
+            disabled={product.stockQuantity <= 0 || addingToCart}
+            loading={addingToCart}
+            className="whitespace-nowrap"
+          >
+            <ShoppingCart size={16} />
+            Add to Cart
+          </Button>
         </div>
       </div>
     </div>

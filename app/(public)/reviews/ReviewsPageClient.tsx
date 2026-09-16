@@ -1,11 +1,13 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import {
+  AlertCircle,
   ChevronRight,
   Home,
+  RotateCcw,
   Star,
   ThumbsUp,
   Loader2,
@@ -30,83 +32,6 @@ interface Review {
   helpfulByUser: boolean;
 }
 
-const MOCK_REVIEWS: Review[] = [
-  {
-    id: '1',
-    userId: 'u1',
-    userName: 'Ahmad Khan',
-    userAvatar: '/images/reviewer-1.jpg',
-    rating: 5,
-    title: 'Excellent quality organic products',
-    comment: 'I have been ordering from E-Mart for months now. The freshness of their fruits and vegetables is unmatched. Highly recommended!',
-    productName: 'Organic Mixed Fruit Basket',
-    productSlug: 'organic-mixed-fruit-basket',
-    productImage: '/images/product-thumb-1.webp',
-    date: '2026-08-20',
-    helpful: 12,
-    helpfulByUser: false,
-  },
-  {
-    id: '2',
-    userId: 'u2',
-    userName: 'Sara Malik',
-    userAvatar: '/images/reviewer-2.jpg',
-    rating: 4,
-    title: 'Great service, fast delivery',
-    comment: 'Ordered groceries at 10am and received them by 4pm the same day. The packaging was excellent and everything was fresh.',
-    productName: 'Fresh Dairy Milk 1L',
-    productSlug: 'fresh-dairy-milk',
-    productImage: '/images/product-thumb-2.webp',
-    date: '2026-08-18',
-    helpful: 8,
-    helpfulByUser: false,
-  },
-  {
-    id: '3',
-    userId: 'u3',
-    userName: 'Ali Raza',
-    userAvatar: '/images/reviewer-3.jpg',
-    rating: 5,
-    title: 'Best prices for organic produce',
-    comment: 'Compared to other online stores, E-Mart offers the best prices for organic produce. The desi ghee is absolutely pure and authentic.',
-    productName: 'Fresh Desi Ghee 1kg',
-    productSlug: 'fresh-desi-ghee',
-    productImage: '/images/product-thumb-3.webp',
-    date: '2026-08-15',
-    helpful: 15,
-    helpfulByUser: true,
-  },
-  {
-    id: '4',
-    userId: 'u4',
-    userName: 'Fatima Noor',
-    userAvatar: '/images/reviewer-1.jpg',
-    rating: 3,
-    title: 'Good but delivery was delayed',
-    comment: 'Products were fresh and good quality, but the delivery was delayed by a day. Expected same-day delivery as promised.',
-    productName: 'Whole Wheat Bread Pack',
-    productSlug: 'whole-wheat-bread',
-    productImage: '/images/product-thumb-1.webp',
-    date: '2026-08-12',
-    helpful: 3,
-    helpfulByUser: false,
-  },
-  {
-    id: '5',
-    userId: 'u5',
-    userName: 'Hassan Ahmed',
-    userAvatar: '/images/reviewer-2.jpg',
-    rating: 5,
-    title: 'My go-to grocery store',
-    comment: 'E-Mart has become my family\'s go-to grocery store. The quality is consistent and the customer support is very responsive.',
-    productName: 'Organic Green Tea Pack',
-    productSlug: 'organic-green-tea',
-    productImage: '/images/product-thumb-2.webp',
-    date: '2026-08-10',
-    helpful: 20,
-    helpfulByUser: false,
-  },
-];
 
 const ITEMS_PER_PAGE = 4;
 
@@ -117,6 +42,8 @@ export default function ReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [overallRating, setOverallRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,20 +52,21 @@ export default function ReviewsPage() {
       try {
         const res = await fetch('/api/v1/reviews');
         const json = await res.json();
-        if (!cancelled && json.success && json.data?.length) {
+        if (json.success && json.data?.length) {
           setReviews(json.data);
           calculateStats(json.data);
+        } else if (json.success) {
+          // Genuinely no reviews yet â€” show the empty state instead of
+          // falling back to fake data.
+          setReviews([]);
+          setOverallRating(0);
+          setTotalReviews(0);
+          setError(null);
         } else {
-          if (!cancelled) {
-            setReviews(MOCK_REVIEWS);
-            calculateStats(MOCK_REVIEWS);
-          }
+          setError(json.error || 'Failed to load reviews');
         }
       } catch {
-        if (!cancelled) {
-          setReviews(MOCK_REVIEWS);
-          calculateStats(MOCK_REVIEWS);
-        }
+        setError('Failed to load reviews');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -153,12 +81,16 @@ export default function ReviewsPage() {
 
     fetchReviews();
     return () => { cancelled = true; };
-  }, []);
+  }, [reloadKey]);
+
+  const reloadReviews = () => {
+    setError(null);
+    setReloadKey((k) => k + 1);
+  };
 
   const filteredReviews = reviews.filter(
     (r) => ratingFilter === 0 || r.rating === ratingFilter
   );
-
   const paginatedReviews = filteredReviews.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
@@ -269,7 +201,23 @@ export default function ReviewsPage() {
       {/* Reviews List */}
       <section className="py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-12">
-          {loading ? (
+          {error ? (
+            <div className="rounded-2xl border border-error-200 bg-error-50 p-6 text-center">
+              <AlertCircle size={40} className="mx-auto mb-3 text-error-500" />
+              <h3 className="font-heading text-lg font-bold text-secondary-800">
+                Couldn&apos;t load reviews
+              </h3>
+              <p className="mt-1 text-sm text-secondary-600">{error}</p>
+              <button
+                type="button"
+                onClick={reloadReviews}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-600"
+              >
+                <RotateCcw size={16} />
+                Try again
+              </button>
+            </div>
+          ) : loading ? (
             <div className="space-y-6">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="animate-pulse rounded-2xl bg-white p-6 shadow-sm">

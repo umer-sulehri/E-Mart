@@ -86,6 +86,19 @@ async function fetchProductBySlug(slug: string): Promise<Product | null> {
             }
           : { id: '', name: '', slug: '', isActive: true, displayOrder: 0, createdAt: '', updatedAt: '' },
       categoryId: p.categories?.id || p.category?.id || '',
+      subcategory: p.subcategories
+        ? {
+            id: p.subcategories.id || '',
+            name: p.subcategories.name,
+            slug: p.subcategories.slug,
+            isActive: true,
+            displayOrder: 0,
+            createdAt: '',
+            updatedAt: '',
+            categoryId: p.categories?.id || p.category?.id || '',
+          }
+        : undefined,
+      subcategoryId: p.subcategories?.id,
       brand: p.brands
         ? {
             id: p.brands.id || '',
@@ -245,6 +258,36 @@ export default async function ProductDetailPage({
                     reviewCount: product.reviewCount,
                   }
                 : undefined,
+            ...(product.vendor?.name
+              ? {
+                  seller: {
+                    '@type': 'Organization',
+                    name: product.vendor.name,
+                    url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}/sellers/${product.vendor.slug}`,
+                  },
+                }
+              : {}),
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
+
+      {/* BreadcrumbList JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}/` },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: product.category.name,
+                item: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}/products?category=${product.category.slug}`,
+              },
+              { '@type': 'ListItem', position: 3, name: product.name },
+            ],
           }).replace(/</g, '\\u003c'),
         }}
       />
@@ -253,12 +296,20 @@ export default async function ProductDetailPage({
       <section className="border-b border-muted-100 bg-white py-4">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
           <Breadcrumb
+            activeItemClassName="text-primary"
             items={[
-              { label: 'Products', href: '/products' },
               {
                 label: product.category.name,
                 href: `/products?category=${product.category.slug}`,
               },
+              ...(product.subcategory?.slug
+                ? [
+                    {
+                      label: product.subcategory.name,
+                      href: `/products?category=${product.category.slug}`,
+                    },
+                  ]
+                : []),
               { label: product.name },
             ]}
           />

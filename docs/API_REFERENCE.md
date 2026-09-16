@@ -168,18 +168,6 @@ Newsletter subscriptions.
 |-----------|----------|
 | POST | /api/v1/newsletter/subscribe |
 
-## /notifications
-
-In-app + email/SMS notifications.
-
-| Method(s) | Endpoint |
-|-----------|----------|
-| GET, PATCH | /api/v1/notifications |
-| POST | /api/v1/notifications/email/send |
-| POST | /api/v1/notifications/mark-all-read |
-| GET, PUT | /api/v1/notifications/preferences |
-| POST | /api/v1/notifications/sms/send |
-
 ## /orders
 
 Buyer orders and lifecycle actions.

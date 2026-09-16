@@ -6,6 +6,7 @@ import { Wallet, Clock, CheckCircle, XCircle, CreditCard, Plus } from 'lucide-re
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { formatPrice, formatDate } from '@/lib/utils';
+import type { PayoutMethod } from '@/components/seller/PayoutMethodModal';
 
 interface Payout {
   id: string;
@@ -39,6 +40,21 @@ export default function SellerPayoutsPage() {
   const [accountDetails, setAccountDetails] = useState('');
   const [requesting, setRequesting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [savedMethod, setSavedMethod] = useState<PayoutMethod | null>(null);
+
+  const openRequestModal = useCallback(() => {
+    const pref = savedMethod?.preferred_method || 'bank';
+    setMethod(pref);
+    setAccountDetails(
+      pref === 'bank'
+        ? `${savedMethod?.account_number || ''}`.trim()
+        : pref === 'easypaisa'
+          ? savedMethod?.easypaisa_phone || ''
+          : savedMethod?.jazzcash_phone || ''
+    );
+    setFieldErrors({});
+    setRequestOpen(true);
+  }, [savedMethod]);
 
   const fetchPayouts = useCallback(async () => {
     setLoading(true);
@@ -63,9 +79,20 @@ export default function SellerPayoutsPage() {
     }
   }, []);
 
+  const fetchSavedMethod = useCallback(async () => {
+    try {
+      const res = await fetch('/api/v1/seller/payout/method');
+      const data = await res.json();
+      if (data.success) setSavedMethod(data.data || null);
+    } catch {
+      console.error('[payouts] failed to load saved payout method');
+    }
+  }, []);
+
   useEffect(() => {
     fetchPayouts();
-  }, [fetchPayouts]);
+    fetchSavedMethod();
+  }, [fetchPayouts, fetchSavedMethod]);
 
   const availableBalance = summary?.pending_balance ?? 0;
 
@@ -139,7 +166,7 @@ export default function SellerPayoutsPage() {
           <h2 className="text-2xl font-bold text-secondary-800">Payouts</h2>
           <p className="text-sm text-muted-500">Request and track your earnings payouts</p>
         </div>
-        <Button size="sm" onClick={() => setRequestOpen(true)}>
+        <Button size="sm" onClick={openRequestModal}>
           <Plus className="h-4 w-4" />
           Request Payout
         </Button>

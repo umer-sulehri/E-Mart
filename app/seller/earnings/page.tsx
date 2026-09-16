@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { DollarSign, Clock, TrendingUp, Calendar, CreditCard } from 'lucide-react';
+import { DollarSign, Clock, TrendingUp, Calendar, CreditCard, Smartphone } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import Button from '@/components/ui/Button';
+import PayoutMethodModal, { type PayoutMethod } from '@/components/seller/PayoutMethodModal';
 
 function SkeletonBlock({ className = 'h-4 w-full' }: { className?: string }) {
   return <div className={`animate-pulse rounded bg-muted-200 ${className}`} />;
@@ -24,6 +25,9 @@ function StatSkeleton() {
 
 export default function SellerEarningsPage() {
   const [loading, setLoading] = useState(true);
+  const [methodLoading, setMethodLoading] = useState(true);
+  const [payoutMethodOpen, setPayoutMethodOpen] = useState(false);
+  const [payoutMethod, setPayoutMethod] = useState<PayoutMethod | null>(null);
   const [stats, setStats] = useState({
     totalRevenue: 0,
     monthlyRevenue: 0,
@@ -34,6 +38,26 @@ export default function SellerEarningsPage() {
     commissionRate: 0,
     netEarnings: 0,
   });
+
+  const fetchPayoutMethod = useCallback(async () => {
+    setMethodLoading(true);
+    try {
+      const res = await fetch('/api/v1/seller/payout/method');
+      const data = await res.json();
+      if (data.success) {
+        setPayoutMethod(data.data || null);
+      }
+    } catch {
+      // Optional section; earnings still render without it.
+      console.error('[earnings] failed to load payout method');
+    } finally {
+      setMethodLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPayoutMethod();
+  }, [fetchPayoutMethod]);
 
   useEffect(() => {
     async function fetchEarnings() {
@@ -55,6 +79,22 @@ export default function SellerEarningsPage() {
   }, []);
 
   const commissionPaid = stats.totalRevenue - stats.netEarnings;
+
+  const methodLabel =
+    payoutMethod?.preferred_method === 'easypaisa'
+      ? 'Easypaisa'
+      : payoutMethod?.preferred_method === 'jazzcash'
+        ? 'JazzCash'
+        : 'Bank Transfer';
+
+  const methodSubtext =
+    payoutMethod?.preferred_method === 'bank'
+      ? [payoutMethod.bank_name, payoutMethod.account_number]
+          .filter(Boolean)
+          .join(' - ') || 'Not set yet'
+      : payoutMethod?.preferred_method === 'easypaisa'
+        ? payoutMethod.easypaisa_phone || 'Not set yet'
+        : payoutMethod?.jazzcash_phone || 'Not set yet';
 
   const earningsStats = [
     { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: DollarSign, bg: 'bg-primary' },
@@ -124,21 +164,46 @@ export default function SellerEarningsPage() {
         <div className="rounded-xl bg-white p-6 shadow-sm">
           <h3 className="mb-4 text-lg font-bold text-secondary-800">Payout Method</h3>
           <div className="rounded-lg border border-muted-200 p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
-                <CreditCard className="h-5 w-5 text-primary" />
+            {methodLoading ? (
+              <div className="space-y-2">
+                <div className="h-4 w-28 animate-pulse rounded bg-muted-200" />
+                <div className="h-3 w-36 animate-pulse rounded bg-muted-200" />
               </div>
-              <div>
-                <p className="text-sm font-semibold text-secondary-800">Bank Account</p>
-                <p className="text-xs text-muted-500">HBL - ****4589</p>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
+                  {payoutMethod?.preferred_method === 'bank' ? (
+                    <CreditCard className="h-5 w-5 text-primary" />
+                  ) : (
+                    <Smartphone className="h-5 w-5 text-primary" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-secondary-800">{methodLabel}</p>
+                  <p className="truncate text-xs text-muted-500">{methodSubtext}</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
-          <Button variant="outline" className="mt-4 w-full">
-            Update Payout Method
+          <Button
+            variant="outline"
+            className="mt-4 w-full"
+            onClick={() => setPayoutMethodOpen(true)}
+          >
+            {payoutMethod ? 'Update Payout Method' : 'Add Payout Method'}
           </Button>
         </div>
       </div>
+
+      <PayoutMethodModal
+        open={payoutMethodOpen}
+        current={payoutMethod}
+        loading={methodLoading}
+        onClose={() => setPayoutMethodOpen(false)}
+        onSaved={(method) => {
+          setPayoutMethod(method);
+        }}
+      />
     </div>
   );
 }

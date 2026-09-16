@@ -147,10 +147,23 @@ export const ORDER_STATUSES = [
 ] as const;
 
 export const USER_ROLES = [
-  { id: "customer", label: "Customer" },
+  { id: "customer", label: "Buyer" },
   { id: "seller", label: "Seller" },
   { id: "admin", label: "Admin" },
 ] as const;
+
+export function getRoleLabel(role: string): string {
+  switch (role) {
+    case "seller":
+      return "Seller";
+    case "admin":
+      return "Admin";
+    case "customer":
+      return "Customer";
+    default:
+      return role;
+  }
+}
 
 export const SITE_CONFIG = {
   name: "E-Mart",

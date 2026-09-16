@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== "seller" && profile?.role !== "admin") {
       return NextResponse.json(
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       .from("vendors")
       .select("id, commission_rate")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!vendor) {
       return NextResponse.json(
@@ -132,6 +132,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    console.error("[v1/seller/payout/route] error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

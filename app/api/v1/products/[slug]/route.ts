@@ -15,6 +15,7 @@ export async function GET(
         `
         *,
         categories!products_category_id_fkey(id, name, slug, description, image_url),
+        subcategories:categories!products_subcategory_id_fkey(id, name, slug, description, image_url),
         vendors(id, name, slug, logo_url, rating, total_sales),
         brands(id, name, slug, logo_url)
       `

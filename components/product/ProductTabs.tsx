@@ -22,10 +22,27 @@ type TabId = (typeof tabs)[number]['id'];
 export default function ProductTabs({ product }: ProductTabsProps) {
   const [activeTab, setActiveTab] = React.useState<TabId>('description');
   const [reviewCount, setReviewCount] = React.useState(0);
+  const [reviewRefreshKey, setReviewRefreshKey] = React.useState(0);
   const reviewFormRef = React.useRef<HTMLFormElement>(null);
   const reviewListRef = React.useRef<HTMLDivElement>(null);
 
+  // Allows the "Write a Review" action in the product detail column to jump
+  // to the Reviews tab without shared state/prop drilling between siblings.
+  React.useEffect(() => {
+    const openReviews = () => {
+      setActiveTab('reviews');
+      requestAnimationFrame(() => {
+        reviewListRef.current?.scrollIntoView({ behavior: 'smooth' });
+      });
+    };
+    window.addEventListener('emart:open-reviews', openReviews);
+    return () => window.removeEventListener('emart:open-reviews', openReviews);
+  }, []);
+
   const handleReviewSuccess = () => {
+    // Refresh the list (a new pending review won't show immediately, but the
+    // count/average should stay in sync) and scroll back to the reviews.
+    setReviewRefreshKey((k) => k + 1);
     reviewListRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -103,10 +120,11 @@ export default function ProductTabs({ product }: ProductTabsProps) {
       )}
 
       {activeTab === 'reviews' && (
-        <div>
+        <div id="reviews">
           <ReviewList
             ref={reviewListRef}
             productSlug={product.slug}
+            refreshSignal={reviewRefreshKey}
             onReviewCountChange={setReviewCount}
             onWriteReview={() => {
               setActiveTab('reviews');

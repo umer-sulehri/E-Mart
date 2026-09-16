@@ -5,6 +5,7 @@ import { Loader2, Save, User, Shield, Mail, KeyRound, Eye, EyeOff } from 'lucide
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
+import { getRoleLabel } from '@/lib/constants';
 
 interface Profile {
   firstName: string;
@@ -156,7 +157,7 @@ export default function AdminAccountPage() {
                 </p>
                 <div className="mt-2">
                   <Badge variant="primary" size="sm">
-                    <Shield className="mr-1 h-3 w-3" /> {(profile?.role || '').toUpperCase()}
+                    <Shield className="mr-1 h-3 w-3" /> {getRoleLabel(profile?.role || '')}
                   </Badge>
                 </div>
               </div>

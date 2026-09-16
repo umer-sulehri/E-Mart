@@ -18,6 +18,7 @@ import {
   Leaf,
   Store,
   Info,
+  Stethoscope,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -82,6 +83,16 @@ export default function SellerSidebar() {
             </Link>
           );
         })}
+        {process.env.NODE_ENV !== 'production' && (
+          <Link
+            href="/seller/debug"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-muted-500 transition-colors hover:bg-muted-50 hover:text-secondary-800"
+          >
+            <Stethoscope className="h-5 w-5 shrink-0" />
+            Diagnostics
+          </Link>
+        )}
       </nav>
 
       {/* Become a Seller banner */}
