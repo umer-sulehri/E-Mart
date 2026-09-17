@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  LogIn,
 } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
@@ -153,6 +154,28 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleLoginAs = async (user: ProfileRow) => {
+    setActionLoading(user.id);
+    try {
+      const res = await fetch('/api/v1/admin/login-as', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Signing in as ${user.first_name || 'user'}...`);
+        window.location.href = data.data?.redirectTo || '/';
+      } else {
+        toast.error(data.error || 'Failed to login as user');
+      }
+    } catch {
+      toast.error('Failed to login as user');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleteLoading(true);
@@ -175,6 +198,12 @@ export default function AdminUsersPage() {
     }
   };
 
+  const ROLE_LABELS: Record<UserRole, string> = {
+    customer: 'Buyer',
+    seller: 'Seller',
+    admin: 'Admin',
+  };
+
   const getRoleBadge = (role: UserRole) => {
     const map: Record<UserRole, { variant: 'primary' | 'secondary' | 'success' }> = {
       customer: { variant: 'secondary' },
@@ -182,7 +211,7 @@ export default function AdminUsersPage() {
       admin: { variant: 'primary' },
     };
     const v = map[role] || { variant: 'secondary' as const };
-    return <Badge variant={v.variant} size="sm">{role.charAt(0).toUpperCase() + role.slice(1)}</Badge>;
+    return <Badge variant={v.variant} size="sm">{ROLE_LABELS[role] ?? role}</Badge>;
   };
 
   const getStatusBadge = (isBlocked: boolean) => {
@@ -222,7 +251,7 @@ export default function AdminUsersPage() {
               className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
             >
               <option value="all">All Roles</option>
-              <option value="customer">Customer</option>
+              <option value="customer">Buyer</option>
               <option value="seller">Seller</option>
               <option value="admin">Admin</option>
             </select>
@@ -274,6 +303,16 @@ export default function AdminUsersPage() {
                             >
                               <Eye className="h-4 w-4" />
                             </button>
+                            {user.role !== 'admin' && (
+                              <button
+                                onClick={() => handleLoginAs(user)}
+                                disabled={actionLoading === user.id}
+                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-primary-50 hover:text-primary disabled:opacity-50"
+                                title="Login as this user"
+                              >
+                                <LogIn className="h-4 w-4" />
+                              </button>
+                            )}
                             {user.is_blocked ? (
                               <button
                                 onClick={() => handleUnblock(user.id)}
@@ -326,7 +365,7 @@ export default function AdminUsersPage() {
                                   disabled={actionLoading === user.id}
                                   className="mt-1 rounded border border-muted-200 bg-white px-2 py-1 text-sm focus:outline-none"
                                 >
-                                  <option value="customer">Customer</option>
+                                  <option value="customer">Buyer</option>
                                   <option value="seller">Seller</option>
                                   <option value="admin">Admin</option>
                                 </select>

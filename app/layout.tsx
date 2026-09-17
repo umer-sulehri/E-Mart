@@ -3,6 +3,7 @@ import { Nunito, Open_Sans } from 'next/font/google';
 import '@/styles/globals.css';
 import { Providers } from '@/components/providers';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
+import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -106,6 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <Providers>
           <div id="main-content">{children}</div>
+          <ImpersonationBanner />
         </Providers>
         <GoogleAnalytics />
       </body>
