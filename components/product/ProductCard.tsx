@@ -119,57 +119,48 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
               )}
 
             <div className="button-area w-full pt-3 lg:px-0 lg:pb-3">
-              <div className="space-y-2">
+              <div className="flex items-stretch gap-2">
                 <QuantitySelector
                   value={quantity}
                   onChange={setQuantity}
                   min={1}
                   max={product.stockQuantity ?? 99}
                   disabled={product.stockQuantity != null && product.stockQuantity <= 0}
-                  className="h-11 w-full justify-between [&>button]:h-full [&>input]:h-full"
+                  className="h-10 w-[110px] shrink-0 rounded-full border-muted-200 [&>button]:h-full [&>button]:rounded-full [&>input]:h-full [&>input]:w-[38px]"
                 />
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => addToCart(product, quantity)}
-                    className="flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg bg-primary p-2 text-xs text-white transition-all duration-200 hover:bg-primary-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    aria-label={`Add ${product.name} to cart`}
-                    disabled={product.stockQuantity != null && product.stockQuantity <= 0}
-                  >
-                    <ShoppingCart size={16} className="shrink-0" />
-                    <span className="hidden truncate sm:inline">Add to Cart</span>
-                  </button>
-                  <button
-                    className="flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-dark px-2 text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    aria-label={`Quick view ${product.name}`}
-                    onClick={() => setQuickViewOpen(true)}
-                  >
-                    <Eye size={16} className="shrink-0" />
-                    <span className="hidden truncate sm:inline">View</span>
-                  </button>
-                  <button
-                    className="flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-dark px-2 text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50"
-                    aria-label={
-                      isWishlisted
-                        ? `Remove ${product.name} from wishlist`
-                        : `Add ${product.name} to wishlist`
-                    }
-                    aria-pressed={isWishlisted}
-                    onClick={toggleWishlist}
-                    disabled={wishlistLoading}
-                  >
-                    {isWishlisted ? (
-                      <>
-                        <Check size={16} className="shrink-0 text-primary" />
-                        <span className="hidden truncate sm:inline">Saved</span>
-                      </>
-                    ) : (
-                      <>
-                        <Heart size={16} className="shrink-0" />
-                        <span className="hidden truncate sm:inline">Wishlist</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button
+                  onClick={() => addToCart(product, quantity)}
+                  className="flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-2 text-xs font-medium text-white transition-all duration-200 hover:bg-primary-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label={`Add ${product.name} to cart`}
+                  disabled={product.stockQuantity != null && product.stockQuantity <= 0}
+                >
+                  <ShoppingCart size={16} className="shrink-0" />
+                  <span className="truncate">Add to Cart</span>
+                </button>
+                <button
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-dark text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label={`Quick view ${product.name}`}
+                  onClick={() => setQuickViewOpen(true)}
+                >
+                  <Eye size={16} className="shrink-0" />
+                </button>
+                <button
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-dark text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50"
+                  aria-label={
+                    isWishlisted
+                      ? `Remove ${product.name} from wishlist`
+                      : `Add ${product.name} to wishlist`
+                  }
+                  aria-pressed={isWishlisted}
+                  onClick={toggleWishlist}
+                  disabled={wishlistLoading}
+                >
+                  {isWishlisted ? (
+                    <Check size={16} className="shrink-0 text-primary" />
+                  ) : (
+                    <Heart size={16} className="shrink-0" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
