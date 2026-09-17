@@ -61,9 +61,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (categories.length > 0) {
-      query = query.in("categories.slug", categories);
+      // Products carry the parent via `category_id` and the sub-category via
+      // `subcategory_id`, so a selected slug must match either relationship.
+      const joined = categories.join(",");
+      query = query.or(
+        `categories!products_category_id_fkey.slug.in.(${joined}),categories!products_subcategory_id_fkey.slug.in.(${joined})`
+      );
     } else if (category) {
-      query = query.eq("categories.slug", category);
+      query = query.or(
+        `categories!products_category_id_fkey.slug.eq.${category},categories!products_subcategory_id_fkey.slug.eq.${category}`
+      );
     }
 
     if (brands.length > 0) {
@@ -84,12 +91,17 @@ export async function GET(request: NextRequest) {
       query = query.not("discount_price", "is", null);
     }
 
-    if (minPrice !== undefined) {
-      query = query.gte("price", minPrice);
-    }
-
-    if (maxPrice !== undefined) {
-      query = query.lte("price", maxPrice);
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      // Customers pay `discount_price` when set, otherwise `price`. Filter on
+      // whichever applies: in-range price OR in-range discount price. NULL
+      // discount prices fail the comparisons and are excluded from that branch.
+      const cond = (column: string) => {
+        const parts: string[] = [];
+        if (minPrice !== undefined) parts.push(`${column}.gte.${minPrice}`);
+        if (maxPrice !== undefined) parts.push(`${column}.lte.${maxPrice}`);
+        return parts.length > 1 ? `and(${parts.join(",")})` : parts[0];
+      };
+      query = query.or(`${cond("price")},${cond("discount_price")}`);
     }
 
     if (minRating !== undefined) {

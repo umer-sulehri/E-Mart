@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       supabase
         .from("products")
         .select("id, name, slug, images, price, discount_price, is_active")
-        .or(`name.ilike.${safeOr},description.ilike.${safeOr}`)
+        .or(`name.ilike.%${safeOr}%,description.ilike.%${safeOr}%`)
         .eq("is_active", true)
         .limit(5),
       supabase
