@@ -14,8 +14,6 @@ import {
   Loader2,
   X,
   ChevronDown,
-  Shield,
-  Store,
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -329,28 +327,8 @@ function UserMenu({
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-muted-200 bg-white p-2 shadow-lg">
-          {user.role === 'admin' && (
-            <Link
-              href="/admin"
-              onClick={() => setOpen(false)}
-              aria-label="Admin Panel"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
-            >
-              <Shield className="h-4 w-4" /> Admin Panel
-            </Link>
-          )}
-          {user.role === 'seller' && (
-            <Link
-              href="/seller"
-              onClick={() => setOpen(false)}
-              aria-label="Seller Dashboard"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
-            >
-              <Store className="h-4 w-4" /> Seller Dashboard
-            </Link>
-          )}
           <Link
-            href="/dashboard"
+            href={user.role === 'admin' ? '/admin' : user.role === 'seller' ? '/seller' : '/dashboard'}
             onClick={() => setOpen(false)}
             aria-label="My Account"
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
