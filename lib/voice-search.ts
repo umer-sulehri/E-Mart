@@ -1,3 +1,15 @@
+function getMicPermissionErrorCode(err: unknown): string {
+  const name = (err as DOMException)?.name ?? '';
+  if (
+    name === 'NotAllowedError' ||
+    name === 'SecurityError' ||
+    name === 'PermissionDeniedError'
+  ) {
+    return 'not-allowed';
+  }
+  return 'audio-capture';
+}
+
 interface SpeechRecognitionEventLike {
   resultIndex: number;
   results: ArrayLike<{
@@ -107,21 +119,42 @@ export class VoiceSearchManager {
   onError: ((code: string) => void) | null = null;
   onStateChange: ((listening: boolean, transcript: string) => void) | null = null;
 
-  startListening() {
+  async startListening() {
     if (!this.recognition) {
       return { supported: false };
     }
     if (this.isListening) return { supported: true };
 
-    try {
-      this.recognition.start();
-      this.isListening = true;
-      this.timeoutId = setTimeout(() => {
-        this.stopListening();
-      }, 8000);
-    } catch {
-      // Already started or unsupported — ignore
+    this.isListening = true;
+
+    const beginRecognition = () => {
+      try {
+        this.recognition!.start();
+        this.timeoutId = setTimeout(() => {
+          this.stopListening();
+        }, 8000);
+      } catch {
+        this.isListening = false;
+      }
+    };
+
+    const mediaDevices =
+      typeof navigator !== 'undefined' ? navigator.mediaDevices : null;
+
+    if (mediaDevices?.getUserMedia) {
+      try {
+        const stream = await mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (err) {
+        this.isListening = false;
+        const code = getMicPermissionErrorCode(err);
+        if (this.onError) this.onError(code);
+        if (this.onStateChange) this.onStateChange(false, '');
+        return { supported: true };
+      }
     }
+
+    beginRecognition();
     return { supported: true };
   }
 

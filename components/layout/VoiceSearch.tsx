@@ -49,7 +49,7 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
     return managerRef.current;
   }, [onSearch]);
 
-  const handleToggle = () => {
+  const handleToggle = async () => {
     setError(null);
     if (isListening) {
       const manager = getManager();
@@ -65,8 +65,13 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
       return;
     }
 
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      setError('Voice search requires HTTPS or localhost. Check your connection settings.');
+      return;
+    }
+
     const manager = getManager();
-    const res = manager.startListening();
+    const res = await manager.startListening();
     if (!res.supported) {
       setError('Voice search is not supported in this browser.');
       return;
