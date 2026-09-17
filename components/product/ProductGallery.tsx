@@ -101,7 +101,7 @@ const ProductGallery = React.forwardRef<HTMLDivElement, ProductGalleryProps>(
               alt={productName}
               fill
               className={cn(
-                'object-contain transition-transform duration-300',
+                'object-cover transition-transform duration-300',
                 isZoomed && 'scale-150'
               )}
               style={
