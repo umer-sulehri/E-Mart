@@ -37,8 +37,9 @@ export async function GET(
         count: "exact",
       })
       .eq("product_id", product.id)
-      // Public read: only approved reviews are visible to every user.
-      .eq("status", "approved");
+      // Public read: reviews are visible to every user (guest, buyer, seller,
+      // admin). Only explicitly rejected reviews stay hidden.
+      .in("status", ["approved", "pending"]);
 
     if (sort === "oldest") {
       query = query.order("created_at", { ascending: true });
@@ -65,7 +66,7 @@ export async function GET(
       .from("reviews")
       .select("rating")
       .eq("product_id", product.id)
-      .eq("status", "approved");
+      .in("status", ["approved", "pending"]);
 
     const breakdown = [1, 2, 3, 4, 5].map((star) => ({
       rating: star,
@@ -204,10 +205,10 @@ export async function POST(
       .from("reviews")
       .select("rating")
       .eq("product_id", product.id)
-      .eq("status", "approved");
+      .in("status", ["approved", "pending"]);
 
-    // Only approved reviews contribute to the product rating, matching the
-    // update_product_rating() trigger. Pending reviews wait for approval.
+    // All publicly visible reviews contribute to the product rating so the
+    // count matches what shoppers actually see on the product page.
     if (allReviews && allReviews.length > 0) {
       const avgRating =
         allReviews.reduce((sum, r) => sum + r.rating, 0) /
