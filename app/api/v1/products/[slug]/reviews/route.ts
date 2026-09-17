@@ -36,7 +36,9 @@ export async function GET(
       .select("*, profiles!inner(first_name, last_name, profile_image_url)", {
         count: "exact",
       })
-      .eq("product_id", product.id);
+      .eq("product_id", product.id)
+      // Public read: only approved reviews are visible to every user.
+      .eq("status", "approved");
 
     if (sort === "oldest") {
       query = query.order("created_at", { ascending: true });

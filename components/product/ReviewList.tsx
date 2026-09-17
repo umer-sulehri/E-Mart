@@ -78,12 +78,23 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
       try {
         const sortParam = sortBy === 'helpful' ? 'newest' : sortBy;
         const res = await fetch(
-          `/api/v1/products/${encodeURIComponent(productSlug)}/reviews?page=1&limit=20&sort=${sortParam}`
+          `/api/v1/products/${encodeURIComponent(productSlug)}/reviews?page=1&limit=20&sort=${sortParam}`,
+          { cache: 'no-store' }
         );
-        const json = await res.json();
 
-        if (!res.ok || !json.success) {
-          throw new Error(json.error || 'Failed to load reviews');
+        let json: any = null;
+        try {
+          json = await res.json();
+        } catch {
+          throw new Error(
+            res.ok
+              ? 'Received an invalid response from the server. Please try again.'
+              : `Failed to load reviews (HTTP ${res.status}). Please try again.`
+          );
+        }
+
+        if (!res.ok || !json?.success) {
+          throw new Error(json?.error || `Failed to load reviews (HTTP ${res.status})`);
         }
 
         const fetched: Review[] = (json.data.reviews || []).map((r: any) => ({

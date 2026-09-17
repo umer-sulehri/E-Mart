@@ -21,7 +21,7 @@ type TabId = (typeof tabs)[number]['id'];
 
 export default function ProductTabs({ product }: ProductTabsProps) {
   const [activeTab, setActiveTab] = React.useState<TabId>('description');
-  const [reviewCount, setReviewCount] = React.useState(0);
+  const [reviewCount, setReviewCount] = React.useState(product.reviewCount || 0);
   const [reviewRefreshKey, setReviewRefreshKey] = React.useState(0);
   const reviewFormRef = React.useRef<HTMLFormElement>(null);
   const reviewListRef = React.useRef<HTMLDivElement>(null);

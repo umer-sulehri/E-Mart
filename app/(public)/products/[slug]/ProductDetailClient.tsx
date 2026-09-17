@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingCart, Heart, Share2, Truck, ShieldCheck, RotateCcw, GitCompareArrows } from 'lucide-react';
+import Link from 'next/link';
+import { ShoppingCart, Heart, Share2, Truck, ShieldCheck, RotateCcw, GitCompareArrows, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StarRating from '@/components/ui/StarRating';
 import QuantitySelector from '@/components/ui/QuantitySelector';
@@ -188,11 +189,48 @@ export default function ProductDetailClient({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Brand */}
-      {product.brand?.name && (
-        <span className="text-sm font-medium text-primary">
-          {product.brand.name}
-        </span>
+      {/* Category + Brand / Store (clickable meta shown above the title) */}
+      {(product.category?.name || product.brand?.name || (product.vendor?.name && product.vendor.slug)) && (
+        <nav
+          className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm"
+          aria-label="Product category and brand"
+        >
+          {product.category?.name && product.category.slug && (
+            <Link
+              href={`/products?category=${encodeURIComponent(product.category.slug)}`}
+              className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 font-bold text-primary transition-colors hover:bg-primary-100 hover:text-primary-700"
+            >
+              <Tag size={13} />
+              {product.category.name}
+            </Link>
+          )}
+          {product.brand?.name && (
+            <>
+              <span className="text-muted-300" aria-hidden="true">
+                •
+              </span>
+              <Link
+                href={`/products?brands=${encodeURIComponent(product.brand.name)}`}
+                className="font-bold text-primary transition-colors hover:text-primary-500"
+              >
+                {product.brand.name}
+              </Link>
+            </>
+          )}
+          {product.vendor?.name && product.vendor.slug && (
+            <>
+              <span className="text-muted-300" aria-hidden="true">
+                •
+              </span>
+              <Link
+                href={`/sellers/${product.vendor.slug}`}
+                className="font-bold text-primary transition-colors hover:text-primary-500"
+              >
+                {product.vendor.name}
+              </Link>
+            </>
+          )}
+        </nav>
       )}
 
       {/* Product Name */}
@@ -258,22 +296,24 @@ export default function ProductDetailClient({
       {/* Divider */}
       <div className="border-t border-muted-100" />
 
-      {/* Quantity + Add to Cart + Wishlist */}
-      <div ref={inlineCtaRef} className="flex flex-wrap items-center gap-3">
-        <QuantitySelector
-          value={quantity}
-          onChange={setQuantity}
-          min={1}
-          max={product.stockQuantity}
-          disabled={product.stockQuantity <= 0}
-        />
+      {/* Quantity + Add to Cart + Wishlist + Compare + Share (equal-spaced grid) */}
+      <div ref={inlineCtaRef} className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+        <div className="col-span-2 flex items-center justify-center lg:col-span-1">
+          <QuantitySelector
+            value={quantity}
+            onChange={setQuantity}
+            min={1}
+            max={product.stockQuantity}
+            disabled={product.stockQuantity <= 0}
+          />
+        </div>
         <Button
           variant="primary"
           size="lg"
           onClick={handleAddToCart}
           disabled={product.stockQuantity <= 0 || addingToCart}
           loading={addingToCart}
-          className="flex-1 sm:flex-none"
+          className="col-span-2 lg:col-span-2"
         >
           <ShoppingCart size={18} />
           Add to Cart
@@ -283,23 +323,34 @@ export default function ProductDetailClient({
           size="lg"
           onClick={toggleWishlist}
           disabled={wishlistLoading}
-          className={cn(isWishlisted && 'bg-danger-50')}
+          aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          className={cn('col-span-1 lg:col-span-1', isWishlisted && 'bg-danger-50')}
         >
           <Heart size={18} className={cn(isWishlisted && 'fill-current')} />
-        </Button>
-        <Button variant="ghost" size="lg" onClick={handleShare}>
-          <Share2 size={18} />
         </Button>
         <Button
           variant={isCompared ? 'outline' : 'ghost'}
           size="lg"
           onClick={handleAddToCompare}
           aria-label={isCompared ? 'Remove from compare' : 'Add to compare'}
+          title={isCompared ? 'Remove from compare' : 'Add to compare'}
+          className="col-span-1 lg:col-span-1"
         >
           <GitCompareArrows
             size={18}
             className={cn(isCompared && 'text-primary')}
           />
+        </Button>
+        <Button
+          variant="ghost"
+          size="lg"
+          onClick={handleShare}
+          aria-label="Share product"
+          title="Share product"
+          className="col-span-2 lg:col-span-1"
+        >
+          <Share2 size={18} />
         </Button>
       </div>
 
@@ -309,20 +360,24 @@ export default function ProductDetailClient({
       {/* SKU + Category (display-only badge below the product ID block) */}
       <div className="space-y-2 text-sm">
         <div className="flex gap-2">
-          <span className="font-medium text-secondary-700">SKU:</span>
+          <span className="font-bold text-secondary-800">SKU:</span>
           <span className="text-muted-600">{product.sku}</span>
         </div>
         {product.category?.name && (
           <div className="flex gap-2">
-            <span className="font-medium text-secondary-700">Category:</span>
-            <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-gray-700">
+            <span className="font-bold text-secondary-800">Category:</span>
+            <span
+              aria-disabled="true"
+              title="Browse other categories from the link above"
+              className="cursor-not-allowed rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide text-gray-700"
+            >
               {product.category.name}
             </span>
           </div>
         )}
         {product.brand?.name && (
           <div className="flex gap-2">
-            <span className="font-medium text-secondary-700">Brand:</span>
+            <span className="font-bold text-secondary-800">Brand:</span>
             <span className="text-muted-600">{product.brand.name}</span>
           </div>
         )}
