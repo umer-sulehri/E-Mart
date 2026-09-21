@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { tryParseJson } from '@/lib/api';
 
 function EasypaisaConfirmContent() {
   const searchParams = useSearchParams();
@@ -33,8 +34,8 @@ function EasypaisaConfirmContent() {
     async function fetchOrder() {
       try {
         const res = await fetch(`/api/v1/orders/${orderId}`);
-        const json = await res.json();
-        if (json.success && json.data) {
+        const json = await tryParseJson<{ success: boolean; data?: unknown }>(res);
+        if (json?.success && json.data) {
           setOrderDetails(json.data);
         }
       } catch {}

@@ -17,6 +17,7 @@ import SectionHeader from '@/components/ui/SectionHeader';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import BlogComments from '@/components/blog/BlogComments';
 import { sanitizeHtml } from '@/lib/sanitize-html';
+import { tryParseJson } from '@/lib/api';
 
 interface BlogPost {
   id: string;
@@ -116,8 +117,8 @@ async function fetchBlogPost(slug: string): Promise<BlogPost | null> {
       { cache: 'no-store' }
     );
     if (!res.ok) return null;
-    const json = await res.json();
-    if (!json.success || !json.data) return null;
+    const json = await tryParseJson<{ success: boolean; data?: BlogPost }>(res);
+    if (!json?.success || !json.data) return null;
     return json.data;
   } catch {
     return null;

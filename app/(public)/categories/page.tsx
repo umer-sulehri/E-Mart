@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronRight, Home } from 'lucide-react';
 import { CATEGORIES } from '@/lib/constants';
+import { tryParseJson } from '@/lib/api';
 
 export const metadata: Metadata = {
   title: 'Categories',
@@ -25,8 +26,8 @@ async function fetchCategories(): Promise<ApiCategory[]> {
       { cache: 'no-store' }
     );
     if (!res.ok) throw new Error();
-    const json = await res.json();
-    if (json.success && json.data?.length) return json.data;
+    const json = await tryParseJson<{ success: boolean; data?: ApiCategory[] }>(res);
+    if (json?.success && json.data?.length) return json.data;
     throw new Error();
   } catch {
     return CATEGORIES.map((c) => ({

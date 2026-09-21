@@ -5,6 +5,7 @@ import { Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { tryParseJson } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
 export interface ReviewFormProps {
@@ -118,10 +119,10 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
           }
         );
 
-        const json = await res.json();
+        const json = await tryParseJson<{ success: boolean; error?: string }>(res);
 
-        if (!res.ok || !json.success) {
-          throw new Error(json.error || 'Failed to submit review');
+        if (!res.ok || !json?.success) {
+          throw new Error(json?.error || 'Failed to submit review');
         }
 
         toast.success(

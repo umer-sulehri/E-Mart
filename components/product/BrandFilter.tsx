@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { tryParseJson } from '@/lib/api';
 
 interface Brand {
   id: string;
@@ -26,10 +27,10 @@ export default function BrandFilter({
   useEffect(() => {
     let cancelled = false;
     fetch('/api/v1/brands')
-      .then((res) => res.json())
+      .then((res) => tryParseJson<{ success: boolean; data?: Brand[] }>(res))
       .then((json) => {
         if (cancelled) return;
-        if (json.success && Array.isArray(json.data)) {
+        if (json?.success && Array.isArray(json.data)) {
           setBrands(json.data);
         }
       })

@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Star, Sparkles, X, RotateCcw } from 'lucide-rea
 import { CATEGORIES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/useDebounce';
+import { tryParseJson } from '@/lib/api';
 import BrandFilter from '@/components/product/BrandFilter';
 import AvailabilityToggle from '@/components/ui/AvailabilityToggle';
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider';
@@ -87,9 +88,9 @@ export default function ProductFilters({
 
   useEffect(() => {
     fetch('/api/v1/categories')
-      .then((res) => res.json())
+      .then((res) => tryParseJson<{ success: boolean; data?: ApiCategory[] }>(res))
       .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
+        if (json?.success && Array.isArray(json.data)) {
           setCategoryOptions(flattenCategories(json.data));
         }
       })

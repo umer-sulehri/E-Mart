@@ -16,6 +16,7 @@ import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import Button from '@/components/ui/Button';
 import ShareWishlist from '@/components/wishlist/ShareWishlist';
 import { formatPrice } from '@/lib/utils';
+import { tryParseJson } from '@/lib/api';
 
 interface WishlistItem {
   id: string;
@@ -41,9 +42,9 @@ export default function WishlistPage() {
     async function checkAuth() {
       try {
         const res = await fetch('/api/v1/auth/me');
-        const json = await res.json();
+        const json = await tryParseJson<{ success: boolean; data?: unknown }>(res);
         if (!cancelled) {
-          if (json.success && json.data) {
+          if (json?.success && json.data) {
             setIsAuthenticated(true);
             fetchWishlist();
           } else {
@@ -62,14 +63,17 @@ export default function WishlistPage() {
     async function fetchWishlist() {
       try {
         const res = await fetch('/api/v1/wishlist');
-        const json = await res.json();
+        const json = await tryParseJson<{
+          success: boolean;
+          data?: any[];
+        }>(res);
         if (!cancelled) {
-          if (json.success && Array.isArray(json.data)) {
+          if (json?.success && Array.isArray(json.data)) {
             setItems(
               json.data
-                .map((row: any) => {
-                  const p = row?.products;
-                  if (!p) return null;
+                .filter((row) => row?.products)
+                .map((row) => {
+                  const p = row.products;
                   return {
                     id: row.id,
                     productId: row.product_id,
@@ -82,7 +86,6 @@ export default function WishlistPage() {
                     addedAt: row.created_at,
                   } as WishlistItem;
                 })
-                .filter(Boolean) as WishlistItem[]
             );
           }
           setLoading(false);
@@ -113,8 +116,8 @@ export default function WishlistPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: item.productId, quantity: 1 }),
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await tryParseJson<{ success: boolean }>(res);
+      if (res.ok && data?.success) {
         await fetch(`/api/v1/wishlist/${item.productId}`, { method: 'DELETE' }).catch(() => {});
         setItems((prev) => prev.filter((w) => w.id !== item.id));
       }

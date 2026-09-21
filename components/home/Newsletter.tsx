@@ -4,6 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { tryParseJson } from '@/lib/api';
 
 export interface NewsletterProps {
   className?: string;
@@ -31,10 +32,10 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
           body: JSON.stringify({ email }),
         });
 
-        const json = await res.json();
+        const json = await tryParseJson<{ success: boolean; error?: string }>(res);
 
-        if (!res.ok || !json.success) {
-          throw new Error(json.error || 'Subscription failed');
+        if (!res.ok || !json?.success) {
+          throw new Error(json?.error || 'Subscription failed');
         }
 
         toast.success('Thanks for subscribing!');

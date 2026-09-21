@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Share2, Link as LinkIcon, Check, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
+import { tryParseJson } from '@/lib/api';
 
 interface ShareWishlistProps {
   wishlistId?: string;
@@ -27,12 +28,16 @@ export default function ShareWishlist({ wishlistId }: ShareWishlistProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ wishlistId }),
       });
-      const json = await res.json();
-      if (json.success && json.data?.url) {
+      const json = await tryParseJson<{
+        success: boolean;
+        data?: { url?: string };
+        error?: string;
+      }>(res);
+      if (json?.success && json.data?.url) {
         setShareUrl(json.data.url);
         copyToClipboard(json.data.url);
       } else {
-        toast.error('Failed to generate share link');
+        toast.error(json?.error || 'Failed to generate share link');
       }
     } catch {
       toast.error('Failed to share wishlist');

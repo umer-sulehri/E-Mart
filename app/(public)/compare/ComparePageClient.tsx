@@ -6,6 +6,7 @@ import { ShoppingCart, X, Plus, BarChart3, Trash2, Star } from 'lucide-react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useCompareStore } from '@/store/compareStore';
 import { useCartStore } from '@/store';
+import { tryParseJson } from '@/lib/api';
 import type { CartItem, Product } from '@/types';
 import type { Product as ProductCardType } from '@/components/product/ProductCard';
 import type { CompareItem } from '@/store/compareStore';
@@ -50,8 +51,25 @@ export default function ComparePage({
           try {
             const res = await fetch(`/api/v1/products/${encodeURIComponent(slug)}`);
             if (!res.ok) return;
-            const json = await res.json();
-            if (!json.success || !json.data) return;
+            const json = await tryParseJson<{
+              success: boolean;
+              data?: {
+                id: string;
+                name: string;
+                slug: string;
+                price: number;
+                discount_price?: number | null;
+                rating?: number;
+                review_count?: number;
+                images?: string[];
+                stock_quantity?: number;
+                category?: { name: string };
+                categories?: { name: string }[];
+                brand?: { name: string };
+                brands?: { name: string }[];
+              };
+            }>(res);
+            if (!json?.success || !json.data) return;
             const p = json.data;
             const item: CompareItem = {
               id: p.id,
@@ -87,9 +105,20 @@ export default function ComparePage({
         `/api/v1/products?search=${encodeURIComponent(searchQuery)}&limit=8`
       );
       if (res.ok) {
-        const data = await res.json();
-        if (data.data) {
-          const mapped: SearchResult[] = data.data.map((p: any) => ({
+        const data = await tryParseJson<{
+          data?: {
+            id: string;
+            name: string;
+            slug: string;
+            price: number;
+            discount_price?: number;
+            rating?: number;
+            review_count?: number;
+            images?: string[];
+          }[];
+        }>(res);
+        if (data?.data) {
+          const mapped: SearchResult[] = data.data.map((p) => ({
             id: p.id,
             name: p.name,
             slug: p.slug,

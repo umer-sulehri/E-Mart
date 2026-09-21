@@ -7,7 +7,7 @@ import ProductDetailClient from './ProductDetailClient';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import { calculateDiscount } from '@/lib/utils';
 import { generateProductMetadata } from '@/lib/seo';
-import { apiProductToCardProduct, type ApiProduct } from '@/lib/api';
+import { apiProductToCardProduct, tryParseJson, type ApiProduct } from '@/lib/api';
 import { getSiteUrl } from '@/lib/absolute-url';
 import logger from '@/lib/logger';
 import type { Product } from '@/types';
@@ -38,7 +38,7 @@ async function fetchProductBySlug(slug: string): Promise<Product | null> {
     return null;
   }
   if (!res.ok) {
-    const body = await res.json().catch(() => null);
+    const body = await tryParseJson<{ error?: string }>(res);
     logger.error('product:fetch_error', {
       slug,
       status: res.status,
@@ -47,8 +47,8 @@ async function fetchProductBySlug(slug: string): Promise<Product | null> {
     throw new Error(body?.error || `Failed to load product (HTTP ${res.status})`);
   }
 
-  const json = await res.json();
-  if (!json.success || !json.data) {
+  const json = await tryParseJson<{ success: boolean; data?: any }>(res);
+  if (!json?.success || !json.data) {
     logger.warn('product:invalid_payload', { slug });
     return null;
   }
@@ -170,8 +170,8 @@ async function fetchRelatedProducts(slug: string) {
       { cache: 'no-store' }
     );
     if (!res.ok) return [];
-    const json = await res.json();
-    if (!json.success || !json.data) return [];
+    const json = await tryParseJson<{ success: boolean; data?: ApiProduct[] }>(res);
+    if (!json?.success || !json.data) return [];
     return (json.data as ApiProduct[])
       .filter((p) => p.slug !== slug)
       .slice(0, 5)

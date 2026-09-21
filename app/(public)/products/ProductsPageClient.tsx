@@ -22,6 +22,7 @@ import {
 import {
   api,
   apiProductToCardProduct,
+  tryParseJson,
   type ApiProduct,
   type ApiListResponse,
 } from '@/lib/api';
@@ -115,11 +116,13 @@ function ProductsContent() {
 
   useEffect(() => {
     fetch('/api/v1/brands')
-      .then((res) => res.json())
+      .then((res) =>
+        tryParseJson<{ success: boolean; data: { slug: string; name: string }[] }>(res)
+      )
       .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
+        if (json?.success && Array.isArray(json.data)) {
           const map: Record<string, string> = {};
-          json.data.forEach((b: { slug: string; name: string }) => {
+          json.data.forEach((b) => {
             map[b.slug] = b.name;
           });
           setBrandNames(map);
@@ -132,9 +135,14 @@ function ProductsContent() {
   // even when new categories were added since the static list shipped.
   useEffect(() => {
     fetch('/api/v1/categories')
-      .then((res) => res.json())
+      .then((res) =>
+        tryParseJson<{
+          success: boolean;
+          data: { name: string; slug: string; subcategories?: unknown[] }[];
+        }>(res)
+      )
       .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
+        if (json?.success && Array.isArray(json.data)) {
           const map: Record<string, string> = {};
           const visit = (items: { name: string; slug: string; subcategories?: unknown[] }[]) => {
             for (const c of items) {
@@ -152,9 +160,11 @@ function ProductsContent() {
   // Real min/max product price keeps the slider aligned with the catalog.
   useEffect(() => {
     fetch('/api/v1/products/price-range')
-      .then((res) => res.json())
+      .then((res) =>
+        tryParseJson<{ success: boolean; data: { min: number; max: number } }>(res)
+      )
       .then((json) => {
-        if (json.success && json.data) {
+        if (json?.success && json.data) {
           setPriceBounds({ min: json.data.min, max: json.data.max });
         }
       })

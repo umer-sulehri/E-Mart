@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import SectionHeader from '@/components/ui/SectionHeader';
 import Button from '@/components/ui/Button';
+import { tryParseJson } from '@/lib/api';
 
 interface BlogPost {
   id: string;
@@ -140,8 +141,8 @@ export default function BlogPage() {
       setLoading(true);
       try {
         const res = await fetch('/api/v1/blog-posts');
-        const json = await res.json();
-        if (!cancelled && json.success && json.data?.length) {
+        const json = await tryParseJson<{ success: boolean; data?: BlogPost[] }>(res);
+        if (!cancelled && json?.success && json.data?.length) {
           setPosts(json.data);
           setTotalPages(Math.ceil(json.data.length / ITEMS_PER_PAGE));
         } else {

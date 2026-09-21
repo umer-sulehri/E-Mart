@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import StarRating from '@/components/ui/StarRating';
 import Button from '@/components/ui/Button';
 import { formatDate, cn } from '@/lib/utils';
+import { tryParseJson } from '@/lib/api';
 
 export interface Review {
   id: string;
@@ -82,34 +83,50 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
           { cache: 'no-store' }
         );
 
-        let json: any = null;
-        try {
-          json = await res.json();
-        } catch {
+        const json = await tryParseJson<{
+          success: boolean;
+          error?: string;
+          data?: {
+            reviews?: {
+              id: string;
+              rating: number;
+              title?: string | null;
+              comment?: string | null;
+              helpful_count?: number;
+              is_verified_purchase?: boolean;
+              created_at?: string;
+              profiles?: {
+                first_name?: string | null;
+                last_name?: string | null;
+                profile_image_url?: string | null;
+              } | null;
+            }[];
+          };
+          meta?: { totalItems?: number };
+        }>(res);
+
+        if (!res.ok || !json?.success || !json.data) {
           throw new Error(
-            res.ok
-              ? 'Received an invalid response from the server. Please try again.'
-              : `Failed to load reviews (HTTP ${res.status}). Please try again.`
+            json?.error ||
+              (res.ok
+                ? 'Received an invalid response from the server. Please try again.'
+                : `Failed to load reviews (HTTP ${res.status}). Please try again.`)
           );
         }
 
-        if (!res.ok || !json?.success) {
-          throw new Error(json?.error || `Failed to load reviews (HTTP ${res.status})`);
-        }
-
-        const fetched: Review[] = (json.data.reviews || []).map((r: any) => ({
+        const fetched: Review[] = (json.data.reviews || []).map((r) => ({
           id: r.id,
           userName:
             r.profiles
               ? `${r.profiles.first_name || ''} ${r.profiles.last_name || ''}`.trim() || 'Anonymous'
               : 'Anonymous',
-          userAvatar: r.profiles?.profile_image_url,
+          userAvatar: r.profiles?.profile_image_url ?? undefined,
           rating: r.rating,
-          title: r.title,
-          comment: r.comment,
+          title: r.title ?? undefined,
+          comment: r.comment ?? '',
           helpfulCount: r.helpful_count || 0,
           isVerifiedPurchase: r.is_verified_purchase || false,
-          createdAt: r.created_at,
+          createdAt: r.created_at ?? '',
         }));
 
         if (sortBy === 'helpful') {
@@ -160,9 +177,9 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
-        const json = await res.json();
-        if (!json.success) {
-          toast.error(json.error || 'Failed to update');
+        const json = await tryParseJson<{ success: boolean; error?: string }>(res);
+        if (!json?.success) {
+          toast.error(json?.error || 'Failed to update');
         }
       } catch {
         toast.error('Failed to update');
@@ -176,11 +193,11 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ reason: 'Inappropriate content' }),
         });
-        const json = await res.json();
-        if (json.success) {
+        const json = await tryParseJson<{ success: boolean; error?: string }>(res);
+        if (json?.success) {
           toast.success('Review reported. Thank you!');
         } else {
-          toast.error(json.error || 'Failed to report');
+          toast.error(json?.error || 'Failed to report');
         }
       } catch {
         toast.error('Failed to report review');

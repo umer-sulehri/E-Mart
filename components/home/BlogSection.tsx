@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, Tag, ArrowRight, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { tryParseJson } from '@/lib/api';
 import SectionHeader from '@/components/ui/SectionHeader';
 
 interface BlogPost {
@@ -64,9 +65,9 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
 
     useEffect(() => {
       fetch('/api/v1/blog-posts?limit=3')
-        .then((res) => res.json())
+        .then((res) => tryParseJson<{ success: boolean; data?: any[] }>(res))
         .then((json) => {
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
             const mapped = json.data.map((post: any, i: number) => ({
               id: i,
               thumbnail: post.cover_image || `/images/post-thumbnail-${(i % 3) + 1}.jpg`,

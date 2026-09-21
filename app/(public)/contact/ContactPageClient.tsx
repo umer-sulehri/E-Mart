@@ -15,6 +15,7 @@ import {
 import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { tryParseJson } from '@/lib/api';
 
 const contactInfo = [
   {
@@ -108,10 +109,10 @@ export default function ContactPageClient() {
         }),
       });
 
-      const json = await res.json();
+      const json = await tryParseJson<{ success: boolean; error?: string }>(res);
 
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Failed to send message');
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || 'Failed to send message');
       }
 
       toast.success('Message sent successfully! We will get back to you soon.');

@@ -13,6 +13,7 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import { useParams, useSearchParams } from 'next/navigation';
 import {
   apiProductToCardProduct,
+  tryParseJson,
   type ApiProduct,
   type ApiListResponse,
 } from '@/lib/api';
@@ -52,8 +53,15 @@ function SellerStoreContent() {
       const res = await fetch(
         `/api/v1/sellers/${encodeURIComponent(slug)}?page=${currentPage}&limit=${ITEMS_PER_PAGE}&sort=${sort}`
       );
-      const json = await res.json();
-      if (!res.ok || !json.success) {
+      const json = await tryParseJson<{
+        success: boolean;
+        data?: {
+          seller: SellerInfo;
+          products: ApiProduct[];
+        };
+        meta?: { totalItems: number; totalPages: number };
+      }>(res);
+      if (!res.ok || !json?.success || !json.data) {
         setNotFound(true);
         return;
       }

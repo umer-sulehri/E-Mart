@@ -7,6 +7,7 @@ import { Store, Star, Package, ChevronRight, Loader2, Search } from 'lucide-reac
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import Pagination from '@/components/product/Pagination';
 import Input from '@/components/ui/Input';
+import { tryParseJson } from '@/lib/api';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -41,9 +42,13 @@ export default function SellersPage() {
         });
         if (search) params.set('search', search);
         const res = await fetch(`/api/v1/sellers?${params.toString()}`);
-        const json = await res.json();
+        const json = await tryParseJson<{
+          success: boolean;
+          data?: Seller[];
+          meta?: { totalPages: number };
+        }>(res);
         if (!cancelled) {
-          if (json.success) {
+          if (json?.success) {
             setSellers(json.data || []);
             setTotalPages(json.meta?.totalPages || 1);
           } else {

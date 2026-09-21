@@ -5,6 +5,7 @@ import { MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
+import { tryParseJson } from '@/lib/api';
 
 interface Comment {
   id: string;
@@ -24,9 +25,9 @@ export default function BlogComments({ postId }: { postId: string }) {
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/v1/blog-posts/${postId}/comments`)
-      .then((res) => res.json())
+      .then((res) => tryParseJson<{ success: boolean; data?: Comment[] }>(res))
       .then((json) => {
-        if (!cancelled && json.success) setComments(json.data || []);
+        if (!cancelled && json?.success) setComments(json.data || []);
       })
       .catch(() => {})
       .finally(() => {
@@ -50,21 +51,25 @@ export default function BlogComments({ postId }: { postId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: text }),
       });
-      const json = await res.json();
+      const json = await tryParseJson<{
+        success: boolean;
+        error?: string;
+        data?: { id: string; content: string; createdAt: string };
+      }>(res);
       if (res.status === 401) {
-        toast.error(json.error || 'Please sign in to comment');
+        toast.error(json?.error || 'Please sign in to comment');
         router.push('/login');
         return;
       }
-      if (!json.success) {
-        toast.error(json.error || 'Failed to post comment');
+      if (!json?.success) {
+        toast.error(json?.error || 'Failed to post comment');
         return;
       }
       setComments((prev) => [
         {
-          id: json.data.id,
-          content: json.data.content,
-          createdAt: json.data.createdAt,
+          id: json.data?.id ?? '',
+          content: json.data?.content ?? text,
+          createdAt: json.data?.createdAt ?? new Date().toISOString(),
           author: 'You',
           avatar: '/images/avatar-1.jpg',
         },

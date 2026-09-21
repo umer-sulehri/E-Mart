@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import toast from 'react-hot-toast';
+import { tryParseJson } from '@/lib/api';
 
 interface Review {
   id: string;
@@ -50,20 +51,24 @@ export default function ReviewsPage() {
 
     async function fetchReviews() {
       try {
-        const res = await fetch('/api/v1/reviews');
-        const json = await res.json();
-        if (json.success && json.data?.length) {
+const res = await fetch('/api/v1/reviews');
+        const json = await tryParseJson<{
+          success: boolean;
+          data?: Review[];
+          error?: string;
+        }>(res);
+        if (json?.success && json.data?.length) {
           setReviews(json.data);
           calculateStats(json.data);
-        } else if (json.success) {
-          // Genuinely no reviews yet â€” show the empty state instead of
+        } else if (json?.success) {
+          // Genuinely no reviews yet — show the empty state instead of
           // falling back to fake data.
           setReviews([]);
           setOverallRating(0);
           setTotalReviews(0);
           setError(null);
         } else {
-          setError(json.error || 'Failed to load reviews');
+          setError(json?.error || 'Failed to load reviews');
         }
       } catch {
         setError('Failed to load reviews');
@@ -119,8 +124,8 @@ export default function ReviewsPage() {
       if (res.status === 401) {
         toast.error('Please sign in to mark reviews as helpful');
       } else if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(json.error || 'Failed to update review');
+        const json = await tryParseJson<{ error?: string }>(res);
+        throw new Error(json?.error || 'Failed to update review');
       }
     } catch {
       // keep optimistic local state

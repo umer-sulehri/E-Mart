@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Facebook, Twitter, Youtube, Instagram, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { tryParseJson } from '@/lib/api';
 
 const organicLinks = [
   { label: 'About us', href: '/about' },
@@ -55,9 +56,9 @@ export default function Footer() {
 
   useEffect(() => {
     fetch('/api/v1/social-links')
-      .then((res) => res.json())
+      .then((res) => tryParseJson<{ success: boolean; data?: { platform: string; url: string; icon?: string }[] }>(res))
       .then((json) => {
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
           setSocialLinksData(json.data);
         }
       })
@@ -89,10 +90,10 @@ export default function Footer() {
         body: JSON.stringify({ email }),
       });
 
-      const json = await res.json();
+      const json = await tryParseJson<{ success: boolean; error?: string }>(res);
 
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Subscription failed');
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || 'Subscription failed');
       }
 
       toast.success('Thanks for subscribing!');

@@ -2,6 +2,47 @@ import { resolveImage } from '@/lib/imageLoader';
 
 const API_BASE = '/api/v1';
 
+/**
+ * Read a fetch Response body as JSON without throwing on non-JSON payloads
+ * (e.g. a stale Next.js dev server returning an HTML error page instead of
+ * JSON). Returns `null` when the body isn't valid JSON or is empty.
+ */
+export async function tryParseJson<T = unknown>(res: Response): Promise<T | null> {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Plain `fetch` wrapper that safely parses JSON from any endpoint. Throws an
+ * Error with the server's message (when the body is JSON) or a fallback status
+ * message (e.g. when the body is an HTML error page).
+ */
+export async function requestJson<T = unknown>(
+  url: string,
+  options?: RequestInit
+): Promise<T> {
+  try {
+    const res = await fetch(url, options);
+    const body = await tryParseJson<T>(res);
+    if (!res.ok || body === null) {
+      const detail =
+        (body as { error?: unknown } | null)?.error ??
+        (body as { message?: unknown } | null)?.message ??
+        `HTTP ${res.status}${res.statusText ? ` (${res.statusText})` : ''}`;
+      throw new Error(typeof detail === 'string' ? detail : 'Request failed');
+    }
+    return body;
+  } catch (err) {
+    if (err instanceof Error) throw err;
+    throw new Error('Request failed');
+  }
+}
+
 export async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
@@ -10,11 +51,15 @@ export async function fetchAPI<T>(endpoint: string, options?: RequestInit): Prom
       ...options?.headers,
     },
   });
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || `HTTP ${res.status}`);
+  const body = await tryParseJson<T>(res);
+  if (!res.ok || body === null) {
+    const detail =
+      (body as { error?: unknown } | null)?.error ??
+      (body as { message?: unknown } | null)?.message ??
+      `HTTP ${res.status}${res.statusText ? ` (${res.statusText})` : ''}`;
+    throw new Error(typeof detail === 'string' ? detail : 'Request failed');
   }
-  return res.json();
+  return body;
 }
 
 const RETRY_DELAYS = [1000, 2000, 4000];
