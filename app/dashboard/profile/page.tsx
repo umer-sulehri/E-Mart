@@ -12,6 +12,7 @@ import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { resolveImage } from '@/lib/imageLoader';
+import { uploadImageFile } from '@/lib/image-upload';
 
 export default function ProfilePage() {
   const { user, setUser, updateUser, logout } = useAuthStore();
@@ -137,24 +138,17 @@ export default function ProfilePage() {
 
     setAvatarUploading(true);
     try {
-      const body = new FormData();
-      body.append('file', file);
-      body.append('bucket', 'avatars');
-      body.append('folder', 'users');
-      const res = await fetch('/api/v1/uploads', { method: 'POST', body });
-      const upload = await res.json();
-      if (!upload.success) throw new Error(upload.error || 'Upload failed');
-
+      const url = await uploadImageFile(file, 'avatars', 'users');
       const saveRes = await fetch('/api/v1/auth/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileImageUrl: upload.data.url }),
+        body: JSON.stringify({ profileImageUrl: url }),
       });
       const save = await saveRes.json();
       if (!save.success) throw new Error(save.error || 'Failed to save photo');
 
-      setProfileImageUrl(upload.data.url);
-      updateUser({ profileImageUrl: upload.data.url });
+      setProfileImageUrl(url);
+      updateUser({ profileImageUrl: url });
       toast.success('Profile photo updated');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Upload failed');

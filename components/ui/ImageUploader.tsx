@@ -4,13 +4,14 @@ import { useRef, useState } from 'react';
 import { Loader2, RefreshCw, UploadCloud, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
+import { uploadImageFile } from '@/lib/image-upload';
 
 type UploadStatus = 'idle' | 'uploading' | 'error';
 
 interface ImageUploaderProps {
   value?: string | null;
   onChange: (url: string) => void;
-  bucket?: 'products' | 'blog' | 'vendor-assets' | 'uploads';
+  bucket?: 'products' | 'blog' | 'vendor-assets' | 'uploads' | 'avatars';
   folder?: string;
   accept?: string;
   maxSizeMB?: number;
@@ -45,17 +46,8 @@ export default function ImageUploader({
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('bucket', bucket);
-      if (folder) formData.append('folder', folder);
-
-      const res = await fetch('/api/v1/uploads', { method: 'POST', body: formData });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Upload failed');
-      }
-      onChange(json.data.url);
+      const url = await uploadImageFile(file, bucket, folder);
+      onChange(url);
       setStatus('idle');
     } catch (err) {
       setStatus('error');

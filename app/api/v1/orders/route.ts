@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 import { normalizeOrder } from "@/lib/orders";
 import { getPaymentToggleState, paymentMethodToToggle } from "@/lib/payments";
+import type { OrderRow } from "@/types/supabase";
 
 export async function GET(request: NextRequest) {
   try {
@@ -88,6 +90,80 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Derive the next sequential order number from the current highest value.
+ * Numbers follow the existing `EM-000001` convention. When the database has
+ * numbers in another format (or none at all) a timestamp-based fallback is
+ * returned so the insert is still unique.
+ */
+async function deriveNextOrderNumber(
+  supabase: SupabaseClient
+): Promise<string> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("order_number")
+    .order("order_number", { ascending: false })
+    .limit(1);
+
+  if (error || !data || data.length === 0) {
+    return `EM-D${Date.now()}`;
+  }
+
+  const last = String(data[0].order_number || "");
+  const match = last.match(/^EM-(\d+)$/i);
+  if (match) {
+    const next = parseInt(match[1], 10) + 1;
+    return `EM-${String(next).padStart(6, "0")}`;
+  }
+
+  return `EM-D${Date.now()}`;
+}
+
+/**
+ * Insert an order row, retrying a handful of times when two concurrent
+ * checkouts collide on the same order_number. Each retry derives a fresh
+ * number, so a collision is resolved instead of failing the checkout.
+ */
+async function insertOrderWithRetry(
+  supabase: SupabaseClient,
+  payload: Record<string, unknown>,
+  attempts = 5
+): Promise<{ data: OrderRow | null; error: { message: string } | null }> {
+  const orderNumber = await deriveNextOrderNumber(supabase);
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const number = attempt === 0 ? orderNumber : await deriveNextOrderNumber(supabase);
+    const { data, error } = await supabase
+      .from("orders")
+      .insert({ ...payload, order_number: attempt === 0 ? orderNumber : number })
+      .select()
+      .single();
+
+    if (!error) return { data, error: null };
+
+    const code = (error as { code?: string }).code;
+    if (code === "23505") {
+      // Duplicate order_number — recompute and retry once more below.
+      continue;
+    }
+
+    return { data: null, error: { message: error.message } };
+  }
+
+  // Last resort: an explicitly unique (non-sequential) number so the order can
+  // still be placed even if the sequence keeps producing collisions.
+  const { data, error } = await supabase
+    .from("orders")
+    .insert({ ...payload, order_number: `EM-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}` })
+    .select()
+    .single();
+
+  if (error) {
+    return { data: null, error: { message: error.message } };
+  }
+  return { data, error: null };
 }
 
 export async function POST(request: NextRequest) {
@@ -266,28 +342,35 @@ export async function POST(request: NextRequest) {
     // Total can never drop below zero.
     let total = Math.max(0, subtotal + shippingCost + tax - Math.floor(discount));
 
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        user_id: user.id,
-        status: "pending",
-        payment_status: "pending",
-        payment_method: paymentMethod,
-        subtotal,
-        tax,
-        shipping_cost: shippingCost,
-        discount,
-        total,
-        coupon_code: couponCode ? String(couponCode).trim() : null,
-        notes,
-        shipping_address_id: shippingAddressId,
-      })
-      .select()
-      .single();
+    // Create the order row. The DB trigger generates `EM-000001`-style numbers
+    // when none is supplied, but its MAX()+1 computation races under concurrent
+    // checkouts (duplicate key on orders_order_number). We therefore derive the
+    // next sequential number ourselves before inserting AND retry on a unique
+    // violation, so concurrent orders always receive distinct numbers.
+    const { data: order, error: orderError } = await insertOrderWithRetry(supabase, {
+      user_id: user.id,
+      status: "pending",
+      payment_status: "pending",
+      payment_method: paymentMethod,
+      subtotal,
+      tax,
+      shipping_cost: shippingCost,
+      discount,
+      total,
+      coupon_code: couponCode ? String(couponCode).trim() : null,
+      notes,
+      shipping_address_id: shippingAddressId,
+    });
 
     if (orderError) {
       return NextResponse.json(
         { success: false, error: orderError.message },
+        { status: 500 }
+      );
+    }
+    if (!order) {
+      return NextResponse.json(
+        { success: false, error: "Failed to create order" },
         { status: 500 }
       );
     }

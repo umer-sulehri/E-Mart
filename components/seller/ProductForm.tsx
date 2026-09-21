@@ -9,6 +9,7 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { uploadImageFile } from '@/lib/image-upload';
 
 interface ImageEntry {
   file?: File;
@@ -182,14 +183,7 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
 
   const uploadImage = async (entry: ImageEntry): Promise<string> => {
     if (!entry.file) return entry.preview;
-    const fd = new FormData();
-    fd.append('file', entry.file);
-    fd.append('bucket', 'products');
-    fd.append('folder', 'products');
-    const res = await fetch('/api/v1/uploads', { method: 'POST', body: fd });
-    const json = await res.json();
-    if (json.success) return json.data.url;
-    throw new Error(json.error || 'Upload failed');
+    return uploadImageFile(entry.file, 'products', 'products');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

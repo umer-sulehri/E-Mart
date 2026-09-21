@@ -7,6 +7,7 @@ import { Camera, Store, Loader2, MapPin, Mail, Phone } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { resolveImage } from '@/lib/imageLoader';
+import { uploadImageFile } from '@/lib/image-upload';
 
 interface VendorProfile {
   id: string;
@@ -72,14 +73,8 @@ export default function SellerProfilePage() {
     if (!file) return;
     setUploading(true);
     try {
-      const body = new FormData();
-      body.append('file', file);
-      body.append('bucket', 'vendor-assets');
-      body.append('folder', 'logos');
-      const res = await fetch('/api/v1/uploads', { method: 'POST', body });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || 'Upload failed');
-      setForm((prev) => ({ ...prev, logoUrl: json.data.url }));
+      const url = await uploadImageFile(file, 'vendor-assets', 'logos');
+      setForm((prev) => ({ ...prev, logoUrl: url }));
       toast.success('Logo uploaded');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Upload failed');

@@ -68,7 +68,14 @@ export class VoiceSearchManager {
 
     this.recognition.continuous = false;
     this.recognition.interimResults = true;
-    this.recognition.lang = 'en-US';
+    // Recognize speech in the browser's own language so it works for speakers
+    // who are not using an English locale (previously hardcoded to en-US,
+    // which made recognition fail/return "no-speech" for everyone else).
+    const browserLang =
+      typeof navigator !== 'undefined'
+        ? navigator.language || navigator.languages?.[0] || ''
+        : '';
+    this.recognition.lang = browserLang ? browserLang : 'en-US';
 
     this.recognition.onstart = () => {
       this.isListening = true;

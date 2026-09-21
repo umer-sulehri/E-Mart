@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { cn, slugify } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { uploadImageFile } from '@/lib/image-upload';
 
 interface BlogFormData {
   title: string;
@@ -58,20 +59,11 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
   const uploadCover = async (file: File) => {
     setCoverUploading(true);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('bucket', 'blog');
-      fd.append('folder', 'covers');
-      const res = await fetch('/api/v1/uploads', { method: 'POST', body: fd });
-      const json = await res.json();
-      if (json.success) {
-        setForm((prev) => ({ ...prev, cover_image: json.data.url }));
-        toast.success('Cover image uploaded');
-      } else {
-        toast.error(json.error || 'Upload failed');
-      }
-    } catch {
-      toast.error('Cover upload failed');
+      const url = await uploadImageFile(file, 'blog', 'covers');
+      setForm((prev) => ({ ...prev, cover_image: url }));
+      toast.success('Cover image uploaded');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Cover upload failed');
     } finally {
       setCoverUploading(false);
     }

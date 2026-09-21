@@ -82,7 +82,7 @@ export default function DashboardPage() {
     fetchData();
   }, [setUser, router]);
 
-  const { lastOrder, canReorder, canTrack, canReview } =
+  const { lastOrder, canReorder, canTrack } =
     getQuickActionState(recentOrders);
 
   const [reordering, setReordering] = useState(false);
@@ -271,7 +271,6 @@ export default function DashboardPage() {
             icon={<Star className="h-6 w-6 sm:h-8 sm:w-8" />}
             label="Write Review"
             href="/dashboard/reviews"
-            disabled={!canReview}
           />
         </div>
       </div>
