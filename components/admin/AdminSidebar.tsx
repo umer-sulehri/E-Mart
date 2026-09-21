@@ -27,6 +27,7 @@ import {
   Activity,
   Link2,
   Wallet,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
@@ -45,6 +46,7 @@ const navLinks = [
   { label: 'Blog', href: '/admin/blog', icon: Newspaper },
   { label: 'Stores / Brands', href: '/admin/stores', icon: Building2 },
   { label: 'Payouts', href: '/admin/payouts', icon: Wallet },
+  { label: 'Contact', href: '/admin/contact', icon: Mail },
   { label: 'Analytics', href: '/admin/analytics', icon: Activity },
   { label: 'Logs', href: '/admin/logs', icon: ScrollText },
   { label: 'Reports', href: '/admin/reports', icon: BarChart3 },
