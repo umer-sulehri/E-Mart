@@ -116,7 +116,7 @@ const faqs: FaqItem[] = [
     category: 'Returns',
     question: 'How do I request a refund?',
     answer:
-      'Go to My Account > Orders, select the order, and click "Request Return." Our team will review and process your refund within 5-7 business days.',
+      'Contact our support team through the Contact page within 7 days of delivery. Our team will review your request and process your refund within 5-7 business days.',
   },
   {
     category: 'Returns',

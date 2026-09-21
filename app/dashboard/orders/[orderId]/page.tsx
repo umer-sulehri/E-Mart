@@ -12,7 +12,6 @@ import {
   MapPin,
   CreditCard,
   RotateCcw,
-  Download,
   X,
   Star,
 } from 'lucide-react';
@@ -64,9 +63,7 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
-  const [returning, setReturning] = useState(false);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
-  const [returnConfirmOpen, setReturnConfirmOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -109,29 +106,6 @@ export default function OrderDetailPage() {
       toast.error('Failed to cancel order');
     } finally {
       setCancelling(false);
-    }
-  };
-
-  const handleReturn = async () => {
-    if (!order) return;
-    try {
-      setReturning(true);
-      const res = await fetch(`/api/v1/orders/${order.id}/return`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: 'Customer requested return' }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Return request submitted successfully');
-        setOrder({ ...order, status: 'returned' });
-      } else {
-        toast.error(data.error || 'Failed to submit return request');
-      }
-    } catch {
-      toast.error('Failed to submit return request');
-    } finally {
-      setReturning(false);
     }
   };
 
@@ -283,15 +257,6 @@ export default function OrderDetailPage() {
           <Badge variant={statusVariant[order.status] ?? 'warning'} size="md">
             {order.status.charAt(0).toUpperCase() + order.status.slice(1).replace(/_/g, ' ')}
           </Badge>
-        </div>
-        <div className="mt-4">
-          <Link
-            href={`/invoice/${order.id || orderId}`}
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary-500"
-          >
-            <Download className="h-4 w-4" />
-            Download Invoice
-          </Link>
         </div>
       </div>
 
@@ -448,16 +413,6 @@ export default function OrderDetailPage() {
         )}
         {['delivered', 'shipped', 'out_for_delivery'].includes(order.status) && (
           <Button
-            variant="danger"
-            loading={returning}
-            onClick={() => setReturnConfirmOpen(true)}
-          >
-            <RotateCcw className="h-4 w-4" />
-            Request Return
-          </Button>
-        )}
-        {['delivered', 'shipped', 'out_for_delivery'].includes(order.status) && (
-          <Button
             variant="outline"
             onClick={() => router.push(`/dashboard/orders/${orderId}/write-review`)}
           >
@@ -468,10 +423,6 @@ export default function OrderDetailPage() {
         <Button variant="primary" onClick={handleReorder}>
           <RotateCcw className="h-4 w-4" />
           Re-Order
-        </Button>
-        <Button variant="outline" onClick={() => router.push(`/invoice/${order.id || orderId}`)}>
-          <Download className="h-4 w-4" />
-          Download Invoice
         </Button>
       </div>
 
@@ -487,20 +438,6 @@ export default function OrderDetailPage() {
         variant="danger"
         confirmLabel="Cancel order"
         loading={cancelling}
-      />
-
-      <ConfirmDialog
-        open={returnConfirmOpen}
-        onClose={() => setReturnConfirmOpen(false)}
-        onConfirm={() => {
-          setReturnConfirmOpen(false);
-          handleReturn();
-        }}
-        title="Request a return?"
-        message="Your return request will be sent for review. You will be notified once it's processed."
-        variant="warning"
-        confirmLabel="Request return"
-        loading={returning}
       />
     </div>
   );
