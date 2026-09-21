@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
 
     const { data: coupons, error, count } = await supabase
       .from("coupons")
-      .select("*", { count: "exact" })
+      .select(
+        "*, profiles:profiles!coupons_created_by_fkey(first_name, last_name, email, role)",
+        { count: "exact" }
+      )
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -154,6 +157,7 @@ export async function POST(request: NextRequest) {
         is_active: true,
         starts_at: startsAt,
         expires_at: expiresAt,
+        created_by: user.id,
       })
       .select()
       .single();

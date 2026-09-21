@@ -35,9 +35,12 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "50", 10);
     const offset = (page - 1) * limit;
 
-    const baseQuery = supabase
+const baseQuery = supabase
       .from("coupons")
-      .select("*", { count: "exact" })
+      .select(
+        "*, profiles:profiles!coupons_created_by_fkey(first_name, last_name, email, role)",
+        { count: "exact" }
+      )
       .eq("created_by", user.id);
 
     const { data: coupons, error, count } = await baseQuery

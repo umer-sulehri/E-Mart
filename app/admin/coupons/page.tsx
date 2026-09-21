@@ -26,10 +26,19 @@ function SkeletonRow() {
       <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
       <td className="px-6 py-4"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
       <td className="hidden px-6 py-4 lg:table-cell"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
+      <td className="hidden px-6 py-4 xl:table-cell"><div className="h-4 w-24 animate-pulse rounded bg-muted-200" /></td>
       <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
       <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
     </tr>
   );
+}
+
+function creatorName(coupon: CouponRow): string {
+  const p = coupon.profiles;
+  if (!p) return '—';
+  const name = [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
+  if (name) return name;
+  return p.email || '—';
 }
 
 export default function AdminCouponsPage() {
@@ -348,6 +357,7 @@ export default function AdminCouponsPage() {
                 <th className="px-6 py-3 font-medium text-muted-600">Type</th>
                 <th className="px-6 py-3 font-medium text-muted-600">Value</th>
                 <th className="hidden px-6 py-3 font-medium text-muted-600 lg:table-cell">Status</th>
+                <th className="hidden px-6 py-3 font-medium text-muted-600 xl:table-cell">Added By</th>
                 <th className="px-6 py-3 font-medium text-muted-600">Expires</th>
                 <th className="px-6 py-3 font-medium text-muted-600">Actions</th>
               </tr>
@@ -358,7 +368,7 @@ export default function AdminCouponsPage() {
                 : coupons.length === 0
                   ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-12 text-center">
+                        <td colSpan={8} className="px-6 py-12 text-center">
                           <Tag className="mx-auto mb-3 h-10 w-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No coupons yet</p>
                         </td>
@@ -382,6 +392,18 @@ export default function AdminCouponsPage() {
                             <Badge variant={isExpired ? 'danger' : coupon.is_active ? 'success' : 'default'} size="sm">
                               {isExpired ? 'Expired' : coupon.is_active ? 'Active' : 'Inactive'}
                             </Badge>
+                          </td>
+                          <td className="hidden px-6 py-4 xl:table-cell">
+                            <span className="flex items-center gap-1.5 text-muted-600">
+                              {coupon.profiles?.role === 'admin' ? (
+                                <Badge variant="primary" size="sm">Admin</Badge>
+                              ) : coupon.profiles?.role === 'seller' ? (
+                                <Badge variant="default" size="sm">Seller</Badge>
+                              ) : null}
+                              <span className="truncate" title={creatorName(coupon)}>
+                                {creatorName(coupon)}
+                              </span>
+                            </span>
                           </td>
                           <td className="px-6 py-4 text-muted-600">
                             {coupon.expires_at ? formatDate(coupon.expires_at) : '-'}

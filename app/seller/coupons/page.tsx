@@ -28,7 +28,20 @@ interface Coupon {
   starts_at: string | null;
   expires_at: string | null;
   description?: string | null;
+  profiles?: {
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+    role?: string | null;
+  } | null;
 }
+
+const creatorName = (coupon: Coupon): string => {
+  const p = coupon.profiles;
+  if (!p) return 'You';
+  const name = [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
+  return name || p.email || 'You';
+};
 
 const defaultForm = {
   code: '',
@@ -327,6 +340,7 @@ export default function SellerCouponsPage() {
                 <th className="px-6 py-3 font-medium text-muted-600">Min Order</th>
                 <th className="px-6 py-3 font-medium text-muted-600">Usage</th>
                 <th className="px-6 py-3 font-medium text-muted-600">Status</th>
+                <th className="hidden px-6 py-3 font-medium text-muted-600 xl:table-cell">Added By</th>
                 <th className="px-6 py-3 font-medium text-muted-600">Expiry</th>
                 <th className="px-6 py-3 font-medium text-muted-600">Actions</th>
               </tr>
@@ -334,13 +348,13 @@ export default function SellerCouponsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center">
+                  <td colSpan={8} className="py-10 text-center">
                     <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
                   </td>
                 </tr>
               ) : coupons.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-sm text-muted-500">
+                  <td colSpan={8} className="py-10 text-center text-sm text-muted-500">
                     No coupons yet. Create your first coupon to start offering discounts.
                   </td>
                 </tr>
@@ -373,6 +387,9 @@ export default function SellerCouponsPage() {
                       <Badge variant={coupon.is_active ? 'success' : 'default'}>
                         {coupon.is_active ? 'Active' : 'Inactive'}
                       </Badge>
+                    </td>
+                    <td className="hidden px-6 py-4 text-muted-600 xl:table-cell">
+                      {creatorName(coupon)}
                     </td>
                     <td className="px-6 py-4 text-muted-600">
                       {coupon.expires_at ? formatDate(coupon.expires_at) : '-'}

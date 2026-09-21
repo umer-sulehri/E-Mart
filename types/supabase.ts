@@ -113,6 +113,13 @@ export interface CouponRow {
   created_by?: string | null;
   created_at: string;
   updated_at: string;
+  // Embedded join for "who added" column:
+  profiles?: {
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+    role?: string | null;
+  } | null;
 }
 
 export interface OrderItemRow {
@@ -169,7 +176,7 @@ export interface ReviewRow {
   images?: string[] | null;
   is_verified_purchase: boolean;
   helpful_count: number;
-  status: 'pending' | 'approved' | 'flagged';
+  status: 'pending' | 'approved' | 'flagged' | 'rejected';
   seller_reply?: string | null;
   created_at: string;
   updated_at: string;
