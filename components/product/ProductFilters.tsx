@@ -117,12 +117,30 @@ export default function ProductFilters({
     max: filters.maxPrice,
   });
 
+  // Tracks the bounds we last aligned the slider to, so real catalog bounds
+  // arriving from /api/v1/products/price-range actually move the thumbs even
+  // when the user hasn't committed a price filter yet.
+  const lastBounds = useRef<{ min: number; max: number }>({
+    min: boundsMin,
+    max: boundsMax,
+  });
+
   // Resync the slider only when the committed filter changed from the outside,
   // never from our own debounced commits (which would fight the user mid-drag).
   useEffect(() => {
     const min = Number(filters.minPrice) || boundsMin;
     const max = Number(filters.maxPrice) || boundsMax;
     const next: [number, number] = [Math.min(min, max), Math.max(min, max)];
+
+    const boundsChanged =
+      lastBounds.current.min !== boundsMin ||
+      lastBounds.current.max !== boundsMax;
+    if (boundsChanged) {
+      lastBounds.current = { min: boundsMin, max: boundsMax };
+      setPrice(next);
+      return;
+    }
+
     if (
       filters.minPrice !== lastCommittedPrice.current.min ||
       filters.maxPrice !== lastCommittedPrice.current.max
@@ -233,7 +251,7 @@ export default function ProductFilters({
         <PriceRangeSlider
           min={boundsMin}
           max={boundsMax}
-          step={500}
+          step={Math.max(1, Math.round((boundsMax - boundsMin) / 100))}
           value={priceRange}
           onChange={setPrice}
         />

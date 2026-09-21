@@ -428,7 +428,7 @@ function ProductsContent() {
           {/* Main content */}
           <div ref={gridRef} className="min-w-0 flex-1">
             {loading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
                   <div key={i} className="animate-pulse">
                     <div className="rounded-2xl bg-white p-3 text-center shadow-sm">

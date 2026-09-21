@@ -60,17 +60,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (categories.length > 0) {
+    const categorySlugs =
+      categories.length > 0 ? categories : category ? [category] : [];
+    if (categorySlugs.length > 0) {
       // Products carry the parent via `category_id` and the sub-category via
-      // `subcategory_id`, so a selected slug must match either relationship.
-      const joined = categories.join(",");
-      query = query.or(
-        `categories!products_category_id_fkey.slug.in.(${joined}),categories!products_subcategory_id_fkey.slug.in.(${joined})`
+      // `subcategory_id`. Selecting a category must therefore match either FK,
+      // and should also include products in that category's sub-categories.
+      const { data: catRows } = await supabase
+        .from("categories")
+        .select("id")
+        .in("slug", categorySlugs);
+
+      const categoryIds = new Set<string>(
+        (catRows || []).map((c) => c.id as string)
       );
-    } else if (category) {
-      query = query.or(
-        `categories!products_category_id_fkey.slug.eq.${category},categories!products_subcategory_id_fkey.slug.eq.${category}`
-      );
+      if (categoryIds.size === 0) {
+        // No matching category rows (e.g. stale slug): match nothing.
+        query = query.eq("id", "00000000-0000-0000-0000-000000000000");
+      } else {
+        const { data: childRows } = await supabase
+          .from("categories")
+          .select("id")
+          .in("parent_id", Array.from(categoryIds));
+        (childRows || []).forEach((c) => categoryIds.add(c.id as string));
+
+        const ids = Array.from(categoryIds);
+        query = query.or(
+          `category_id.in.(${ids.join(",")}),subcategory_id.in.(${ids.join(",")})`
+        );
+      }
     }
 
     if (brands.length > 0) {
