@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
+import { tryParseJson } from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import MobileNav from './MobileNav';
@@ -53,10 +54,10 @@ function SearchBar({ className }: { className?: string }) {
     setLoading(true);
 
     fetch(`/api/v1/search/suggestions?q=${encodeURIComponent(debouncedQuery)}`)
-      .then((res) => res.json())
+      .then((res) => tryParseJson<{ success: boolean; data?: Suggestion[] }>(res))
       .then((json) => {
         if (cancelled) return;
-        if (json.success) {
+        if (json?.success) {
           setSuggestions(json.data || []);
           setOpen((json.data || []).length > 0);
         }
@@ -216,9 +217,6 @@ function PagesDropdown() {
     { label: 'Contact', href: '/contact' },
     { label: 'Compare Products', href: '/compare' },
     { label: 'Help Center', href: '/help' },
-    { label: 'My Account', href: '/dashboard' },
-    { label: 'Seller Dashboard', href: '/seller' },
-    { label: 'Admin', href: '/admin' },
   ];
 
   const handleItemClick = (href: string) => {
@@ -384,10 +382,10 @@ export default function Header() {
 
   useEffect(() => {
     fetch('/api/v1/categories')
-      .then((res) => res.json())
+      .then((res) => tryParseJson<{ success: boolean; data?: { name: string; slug: string }[] }>(res))
       .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
-          setCategories(json.data.map((c: { name: string; slug: string }) => ({ name: c.name, slug: c.slug })));
+        if (json?.success && Array.isArray(json.data)) {
+          setCategories(json.data.map((c) => ({ name: c.name, slug: c.slug })));
         }
       })
       .catch(() => {});
