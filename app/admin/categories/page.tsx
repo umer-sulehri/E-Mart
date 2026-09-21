@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import ImageUploader from '@/components/ui/ImageUploader';
 import type { CategoryRow } from '@/types/supabase';
 
 function SkeletonCard() {
@@ -232,13 +233,12 @@ export default function AdminCategoriesPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-secondary-800">Image URL</label>
-              <input
-                type="text"
+              <label className="mb-1.5 block text-sm font-medium text-secondary-800">Image</label>
+              <ImageUploader
                 value={newCategory.imageUrl}
-                onChange={(e) => setNewCategory({ ...newCategory, imageUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                onChange={(url) => setNewCategory({ ...newCategory, imageUrl: url })}
+                bucket="uploads"
+                folder="categories"
               />
             </div>
             <div>

@@ -15,6 +15,7 @@ import {
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
+import ImageUploader from '@/components/ui/ImageUploader';
 
 interface Brand {
   id: string;
@@ -197,11 +198,14 @@ export default function AdminStoresPage() {
               onChange={(e) => setForm({ ...form, website_url: e.target.value })}
               placeholder="https://..."
             />
-            <Input
-              label="Logo URL"
+          </div>
+          <div className="mt-4">
+            <label className="mb-1 block text-sm font-medium text-secondary-800">Logo</label>
+            <ImageUploader
               value={form.logo_url}
-              onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-              placeholder="https://.../logo.webp"
+              onChange={(url) => setForm({ ...form, logo_url: url })}
+              bucket="vendor-assets"
+              folder="brands"
             />
           </div>
           <div className="mt-4">

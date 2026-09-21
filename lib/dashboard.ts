@@ -17,8 +17,10 @@ export interface QuickActionState {
  * Normalizes to a consistent OrderItem[] for downstream use.
  */
 export function getOrderItems(order: Order): OrderItem[] {
+  const items = order.items;
+  if (items && items.length > 0) return items;
   const nested = (order as unknown as { order_items?: OrderItem[] }).order_items;
-  return nested || order.items || [];
+  return nested || [];
 }
 
 const REORDERABLE_STATUSES = new Set([

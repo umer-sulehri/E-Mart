@@ -6,7 +6,6 @@ import {
   CreditCard,
   Truck,
   Share2,
-  Mail,
   Save,
   Globe,
   Phone,
@@ -24,15 +23,15 @@ import {
 import { cn } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import ImageUploader from '@/components/ui/ImageUploader';
 
-type Tab = 'general' | 'payments' | 'shipping' | 'social' | 'email';
+type Tab = 'general' | 'payments' | 'shipping' | 'social';
 
 const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'general', label: 'General', icon: Settings },
   { id: 'payments', label: 'Payments', icon: CreditCard },
   { id: 'shipping', label: 'Shipping', icon: Truck },
   { id: 'social', label: 'Social Links', icon: Share2 },
-  { id: 'email', label: 'Email', icon: Mail },
 ];
 
 interface GeneralSettings {
@@ -63,18 +62,10 @@ interface SocialLink {
   platform: string;
   url: string;
   icon: string;
-  is_active: boolean;
-  display_order: number;
-}
+    is_active: boolean;
+    display_order: number;
+  }
 
-interface EmailSettings {
-  smtp_host: string;
-  smtp_port: number;
-  smtp_user: string;
-  smtp_from_name: string;
-  smtp_from_email: string;
-  smtp_encryption: string;
-}
 
 const Skeleton = ({ className }: { className?: string }) => (
   <div className={cn('animate-pulse rounded-lg bg-muted-200', className)} />
@@ -190,16 +181,6 @@ export default function AdminSettingsPage() {
   const [newSocialLink, setNewSocialLink] = useState({
     platform: '',
     url: '',
-    icon: '',
-  });
-
-  const [emailSettings] = useState<EmailSettings>({
-    smtp_host: 'smtp.gmail.com',
-    smtp_port: 587,
-    smtp_user: 'noreply@emart.pk',
-    smtp_from_name: 'E-Mart',
-    smtp_from_email: 'noreply@emart.pk',
-    smtp_encryption: 'TLS',
   });
 
   const showToast = (message: string, type: 'success' | 'error') => {
@@ -328,7 +309,7 @@ export default function AdminSettingsPage() {
         body: JSON.stringify(newSocialLink),
       });
       if (res.ok) {
-        setNewSocialLink({ platform: '', url: '', icon: '' });
+        setNewSocialLink({ platform: '', url: '' });
         fetchSocialLinks();
         showToast('Social link added', 'success');
       } else {
@@ -474,15 +455,15 @@ export default function AdminSettingsPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-secondary-800">
-                    Logo URL
+                    Store Logo
                   </label>
-                  <input
-                    type="url"
+                  <ImageUploader
                     value={general.logo_url}
-                    onChange={(e) =>
-                      setGeneral((p) => ({ ...p, logo_url: e.target.value }))
+                    onChange={(url) =>
+                      setGeneral((p) => ({ ...p, logo_url: url }))
                     }
-                    className={inputClass}
+                    bucket="uploads"
+                    folder="logo"
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -818,95 +799,6 @@ export default function AdminSettingsPage() {
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Email Settings */}
-      {activeTab === 'email' && (
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-secondary-800">
-            Email Settings
-          </h2>
-          <p className="mt-1 text-sm text-muted-500">
-            SMTP configuration for transactional emails
-          </p>
-          <div className="mt-6 rounded-lg border border-muted-200 bg-muted-50 p-4">
-            <div className="flex items-center gap-2 text-sm text-muted-600">
-              <AlertCircle className="h-4 w-4" />
-              <span>
-                Email settings are configured via environment variables and
-                cannot be edited here.
-              </span>
-            </div>
-          </div>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-secondary-800">
-                SMTP Host
-              </label>
-              <input
-                type="text"
-                value={emailSettings.smtp_host}
-                readOnly
-                className={cn(inputClass, 'bg-muted-50 cursor-not-allowed')}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-secondary-800">
-                SMTP Port
-              </label>
-              <input
-                type="text"
-                value={emailSettings.smtp_port}
-                readOnly
-                className={cn(inputClass, 'bg-muted-50 cursor-not-allowed')}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-secondary-800">
-                SMTP Username
-              </label>
-              <input
-                type="text"
-                value={emailSettings.smtp_user}
-                readOnly
-                className={cn(inputClass, 'bg-muted-50 cursor-not-allowed')}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-secondary-800">
-                Encryption
-              </label>
-              <input
-                type="text"
-                value={emailSettings.smtp_encryption}
-                readOnly
-                className={cn(inputClass, 'bg-muted-50 cursor-not-allowed')}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-secondary-800">
-                From Name
-              </label>
-              <input
-                type="text"
-                value={emailSettings.smtp_from_name}
-                readOnly
-                className={cn(inputClass, 'bg-muted-50 cursor-not-allowed')}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-secondary-800">
-                From Email
-              </label>
-              <input
-                type="email"
-                value={emailSettings.smtp_from_email}
-                readOnly
-                className={cn(inputClass, 'bg-muted-50 cursor-not-allowed')}
-              />
-            </div>
-          </div>
         </div>
       )}
 

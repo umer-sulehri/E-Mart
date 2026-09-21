@@ -7,6 +7,7 @@ import { Plus, Pencil, Trash2, ImageIcon, RotateCw } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import ImageUploader from '@/components/ui/ImageUploader';
 import { cn } from '@/lib/utils';
 
 interface Banner {
@@ -277,12 +278,12 @@ export default function AdminBannersPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-secondary-700">Image URL</label>
-                <input
+                <label className="mb-1 block text-sm font-medium text-secondary-700">Image</label>
+                <ImageUploader
                   value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full rounded-lg border border-muted-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="/images/banner-1.jpg"
+                  onChange={setImageUrl}
+                  bucket="uploads"
+                  folder="banners"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
