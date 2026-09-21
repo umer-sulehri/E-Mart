@@ -61,11 +61,10 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
   const handleToggle = async () => {
     setError(null);
     if (isListening) {
-      const manager = getManager();
-      manager.stopListening();
-      setIsListening(false);
-      // If there's a transcript and the user stopped early, still submit it.
-      if (transcript.trim()) onSearch(transcript.trim());
+      // Submission is handled centrally by the manager's onend handler, which
+      // hands over the best transcript it heard even if no "final" result
+      // arrived before stopping.
+      getManager().stopListening();
       return;
     }
 
@@ -161,6 +160,8 @@ function getErrorText(code: string): string {
       return 'Speech service unavailable. Check your connection.';
     case 'audio-capture':
       return 'No microphone found.';
+    case 'language-not-supported':
+      return 'Voice search is not available in this language. Try English.';
     default:
       return 'Voice recognition failed. Please try again.';
   }
