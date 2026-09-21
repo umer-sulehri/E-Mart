@@ -20,9 +20,23 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  return updateBanner(request, params);
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return updateBanner(request, params);
+}
+
+async function updateBanner(
+  request: NextRequest,
+  paramsPromise: Promise<{ id: string }>
+) {
   try {
     const supabase = await createClient();
-    const { id } = await params;
+    const { id } = await paramsPromise;
 
     const admin = await requireAdmin(supabase);
     if (admin.error) {
