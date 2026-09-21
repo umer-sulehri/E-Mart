@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useRouter } from 'next/navigation';
@@ -18,11 +18,14 @@ import {
   Lock,
   ShoppingBag,
   Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import { z } from 'zod';
 import { useCartStore } from '@/store/cartStore';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatPrice } from '@/lib/utils';
+import { PAYMENT_METHOD_LABELS } from '@/lib/payments';
+import { tryParseJson } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import CartSummary from '@/components/cart/CartSummary';
@@ -63,6 +66,48 @@ const reviewSchema = z.object({
 type ShippingFormData = z.infer<typeof shippingSchema>;
 type PaymentFormData = z.infer<typeof paymentSchema>;
 type ReviewFormData = z.infer<typeof reviewSchema>;
+
+// ──────────────────────────────────────────
+// Payment Options
+// ──────────────────────────────────────────
+
+type PaymentMethodOption = {
+  id: PaymentFormData['method'];
+  name: string;
+  icon: React.ElementType;
+  color: string;
+};
+
+const PAYMENT_METHOD_OPTIONS: PaymentMethodOption[] = [
+  {
+    id: 'easypaisa',
+    name: 'Easypaisa',
+    icon: Smartphone,
+    color: 'bg-green-50 text-green-600',
+  },
+  {
+    id: 'jazzcash',
+    name: 'JazzCash',
+    icon: Smartphone,
+    color: 'bg-red-50 text-red-600',
+  },
+  {
+    id: 'card',
+    name: 'Credit / Debit Card (Stripe)',
+    icon: CreditCard,
+    color: 'bg-blue-50 text-blue-600',
+  },
+  {
+    id: 'cod',
+    name: 'Cash on Delivery',
+    icon: Banknote,
+    color: 'bg-amber-50 text-amber-600',
+  },
+];
+
+type PaymentConfig = Partial<
+  Record<'stripe_enabled' | 'easypaisa_enabled' | 'jazzcash_enabled' | 'cod_enabled', boolean>
+>;
 
 // ──────────────────────────────────────────
 // Helpers
@@ -282,6 +327,7 @@ function ShippingStep({
 function PaymentStep({
   data,
   errors,
+  methods,
   onChange,
   onSelect,
   onBack,
@@ -289,38 +335,12 @@ function PaymentStep({
 }: {
   data: PaymentFormData;
   errors: Record<string, string>;
+  methods: PaymentMethodOption[];
   onChange: (field: string, value: string) => void;
   onSelect: (method: PaymentFormData['method']) => void;
   onBack: () => void;
   onContinue: () => void;
 }) {
-  const methods = [
-    {
-      id: 'easypaisa' as const,
-      name: 'Easypaisa',
-      icon: Smartphone,
-      color: 'bg-green-50 text-green-600',
-    },
-    {
-      id: 'jazzcash' as const,
-      name: 'JazzCash',
-      icon: Smartphone,
-      color: 'bg-red-50 text-red-600',
-    },
-    {
-      id: 'card' as const,
-      name: 'Credit / Debit Card (Stripe)',
-      icon: CreditCard,
-      color: 'bg-blue-50 text-blue-600',
-    },
-    {
-      id: 'cod' as const,
-      name: 'Cash on Delivery',
-      icon: Banknote,
-      color: 'bg-amber-50 text-amber-600',
-    },
-  ];
-
   return (
     <div className="space-y-5">
       <h2 className="font-heading text-lg font-bold text-secondary-800">
@@ -429,6 +449,14 @@ function PaymentStep({
         })}
       </div>
 
+      {methods.length === 0 && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+          <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+          No payment methods are currently enabled. Please contact the store
+          to place your order.
+        </div>
+      )}
+
       {errors.method && (
         <p className="text-xs text-danger">{errors.method}</p>
       )}
@@ -438,7 +466,12 @@ function PaymentStep({
           <ChevronLeft size={16} />
           Back to Shipping
         </Button>
-        <Button variant="primary" size="lg" onClick={onContinue}>
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={onContinue}
+          disabled={methods.length === 0}
+        >
           Review Order
           <ChevronRight size={16} />
         </Button>
@@ -683,11 +716,68 @@ export default function CheckoutPage() {
     method: 'cod',
   });
 
+  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null);
+
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [shippingErrors, setShippingErrors] = useState<Record<string, string>>({});
   const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>({});
   const [reviewErrors, setReviewErrors] = useState<Record<string, string>>({});
+
+  // Load the admin payment toggles so disabled gateways disappear from the
+  // checkout. If the fetch fails we fall back to showing every method.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/v1/settings/public');
+        const json = await tryParseJson<{
+          success: boolean;
+          data?: { payments?: PaymentConfig | null };
+        }>(res);
+        if (!cancelled && json?.success && json.data?.payments) {
+          setPaymentConfig(json.data.payments);
+        }
+      } catch {
+        // Keep every method available if settings cannot be reached.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Filter the payment methods by the store owner's toggles. Until the config
+  // has loaded we show the full list so the step never renders empty.
+  const availableMethods = useMemo(() => {
+    if (!paymentConfig) return PAYMENT_METHOD_OPTIONS;
+    return PAYMENT_METHOD_OPTIONS.filter((m) => {
+      switch (m.id) {
+        case 'easypaisa':
+          return paymentConfig.easypaisa_enabled !== false;
+        case 'jazzcash':
+          return paymentConfig.jazzcash_enabled !== false;
+        case 'card':
+          return paymentConfig.stripe_enabled !== false;
+        case 'cod':
+          return paymentConfig.cod_enabled !== false;
+        default:
+          return true;
+      }
+    });
+  }, [paymentConfig]);
+
+  // Keep the selected method valid while toggles load or change.
+  useEffect(() => {
+    if (
+      availableMethods.length > 0 &&
+      !availableMethods.some((m) => m.id === paymentData.method)
+    ) {
+      setPaymentData((prev) => ({ ...prev, method: availableMethods[0].id }));
+    }
+  }, [availableMethods, paymentData.method]);
+
+  const paymentLabel = PAYMENT_METHOD_LABELS[paymentData.method] || '';
 
   // Handlers
   const handleShippingChange = (
@@ -966,7 +1056,7 @@ export default function CheckoutPage() {
       <section className="pb-12 lg:pb-16">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
           {/* Mobile order summary (collapsible) */}
-          <MobileOrderSummary />
+          <MobileOrderSummary paymentMethodLabel={currentStep >= 1 ? paymentLabel : null} />
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             {/* Left: Form */}
@@ -984,6 +1074,7 @@ export default function CheckoutPage() {
                   <PaymentStep
                     data={paymentData}
                     errors={paymentErrors}
+                    methods={availableMethods}
                     onChange={handlePaymentChange}
                     onSelect={handlePaymentSelect}
                     onBack={() => {
@@ -1029,6 +1120,7 @@ export default function CheckoutPage() {
               <div className="sticky top-24">
                 <CartSummary
                   isCheckout={currentStep === 2}
+                  paymentMethodLabel={currentStep >= 1 ? paymentLabel : null}
                   onPlaceOrder={currentStep === 2 ? handlePlaceOrder : undefined}
                   placeOrderLoading={placeOrderLoading}
                 />
@@ -1043,7 +1135,7 @@ export default function CheckoutPage() {
 
 // Mobile-only collapsible order summary so users see their total without
 // scrolling past the entire form on small screens.
-function MobileOrderSummary() {
+function MobileOrderSummary({ paymentMethodLabel }: { paymentMethodLabel?: string | null }) {
   const [open, setOpen] = useState(false);
   const hydrated = useHydrated();
   const subtotal = useCartStore((s) => s.subtotal);
@@ -1100,6 +1192,12 @@ function MobileOrderSummary() {
               <div className="flex items-center justify-between">
                 <dt className="text-muted-500">Discount</dt>
                 <dd className="font-medium text-success">-{formatPrice(shownDiscount)}</dd>
+              </div>
+            )}
+            {paymentMethodLabel && (
+              <div className="flex items-center justify-between">
+                <dt className="text-muted-500">Payment</dt>
+                <dd className="font-medium text-secondary-800">{paymentMethodLabel}</dd>
               </div>
             )}
             <div className="flex items-center justify-between border-t border-muted-100 pt-2">

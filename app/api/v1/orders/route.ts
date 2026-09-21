@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 import { normalizeOrder } from "@/lib/orders";
+import { getPaymentToggleState, paymentMethodToToggle } from "@/lib/payments";
 
 export async function GET(request: NextRequest) {
   try {
@@ -125,6 +126,19 @@ export async function POST(request: NextRequest) {
         { success: false, error: "Invalid payment method" },
         { status: 400 }
       );
+    }
+
+    // Respect the admin payment toggles: reject a method the store owner has
+    // disabled, even if the checkout UI was bypassed or served stale options.
+    const toggle = paymentMethodToToggle(paymentMethod);
+    if (toggle) {
+      const paymentToggleState = await getPaymentToggleState(supabase);
+      if (!paymentToggleState[toggle]) {
+        return NextResponse.json(
+          { success: false, error: "This payment method is currently unavailable" },
+          { status: 400 }
+        );
+      }
     }
 
     const { data: address } = await supabase

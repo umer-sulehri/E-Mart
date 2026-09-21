@@ -7,18 +7,22 @@ import toast from 'react-hot-toast';
 import { useCartStore } from '@/store/cartStore';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatPrice } from '@/lib/utils';
+import { tryParseJson } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
 interface CartSummaryProps {
   /** When true, shows "Place Order" instead of "Proceed to Checkout" and hides the link */
   isCheckout?: boolean;
+  /** Selected payment method label; rendered in the summary during checkout */
+  paymentMethodLabel?: string | null;
   onPlaceOrder?: () => void;
   placeOrderLoading?: boolean;
 }
 
 export default function CartSummary({
   isCheckout = false,
+  paymentMethodLabel = null,
   onPlaceOrder,
   placeOrderLoading = false,
 }: CartSummaryProps) {
@@ -70,10 +74,10 @@ export default function CartSummary({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
       });
-      const json = await res.json();
+      const json = await tryParseJson<{ success: boolean; error?: string; data?: any }>(res);
 
-      if (!json.success) {
-        toast.error(json.error || 'Invalid coupon code');
+      if (!json?.success) {
+        toast.error(json?.error || 'Invalid coupon code');
         return;
       }
 
@@ -172,6 +176,14 @@ export default function CartSummary({
               Discount{shownCouponCode ? ` (${shownCouponCode})` : ''}
             </span>
             <span className="font-medium">-{formatPrice(shownDiscount)}</span>
+          </div>
+        )}
+
+        {/* Payment method */}
+        {isCheckout && paymentMethodLabel && (
+          <div className="flex items-center justify-between text-secondary-700">
+            <span className="text-muted-500">Payment</span>
+            <span className="font-medium">{paymentMethodLabel}</span>
           </div>
         )}
 

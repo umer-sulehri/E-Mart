@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getPaymentToggleState } from "@/lib/payments";
 
 export async function GET() {
   try {
@@ -39,9 +40,20 @@ export async function GET() {
       publicSettings[s.key] = s.value;
     });
 
+    // Payment gateways are toggled in the admin "Payments" tab; expose the
+    // resolved on/off flags so any client (checkout, cart) can hide methods
+    // the store owner disabled. Missing rows default to enabled.
+    const payments = await getPaymentToggleState(supabase);
+
     return NextResponse.json({
       success: true,
-      data: publicSettings,
+      data: {
+        ...publicSettings,
+        // Nested, grouped shape for new consumers…
+        payments,
+        // …plus flat booleans so older flat lookups keep working.
+        ...payments,
+      },
     });
   } catch (error) {
     return NextResponse.json(
