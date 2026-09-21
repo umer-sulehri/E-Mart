@@ -94,12 +94,12 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                   : formatPrice(product.price)}
               </span>
               {discount > 0 && (
-                <span className="rounded-none border border-dark-subtle px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
+                <span className="rounded-none border border-muted-300 px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
                   {discount}% OFF
                 </span>
               )}
               {product.badge && (
-                <span className="rounded-none border border-dark-subtle px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
+                <span className="rounded-none border border-muted-300 px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
                   {product.badge}
                 </span>
               )}

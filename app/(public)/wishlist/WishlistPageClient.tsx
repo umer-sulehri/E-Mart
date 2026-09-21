@@ -268,7 +268,7 @@ export default function WishlistPage() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                       {!item.inStock && (
-                        <span className="absolute left-2 top-2 rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white">
+                        <span className="absolute left-2 top-2 rounded-full bg-danger px-3 py-1 text-xs font-semibold text-white">
                           Out of Stock
                         </span>
                       )}

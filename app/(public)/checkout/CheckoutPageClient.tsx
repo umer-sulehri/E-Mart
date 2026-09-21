@@ -440,7 +440,7 @@ function PaymentStep({
 
               {/* COD info */}
               {m.id === 'cod' && isSelected && (
-                <div className="mt-3 ml-14 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
+                <div className="mt-3 ml-14 rounded-lg bg-warning-50 p-3 text-xs text-warning-700">
                   Pay with cash upon delivery. Available for orders within Pakistan.
                 </div>
               )}
@@ -450,7 +450,7 @@ function PaymentStep({
       </div>
 
       {methods.length === 0 && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+        <div className="flex items-start gap-2 rounded-lg border border-warning-200 bg-warning-50 p-3 text-xs text-warning-700">
           <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
           No payment methods are currently enabled. Please contact the store
           to place your order.
@@ -668,7 +668,7 @@ function ReviewStep({
       )}
 
       {orderError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-danger-200 bg-danger-50 p-4 text-sm text-danger-700">
           {orderError}
         </div>
       )}

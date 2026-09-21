@@ -126,7 +126,7 @@
   /* Button Link Style */
   .btn-link {
     @apply relative inline-block text-[0.875rem] font-bold uppercase tracking-[0.0875rem];
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-heading);
   }
 
   .btn-link::before,

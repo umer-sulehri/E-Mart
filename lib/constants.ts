@@ -128,6 +128,11 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
+// Absolute bounds of the shop price-range filter. The slider always spans this
+// whole domain (0 .. 10,000,000) so future high-value items remain reachable.
+export const PRODUCT_PRICE_MIN = 0;
+export const PRODUCT_PRICE_MAX = 10_000_000;
+
 export const PAYMENT_METHODS = [
   { id: "cod", name: "Cash on Delivery", icon: "Banknote" },
   { id: "easypaisa", name: "Easypaisa", icon: "Smartphone" },

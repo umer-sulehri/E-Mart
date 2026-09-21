@@ -31,8 +31,8 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
       <section className="flex flex-col items-center justify-center px-4 py-16 lg:py-24">
         <div className="w-full max-w-lg text-center">
           <div className="mb-6 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle size={48} className="text-green-600" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/20">
+              <CheckCircle size={48} className="text-success-600" />
             </div>
           </div>
 

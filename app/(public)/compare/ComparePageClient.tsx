@@ -381,7 +381,7 @@ export default function ComparePage({
                       </div>
                     ) : field.key === 'rating' ? (
                       <div className="flex items-center justify-center gap-1">
-                        <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                        <Star size={14} className="fill-warning text-warning" />
                         <span className="text-sm font-medium text-secondary-700">
                           {item.rating > 0 ? item.rating.toFixed(1) : 'N/A'}
                         </span>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Star, Sparkles, X, RotateCcw } from 'lucide-react';
-import { CATEGORIES } from '@/lib/constants';
+import { CATEGORIES, PRODUCT_PRICE_MAX, PRODUCT_PRICE_MIN } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/useDebounce';
 import { tryParseJson } from '@/lib/api';
@@ -47,7 +47,6 @@ function flattenCategories(
 interface ProductFiltersProps {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
-  priceBounds?: { min: number; max: number };
 }
 
 function FilterSection({
@@ -78,7 +77,6 @@ function FilterSection({
 export default function ProductFilters({
   filters,
   onFilterChange,
-  priceBounds,
 }: ProductFiltersProps) {
   // Live category list from the DB, falling back to the static catalog while
   // loading or when the request fails.
@@ -97,9 +95,12 @@ export default function ProductFilters({
       .catch(() => {});
   }, []);
 
-  // Default bounds when the caller hasn't resolved real product prices yet.
-  const boundsMin = priceBounds?.min ?? 0;
-  const boundsMax = priceBounds?.max ?? 100000;
+  // The price slider always spans the full supported domain (0 .. 10,000,000)
+  // so every product price is selectable and expensive future items stay
+  // reachable. The slider uses a logarithmic scale, so the low end — where real
+  // groceries live — still has usable resolution.
+  const boundsMin = PRODUCT_PRICE_MIN;
+  const boundsMax = PRODUCT_PRICE_MAX;
 
   // Price keeps a local "live" value so the slider tracks the pointer during
   // a drag, while the committed filter is debounced (300ms) into the URL.
@@ -117,29 +118,12 @@ export default function ProductFilters({
     max: filters.maxPrice,
   });
 
-  // Tracks the bounds we last aligned the slider to, so real catalog bounds
-  // arriving from /api/v1/products/price-range actually move the thumbs even
-  // when the user hasn't committed a price filter yet.
-  const lastBounds = useRef<{ min: number; max: number }>({
-    min: boundsMin,
-    max: boundsMax,
-  });
-
   // Resync the slider only when the committed filter changed from the outside,
   // never from our own debounced commits (which would fight the user mid-drag).
   useEffect(() => {
     const min = Number(filters.minPrice) || boundsMin;
     const max = Number(filters.maxPrice) || boundsMax;
     const next: [number, number] = [Math.min(min, max), Math.max(min, max)];
-
-    const boundsChanged =
-      lastBounds.current.min !== boundsMin ||
-      lastBounds.current.max !== boundsMax;
-    if (boundsChanged) {
-      lastBounds.current = { min: boundsMin, max: boundsMax };
-      setPrice(next);
-      return;
-    }
 
     if (
       filters.minPrice !== lastCommittedPrice.current.min ||
@@ -251,7 +235,6 @@ export default function ProductFilters({
         <PriceRangeSlider
           min={boundsMin}
           max={boundsMax}
-          step={Math.max(1, Math.round((boundsMax - boundsMin) / 100))}
           value={priceRange}
           onChange={setPrice}
         />

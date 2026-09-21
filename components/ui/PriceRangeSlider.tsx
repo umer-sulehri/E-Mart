@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface PriceRangeSliderProps {
@@ -8,7 +8,6 @@ interface PriceRangeSliderProps {
   max: number;
   value: [number, number];
   onChange: (value: [number, number]) => void;
-  step?: number;
   currency?: string;
   className?: string;
 }
@@ -18,28 +17,45 @@ export default function PriceRangeSlider({
   max,
   value,
   onChange,
-  step = 1,
   currency = '₨',
   className,
 }: PriceRangeSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<'min' | 'max' | null>(null);
 
-  const getPercent = (val: number) =>
-    ((val - min) / (max - min)) * 100;
+  // A broad (0 .. 10,000,000) price domain renders linear thumb positions that
+  // squeeze every real product into a few pixels, so positions map through a
+  // logarithmic scale: low prices stay precisely selectable while the slider
+  // still reaches the configured upper bound.
+  const span = max - min;
+  const logSpan = span > 0 ? Math.log10(span + 1) : 1;
+
+  const toT = useCallback(
+    (v: number) => {
+      const clamped = Math.max(min, Math.min(max, v));
+      return Math.log10(clamped - min + 1) / logSpan;
+    },
+    [min, max, logSpan]
+  );
+
+  const fromT = useCallback(
+    (t: number) => {
+      const v = min + Math.pow(10, t * logSpan) - 1;
+      return Math.max(min, Math.min(max, v));
+    },
+    [min, max, logSpan]
+  );
+
+  const getPercent = useCallback((v: number) => toT(v) * 100, [toT]);
 
   const getValueFromPosition = useCallback(
     (clientX: number) => {
       if (!trackRef.current) return min;
       const rect = trackRef.current.getBoundingClientRect();
-      const percent = Math.max(
-        0,
-        Math.min(1, (clientX - rect.left) / rect.width)
-      );
-      const raw = min + percent * (max - min);
-      return Math.round(raw / step) * step;
+      const t = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      return Math.round(fromT(t));
     },
-    [min, max, step]
+    [fromT, min]
   );
 
   useEffect(() => {
@@ -50,9 +66,9 @@ export default function PriceRangeSlider({
       const val = getValueFromPosition(clientX);
 
       if (dragging === 'min') {
-        onChange([Math.min(val, value[1] - step), value[1]]);
+        onChange([Math.min(val, value[1] - 1), value[1]]);
       } else {
-        onChange([value[0], Math.max(val, value[0] + step)]);
+        onChange([value[0], Math.max(val, value[0] + 1)]);
       }
     }
 
@@ -71,19 +87,29 @@ export default function PriceRangeSlider({
       document.removeEventListener('touchmove', handleMove);
       document.removeEventListener('touchend', handleUp);
     };
-  }, [dragging, value, onChange, getValueFromPosition, step]);
+  }, [dragging, value, onChange, getValueFromPosition]);
 
-  const leftPercent = getPercent(value[0]);
-  const rightPercent = getPercent(value[1]);
+  const leftValue = Math.max(min, Math.min(max, Math.round(value[0])));
+  const rightValue = Math.max(min, Math.min(max, Math.round(value[1])));
+  const leftPercent = getPercent(leftValue);
+  const rightPercent = getPercent(rightValue);
+
+  const nudge = (v: number, dir: -1 | 1) => {
+    const clamped = Math.max(min, Math.min(max, v));
+    const t = toT(clamped);
+    let next = Math.round(fromT(Math.max(0, Math.min(1, t + 0.01 * dir))));
+    if (next === clamped) next = clamped + dir;
+    return Math.max(min, Math.min(max, next));
+  };
 
   return (
     <div className={cn('space-y-3', className)}>
       <div className="flex items-center justify-between text-sm text-secondary-700">
         <span>
-          {currency}{value[0].toLocaleString()}
+          {currency}{leftValue.toLocaleString()}
         </span>
         <span>
-          {currency}{value[1].toLocaleString()}
+          {currency}{rightValue.toLocaleString()}
         </span>
       </div>
 
@@ -92,12 +118,12 @@ export default function PriceRangeSlider({
         className="relative h-2 cursor-pointer rounded-full bg-muted-200"
         onClick={(e) => {
           const val = getValueFromPosition(e.clientX);
-          const distToMin = Math.abs(val - value[0]);
-          const distToMax = Math.abs(val - value[1]);
+          const distToMin = Math.abs(val - leftValue);
+          const distToMax = Math.abs(val - rightValue);
           if (distToMin < distToMax) {
-            onChange([Math.min(val, value[1] - step), value[1]]);
+            onChange([Math.min(val, rightValue - 1), rightValue]);
           } else {
-            onChange([value[0], Math.max(val, value[0] + step)]);
+            onChange([leftValue, Math.max(val, leftValue + 1)]);
           }
         }}
       >
@@ -123,15 +149,16 @@ export default function PriceRangeSlider({
             setDragging('min');
           }}
           role="slider"
+          aria-label="Minimum price"
           aria-valuemin={min}
-          aria-valuemax={value[1]}
-          aria-valuenow={value[0]}
+          aria-valuemax={rightValue}
+          aria-valuenow={leftValue}
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-              onChange([Math.min(value[0] + step, value[1] - step), value[1]]);
+              onChange([Math.min(nudge(leftValue, 1), rightValue - 1), rightValue]);
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-              onChange([Math.max(value[0] - step, min), value[1]]);
+              onChange([Math.max(nudge(leftValue, -1), min), rightValue]);
             }
           }}
         />
@@ -149,15 +176,16 @@ export default function PriceRangeSlider({
             setDragging('max');
           }}
           role="slider"
-          aria-valuemin={value[0]}
+          aria-label="Maximum price"
+          aria-valuemin={leftValue}
           aria-valuemax={max}
-          aria-valuenow={value[1]}
+          aria-valuenow={rightValue}
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-              onChange([value[0], Math.min(value[1] + step, max)]);
+              onChange([leftValue, Math.max(Math.min(nudge(rightValue, 1), max), leftValue + 1)]);
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-              onChange([value[0], Math.max(value[1] - step, value[0] + step)]);
+              onChange([leftValue, Math.max(nudge(rightValue, -1), leftValue + 1)]);
             }
           }}
         />

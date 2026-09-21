@@ -69,7 +69,6 @@ function ProductsContent() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [brandNames, setBrandNames] = useState<Record<string, string>>({});
   const [categoryNames, setCategoryNames] = useState<Record<string, string>>({});
-  const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -157,20 +156,6 @@ function ProductsContent() {
       .catch(() => {});
   }, []);
 
-  // Real min/max product price keeps the slider aligned with the catalog.
-  useEffect(() => {
-    fetch('/api/v1/products/price-range')
-      .then((res) =>
-        tryParseJson<{ success: boolean; data: { min: number; max: number } }>(res)
-      )
-      .then((json) => {
-        if (json?.success && json.data) {
-          setPriceBounds({ min: json.data.min, max: json.data.max });
-        }
-      })
-      .catch(() => {});
-  }, []);
-
   useEffect(() => {
     setCurrentPage(1);
   }, [filters, sort, initialSearch]);
@@ -232,7 +217,6 @@ function ProductsContent() {
     <ProductFilters
       filters={filters}
       onFilterChange={applyFilters}
-      priceBounds={priceBounds}
     />
   );
 
@@ -240,7 +224,6 @@ function ProductsContent() {
     <ProductFilters
       filters={filters}
       onFilterChange={applyFilters}
-      priceBounds={priceBounds}
     />
   );
 
