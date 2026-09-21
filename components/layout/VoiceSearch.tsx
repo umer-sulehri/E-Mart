@@ -85,7 +85,6 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
       return;
     }
     setTranscript('');
-    setIsListening(true);
   };
 
   const handleClear = () => {

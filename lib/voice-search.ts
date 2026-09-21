@@ -216,55 +216,46 @@ export class VoiceSearchManager {
     if (!this.recognition) {
       return { supported: false };
     }
-    if (this.isListening) return { supported: true };
+
+    if (this.isListening) {
+      return { supported: true };
+    }
 
     this.isListening = true;
     this.hasSubmittedFinal = false;
     this.pendingTranscript = '';
 
-    // Start recognition synchronously inside the user gesture. iOS/Safari only
-    // allow start() when called directly from the tap handler — awaiting
-    // getUserMedia first would drop the gesture context and make it fail.
-    const beginRecognition = () => {
-      try {
-        this.recognition!.start();
-        this.timeoutId = setTimeout(() => {
-          this.stopListening();
-        }, 8000);
-        return true;
-      } catch {
-        this.isListening = false;
-        return false;
-      }
-    };
+    try {
+      // IMPORTANT:
+      // Start SpeechRecognition directly from the user's click/tap.
+      // Do not await getUserMedia() before or after this call.
+      this.recognition.start();
 
-    const started = beginRecognition();
+      this.timeoutId = setTimeout(() => {
+        this.stopListening();
+      }, 8000);
 
-    // Warm the microphone afterwards so a denied permission surfaces as a
-    // clear error right away instead of a delayed "no-speech"/"network".
-    const mediaDevices =
-      typeof navigator !== 'undefined' ? navigator.mediaDevices : null;
-    if (started && mediaDevices?.getUserMedia) {
-      try {
-        const stream = await mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach((track) => track.stop());
-      } catch (err) {
-        this.isListening = false;
-        this.hasSubmittedFinal = true;
-        this.pendingTranscript = '';
-        try {
-          this.recognition!.abort();
-        } catch {
-          // ignore
-        }
-        const code = getMicPermissionErrorCode(err);
-        if (this.onError) this.onError(code);
-        if (this.onStateChange) this.onStateChange(false, '');
-        return { supported: true };
+      return { supported: true };
+    } catch (err) {
+      this.isListening = false;
+
+      if (this.timeoutId) {
+        clearTimeout(this.timeoutId);
+        this.timeoutId = null;
       }
+
+      console.error('Speech recognition start failed:', err);
+
+      if (this.onError) {
+        this.onError('not-allowed');
+      }
+
+      if (this.onStateChange) {
+        this.onStateChange(false, '');
+      }
+
+      return { supported: true };
     }
-
-    return { supported: true };
   }
 
   stopListening() {
