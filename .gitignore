@@ -13,6 +13,10 @@ out/
 next-env.d.ts
 .DS_Store
 
+# Local dev server logs
+devlog.txt
+prodlog.txt
+
 # Local template reference only - never commit
 organic-1.0.0/
 
