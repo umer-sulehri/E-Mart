@@ -2,14 +2,33 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Star, MessageSquare, Send, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, MessageSquare, Send, ChevronLeft, ChevronRight, CheckCircle2, Ban, Trash2, Loader2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { ReviewRow } from '@/types/supabase';
 
 const filterTabs = ['All', '5-star', '4-star', '3-star', '2-star', '1-star'];
+
+function StatusBadge({ status }: { status: ReviewRow['status'] }) {
+  const map: Record<
+    ReviewRow['status'],
+    { variant: 'warning' | 'success' | 'danger'; label: string }
+  > = {
+    pending: { variant: 'warning', label: 'Pending' },
+    approved: { variant: 'success', label: 'Approved' },
+    flagged: { variant: 'danger', label: 'Flagged' },
+    rejected: { variant: 'danger', label: 'Rejected' },
+  };
+  const m = map[status] || map.pending;
+  return (
+    <Badge variant={m.variant} size="sm">
+      {m.label}
+    </Badge>
+  );
+}
 
 function SkeletonReview() {
   return (
@@ -33,6 +52,8 @@ export default function SellerReviewsPage() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [submittingReply, setSubmittingReply] = useState(false);
+  const [acting, setActing] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ReviewRow | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -103,6 +124,39 @@ export default function SellerReviewsPage() {
       toast.error('Failed to send reply');
     } finally {
       setSubmittingReply(false);
+    }
+  };
+
+  const handleModerate = async (
+    reviewId: string,
+    action: 'approve' | 'reject' | 'delete'
+  ) => {
+    setActing(reviewId);
+    try {
+      if (action === 'delete') {
+        const res = await fetch(`/api/v1/seller/reviews/${reviewId}`, {
+          method: 'DELETE',
+        });
+        const data = await res.json();
+        if (data.success) toast.success('Review deleted');
+        else toast.error(data.error || 'Failed to delete review');
+      } else {
+        const status = action === 'approve' ? 'approved' : 'rejected';
+        const res = await fetch(`/api/v1/seller/reviews/${reviewId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        });
+        const data = await res.json();
+        if (data.success)
+          toast.success(action === 'approve' ? 'Review approved' : 'Review rejected');
+        else toast.error(data.error || 'Update failed');
+      }
+      fetchReviews();
+    } catch {
+      toast.error('Action failed');
+    } finally {
+      setActing(null);
     }
   };
 
@@ -194,6 +248,7 @@ export default function SellerReviewsPage() {
                           ))}
                         </div>
                         <span className="text-xs text-muted-500">{formatDate(review.created_at)}</span>
+                        <StatusBadge status={review.status} />
                       </div>
                       <p className="mt-0.5 text-xs text-primary">{review.products?.name ?? ''}</p>
                       <p className="mt-2 text-sm text-muted-700">{review.comment}</p>
@@ -228,15 +283,51 @@ export default function SellerReviewsPage() {
                     </div>
                   </div>
 
-                  {!review.seller_reply && replyingTo !== review.id && (
-                    <button
-                      onClick={() => setReplyingTo(review.id)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-muted-200 px-3 py-1.5 text-xs font-medium text-muted-600 transition-colors hover:bg-muted-50"
-                    >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      Reply
-                    </button>
-                  )}
+                  <div className="flex flex-col items-end gap-2">
+                    {!review.seller_reply && replyingTo !== review.id && (
+                      <button
+                        onClick={() => setReplyingTo(review.id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-muted-200 px-3 py-1.5 text-xs font-medium text-muted-600 transition-colors hover:bg-muted-50"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        Reply
+                      </button>
+                    )}
+                    <div className="flex items-center gap-1">
+                      {review.status !== 'approved' && (
+                        <button
+                          onClick={() => handleModerate(review.id, 'approve')}
+                          disabled={acting === review.id}
+                          className="inline-flex items-center gap-1 rounded-lg border border-success-200 px-2.5 py-1.5 text-xs font-medium text-success transition-colors hover:bg-success-50 disabled:opacity-50"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Approve
+                        </button>
+                      )}
+                      {review.status !== 'rejected' && (
+                        <button
+                          onClick={() => handleModerate(review.id, 'reject')}
+                          disabled={acting === review.id}
+                          className="inline-flex items-center gap-1 rounded-lg border border-muted-200 px-2.5 py-1.5 text-xs font-medium text-secondary-700 transition-colors hover:bg-muted-50 disabled:opacity-50"
+                        >
+                          <Ban className="h-3.5 w-3.5" />
+                          Reject
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setDeleteTarget(review)}
+                        disabled={acting === review.id}
+                        className="inline-flex items-center gap-1 rounded-lg border border-danger-200 px-2.5 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger-50 disabled:opacity-50"
+                      >
+                        {acting === review.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -283,6 +374,27 @@ export default function SellerReviewsPage() {
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            handleModerate(deleteTarget.id, 'delete').finally(() => setDeleteTarget(null));
+          } else {
+            setDeleteTarget(null);
+          }
+        }}
+        title="Delete review?"
+        message={
+          deleteTarget
+            ? `This will permanently remove this review. This action cannot be undone.`
+            : ''
+        }
+        variant="danger"
+        confirmLabel="Delete review"
+        loading={deleteTarget !== null && acting === deleteTarget.id}
+      />
     </div>
   );
 }
