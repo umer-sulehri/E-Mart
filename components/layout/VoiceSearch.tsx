@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Mic, X } from 'lucide-react';
 import { VoiceSearchManager } from '@/lib/voice-search';
@@ -48,6 +48,15 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
     }
     return managerRef.current;
   }, [onSearch]);
+
+  // Stop recognition and release the microphone when the component unmounts
+  // so the page never keeps listening after navigation.
+  useEffect(() => {
+    return () => {
+      managerRef.current?.destroy();
+      managerRef.current = null;
+    };
+  }, []);
 
   const handleToggle = async () => {
     setError(null);
