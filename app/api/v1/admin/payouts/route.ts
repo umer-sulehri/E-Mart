@@ -36,15 +36,34 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const offset = (page - 1) * limit;
+    const status = searchParams.get("status");
 
-    const { data: payoutRows, error, count } = await supabase
+    if (status && !VALID_STATUSES.includes(status)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `status must be one of ${VALID_STATUSES.join(", ")}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    let query = supabase
       .from("seller_payouts")
       .select(
         "id, seller_id, amount, method, account_details, status, notes, processed_at, created_at, updated_at",
         { count: "exact" }
-      )
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      );
+
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    const {
+      data: payoutRows,
+      error,
+      count,
+    } = await query.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json(
