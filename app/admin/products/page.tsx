@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Eye,
   Flag,
+  RotateCcw,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
@@ -237,6 +238,16 @@ export default function AdminProductsPage() {
                               title="Remove"
                             >
                               <ShieldAlert className="h-4 w-4" />
+                            </button>
+                          )}
+                          {product.moderation_status === 'removed' && (
+                            <button
+                              onClick={() => handleModeration(product.id, 'approved')}
+                              disabled={moderating === product.id}
+                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
+                              title="Reactivate (make Active)"
+                            >
+                              <RotateCcw className="h-4 w-4" />
                             </button>
                           )}
                         </div>
