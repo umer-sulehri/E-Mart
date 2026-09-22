@@ -53,15 +53,12 @@ export default function AdminOffersPage() {
     discounted: false,
   });
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sellerDropdownOpen, setSellerDropdownOpen] = useState(false);
   const sellerDropdownRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<{ id: string; field: string } | null>(null);
   const [justSaved, setJustSaved] = useState<SavingId>(null);
-  const [bulkSaving, setBulkSaving] = useState(false);
-
   useEffect(() => {
     let cancelled = false;
     toast('Loading offers...');
@@ -204,50 +201,10 @@ export default function AdminOffersPage() {
     setSellerFilter([]);
     setTypeFilter({ featured: false, isNew: false, discounted: false });
     setStatusFilter('all');
-    setSelected(new Set());
   };
 
   const toggleType = (key: keyof typeof typeFilter) => {
     setTypeFilter((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const toggleAll = (checked: boolean) => {
-    setSelected(checked ? new Set(filtered.map((p) => p.id)) : new Set());
-  };
-
-  const toggleRow = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const bulkUpdate = async (updates: Record<string, unknown>, successMsg: string) => {
-    if (selected.size === 0) return;
-    setBulkSaving(true);
-    try {
-      const res = await fetch('/api/v1/admin/products/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_ids: Array.from(selected), updates }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        setProducts((prev) =>
-          prev.map((p) => (selected.has(p.id) ? { ...p, ...updates } : p))
-        );
-        setSelected(new Set());
-        toast.success(json.message || successMsg);
-      } else {
-        toast.error(json.error || 'Bulk update failed');
-      }
-    } catch {
-      toast.error('Bulk update failed');
-    } finally {
-      setBulkSaving(false);
-    }
   };
 
   if (loading) {
@@ -435,49 +392,11 @@ export default function AdminOffersPage() {
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        {/* Bulk actions */}
-        {selected.size > 0 && (
-          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg bg-primary-50 p-3">
-            <span className="text-sm font-medium text-primary">
-              {selected.size} selected
-            </span>
-            <button
-              onClick={() => bulkUpdate({ is_active: false }, 'Deactivated')}
-              disabled={bulkSaving}
-              className="inline-flex items-center gap-2 rounded-lg bg-danger px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-danger-600 disabled:opacity-50"
-            >
-              {bulkSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Deactivate Selected
-            </button>
-            <button
-              onClick={() => bulkUpdate({ is_featured: false }, 'Unfeatured')}
-              disabled={bulkSaving}
-              className="inline-flex items-center gap-2 rounded-lg bg-secondary-800 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-secondary disabled:opacity-50"
-            >
-              Remove Featured
-            </button>
-            <button
-              onClick={() => setSelected(new Set())}
-              className="text-sm font-medium text-muted-500 hover:text-secondary-800"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-muted-100">
-                <th className="w-10 pb-3">
-                  <input
-                    type="checkbox"
-                    checked={selected.size > 0 && selected.size === filtered.length}
-                    onChange={(e) => toggleAll(e.target.checked)}
-                    className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
-                    aria-label="Select all offers"
-                  />
-                </th>
                 <th className="pb-3 font-medium text-muted-500">Product</th>
                 <th className="hidden pb-3 font-medium text-muted-500 md:table-cell">Seller</th>
                 <th className="hidden pb-3 font-medium text-muted-500 lg:table-cell">Price</th>
@@ -489,15 +408,6 @@ export default function AdminOffersPage() {
             <tbody className="divide-y divide-muted-50">
               {filtered.map((product) => (
                 <tr key={product.id} className="hover:bg-muted-50/50">
-                  <td className="py-3">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(product.id)}
-                      onChange={() => toggleRow(product.id)}
-                      className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
-                      aria-label={`Select ${product.name}`}
-                    />
-                  </td>
                   <td className="py-3">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted-100">
@@ -578,7 +488,7 @@ export default function AdminOffersPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-muted-500">
+                  <td colSpan={6} className="py-10 text-center text-muted-500">
                     No products match the current filters
                   </td>
                 </tr>
