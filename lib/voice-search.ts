@@ -181,8 +181,12 @@ export class VoiceSearchManager {
 
     this.recognition.onerror = (event) => {
       // "aborted" is our own stop/abort, not a user-facing failure.
-      if (event.error !== 'aborted' && this.onError) {
-        this.onError(event.error);
+      if (event.error !== 'aborted') {
+        // A real error ends the session (onerror is always followed by
+        // onend). Drop any partial transcript so onend does not submit a
+        // garbage/partial query right after showing the error.
+        this.pendingTranscript = '';
+        if (this.onError) this.onError(event.error);
       }
       this.isListening = false;
       if (this.onStateChange) this.onStateChange(false, '');
@@ -247,7 +251,7 @@ export class VoiceSearchManager {
       console.error('Speech recognition start failed:', err);
 
       if (this.onError) {
-        this.onError('not-allowed');
+        this.onError(getMicPermissionErrorCode(err));
       }
 
       if (this.onStateChange) {

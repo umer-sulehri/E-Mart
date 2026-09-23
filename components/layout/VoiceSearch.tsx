@@ -11,6 +11,61 @@ interface VoiceSearchProps {
   className?: string;
 }
 
+// Browsers collapse every microphone failure into `not-allowed`, so on its own
+// the Web Speech API cannot tell us WHY the mic was rejected. Probe the actual
+// cause so the user gets an accurate, actionable message instead of a generic
+// "permission denied" that is wrong when the policy or OS is at fault.
+async function diagnoseMicError(code: string): Promise<string> {
+  if (code !== 'not-allowed' && code !== 'audio-capture' && code !== 'service-not-allowed') {
+    return code;
+  }
+
+  const doc = document as unknown as {
+    permissionsPolicy?: { allowsFeature?: (feature: string) => boolean };
+    featurePolicy?: { allowsFeature?: (feature: string) => boolean };
+  };
+  const policy = doc.permissionsPolicy || doc.featurePolicy;
+  if (policy?.allowsFeature) {
+    try {
+      if (!policy.allowsFeature('microphone')) return 'policy-blocked';
+    } catch {
+      // API exists but rejected the query — ignore.
+    }
+  }
+
+  try {
+    const perm = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+    if (perm.state === 'denied') return 'permission-denied';
+  } catch {
+    // Permissions API does not expose microphone in this browser — ignore.
+  }
+
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    if (!devices.some((d) => d.kind === 'audioinput')) return 'no-mic';
+  } catch {
+    // Unsupported browser — ignore.
+  }
+
+  try {
+    // A real mic probe: if this succeeds, the mic hardware, OS, browser
+    // permission and policy are all fine and the failure was transient.
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach((track) => track.stop());
+    return 'transient';
+  } catch (err) {
+    switch ((err as DOMException)?.name) {
+      case 'NotFoundError':
+      case 'DevicesNotFoundError':
+        return 'no-mic';
+      case 'NotReadableError':
+        return 'device-busy';
+      default:
+        return 'permission-denied';
+    }
+  }
+}
+
 function isSupported() {
   if (typeof window === 'undefined') return false;
   const w = window as unknown as {
@@ -38,7 +93,11 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
       };
       managerRef.current.onError = (code) => {
         setIsListening(false);
-        setError(getErrorText(code));
+        void (async () => {
+          const resolved = await diagnoseMicError(code);
+          // Component may have unmounted (navigation) while diagnosing.
+          if (managerRef.current) setError(getErrorText(resolved));
+        })();
       };
       managerRef.current.onStateChange = (listening, t) => {
         setIsListening(listening);
@@ -152,17 +211,24 @@ function getErrorText(code: string): string {
   switch (code) {
     case 'not-allowed':
     case 'service-not-allowed':
-      return 'Microphone permission denied. Allow access to use voice search.';
+    case 'permission-denied':
+      return 'Microphone access is blocked. Allow the microphone for this site in your browser, then try again.';
+    case 'policy-blocked':
+      return 'Microphone is blocked by the site\'s security policy. Contact the site administrator — this is a configuration issue, not your device.';
     case 'no-speech':
       return 'No speech detected. Please try again.';
     case 'network':
       return 'Speech service unavailable. Check your connection.';
     case 'audio-capture':
-      return 'No microphone found.';
+    case 'no-mic':
+      return 'No microphone found. Connect a microphone and try again.';
+    case 'device-busy':
+      return 'Your microphone is in use by another app. Close it and try again.';
     case 'language-not-supported':
       return 'Voice search is not available in this language. Try English.';
+    case 'transient':
     default:
-      return 'Voice recognition failed. Please try again.';
+      return 'Voice recognition stopped unexpectedly. Please try again.';
   }
 }
 
