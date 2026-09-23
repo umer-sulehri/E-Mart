@@ -93,16 +93,23 @@ function SearchBar({ className }: { className?: string }) {
     [router]
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      // Save search history (fire-and-forget)
+  // Shared by typed and voice searches so both record history.
+  const submitQuery = useCallback(
+    (q: string) => {
       fetch('/api/v1/search/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: query.trim() }),
+        body: JSON.stringify({ query: q }),
       }).catch(() => {});
-      navigateTo(query.trim());
+      navigateTo(q);
+    },
+    [navigateTo]
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      submitQuery(query.trim());
     }
   };
 
@@ -160,7 +167,7 @@ function SearchBar({ className }: { className?: string }) {
             <Search className="h-5 w-5" />
           )}
         </button>
-        <VoiceSearch onSearch={navigateTo} />
+        <VoiceSearch onSearch={submitQuery} />
       </form>
 
       {/* Suggestions Dropdown */}

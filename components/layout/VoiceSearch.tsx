@@ -80,6 +80,13 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
   const managerRef = useRef<VoiceSearchManager | null>(null);
+  // Manager callbacks are wired once (first construction), so keep the latest
+  // onSearch in a ref to avoid the manager capturing a stale closure.
+  const onSearchRef = useRef(onSearch);
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  });
 
   const getManager = useCallback(() => {
     if (!managerRef.current) {
@@ -88,7 +95,7 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
         setTranscript(text);
         setIsListening(false);
         if (text.trim()) {
-          onSearch(text.trim());
+          onSearchRef.current(text.trim());
         }
       };
       managerRef.current.onError = (code) => {
@@ -106,7 +113,7 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
       };
     }
     return managerRef.current;
-  }, [onSearch]);
+  }, []);
 
   // Stop recognition and release the microphone when the component unmounts
   // so the page never keeps listening after navigation.
