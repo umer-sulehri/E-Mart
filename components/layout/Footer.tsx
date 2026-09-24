@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Facebook, Twitter, Youtube, Instagram, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { tryParseJson } from '@/lib/api';
+import CookieSettingsButton from '@/components/ui/CookieSettingsButton';
 
 const organicLinks = [
   { label: 'About us', href: '/about' },
@@ -30,7 +31,8 @@ const customerServiceLinks = [
   { label: 'Contact', href: '/contact' },
   { label: 'Privacy Policy', href: '/privacy-policy' },
   { label: 'Returns & Refunds', href: '/faq' },
-  { label: 'Cookie Guidelines', href: '/privacy-policy' },
+  { label: 'Cookie Policy', href: '/cookie-policy' },
+  { label: 'Do Not Sell My Personal Information', href: '/privacy-policy#do-not-sell' },
   { label: 'Delivery Information', href: '/faq' },
 ];
 
@@ -188,6 +190,9 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <CookieSettingsButton className="nav-link text-muted hover:text-dark transition-colors text-sm" />
+              </li>
             </ul>
           </div>
         </div>

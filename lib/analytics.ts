@@ -4,7 +4,12 @@
  * Pushes events to the Google tag (gtag.js / dataLayer) when present and
  * silently no-ops otherwise, so it can be called from client components that
  * run below the analytics <script> or in tests.
+ *
+ * Events are only sent after the visitor has accepted analytics cookies;
+ * `trackEvent` no-ops until then.
  */
+
+import { isAnalyticsAllowed } from '@/lib/consent';
 
 type TrackParams = {
   action: string;
@@ -26,6 +31,7 @@ declare global {
 
 export function trackEvent({ action, category, label, value, ...rest }: TrackParams): void {
   if (!isClient()) return;
+  if (!isAnalyticsAllowed()) return;
 
   try {
     const event = {

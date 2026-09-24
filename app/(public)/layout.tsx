@@ -4,7 +4,6 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartSidebar from '@/components/cart/CartSidebar';
 import BackToTop from '@/components/ui/BackToTop';
-import CookieConsent from '@/components/ui/CookieConsent';
 import Preloader from '@/components/layout/Preloader';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 
@@ -25,7 +24,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <Footer />
       <CartSidebar />
       <BackToTop />
-      <CookieConsent />
       <MobileBottomNav />
     </div>
   );

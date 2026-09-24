@@ -11,6 +11,7 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import PrivacyControls from '@/components/dashboard/PrivacyControls';
 import { resolveImage } from '@/lib/imageLoader';
 import { uploadImageFile } from '@/lib/image-upload';
 
@@ -308,6 +309,8 @@ export default function ProfilePage() {
           </Button>
         </div>
       </div>
+
+      <PrivacyControls />
 
       <div className="rounded-xl border border-danger-200 bg-white p-6 shadow-sm">
         <h3 className="font-bold text-secondary-800">Danger Zone</h3>

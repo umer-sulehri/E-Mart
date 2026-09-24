@@ -4,6 +4,7 @@ import '@/styles/globals.css';
 import { Providers } from '@/components/providers';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
+import CookieConsent from '@/components/ui/CookieConsent';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -108,6 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <div id="main-content">{children}</div>
           <ImpersonationBanner />
+          <CookieConsent />
         </Providers>
         <GoogleAnalytics />
       </body>
