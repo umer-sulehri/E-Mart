@@ -38,8 +38,6 @@ Administrator operations (auth: admin role).
 |-----------|----------|
 | GET | /api/v1/admin/analytics/dashboard |
 | GET | /api/v1/admin/analytics/orders |
-| GET, POST | /api/v1/admin/banners |
-| DELETE, PUT | /api/v1/admin/banners/[id] |
 | GET, POST | /api/v1/admin/blog-posts |
 | DELETE, GET, PUT | /api/v1/admin/blog-posts/[id] |
 | GET, POST | /api/v1/admin/brands |
@@ -54,6 +52,7 @@ Administrator operations (auth: admin role).
 | GET | /api/v1/admin/export/products |
 | GET | /api/v1/admin/export/users |
 | GET | /api/v1/admin/logs |
+| GET | /api/v1/admin/consent-audit |
 | GET | /api/v1/admin/orders |
 | GET, PATCH | /api/v1/admin/orders/[id] |
 | GET, PATCH | /api/v1/admin/products |

@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const { data: records, error, count } = await supabase
       .from("consent_audit")
       .select(
-        "subject, action, method, source, region, previous, next, created_at, profiles(first_name, last_name, email)",
+        "id, subject, action, method, source, region, previous, next, created_at, profiles(first_name, last_name, email)",
         { count: "exact" }
       )
       .order("created_at", { ascending: false })

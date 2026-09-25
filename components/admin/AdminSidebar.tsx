@@ -18,7 +18,6 @@ import {
   Menu,
   X,
   Shield,
-  ImageIcon,
   Newspaper,
   ScrollText,
   User,
@@ -28,6 +27,7 @@ import {
   Link2,
   Wallet,
   Mail,
+  Cookie,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
@@ -42,13 +42,13 @@ const navLinks = [
   { label: 'Categories', href: '/admin/categories', icon: Grid },
   { label: 'Coupons', href: '/admin/coupons', icon: Tag },
   { label: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
-  { label: 'Banners', href: '/admin/banners', icon: ImageIcon },
   { label: 'Blog', href: '/admin/blog', icon: Newspaper },
   { label: 'Stores / Brands', href: '/admin/stores', icon: Building2 },
   { label: 'Payouts', href: '/admin/payouts', icon: Wallet },
   { label: 'Contact', href: '/admin/contact', icon: Mail },
   { label: 'Analytics', href: '/admin/analytics', icon: Activity },
   { label: 'Logs', href: '/admin/logs', icon: ScrollText },
+  { label: 'Consent Audit', href: '/admin/consent-audit', icon: Cookie },
   { label: 'Reports', href: '/admin/reports', icon: BarChart3 },
   { label: 'Social Links', href: '/admin/social-links', icon: Link2 },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
