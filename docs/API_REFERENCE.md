@@ -223,7 +223,10 @@ Product reviews.
 
 ## /search
 
-Search, autocomplete, trending, voice.
+Search, autocomplete, trending and search history. Voice search is performed
+entirely in the browser via the Web Speech API and is sent to the same
+`/api/v1/search/history` endpoint as a typed query, so there is no separate
+voice endpoint.
 
 | Method(s) | Endpoint |
 |-----------|----------|
@@ -231,7 +234,6 @@ Search, autocomplete, trending, voice.
 | GET, POST | /api/v1/search/history |
 | GET | /api/v1/search/suggestions |
 | GET | /api/v1/search/trending |
-| POST | /api/v1/search/voice |
 
 ## /seller
 
@@ -249,6 +251,7 @@ Seller dashboard operations (auth: seller/vendor).
 | POST | /api/v1/seller/payout/request |
 | GET, POST | /api/v1/seller/products |
 | POST | /api/v1/seller/products/import |
+| GET | /api/v1/seller/products/quota |
 | DELETE, GET, PUT | /api/v1/seller/products/[id] |
 | GET, PUT | /api/v1/seller/profile |
 | GET | /api/v1/seller/reviews |

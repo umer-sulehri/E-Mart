@@ -3,7 +3,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Mic, X } from 'lucide-react';
-import { VoiceSearchManager } from '@/lib/voice-search';
+import { VoiceSearchManager, getErrorText } from '@/lib/voice-search';
+import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
 interface VoiceSearchProps {
@@ -95,11 +96,24 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
         setTranscript(text);
         setIsListening(false);
         if (text.trim()) {
+          // Deliberately does not send the transcript to analytics. What the
+          // user said is not needed for a funnel metric, and a spoken query can
+          // contain far more sensitive detail than a typed one.
+          trackEvent({
+            action: 'search_voice',
+            category: 'search',
+            label: 'success',
+          });
           onSearchRef.current(text.trim());
         }
       };
       managerRef.current.onError = (code) => {
         setIsListening(false);
+        trackEvent({
+          action: 'search_voice',
+          category: 'search',
+          label: `error:${code}`,
+        });
         void (async () => {
           const resolved = await diagnoseMicError(code);
           // Component may have unmounted (navigation) while diagnosing.
@@ -185,8 +199,15 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
       {error && (
         <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-lg border border-danger-200 bg-white p-3 shadow-lg">
           <div className="flex items-start justify-between">
-            <p className="text-xs text-danger">{error}</p>
-            <button onClick={handleClear} className="ml-2 text-danger hover:text-danger-600">
+            {/* Assertive: this reports a failure the user is waiting on. */}
+            <p role="alert" className="text-xs text-danger">
+              {error}
+            </p>
+            <button
+              onClick={handleClear}
+              className="ml-2 text-danger hover:text-danger-600"
+              aria-label="Dismiss voice search error"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -205,7 +226,10 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
               />
             ))}
           </div>
-          <p className="min-h-4 text-xs text-muted-600">
+          {/* Without a live region, a screen-reader user gets no feedback that
+              recognition is running or what it has heard, which makes the
+              interim transcript useless to them. */}
+          <p aria-live="polite" className="min-h-4 text-xs text-muted-600">
             {transcript || 'Speak now…'}
           </p>
         </div>
@@ -214,29 +238,5 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
   );
 }
 
-function getErrorText(code: string): string {
-  switch (code) {
-    case 'not-allowed':
-    case 'service-not-allowed':
-    case 'permission-denied':
-      return 'Microphone access is blocked. Allow the microphone for this site in your browser, then try again.';
-    case 'policy-blocked':
-      return 'Microphone is blocked by the site\'s security policy. Contact the site administrator — this is a configuration issue, not your device.';
-    case 'no-speech':
-      return 'No speech detected. Please try again.';
-    case 'network':
-      return 'Speech service unavailable. Check your connection.';
-    case 'audio-capture':
-    case 'no-mic':
-      return 'No microphone found. Connect a microphone and try again.';
-    case 'device-busy':
-      return 'Your microphone is in use by another app. Close it and try again.';
-    case 'language-not-supported':
-      return 'Voice search is not available in this language. Try English.';
-    case 'transient':
-    default:
-      return 'Voice recognition stopped unexpectedly. Please try again.';
-  }
-}
 
 export { isSupported };
