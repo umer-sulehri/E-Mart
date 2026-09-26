@@ -1,12 +1,13 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { rateLimit, rateLimitByIp, rateLimitHeaders } from "../rate-limit";
+import { describe, it, expect } from "vitest";
+import {
+  rateLimit,
+  rateLimitByIp,
+  rateLimitByUserId,
+  peekRateLimit,
+  rateLimitHeaders,
+} from "../rate-limit";
 
 describe("rateLimit", () => {
-  beforeEach(() => {
-    // Reset module state between tests by re-importing isn't possible for
-    // module-level maps; instead use unique keys per test.
-  });
-
   it("allows the first request and reports remaining", async () => {
     const result = await rateLimit("test:first", 5);
     expect(result.success).toBe(true);
@@ -68,6 +69,85 @@ describe("rateLimitByIp", () => {
     const request = new Request("http://localhost");
     const r = await rateLimitByIp(request, 3);
     expect(r.success).toBe(true);
+  });
+});
+
+describe("rateLimitByUserId", () => {
+  it("allows requests up to the limit for a user", async () => {
+    const first = await rateLimitByUserId("seller-a", 2, 60000);
+    expect(first.success).toBe(true);
+    expect(first.remaining).toBe(1);
+
+    const second = await rateLimitByUserId("seller-a", 2, 60000);
+    expect(second.success).toBe(true);
+    expect(second.remaining).toBe(0);
+
+    const third = await rateLimitByUserId("seller-a", 2, 60000);
+    expect(third.success).toBe(false);
+    expect(third.remaining).toBe(0);
+    expect(third.retryAfterSec).toBeGreaterThan(0);
+  });
+
+  it("scopes the counter per user so one seller cannot exhaust another's", async () => {
+    for (let i = 0; i < 3; i++) {
+      await rateLimitByUserId("seller-exhausted", 3, 60000);
+    }
+    expect((await rateLimitByUserId("seller-exhausted", 3, 60000)).success).toBe(false);
+
+    // A different user is unaffected.
+    const other = await rateLimitByUserId("seller-fresh", 3, 60000);
+    expect(other.success).toBe(true);
+    expect(other.remaining).toBe(2);
+  });
+});
+
+describe("peekRateLimit", () => {
+  it("reports a full allowance for an untouched counter", async () => {
+    const r = await peekRateLimit("peek:empty", 10, 60000);
+    expect(r.success).toBe(true);
+    expect(r.remaining).toBe(10);
+  });
+
+  it("does not consume a slot when called repeatedly", async () => {
+    for (let i = 0; i < 3; i++) {
+      await rateLimit("peek:consume", 10, 60000);
+    }
+
+    const a = await peekRateLimit("peek:consume", 10, 60000);
+    const b = await peekRateLimit("peek:consume", 10, 60000);
+    const c = await peekRateLimit("peek:consume", 10, 60000);
+
+    expect(a.remaining).toBe(7);
+    expect(b.remaining).toBe(7);
+    expect(c.remaining).toBe(7);
+  });
+
+  it("still allows writes after repeated peeks", async () => {
+    for (let i = 0; i < 3; i++) {
+      await rateLimit("peek:writes", 5, 60000);
+    }
+    for (let i = 0; i < 5; i++) {
+      await peekRateLimit("peek:writes", 5, 60000);
+    }
+
+    // Two slots left, so exactly two more writes succeed and the third is blocked.
+    expect((await rateLimit("peek:writes", 5, 60000)).success).toBe(true);
+    expect((await rateLimit("peek:writes", 5, 60000)).success).toBe(true);
+
+    const blocked = await rateLimit("peek:writes", 5, 60000);
+    expect(blocked.success).toBe(false);
+    expect(blocked.remaining).toBe(0);
+  });
+
+  it("reports exhaustion without blocking a counter it did not increment", async () => {
+    for (let i = 0; i < 2; i++) {
+      await rateLimit("peek:exhausted", 2, 60000);
+    }
+
+    const peeked = await peekRateLimit("peek:exhausted", 2, 60000);
+    expect(peeked.success).toBe(false);
+    expect(peeked.remaining).toBe(0);
+    expect(peeked.retryAfterSec).toBeGreaterThan(0);
   });
 });
 

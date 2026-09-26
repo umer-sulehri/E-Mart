@@ -19,6 +19,8 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import ProductQuotaBar from '@/components/seller/ProductQuotaBar';
+import { useProductQuota } from '@/hooks/useProductQuota';
 import { cn } from '@/lib/utils';
 import type { ProductRow } from '@/types/supabase';
 
@@ -59,6 +61,8 @@ export default function SellerProductsPage() {
   const [deleteTarget, setDeleteTarget] = useState<ProductRow | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const ITEMS_PER_PAGE = 10;
+  const { quota, loading: quotaLoading } = useProductQuota();
+  const quotaExhausted = quota?.exhausted === true;
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -125,13 +129,30 @@ export default function SellerProductsPage() {
           <h2 className="text-2xl font-bold text-secondary-800">Products</h2>
           <p className="text-sm text-muted-500">Manage your product inventory</p>
         </div>
-        <Link href="/seller/products/new">
-          <Button>
-            <Plus className="h-4 w-4" />
-            Add New Product
+        {quotaExhausted ? (
+          // A real <button disabled>, not a disabled <Link>: an anchor cannot be
+          // disabled, and suppressing pointer events on one leaves it
+          // keyboard-focusable and screen-reader-announced as still available.
+          <Button
+            disabled
+            title="Daily limit reached. Try again tomorrow."
+            aria-label="Daily product limit reached. Try again tomorrow."
+            className="w-full sm:w-auto"
+          >
+            <Plus className="size-4" aria-hidden="true" />
+            Daily limit reached
           </Button>
-        </Link>
+        ) : (
+          <Link href="/seller/products/new" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto">
+              <Plus className="size-4" aria-hidden="true" />
+              Add New Product
+            </Button>
+          </Link>
+        )}
       </div>
+
+      <ProductQuotaBar quota={quota} loading={quotaLoading} />
 
       <div className="rounded-xl bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
