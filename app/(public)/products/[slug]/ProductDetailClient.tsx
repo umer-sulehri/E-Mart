@@ -407,10 +407,16 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      {/* Sticky Add to Cart (mobile) */}
+      {/* Sticky Add to Cart (mobile).
+
+          Sits directly above MobileBottomNav rather than at the viewport edge:
+          both are `fixed bottom-0` and both render on this page, so a bar at
+          bottom-0 put the primary purchase action underneath the nav. The nav
+          is min-h-[56px] per item plus the home-indicator inset. */}
       <div
         className={cn(
-          'fixed inset-x-0 bottom-0 z-40 border-t border-muted-100 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm transition-transform duration-300 lg:hidden',
+          'fixed inset-x-0 z-40 border-t border-muted-100 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm transition-transform duration-300 lg:hidden',
+          'bottom-[calc(56px+env(safe-area-inset-bottom))]',
           stickyVisible ? 'translate-y-0' : 'translate-y-full'
         )}
         aria-hidden={!stickyVisible}

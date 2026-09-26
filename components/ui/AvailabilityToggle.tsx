@@ -19,8 +19,9 @@ export default function AvailabilityToggle({
       <p className="mb-3 text-sm font-semibold text-secondary-800">
         Availability
       </p>
-      <label className="flex cursor-pointer items-center gap-2.5">
+      <label htmlFor="availability-in-stock" className="flex cursor-pointer items-center gap-2.5">
         <input
+          id="availability-in-stock"
           type="checkbox"
           checked={inStockOnly}
           onChange={() => onChange(!inStockOnly)}

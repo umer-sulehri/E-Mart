@@ -365,7 +365,13 @@ export default function ComparePage({
             Search Products to Compare
           </h3>
           <div className="flex gap-3">
+            {/* A placeholder is not an accessible name, and this input has no
+                visible label. */}
+            <label htmlFor="compare-search" className="sr-only">
+              Search products to compare
+            </label>
             <input
+              id="compare-search"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

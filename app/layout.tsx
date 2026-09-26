@@ -93,6 +93,10 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  // Without this the layout viewport is inset to the safe area, so a sticky
+  // header or a fixed mobile bar cannot reach under the notch or the home
+  // indicator, and `env(safe-area-inset-*)` resolves to 0 everywhere.
+  viewportFit: 'cover',
   themeColor: '#6BB252',
 };
 

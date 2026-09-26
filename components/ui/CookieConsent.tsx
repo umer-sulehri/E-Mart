@@ -133,7 +133,7 @@ export default function CookieConsent() {
   return (
     <>
       {showBanner && !hasConsent() && (
-        <div className="fixed bottom-0 left-0 z-40 w-full bg-secondary text-white">
+        <div className="fixed bottom-0 left-0 z-40 w-full bg-secondary pb-[env(safe-area-inset-bottom)] text-white">
           <div className="container mx-auto flex flex-col gap-4 px-4 py-4 sm:px-6 lg:px-12">
             <p className="text-sm text-white/80">{bannerCopy()}</p>
             {isUsRegion(region) && (
