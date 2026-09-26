@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, X, Plus, BarChart3, Trash2, Star } from 'lucide-react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
-import { useCompareStore } from '@/store/compareStore';
+import { useCompareStore, MAX_COMPARE_ITEMS, remainingCompareSlots } from '@/store/compareStore';
 import { useCartStore } from '@/store';
 import { tryParseJson } from '@/lib/api';
+import CompareCategoryDialog from '@/components/compare/CompareCategoryDialog';
 import type { CartItem, Product } from '@/types';
 import type { Product as ProductCardType } from '@/components/product/ProductCard';
 import type { CompareItem } from '@/store/compareStore';
@@ -20,6 +21,15 @@ interface SearchResult {
   rating: number;
   reviewCount: number;
   image: string;
+  /** Display name, from the product's primary category. */
+  category: string;
+  /** Stable category id, used to enforce the same-category rule. */
+  categoryId: string;
+}
+
+/** Human-readable fallback when a product carries no category name. */
+function categoryLabel(category: string, categoryId: string): string {
+  return category || categoryId || 'an unknown category';
 }
 
 export default function ComparePage({
@@ -33,6 +43,31 @@ export default function ComparePage({
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  /**
+   * A product refused for being in a different category, held until the user
+   * chooses to keep the current comparison or start over.
+   */
+  const [pendingCategorySwitch, setPendingCategorySwitch] = useState<{
+    product: CompareItem;
+    activeCategoryId: string;
+  } | null>(null);
+  const [limitNotice, setLimitNotice] = useState(false);
+
+  // Both notices are transient and self-clearing. A fixed timeout avoids
+  // depending on an effect that must observe a rising edge.
+  useEffect(() => {
+    if (!limitNotice) return;
+    const t = setTimeout(() => setLimitNotice(false), 4000);
+    return () => clearTimeout(t);
+  }, [limitNotice]);
+
+  /** The category every item in the current comparison shares, if any. */
+  const activeCategory = items[0]
+    ? {
+        id: items[0].categoryId,
+        label: categoryLabel(items[0].category || '', items[0].categoryId),
+      }
+    : null;
 
   // Hydrate the compare list from a deep link (?products=slug1,slug2) so
   // shared links work without requiring the local persisted store.
@@ -46,8 +81,11 @@ export default function ComparePage({
 
     let cancelled = false;
     (async () => {
+      // Fetched concurrently, so the slot budget is computed from the snapshot
+      // taken above rather than from the mutating list.
+      const budget = remainingCompareSlots(existing.length);
       await Promise.all(
-        missing.slice(0, 4 - existing.length).map(async (slug) => {
+        missing.slice(0, budget).map(async (slug) => {
           try {
             const res = await fetch(`/api/v1/products/${encodeURIComponent(slug)}`);
             if (!res.ok) return;
@@ -63,14 +101,23 @@ export default function ComparePage({
                 review_count?: number;
                 images?: string[];
                 stock_quantity?: number;
-                category?: { name: string };
-                categories?: { name: string }[];
+                category_id?: string | null;
+                category?: { id?: string; name: string };
+                categories?: { id?: string; name: string }[];
                 brand?: { name: string };
                 brands?: { name: string }[];
               };
             }>(res);
             if (!json?.success || !json.data) return;
             const p = json.data;
+            // A deep link may span categories. Fall back to the oldest of the
+            // three sources: an explicit category, the first in the array, then
+            // the raw FK. An item with no resolvable category is skipped rather
+            // than added uncategorised, which would break the rule for the rest
+            // of the comparison.
+            const categoryId =
+              p.category?.id || p.categories?.[0]?.id || p.category_id || '';
+            if (!categoryId) return;
             const item: CompareItem = {
               id: p.id,
               name: p.name,
@@ -81,10 +128,15 @@ export default function ComparePage({
               reviewCount: p.review_count || 0,
               image: p.images?.[0] || '/images/product-thumb-1.webp',
               category: p.category?.name || p.categories?.[0]?.name || '',
+              categoryId,
               brand: p.brand?.name || p.brands?.[0]?.name || '',
               inStock: (p.stock_quantity ?? 0) > 0,
             };
-            if (!cancelled) useCompareStore.getState().addItem(item);
+            if (cancelled) return;
+            // Concurrent fetches resolve out of order, so each is added
+            // sequentially against the live list; a slug from another category
+            // is simply refused by the store's rule.
+            useCompareStore.getState().addItem(item);
           } catch {
             // Ignore individual fetch failures so a single bad slug never
             // blocks the rest of the deep-linked products.
@@ -115,6 +167,8 @@ export default function ComparePage({
             rating?: number;
             review_count?: number;
             images?: string[];
+            category_id?: string | null;
+            categories?: { id?: string; name: string }[];
           }[];
         }>(res);
         if (data?.data) {
@@ -127,8 +181,17 @@ export default function ComparePage({
             rating: p.rating || 0,
             reviewCount: p.review_count || 0,
             image: p.images?.[0] || '/images/product-thumb-1.webp',
+            category: p.categories?.[0]?.name || '',
+            categoryId: p.categories?.[0]?.id || p.category_id || '',
           }));
-          setSearchResults(mapped.filter((m) => !items.find((i) => i.id === m.id)));
+          // Products whose category cannot be resolved are dropped here: they
+          // can never satisfy the same-category rule, so offering an "add"
+          // button that silently does nothing is worse than omitting them.
+          setSearchResults(
+            mapped.filter(
+              (m) => m.categoryId && !items.find((i) => i.id === m.id)
+            )
+          );
         }
       }
     } catch {
@@ -139,7 +202,7 @@ export default function ComparePage({
   };
 
   const handleAddToCompare = (product: SearchResult) => {
-    const compareItem = {
+    const compareItem: CompareItem = {
       id: product.id,
       name: product.name,
       slug: product.slug,
@@ -148,12 +211,44 @@ export default function ComparePage({
       rating: product.rating,
       reviewCount: product.reviewCount,
       image: product.image,
-      category: '',
+      category: product.category,
+      categoryId: product.categoryId,
       brand: '',
       inStock: true,
     };
-    useCompareStore.getState().addItem(compareItem);
-    setSearchResults((prev) => prev.filter((r) => r.id !== product.id));
+    const decision = useCompareStore.getState().addItem(compareItem);
+
+    if (decision.allowed) {
+      setSearchResults((prev) => prev.filter((r) => r.id !== product.id));
+      return;
+    }
+
+    switch (decision.reason) {
+      case 'category-mismatch':
+        setPendingCategorySwitch({
+          product: compareItem,
+          activeCategoryId: decision.activeCategoryId,
+        });
+        break;
+      case 'limit-reached':
+        setLimitNotice(true);
+        break;
+      case 'duplicate':
+        // Already present: drop it from the results to reflect reality.
+        setSearchResults((prev) => prev.filter((r) => r.id !== product.id));
+        break;
+    }
+  };
+
+  /** Replace the current comparison with the product that was refused. */
+  const handleStartOverWithPending = () => {
+    if (!pendingCategorySwitch) return;
+    useCompareStore.getState().clearAll();
+    useCompareStore.getState().addItem(pendingCategorySwitch.product);
+    setSearchResults((prev) =>
+      prev.filter((r) => r.id !== pendingCategorySwitch.product.id)
+    );
+    setPendingCategorySwitch(null);
   };
 
   const handleAddToCart = (item: (typeof items)[number]) => {
@@ -166,8 +261,8 @@ export default function ComparePage({
       discountPrice: item.discountPrice || undefined,
       stockQuantity: item.inStock ? 999 : 0,
       sku: '',
-      category: { id: '', name: item.category || '', slug: item.category?.toLowerCase().replace(/\s+/g, '-') || '', description: '', imageUrl: '', displayOrder: 0, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      categoryId: '',
+      category: { id: item.categoryId, name: item.category || '', slug: item.category?.toLowerCase().replace(/\s+/g, '-') || '', description: '', imageUrl: '', displayOrder: 0, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      categoryId: item.categoryId,
       rating: 0,
       reviewCount: 0,
       isActive: true,
@@ -238,11 +333,14 @@ export default function ComparePage({
             Compare Products
           </h1>
           <p className="mt-1 text-sm text-muted-500">
-            Comparing {items.length} of 4 products
+            Comparing {items.length} of {MAX_COMPARE_ITEMS} products
+            {activeCategory && (
+              <> &middot; all in {activeCategory.label}</>
+            )}
           </p>
         </div>
         <div className="flex gap-3">
-          {items.length < 4 && (
+          {items.length < MAX_COMPARE_ITEMS && (
             <button
               onClick={() => setShowSearch(!showSearch)}
               className="inline-flex items-center gap-2 rounded-xl border border-muted-200 bg-white px-4 py-2 text-sm font-semibold text-secondary-700 shadow-sm transition-colors hover:bg-muted-50"
@@ -434,6 +532,32 @@ export default function ComparePage({
           </tbody>
         </table>
       </div>
+
+      {/* Limit notice: announced politely rather than as an alert, because it
+          reports a state the user can see on the page. */}
+      {limitNotice && (
+        <p
+          role="status"
+          className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-xl bg-secondary-800 px-4 py-3 text-sm font-medium text-white shadow-lg"
+        >
+          You can compare up to {MAX_COMPARE_ITEMS} products. Remove one to add
+          another.
+        </p>
+      )}
+
+      <CompareCategoryDialog
+        open={pendingCategorySwitch !== null}
+        activeCategory={categoryLabel(
+          items[0]?.category || '',
+          pendingCategorySwitch?.activeCategoryId || ''
+        )}
+        incomingCategory={categoryLabel(
+          pendingCategorySwitch?.product.category || '',
+          pendingCategorySwitch?.product.categoryId || ''
+        )}
+        onClose={() => setPendingCategorySwitch(null)}
+        onStartOver={handleStartOverWithPending}
+      />
     </div>
   );
 }

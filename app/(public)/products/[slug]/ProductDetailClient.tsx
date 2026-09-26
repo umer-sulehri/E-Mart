@@ -16,6 +16,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useCompareStore } from '@/store/compareStore';
 import { useAuthStore } from '@/store/authStore';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
+import { useCompareToggle } from '@/hooks/useCompareToggle';
 import type { Product } from '@/types';
 
 export interface ProductDetailClientProps {
@@ -34,8 +35,8 @@ export default function ProductDetailClient({
   const addItem = useCartStore((s) => s.addItem);
   const addToServer = useCartStore((s) => s.addToServer);
   const compareItems = useCompareStore((s) => s.items);
-  const addCompare = useCompareStore((s) => s.addItem);
-  const removeCompare = useCompareStore((s) => s.removeItem);
+  const { isCompared, toggle: compareToggle, dialog: compareDialog } =
+    useCompareToggle();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const pathname = usePathname();
@@ -45,7 +46,7 @@ export default function ProductDetailClient({
     { isAuthenticated }
   );
 
-  const isCompared = compareItems.some((i) => i.id === product.id);
+  const isInCompare = isCompared(product.id);
 
   // Keep the /compare deep link (?products=slug1,slug2) shareable by syncing
   // the URL whenever the persisted compare list changes.
@@ -62,18 +63,10 @@ export default function ProductDetailClient({
   };
 
   const handleAddToCompare = () => {
-    if (isCompared) {
-      const remaining = compareItems.filter((i) => i.id !== product.id);
-      removeCompare(product.id);
-      syncCompareUrl(remaining);
-      toast.success('Removed from compare');
-      return;
-    }
-    if (compareItems.length >= 4) {
-      toast.error('You can compare up to 4 products');
-      return;
-    }
-    addCompare({
+    // URL sync is the caller's concern; the hook owns the store transition,
+    // the rules, the dialog and the toast.
+    const before = compareItems.length;
+    compareToggle({
       id: product.id,
       name: product.name,
       slug: product.slug,
@@ -83,12 +76,18 @@ export default function ProductDetailClient({
       reviewCount: product.reviewCount,
       image: product.images?.[0] || '/images/product-thumb-1.webp',
       category: product.category?.name || '',
+      categoryId: product.categoryId,
       brand: product.brand?.name || '',
       inStock: product.stockQuantity > 0,
     });
-    syncCompareUrl([...compareItems, { slug: product.slug }]);
-    trackEvent({ action: 'compare_add', category: 'product', label: product.slug });
-    toast.success('Added to compare');
+    // Removal leaves the list one shorter, addition makes it one longer.
+    if (compareItems.length !== before) {
+      const next =
+        compareItems.length < before
+          ? compareItems.filter((i) => i.id !== product.id)
+          : [...compareItems, { slug: product.slug }];
+      syncCompareUrl(next);
+    }
   };
 
   const handleAddToCart = async () => {
@@ -207,7 +206,7 @@ export default function ProductDetailClient({
           {product.brand?.name && (
             <>
               <span className="text-muted-300" aria-hidden="true">
-                •
+                â€¢
               </span>
               <Link
                 href={`/products?brands=${encodeURIComponent(product.brand.name)}`}
@@ -220,7 +219,7 @@ export default function ProductDetailClient({
           {product.vendor?.name && product.vendor.slug && (
             <>
               <span className="text-muted-300" aria-hidden="true">
-                •
+                â€¢
               </span>
               <Link
                 href={`/sellers/${product.vendor.slug}`}
@@ -251,7 +250,7 @@ export default function ProductDetailClient({
         </a>
       </div>
 
-      {/* Sold by — shown above price so buyers see the store context early */}
+      {/* Sold by â€” shown above price so buyers see the store context early */}
       {product.vendor?.id && (
         <SellerInformationCard
           seller={{
@@ -330,16 +329,16 @@ export default function ProductDetailClient({
           <Heart size={18} className={cn(isWishlisted && 'fill-current')} />
         </Button>
         <Button
-          variant={isCompared ? 'outline' : 'ghost'}
+          variant={isInCompare ? 'outline' : 'ghost'}
           size="lg"
           onClick={handleAddToCompare}
-          aria-label={isCompared ? 'Remove from compare' : 'Add to compare'}
-          title={isCompared ? 'Remove from compare' : 'Add to compare'}
+          aria-label={isInCompare ? 'Remove from compare' : 'Add to compare'}
+          title={isInCompare ? 'Remove from compare' : 'Add to compare'}
           className="col-span-1 lg:col-span-1"
         >
           <GitCompareArrows
             size={18}
-            className={cn(isCompared && 'text-primary')}
+            className={cn(isInCompare && 'text-primary')}
           />
         </Button>
         <Button
@@ -433,6 +432,8 @@ export default function ProductDetailClient({
           </Button>
         </div>
       </div>
+
+      {compareDialog}
     </div>
   );
 }

@@ -186,8 +186,8 @@ export default function CookiePolicyPage() {
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart-compare</td>
                         <td className="py-2 pr-4">Preference</td>
-                        <td className="py-2 pr-4">Products in your compare list</td>
-                        <td className="py-2">Local storage</td>
+                        <td className="py-2 pr-4">Products in your compare list, for the duration of the browsing session only</td>
+                        <td className="py-2">Session storage (cleared when the tab session ends)</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart-review-draft-*</td>
@@ -245,7 +245,7 @@ export default function CookiePolicyPage() {
                 </p>
                 <ul className="mb-4 list-disc space-y-2 pl-5">
                   <li>Your cart contents and any applied coupon (<code>emart-cart</code>)</li>
-                  <li>Your compare list (<code>emart-compare</code>)</li>
+                  <li>Your compare list (<code>emart-compare</code>), kept in session storage for the current tab session only</li>
                   <li>Autosaved drafts of product reviews (<code>emart-review-draft-*</code>)</li>
                   <li>Your cookie consent choice (<code>emart-consent</code>) and an anonymous consent identifier (<code>emart-consent-anon-id</code>)</li>
                 </ul>

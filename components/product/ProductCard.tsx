@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ShoppingCart, Heart, Eye, Check } from "lucide-react";
+import { ShoppingCart, Heart, Eye, Check, GitCompareArrows } from "lucide-react";
 import StarRating from "@/components/ui/StarRating";
 import QuickViewModal from "@/components/product/QuickViewModal";
 import { useAddToCart } from "@/hooks/useAddToCart";
 import { useAddToWishlist } from "@/hooks/useAddToWishlist";
+import { useCompareToggle } from "@/hooks/useCompareToggle";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import QuantitySelector from "@/components/ui/QuantitySelector";
 import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
@@ -23,6 +24,13 @@ export interface Product {
   image: string;
   badge?: string;
   stockQuantity?: number;
+  /**
+   * Required so the compare rule can enforce a single category. Cards render
+   * the compare toggle unconditionally, so every caller must supply it.
+   */
+  categoryId: string;
+  category?: { name: string };
+  brand?: { name: string };
 }
 
 export interface ProductCardProps {
@@ -41,6 +49,9 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
       toggleWishlist,
       wishlistLoading,
     } = useAddToWishlist(product.id, product.name, { isAuthenticated });
+    const { isCompared, toggle: compareToggle, dialog: compareDialog } =
+      useCompareToggle();
+    const isInCompare = isCompared(product.id);
     const discount = product.discountPrice
       ? calculateDiscount(product.price, product.discountPrice)
       : 0;
@@ -50,7 +61,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
         ref={ref}
         className={cn("product-item flex h-full max-w-full flex-col", className)}
       >
-        <figure className="image-container mx-auto mb-3 aspect-square w-full max-w-full overflow-hidden rounded-xl bg-white">
+        <figure className="image-container relative mx-auto mb-3 aspect-square w-full max-w-full overflow-hidden rounded-xl bg-white">
           <Link href={`/products/${product.slug}`} title={product.name}>
             <ImageWithFallback
               src={product.image}
@@ -61,6 +72,39 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
               className="h-full w-full object-contain p-2 sm:p-3"
             />
           </Link>
+
+          {/* Compare toggle sits on the image rather than in the button row,
+              which is already at capacity on small screens. */}
+          <button
+            onClick={() =>
+              compareToggle({
+                id: product.id,
+                name: product.name,
+                slug: product.slug,
+                price: product.price,
+                discountPrice: product.discountPrice ?? undefined,
+                rating: product.rating,
+                reviewCount: product.reviewCount,
+                image: product.image,
+                category: product.category?.name || '',
+                categoryId: product.categoryId,
+                brand: product.brand?.name || '',
+                inStock: (product.stockQuantity ?? 0) > 0,
+              })
+            }
+            className={cn(
+              "absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-white/90 shadow-sm ring-1 ring-muted-200 backdrop-blur transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+              isInCompare ? "text-primary ring-primary" : "text-dark"
+            )}
+            aria-label={
+              isInCompare
+                ? `Remove ${product.name} from compare`
+                : `Add ${product.name} to compare`
+            }
+            aria-pressed={isInCompare}
+          >
+            <GitCompareArrows size={15} className="shrink-0" />
+          </button>
         </figure>
 
         <div className="flex flex-1 flex-col items-center text-center">
@@ -171,6 +215,8 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
           open={quickViewOpen}
           onClose={() => setQuickViewOpen(false)}
         />
+
+        {compareDialog}
       </div>
     );
   }

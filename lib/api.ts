@@ -129,6 +129,8 @@ export interface ApiProduct {
   review_count: number;
   categories?: { name: string; slug: string };
   category?: { name: string; slug: string };
+  /** Present on list/detail responses; required to enforce the compare rule. */
+  category_id?: string | null;
   vendors?: { name: string; slug: string };
   vendor?: { name: string; slug: string };
   brands?: { name: string; slug: string };
@@ -213,6 +215,7 @@ export interface ApiSocialLink {
 }
 
 export function apiProductToCardProduct(p: ApiProduct) {
+  const category = p.category ?? p.categories;
   return {
     id: p.id,
     name: p.name,
@@ -223,6 +226,11 @@ export function apiProductToCardProduct(p: ApiProduct) {
     reviewCount: p.review_count,
     image: resolveImage(p.images?.[0]),
     stockQuantity: p.stock_quantity,
+    // The compare feature refuses any product whose category cannot be
+    // resolved, so this must be a concrete id rather than a display name.
+    categoryId: p.category_id || '',
+    category: category ? { name: category.name } : undefined,
+    brand: p.brand || p.brands ? { name: (p.brand ?? p.brands)!.name } : undefined,
   };
 }
 

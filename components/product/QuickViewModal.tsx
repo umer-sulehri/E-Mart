@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { X, Heart, ShoppingCart, Star, Eye, Check } from 'lucide-react';
+import { X, Heart, ShoppingCart, Star, Eye, Check, GitCompareArrows } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import StockStatusIndicator from '@/components/ui/StockStatusIndicator';
@@ -10,6 +10,7 @@ import QuantitySelector from '@/components/ui/QuantitySelector';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useAddToCart } from '@/hooks/useAddToCart';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
+import { useCompareToggle } from '@/hooks/useCompareToggle';
 import { useAuthStore } from '@/store/authStore';
 import { formatPrice, calculateDiscount } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -25,7 +26,10 @@ export interface QuickViewProduct {
   image: string;
   stockQuantity?: number;
   description?: string;
-  category?: string;
+  /** Display name of the product's category, when known. */
+  category?: { name: string };
+  /** Required so the compare rule can enforce a single category. */
+  categoryId: string;
 }
 
 interface QuickViewModalProps {
@@ -47,6 +51,9 @@ export default function QuickViewModal({
     toggleWishlist,
     wishlistLoading,
   } = useAddToWishlist(product?.id ?? '', product?.name ?? '', { isAuthenticated });
+  const { isCompared, toggle: compareToggle, dialog: compareDialog } =
+    useCompareToggle();
+  const isInCompare = product ? isCompared(product.id) : false;
 
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -113,9 +120,9 @@ export default function QuickViewModal({
 
           {/* Info */}
           <div className="flex flex-col">
-            {product.category && (
+            {product.category?.name && (
               <p className="text-xs font-medium uppercase tracking-wide text-primary-600">
-                {product.category}
+                {product.category.name}
               </p>
             )}
 
@@ -211,6 +218,34 @@ export default function QuickViewModal({
                     <Heart size={16} />
                   )}
                 </Button>
+                <Button
+                  variant={isInCompare ? 'primary' : 'outline'}
+                  size="md"
+                  className="px-3"
+                  onClick={() =>
+                    compareToggle({
+                      id: product.id,
+                      name: product.name,
+                      slug: product.slug,
+                      price: product.price,
+                      discountPrice: product.discountPrice,
+                      rating: product.rating,
+                      reviewCount: product.reviewCount,
+                      image: product.image,
+                      category: product.category?.name,
+                      categoryId: product.categoryId,
+                      inStock: (product.stockQuantity ?? 0) > 0,
+                    })
+                  }
+                  aria-pressed={isInCompare}
+                  aria-label={
+                    isInCompare
+                      ? `Remove ${product.name} from compare`
+                      : `Add ${product.name} to compare`
+                  }
+                >
+                  <GitCompareArrows size={16} />
+                </Button>
               </div>
 
               <Link
@@ -225,6 +260,8 @@ export default function QuickViewModal({
           </div>
         </div>
       </div>
+
+      {compareDialog}
     </div>
   );
 }
