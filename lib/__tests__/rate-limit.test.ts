@@ -25,10 +25,19 @@ describe("rateLimit", () => {
   });
 
   it("resets the window after expiry", async () => {
-    const r1 = await rateLimit("test:expire", 1, 1); // 1ms window
+    const r1 = await rateLimit("test:expire", 1, 10); // 10ms window
     expect(r1.success).toBe(true);
-    const r2 = await rateLimit("test:expire", 1, 1);
+    // Blocked while the window is still open.
+    const r2 = await rateLimit("test:expire", 1, 10);
     expect(r2.success).toBe(false);
+    // Once the window elapses the counter resets and the request is allowed
+    // again. The previous version of this test used a 1ms window and asserted
+    // `false` immediately, so it only passed when both calls happened to land
+    // inside the same millisecond — a race that failed intermittently.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const r3 = await rateLimit("test:expire", 1, 10);
+    expect(r3.success).toBe(true);
+    expect(r3.remaining).toBe(0);
   });
 
   it("uses a custom window", async () => {
