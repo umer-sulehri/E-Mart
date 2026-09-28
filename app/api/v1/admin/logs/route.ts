@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
-    const offset = (page - 1) * limit;
+    // Clamped, unlike a bare `parseInt`: `?page=0` or `?limit=-5` would otherwise
+    // produce a negative offset and an error from PostgREST.
+    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 50 });
     const supabase = await createClient();
 
     const {
@@ -53,11 +54,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: logs || [],
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(

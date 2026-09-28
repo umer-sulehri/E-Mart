@@ -6,6 +6,7 @@ import { X, Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { useHydrated } from '@/hooks/useHydrated';
+import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
 import { formatPrice } from '@/lib/utils';
 import { resolveImage } from '@/lib/imageLoader';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
@@ -47,25 +48,10 @@ export default function CartSidebar() {
     return () => window.removeEventListener('toggle-cart', handler);
   }, [handleToggle]);
 
-  useEffect(() => {
-    if (isCartOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isCartOpen]);
-
-  useEffect(() => {
-    if (!isCartOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') toggleCart();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isCartOpen, toggleCart]);
+  // Reference-counted: QuickView opens from inside this drawer, and a plain
+  // body.overflow reset on unmount would re-enable scrolling behind the cart.
+  useBodyScrollLock(isCartOpen);
+  useEscapeKey(isCartOpen, toggleCart);
 
   const currentSubtotal = subtotal();
   const currentShipping = shippingCost();

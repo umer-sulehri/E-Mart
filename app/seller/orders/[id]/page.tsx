@@ -186,7 +186,7 @@ export default function SellerOrderDetailPage() {
               </div>
             ))}
           </div>
-          <div className="border-t border-muted-100 px-6 py-4">
+          <div className="border-t border-muted-100 px-3 py-4 sm:px-6">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-500">Total</span>
               <span className="text-lg font-bold text-secondary-800">{formatPrice(order.total)}</span>

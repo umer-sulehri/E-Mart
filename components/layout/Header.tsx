@@ -158,7 +158,7 @@ function SearchBar({ className }: { className?: string }) {
         )}
         <button
           type="submit"
-          className="p-2 text-muted hover:text-secondary transition-colors"
+          className="p-2.5 text-muted transition-colors hover:text-secondary md:p-2"
           aria-label="Search"
         >
           {loading ? (
@@ -398,19 +398,14 @@ export default function Header() {
       .catch(() => {});
   }, []);
 
+  // Escape and the body-scroll lock are owned by <MobileNav> (via
+  // useEscapeKey/useBodyScrollLock). The Header only owns returning focus to
+  // the toggle once the sheet has closed, which is its own responsibility.
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && mobileNavOpen) {
-        setMobileNavOpen(false);
-        navButtonRef.current?.focus();
-      }
+    if (mobileNavOpen) return;
+    if (navButtonRef.current && document.activeElement === document.body) {
+      navButtonRef.current.focus();
     }
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = mobileNavOpen ? 'hidden' : '';
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
   }, [mobileNavOpen]);
 
   return (
@@ -422,7 +417,7 @@ export default function Header() {
             <div className="flex items-center gap-2">
               <button
                 ref={navButtonRef}
-                className="p-2 -ml-2 rounded-lg text-secondary hover:bg-muted-100 hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="-ml-2 rounded-lg p-2.5 text-secondary transition-colors hover:bg-muted-100 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary md:p-2"
                 onClick={() => setMobileNavOpen(true)}
                 aria-label="Open navigation menu"
                 aria-expanded={mobileNavOpen}
@@ -490,7 +485,7 @@ export default function Header() {
               </li>
               <li>
                 <button
-                  className="p-2 hover:text-primary transition-colors relative"
+                  className="relative p-2.5 text-secondary transition-colors hover:text-primary md:p-2"
                   aria-label={`Shopping bag, ${itemCount} items`}
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('toggle-cart'));

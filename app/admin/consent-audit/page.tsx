@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Cookie, RotateCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Cookie, RotateCw } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Pagination from '@/components/ui/Pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import { formatDate } from '@/lib/utils';
+
+const ITEMS_PER_PAGE = 25;
 
 interface ConsentAuditEntry {
   id: string;
@@ -23,11 +27,11 @@ interface ConsentAuditEntry {
 function SkeletonRow() {
   return (
     <tr className="border-b border-muted-50">
-      <td className="px-6 py-4"><div className="h-4 w-36 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-32 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-24 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-36 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-32 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-24 animate-pulse rounded bg-muted-200" /></td>
     </tr>
   );
 }
@@ -43,19 +47,37 @@ function preferenceDelta(preferences: Record<string, boolean> | null): string {
 }
 
 export default function AdminConsentAuditPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <AdminConsentAuditContent />
+    </Suspense>
+  );
+}
+
+function AdminConsentAuditContent() {
   const [records, setRecords] = useState<ConsentAuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const { page, setPage } = usePageParam({ totalPages });
 
   const fetchRecords = useCallback(async (pageNum: number) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/admin/consent-audit?page=${pageNum}&limit=25`);
+      const params = new URLSearchParams({
+        page: String(pageNum),
+        limit: String(ITEMS_PER_PAGE),
+      });
+      const res = await fetch(`/api/v1/admin/consent-audit?${params}`);
       const data = await res.json();
       if (data.success) {
         setRecords(data.data || []);
         setTotalItems(data.meta?.totalItems || 0);
+        // Read the page count from the API instead of re-deriving it from a
+        // hardcoded page size, which silently drifts from the request above.
+        setTotalPages(data.meta?.totalPages || 1);
       } else {
         toast.error(data.error || 'Failed to load consent records');
       }
@@ -69,8 +91,6 @@ export default function AdminConsentAuditPage() {
   useEffect(() => {
     fetchRecords(page);
   }, [fetchRecords, page]);
-
-  const totalPages = Math.max(1, Math.ceil(totalItems / 25));
 
   const subjectLabel = (entry: ConsentAuditEntry) => {
     if (entry.action !== 'withdraw' && entry.subject.startsWith('user:')) {
@@ -142,28 +162,28 @@ export default function AdminConsentAuditPage() {
                         key={record.id}
                         className="border-b border-muted-50 transition-colors hover:bg-muted-50/50"
                       >
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-4 sm:px-6">
                           <p className="font-medium text-secondary-800">
                             {subjectLabel(record)}
                           </p>
                           <p className="text-xs text-muted-400">{subjectSub(record)}</p>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-4 sm:px-6">
                           <Badge variant={actionVariant(record.action)}>
                             {record.action}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 text-muted-600">
+                        <td className="px-3 py-4 sm:px-6 text-muted-600">
                           <p>{record.method || '—'}</p>
                           <p className="text-xs text-muted-400">
                             {record.source} · {record.region === 'unknown' ? 'region n/a' : record.region}
                           </p>
                         </td>
-                        <td className="px-6 py-4 text-xs text-muted-600">
+                        <td className="px-3 py-4 sm:px-6 text-xs text-muted-600">
                           <p className="text-muted-400">← {preferenceDelta(record.previous)}</p>
                           <p>→ {preferenceDelta(record.next)}</p>
                         </td>
-                        <td className="px-6 py-4 text-muted-600">{formatDate(record.created_at)}</td>
+                        <td className="px-3 py-4 sm:px-6 text-muted-600">{formatDate(record.created_at)}</td>
                       </tr>
                     ))}
             </tbody>
@@ -172,30 +192,17 @@ export default function AdminConsentAuditPage() {
       </div>
 
       {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-500">
-            Page {page} of {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+        <div className="rounded-xl bg-white shadow-sm">
+          <Pagination
+            variant="table"
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalItems={totalItems}
+            itemsPerPage={ITEMS_PER_PAGE}
+            itemLabel="records"
+            className="border-t border-muted-100 px-3 py-4 sm:px-6"
+          />
         </div>
       )}
     </div>

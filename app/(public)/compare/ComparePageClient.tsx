@@ -1,16 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, X, Plus, BarChart3, Trash2, Star } from 'lucide-react';
+import { ShoppingCart, X, Plus, BarChart3, Trash2, Star, Layers } from 'lucide-react';
+import toast from 'react-hot-toast';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
-import { useCompareStore, MAX_COMPARE_ITEMS, remainingCompareSlots } from '@/store/compareStore';
+import CompareGroupRail from '@/components/compare/CompareGroupRail';
+import { useHydrated } from '@/hooks/useHydrated';
+import {
+  useCompareStore,
+  MAX_COMPARE_ITEMS,
+  MAX_SAVED_COMPARE_ITEMS,
+  remainingTraySlots,
+  type CompareItem,
+} from '@/store/compareStore';
+import {
+  groupItemsByCategory,
+  resolveActiveGroup,
+  resolveGroupLabel,
+} from '@/lib/compare-rules';
 import { useCartStore } from '@/store';
 import { tryParseJson } from '@/lib/api';
-import CompareCategoryDialog from '@/components/compare/CompareCategoryDialog';
-import type { CartItem, Product } from '@/types';
-import type { Product as ProductCardType } from '@/components/product/ProductCard';
-import type { CompareItem } from '@/store/compareStore';
+import { trackEvent } from '@/lib/analytics';
+import type { CartItem, Category, Product } from '@/types';
 
 interface SearchResult {
   id: string;
@@ -23,54 +35,57 @@ interface SearchResult {
   image: string;
   /** Display name, from the product's primary category. */
   category: string;
-  /** Stable category id, used to enforce the same-category rule. */
   categoryId: string;
 }
 
-/** Human-readable fallback when a product carries no category name. */
-function categoryLabel(category: string, categoryId: string): string {
-  return category || categoryId || 'an unknown category';
-}
+type Notice = { tone: 'limit' | 'tray'; message: string } | null;
 
 export default function ComparePage({
   initialProductSlugs = [],
 }: {
   initialProductSlugs?: string[];
 }) {
-  const { items, removeItem, clearAll } = useCompareStore();
+  // The tray lives in sessionStorage, so the server render has no items and the
+  // first client render would disagree with it. Gate the whole view on
+  // hydration rather than letting React patch a mismatched table.
+  const hydrated = useHydrated();
+
+  const items = useCompareStore((s) => s.items);
+  const activeCategoryId = useCompareStore((s) => s.activeCategoryId);
+  const removeItem = useCompareStore((s) => s.removeItem);
+  const clearAll = useCompareStore((s) => s.clearAll);
+  const setActiveCategory = useCompareStore((s) => s.setActiveCategory);
   const addItemToCart = useCartStore((s) => s.addItem);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  /**
-   * A product refused for being in a different category, held until the user
-   * chooses to keep the current comparison or start over.
-   */
-  const [pendingCategorySwitch, setPendingCategorySwitch] = useState<{
-    product: CompareItem;
-    activeCategoryId: string;
-  } | null>(null);
-  const [limitNotice, setLimitNotice] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
 
-  // Both notices are transient and self-clearing. A fixed timeout avoids
-  // depending on an effect that must observe a rising edge.
+  // Transient and self-clearing. A fixed timeout avoids depending on an effect
+  // that must observe a rising edge.
   useEffect(() => {
-    if (!limitNotice) return;
-    const t = setTimeout(() => setLimitNotice(false), 4000);
-    return () => clearTimeout(t);
-  }, [limitNotice]);
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 5000);
+    return () => clearTimeout(timer);
+  }, [notice]);
 
-  /** The category every item in the current comparison shares, if any. */
-  const activeCategory = items[0]
-    ? {
-        id: items[0].categoryId,
-        label: categoryLabel(items[0].category || '', items[0].categoryId),
-      }
-    : null;
+  /**
+   * The tray is partitioned by category. Only the active group is ever
+   * compared — the rest wait in the rail below it.
+   */
+  const groups = useMemo(() => groupItemsByCategory(items), [items]);
+  const activeGroup = useMemo(
+    () => resolveActiveGroup(groups, activeCategoryId),
+    [groups, activeCategoryId]
+  );
+  const comparing = activeGroup?.items ?? [];
+  const trayRoom = remainingTraySlots(items.length);
+  const roomInActiveGroup = Math.max(0, MAX_COMPARE_ITEMS - comparing.length);
 
-  // Hydrate the compare list from a deep link (?products=slug1,slug2) so
-  // shared links work without requiring the local persisted store.
+  // Hydrate the tray from a deep link (?products=slug1,slug2) so shared links
+  // work without requiring the local persisted store.
   useEffect(() => {
     if (initialProductSlugs.length === 0) return;
     const existing = useCompareStore.getState().items;
@@ -82,8 +97,10 @@ export default function ComparePage({
     let cancelled = false;
     (async () => {
       // Fetched concurrently, so the slot budget is computed from the snapshot
-      // taken above rather than from the mutating list.
-      const budget = remainingCompareSlots(existing.length);
+      // taken above rather than from the mutating list. A deep link may span
+      // categories; the tray now holds those in separate groups, so the budget
+      // is the tray's own cap rather than a per-category one.
+      const budget = remainingTraySlots(existing.length);
       await Promise.all(
         missing.slice(0, budget).map(async (slug) => {
           try {
@@ -110,14 +127,13 @@ export default function ComparePage({
             }>(res);
             if (!json?.success || !json.data) return;
             const p = json.data;
-            // A deep link may span categories. Fall back to the oldest of the
-            // three sources: an explicit category, the first in the array, then
-            // the raw FK. An item with no resolvable category is skipped rather
-            // than added uncategorised, which would break the rule for the rest
-            // of the comparison.
+            // Fall back to the oldest of the three category sources: an
+            // explicit category, the first in the array, then the raw FK. A
+            // product whose category still cannot be resolved is saved under
+            // the uncategorised group rather than dropped, because losing a
+            // deep-linked product silently is worse than labelling it vaguely.
             const categoryId =
               p.category?.id || p.categories?.[0]?.id || p.category_id || '';
-            if (!categoryId) return;
             const item: CompareItem = {
               id: p.id,
               name: p.name,
@@ -134,8 +150,7 @@ export default function ComparePage({
             };
             if (cancelled) return;
             // Concurrent fetches resolve out of order, so each is added
-            // sequentially against the live list; a slug from another category
-            // is simply refused by the store's rule.
+            // sequentially against the live list; the store enforces the caps.
             useCompareStore.getState().addItem(item);
           } catch {
             // Ignore individual fetch failures so a single bad slug never
@@ -149,6 +164,23 @@ export default function ComparePage({
     };
   }, [initialProductSlugs]);
 
+  const handleActivateGroup = (categoryId: string) => {
+    setActiveCategory(categoryId);
+    const group = groups.find((g) => g.categoryId === categoryId);
+    if (group) {
+      trackEvent({
+        action: 'compare_group_switch',
+        category: 'product',
+        label: group.label,
+      });
+      toast.success(`Comparing ${group.items.length} ${group.label} products`);
+    }
+  };
+
+  const handleRemove = (productId: string) => {
+    removeItem(productId);
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
@@ -156,46 +188,42 @@ export default function ComparePage({
       const res = await fetch(
         `/api/v1/products?search=${encodeURIComponent(searchQuery)}&limit=8`
       );
-      if (res.ok) {
-        const data = await tryParseJson<{
-          data?: {
-            id: string;
-            name: string;
-            slug: string;
-            price: number;
-            discount_price?: number;
-            rating?: number;
-            review_count?: number;
-            images?: string[];
-            category_id?: string | null;
-            categories?: { id?: string; name: string }[];
-          }[];
-        }>(res);
-        if (data?.data) {
-          const mapped: SearchResult[] = data.data.map((p) => ({
-            id: p.id,
-            name: p.name,
-            slug: p.slug,
-            price: p.price,
-            discountPrice: p.discount_price,
-            rating: p.rating || 0,
-            reviewCount: p.review_count || 0,
-            image: p.images?.[0] || '/images/product-thumb-1.webp',
-            category: p.categories?.[0]?.name || '',
-            categoryId: p.categories?.[0]?.id || p.category_id || '',
-          }));
-          // Products whose category cannot be resolved are dropped here: they
-          // can never satisfy the same-category rule, so offering an "add"
-          // button that silently does nothing is worse than omitting them.
-          setSearchResults(
-            mapped.filter(
-              (m) => m.categoryId && !items.find((i) => i.id === m.id)
-            )
-          );
-        }
-      }
+      if (!res.ok) return;
+      const data = await tryParseJson<{
+        data?: {
+          id: string;
+          name: string;
+          slug: string;
+          price: number;
+          discount_price?: number;
+          rating?: number;
+          review_count?: number;
+          images?: string[];
+          category_id?: string | null;
+          categories?: { id?: string; name: string }[];
+        }[];
+      }>(res);
+      if (!data?.data) return;
+
+      const mapped: SearchResult[] = data.data.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: p.price,
+        discountPrice: p.discount_price,
+        rating: p.rating || 0,
+        reviewCount: p.review_count || 0,
+        image: p.images?.[0] || '/images/product-thumb-1.webp',
+        category: p.categories?.[0]?.name || '',
+        categoryId: p.categories?.[0]?.id || p.category_id || '',
+      }));
+      // Already-saved products are dropped so the list never offers an "add"
+      // button that would report a duplicate.
+      setSearchResults((prev) => [
+        ...mapped.filter((m) => !prev.some((saved) => saved.id === m.id)),
+      ]);
     } catch {
-      // silently fail
+      // Leave the previous results in place rather than blanking the panel.
     } finally {
       setIsSearching(false);
     }
@@ -220,88 +248,105 @@ export default function ComparePage({
 
     if (decision.allowed) {
       setSearchResults((prev) => prev.filter((r) => r.id !== product.id));
+      toast.success(
+        decision.isNewGroup
+          ? `Saved to compare · ${decision.groupLabel}`
+          : 'Added to compare'
+      );
       return;
     }
 
     switch (decision.reason) {
-      case 'category-mismatch':
-        setPendingCategorySwitch({
-          product: compareItem,
-          activeCategoryId: decision.activeCategoryId,
+      case 'category-full':
+        setNotice({
+          tone: 'limit',
+          message: `You can compare up to ${MAX_COMPARE_ITEMS} ${decision.label} products. Remove one to swap it.`,
         });
         break;
-      case 'limit-reached':
-        setLimitNotice(true);
+      case 'tray-full':
+        setNotice({
+          tone: 'tray',
+          message: `Your compare list is full (${MAX_SAVED_COMPARE_ITEMS}). Remove a product to add another.`,
+        });
         break;
       case 'duplicate':
-        // Already present: drop it from the results to reflect reality.
         setSearchResults((prev) => prev.filter((r) => r.id !== product.id));
         break;
     }
   };
 
-  /** Replace the current comparison with the product that was refused. */
-  const handleStartOverWithPending = () => {
-    if (!pendingCategorySwitch) return;
-    useCompareStore.getState().clearAll();
-    useCompareStore.getState().addItem(pendingCategorySwitch.product);
-    setSearchResults((prev) =>
-      prev.filter((r) => r.id !== pendingCategorySwitch.product.id)
-    );
-    setPendingCategorySwitch(null);
-  };
-
-  const handleAddToCart = (item: (typeof items)[number]) => {
-    const product = {
+  const handleAddToCart = (item: CompareItem) => {
+    // The tray stores a snapshot, not a full product row, so the fields the
+    // cart never reads (description, sku, brand entity) are left empty rather
+    // than invented. Every field `CartItem` requires is present, so this needs
+    // no type assertion.
+    const now = new Date().toISOString();
+    const category: Category = {
+      id: item.categoryId,
+      name: resolveGroupLabel(item),
+      slug:
+        item.category?.trim().toLowerCase().replace(/\s+/g, '-') ||
+        `category-${item.categoryId}`,
+      isActive: true,
+      displayOrder: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const product: Product = {
       id: item.id,
       name: item.name,
       slug: item.slug,
       description: '',
       price: item.price,
-      discountPrice: item.discountPrice || undefined,
-      stockQuantity: item.inStock ? 999 : 0,
+      discountPrice: item.discountPrice,
+      stockQuantity: item.inStock ? 1 : 0,
       sku: '',
-      category: { id: item.categoryId, name: item.category || '', slug: item.category?.toLowerCase().replace(/\s+/g, '-') || '', description: '', imageUrl: '', displayOrder: 0, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      category,
       categoryId: item.categoryId,
-      rating: 0,
-      reviewCount: 0,
+      rating: item.rating,
+      reviewCount: item.reviewCount,
       isActive: true,
       isFeatured: false,
       isNew: false,
       images: item.image ? [item.image] : [],
       tags: item.brand ? [item.brand] : [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    } as unknown as Product;
+      createdAt: now,
+      updatedAt: now,
+    };
+    const unitPrice = item.discountPrice || item.price;
     const cartItem: CartItem = {
       id: `compare-${item.id}`,
       productId: item.id,
       product,
-      unitPrice: item.discountPrice || item.price,
+      unitPrice,
       quantity: 1,
-      totalPrice: item.discountPrice || item.price,
-      addedAt: new Date().toISOString(),
+      totalPrice: unitPrice,
+      addedAt: now,
     };
     addItemToCart(cartItem);
     // Persist to the server cart when signed in; gracefully no-ops for guests.
     useCartStore.getState().addToServer(item.id, 1);
+    toast.success(`${item.name} added to cart`);
   };
 
-  const comparisonFields = [
-    { key: 'image', label: 'Image' },
-    { key: 'name', label: 'Name' },
-    { key: 'price', label: 'Price' },
-    { key: 'rating', label: 'Rating' },
-    { key: 'category', label: 'Category' },
-    { key: 'brand', label: 'Brand' },
-    { key: 'stock', label: 'Stock Status' },
-  ] as const;
+  if (!hydrated) {
+    return (
+      <div
+        className="mx-auto max-w-6xl animate-pulse px-4 py-8"
+        aria-busy="true"
+        aria-label="Loading comparison"
+      >
+        <div className="mb-8 h-8 w-56 rounded bg-muted-100" />
+        <div className="h-72 rounded-2xl bg-muted-100" />
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-          <BarChart3 size={40} className="text-primary" />
+          <BarChart3 size={40} className="text-primary" aria-hidden="true" />
         </div>
         <h1 className="font-heading text-2xl font-bold text-secondary-800">
           Compare Products
@@ -312,58 +357,75 @@ export default function ComparePage({
         <div className="mt-8 flex flex-col items-center gap-4">
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            <Plus size={16} />
+            <Plus size={16} aria-hidden="true" />
             Browse Products
           </Link>
           <p className="text-xs text-muted-400">
-            You can add up to 4 products to compare.
+            You can compare up to {MAX_COMPARE_ITEMS} products from the same
+            category, and save up to {MAX_SAVED_COMPARE_ITEMS} in total.
           </p>
         </div>
       </div>
     );
   }
 
+  const activeLabel = activeGroup?.label ?? '';
+  const otherGroups = groups.filter(
+    (group) => group.categoryId !== activeGroup?.categoryId
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-heading text-2xl font-bold text-secondary-800">
             Compare Products
           </h1>
           <p className="mt-1 text-sm text-muted-500">
-            Comparing {items.length} of {MAX_COMPARE_ITEMS} products
-            {activeCategory && (
-              <> &middot; all in {activeCategory.label}</>
+            Comparing {comparing.length} of {MAX_COMPARE_ITEMS} products
+            {activeLabel && <> in {activeLabel}</>}
+            {otherGroups.length > 0 && (
+              <>
+                {' '}
+                &middot; {items.length} saved across {groups.length} categories
+              </>
             )}
           </p>
         </div>
-        <div className="flex gap-3">
-          {items.length < MAX_COMPARE_ITEMS && (
+        <div className="flex flex-wrap gap-3">
+          {trayRoom > 0 && (
             <button
+              type="button"
               onClick={() => setShowSearch(!showSearch)}
-              className="inline-flex items-center gap-2 rounded-xl border border-muted-200 bg-white px-4 py-2 text-sm font-semibold text-secondary-700 shadow-sm transition-colors hover:bg-muted-50"
+              aria-expanded={showSearch}
+              aria-controls="compare-search-panel"
+              className="inline-flex items-center gap-2 rounded-xl border border-muted-200 bg-white px-4 py-2 text-sm font-semibold text-secondary-700 shadow-sm transition-colors hover:bg-muted-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-              <Plus size={16} />
+              <Plus size={16} aria-hidden="true" />
               Add Product
             </button>
           )}
           <button
+            type="button"
             onClick={clearAll}
-            className="inline-flex items-center gap-2 rounded-xl border border-danger/20 bg-white px-4 py-2 text-sm font-semibold text-danger shadow-sm transition-colors hover:bg-danger/5"
+            className="inline-flex items-center gap-2 rounded-xl border border-danger/20 bg-white px-4 py-2 text-sm font-semibold text-danger shadow-sm transition-colors hover:bg-danger/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
           >
-            <Trash2 size={16} />
+            <Trash2 size={16} aria-hidden="true" />
             Clear All
           </button>
         </div>
       </div>
 
       {showSearch && (
-        <div className="mb-8 rounded-2xl border border-muted-100 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold text-secondary-700">
+        <div
+          id="compare-search-panel"
+          className="mb-8 rounded-2xl border border-muted-100 bg-white p-6 shadow-sm"
+        >
+          <h2 className="mb-4 text-sm font-semibold text-secondary-700">
             Search Products to Compare
-          </h3>
+          </h2>
           <div className="flex gap-3">
             {/* A placeholder is not an accessible name, and this input has no
                 visible label. */}
@@ -380,61 +442,116 @@ export default function ComparePage({
               className="flex-1 rounded-xl border border-muted-200 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
             <button
+              type="button"
               onClick={handleSearch}
               disabled={isSearching}
-              className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:opacity-50"
+              className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               {isSearching ? 'Searching...' : 'Search'}
             </button>
           </div>
-          {searchResults.length > 0 && (
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {searchResults.map((product) => (
-                <div
-                  key={product.id}
-                  className="rounded-xl border border-muted-100 p-3 text-center"
-                >
-                  <ImageWithFallback
-                    src={product.image}
-                    alt={product.name}
-                    width={80}
-                    height={80}
-                    className="mx-auto h-20 w-20 object-contain"
-                  />
-                  <p className="mt-2 line-clamp-2 text-xs font-medium text-secondary-700">
-                    {product.name}
-                  </p>
-                  <p className="mt-1 text-xs font-bold text-primary">
-                    Rs. {(product.discountPrice || product.price).toLocaleString()}
-                  </p>
-                  <button
-                    onClick={() => handleAddToCompare(product)}
-                    className="mt-2 w-full rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+
+          {searchResults.length > 0 ? (
+            <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {searchResults.map((product) => {
+                const alreadySaved = items.some((i) => i.id === product.id);
+                const landsInActiveGroup =
+                  !!activeGroup && product.categoryId === activeGroup.categoryId;
+                const savedSlots = items.filter(
+                  (i) => i.categoryId === product.categoryId
+                ).length;
+                const groupFull = savedSlots >= MAX_COMPARE_ITEMS;
+
+                return (
+                  <li
+                    key={product.id}
+                    className="rounded-xl border border-muted-100 p-3 text-center"
                   >
-                    + Compare
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <ImageWithFallback
+                      src={product.image}
+                      alt={product.name}
+                      width={80}
+                      height={80}
+                      className="mx-auto h-20 w-20 object-contain"
+                    />
+                    <p className="mt-2 line-clamp-2 text-xs font-medium text-secondary-700">
+                      {product.name}
+                    </p>
+                    <p className="mt-1 text-xs font-bold text-primary">
+                      Rs. {(product.discountPrice || product.price).toLocaleString()}
+                    </p>
+                    {landsInActiveGroup ? (
+                      <p className="mt-1.5 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        Same category
+                      </p>
+                    ) : (
+                      <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-muted-200 px-2 py-0.5 text-[10px] font-semibold text-muted-600">
+                        <Layers size={9} aria-hidden="true" />
+                        Saves to {resolveGroupLabel(product)}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCompare(product)}
+                      disabled={alreadySaved || groupFull}
+                      aria-label={
+                        alreadySaved
+                          ? `${product.name} is already saved`
+                          : `Add ${product.name} to compare`
+                      }
+                      className="mt-2 w-full rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:bg-muted-100 disabled:text-muted-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      {alreadySaved
+                        ? 'Saved'
+                        : groupFull
+                          ? `${MAX_COMPARE_ITEMS} max`
+                          : '+ Compare'}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            isSearching && (
+              <p className="mt-4 text-xs text-muted-500">Searching&hellip;</p>
+            )
           )}
         </div>
       )}
 
+      {otherGroups.length > 0 && (
+        <CompareGroupRail
+          groups={groups}
+          activeCategoryId={activeGroup?.categoryId ?? ''}
+          totalSaved={items.length}
+          onActivate={handleActivateGroup}
+          onRemove={handleRemove}
+        />
+      )}
+
       <div className="overflow-x-auto rounded-2xl border border-muted-100 bg-white shadow-sm">
         <table className="w-full min-w-[600px]">
+          <caption className="sr-only">
+            {`Comparing ${comparing.length} ${activeLabel} products side by side`}
+          </caption>
           <thead>
             <tr className="border-b border-muted-100">
-              <th className="w-40 p-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-500">
+              <th
+                scope="col"
+                className="w-40 p-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-500"
+              >
                 Feature
               </th>
-              {items.map((item) => (
-                <th key={item.id} className="p-4 text-center">
+              {comparing.map((item) => (
+                <th key={item.id} scope="col" className="p-4 text-center">
                   <div className="relative">
                     <button
-                      onClick={() => removeItem(item.id)}
-                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-muted-100 text-muted-500 transition-colors hover:bg-danger/10 hover:text-danger"
+                      type="button"
+                      onClick={() => handleRemove(item.id)}
+                      aria-label={`Remove ${item.name} from compare`}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-muted-100 text-muted-500 transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
-                      <X size={12} />
+                      <X size={12} aria-hidden="true" />
                     </button>
                     <ImageWithFallback
                       src={item.image}
@@ -443,93 +560,111 @@ export default function ComparePage({
                       height={120}
                       className="mx-auto h-24 w-24 object-contain"
                     />
+                    <span className="mt-2 block text-xs font-medium text-secondary-700">
+                      {item.name}
+                    </span>
                   </div>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {comparisonFields.map((field, index) => (
-              <tr
-                key={field.key}
-                className={index % 2 === 0 ? 'bg-muted-50/50' : ''}
-              >
-                <td className="p-4 text-sm font-semibold text-secondary-700">
-                  {field.label}
-                </td>
-                {items.map((item) => (
-                  <td key={item.id} className="p-4 text-center">
-                    {field.key === 'image' ? null : field.key === 'name' ? (
-                      <Link
-                        href={`/products/${item.slug}`}
-                        className="text-sm font-medium text-primary hover:underline"
-                      >
-                        {item.name}
-                      </Link>
-                    ) : field.key === 'price' ? (
-                      <div>
-                        {item.discountPrice ? (
-                          <>
-                            <span className="text-sm font-bold text-danger">
-                              Rs. {item.discountPrice.toLocaleString()}
-                            </span>
-                            <span className="ml-2 text-xs text-muted-400 line-through">
-                              Rs. {item.price.toLocaleString()}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-sm font-bold text-secondary-800">
-                            Rs. {item.price.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                    ) : field.key === 'rating' ? (
-                      <div className="flex items-center justify-center gap-1">
-                        <Star size={14} className="fill-warning text-warning" />
-                        <span className="text-sm font-medium text-secondary-700">
-                          {item.rating > 0 ? item.rating.toFixed(1) : 'N/A'}
-                        </span>
-                        {item.reviewCount > 0 && (
-                          <span className="text-xs text-muted-400">
-                            ({item.reviewCount})
-                          </span>
-                        )}
-                      </div>
-                    ) : field.key === 'stock' ? (
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                          item.inStock
-                            ? 'bg-success/10 text-success'
-                            : 'bg-danger/10 text-danger'
-                        }`}
-                      >
-                        {item.inStock ? 'In Stock' : 'Out of Stock'}
-                      </span>
-                    ) : field.key === 'category' ? (
-                      <span className="text-sm text-secondary-600">
-                        {item.category || 'N/A'}
-                      </span>
-                    ) : field.key === 'brand' ? (
-                      <span className="text-sm text-secondary-600">
-                        {item.brand || 'N/A'}
-                      </span>
-                    ) : null}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            <ComparisonRow label="Name" comparing={comparing}>
+              {(item) => (
+                <Link
+                  href={`/products/${item.slug}`}
+                  className="text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  {item.name}
+                </Link>
+              )}
+            </ComparisonRow>
+
+            <ComparisonRow label="Price" comparing={comparing} striped>
+              {(item) =>
+                item.discountPrice ? (
+                  <div>
+                    <span className="text-sm font-bold text-danger">
+                      Rs. {item.discountPrice.toLocaleString()}
+                    </span>
+                    <span className="ml-2 text-xs text-muted-400 line-through">
+                      Rs. {item.price.toLocaleString()}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-sm font-bold text-secondary-800">
+                    Rs. {item.price.toLocaleString()}
+                  </span>
+                )
+              }
+            </ComparisonRow>
+
+            <ComparisonRow label="Rating" comparing={comparing}>
+              {(item) => (
+                <div className="flex items-center justify-center gap-1">
+                  <Star
+                    size={14}
+                    className="fill-warning text-warning"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-medium text-secondary-700">
+                    {item.rating > 0 ? item.rating.toFixed(1) : 'N/A'}
+                  </span>
+                  {item.reviewCount > 0 && (
+                    <span className="text-xs text-muted-400">
+                      ({item.reviewCount})
+                    </span>
+                  )}
+                </div>
+              )}
+            </ComparisonRow>
+
+            <ComparisonRow label="Category" comparing={comparing} striped>
+              {(item) => (
+                <span className="text-sm text-secondary-600">
+                  {resolveGroupLabel(item)}
+                </span>
+              )}
+            </ComparisonRow>
+
+            <ComparisonRow label="Brand" comparing={comparing}>
+              {(item) => (
+                <span className="text-sm text-secondary-600">
+                  {item.brand || 'N/A'}
+                </span>
+              )}
+            </ComparisonRow>
+
+            <ComparisonRow label="Stock Status" comparing={comparing} striped>
+              {(item) => (
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                    item.inStock
+                      ? 'bg-success/10 text-success'
+                      : 'bg-danger/10 text-danger'
+                  }`}
+                >
+                  {item.inStock ? 'In Stock' : 'Out of Stock'}
+                </span>
+              )}
+            </ComparisonRow>
+
             <tr className="border-t border-muted-100">
-              <td className="p-4 text-sm font-semibold text-secondary-700">
+              <th
+                scope="row"
+                className="p-4 text-left text-sm font-semibold text-secondary-700"
+              >
                 Action
-              </td>
-              {items.map((item) => (
+              </th>
+              {comparing.map((item) => (
                 <td key={item.id} className="p-4 text-center">
                   <button
+                    type="button"
                     onClick={() => handleAddToCart(item)}
                     disabled={!item.inStock}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
-                    <ShoppingCart size={14} />
+                    <ShoppingCart size={14} aria-hidden="true" />
                     Add to Cart
                   </button>
                 </td>
@@ -539,31 +674,73 @@ export default function ComparePage({
         </table>
       </div>
 
-      {/* Limit notice: announced politely rather than as an alert, because it
-          reports a state the user can see on the page. */}
-      {limitNotice && (
-        <p
-          role="status"
-          className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-xl bg-secondary-800 px-4 py-3 text-sm font-medium text-white shadow-lg"
-        >
-          You can compare up to {MAX_COMPARE_ITEMS} products. Remove one to add
-          another.
+      {/* A single-product group has nothing to compare, so say so rather than
+          presenting a one-column table that looks broken. */}
+      {comparing.length === 1 && (
+        <p className="mt-4 text-center text-xs text-muted-500">
+          Add another {activeLabel} product to see them side by side.
         </p>
       )}
 
-      <CompareCategoryDialog
-        open={pendingCategorySwitch !== null}
-        activeCategory={categoryLabel(
-          items[0]?.category || '',
-          pendingCategorySwitch?.activeCategoryId || ''
-        )}
-        incomingCategory={categoryLabel(
-          pendingCategorySwitch?.product.category || '',
-          pendingCategorySwitch?.product.categoryId || ''
-        )}
-        onClose={() => setPendingCategorySwitch(null)}
-        onStartOver={handleStartOverWithPending}
-      />
+      {/* Announced politely rather than as an alert: it reports a state the user
+          can already see on the page. */}
+      {notice && (
+        <p
+          role="status"
+          className="fixed left-1/2 z-[60] w-[min(90vw,28rem)] -translate-x-1/2 rounded-xl bg-secondary-800 px-4 py-3 text-center text-sm font-medium text-white shadow-lg bottom-[calc(72px+env(safe-area-inset-bottom))] lg:bottom-4"
+        >
+          {notice.message}
+        </p>
+      )}
+
+      {/* Keyboard users need a way back to the saved groups once the table has
+          pushed the rail off screen. */}
+      {otherGroups.length > 0 && (
+        <p className="mt-6 text-center text-xs text-muted-500">
+          {roomInActiveGroup} more {activeLabel} product
+          {roomInActiveGroup === 1 ? '' : 's'} can be added to this table.{' '}
+          <a
+            href="#compare-rail-heading"
+            className="font-medium text-primary underline underline-offset-2"
+          >
+            Back to saved categories
+          </a>
+        </p>
+      )}
     </div>
+  );
+}
+
+/**
+ * One labelled row of the comparison table.
+ *
+ * Extracted so adding a specification row is a single entry rather than another
+ * nested ternary inside a 200-line `<tbody>`.
+ */
+function ComparisonRow({
+  label,
+  comparing,
+  striped = false,
+  children,
+}: {
+  label: string;
+  comparing: readonly CompareItem[];
+  striped?: boolean;
+  children: (item: CompareItem) => ReactNode;
+}) {
+  return (
+    <tr className={striped ? 'bg-muted-50/50' : undefined}>
+      <th
+        scope="row"
+        className="p-4 text-left text-sm font-semibold text-secondary-700"
+      >
+        {label}
+      </th>
+      {comparing.map((item) => (
+        <td key={item.id} className="p-4 text-center">
+          {children(item)}
+        </td>
+      ))}
+    </tr>
   );
 }

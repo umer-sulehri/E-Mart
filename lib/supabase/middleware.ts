@@ -1,5 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  AUTH_COOKIE_OPTIONS,
+  SUPABASE_COOKIE_OPTIONS,
+  USER_ROLE_COOKIE_MAX_AGE,
+} from "./cookie-options";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -8,6 +13,7 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: SUPABASE_COOKIE_OPTIONS,
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -19,8 +25,11 @@ export async function updateSession(request: NextRequest) {
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value }) =>
-            supabaseResponse.cookies.set(name, value)
+          // Forward the library's options so a refreshed session cookie keeps
+          // its Secure / SameSite / HttpOnly flags instead of falling back to
+          // Next.js defaults.
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
           );
         },
       },
@@ -38,11 +47,8 @@ export async function updateSession(request: NextRequest) {
 
     if (profile) {
       supabaseResponse.cookies.set("sb-user-role", profile.role, {
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60,
+        ...AUTH_COOKIE_OPTIONS,
+        maxAge: USER_ROLE_COOKIE_MAX_AGE,
       });
     }
   } else {

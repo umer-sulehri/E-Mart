@@ -1,24 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
+    const ratingParam = Number(searchParams.get("rating") || 0);
+    const rating =
+      Number.isInteger(ratingParam) && ratingParam >= 1 && ratingParam <= 5
+        ? ratingParam
+        : 0;
 
-    const { data, error, count } = await supabase
+    // Public read: every submitted review is visible to guests, buyers,
+    // sellers and admins. Only explicitly rejected reviews stay hidden.
+    let query = supabase
       .from("reviews")
       .select(
         "*, products(id, name, slug, images), profiles(id, first_name, last_name, profile_image_url)",
         { count: "exact" }
       )
-      // Public read: every submitted review is visible to guests, buyers,
-      // sellers and admins. Only explicitly rejected reviews stay hidden.
-      .in("status", ["approved", "pending"])
+      .in("status", ["approved", "pending"]);
+
+    // Rating is filtered here rather than in the browser: filtering the current
+    // page in the UI can only match the reviews that happen to be on it, so the
+    // other pages of the same filter would be unreachable.
+    if (rating) {
+      query = query.eq("rating", rating);
+    }
+
+    const { data, error, count } = await query
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -53,17 +66,26 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // The headline average and count describe every visible review, not just
+    // the ones on this page or matching the rating filter, so the summary does
+    // not swing as the user pages around.
+    const { data: statRows } = await supabase
+      .from("reviews")
+      .select("rating")
+      .in("status", ["approved", "pending"]);
+
+    const ratings = (statRows || []).map((row) => Number(row.rating) || 0);
+    const totalReviews = ratings.length;
+    const overallRating =
+      totalReviews > 0
+        ? Math.round((ratings.reduce((sum, value) => sum + value, 0) / totalReviews) * 10) / 10
+        : 0;
+
     return NextResponse.json({
       success: true,
       data: reviews,
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
+      stats: { totalReviews, overallRating },
     });
   } catch (error) {
     return NextResponse.json(

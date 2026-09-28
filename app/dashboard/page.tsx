@@ -220,21 +220,21 @@ export default function DashboardPage() {
                     key={order.id}
                     className="border-b border-muted-50 transition-colors hover:bg-muted-50/50"
                   >
-                    <td className="px-6 py-4 font-medium text-secondary-800">
+                    <td className="px-3 py-4 sm:px-6 font-medium text-secondary-800">
                       {order.orderNumber}
                     </td>
-                    <td className="px-6 py-4 text-muted-600">
+                    <td className="px-3 py-4 sm:px-6 text-muted-600">
                       {formatDate(order.createdAt)}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4 sm:px-6">
                       <Badge variant={statusVariant[order.status] ?? 'warning'}>
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1).replace(/_/g, ' ')}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 text-muted-600">
+                    <td className="px-3 py-4 sm:px-6 text-muted-600">
                       {order.items?.length ?? 0} items
                     </td>
-                    <td className="px-6 py-4 text-right font-semibold text-secondary-800">
+                    <td className="px-3 py-4 sm:px-6 text-right font-semibold text-secondary-800">
                       {formatPrice(order.total)}
                     </td>
                   </tr>

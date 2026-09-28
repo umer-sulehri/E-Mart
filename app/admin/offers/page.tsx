@@ -517,18 +517,26 @@ function Toggle({
       aria-checked={checked}
       disabled={loading}
       onClick={() => onChange(!checked)}
+      // 44px hit area (p-2 + 24px track) so the switch is tappable on a phone
+      // without the visible track growing to 44px.
       className={cn(
-        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-        checked ? 'bg-primary' : 'bg-muted-300',
+        'flex h-11 w-[60px] shrink-0 cursor-pointer items-center p-2',
         loading && 'opacity-50'
       )}
     >
       <span
         className={cn(
-          'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-          checked ? 'translate-x-6' : 'translate-x-1'
+          'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+          checked ? 'bg-primary' : 'bg-muted-300'
         )}
-      />
+      >
+        <span
+          className={cn(
+            'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+            checked ? 'translate-x-6' : 'translate-x-1'
+          )}
+        />
+      </span>
     </button>
   );
 }

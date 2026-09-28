@@ -57,8 +57,10 @@ export default function ImpersonationBanner() {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[90] border-t border-warning/50 bg-warning/10 px-4 py-2 shadow-lg backdrop-blur">
-      <div className="container mx-auto flex flex-wrap items-center justify-center gap-3 text-sm text-secondary-800 sm:justify-between">
+    // Stacked above the mobile bottom nav (z-50) rather than on top of it, so
+    // navigation stays usable while an admin is impersonating an account.
+    <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-warning/50 bg-warning/10 px-4 py-2 pb-[calc(0.5rem+56px+env(safe-area-inset-bottom))] shadow-lg backdrop-blur lg:pb-2">
+      <div className="container mx-auto flex flex-wrap items-center justify-center gap-3 py-1 text-sm text-secondary-800 sm:justify-between">
         <span className="inline-flex items-center gap-2">
           <Eye className="h-4 w-4 text-warning" />
           You are viewing the site as <strong>{info.name}</strong> ({info.role}).

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
 import {
   LayoutDashboard,
   Users,
@@ -64,6 +65,11 @@ export default function AdminSidebar() {
   const isActive = (href: string) =>
     href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
 
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+
+  useBodyScrollLock(mobileOpen);
+  useEscapeKey(mobileOpen, closeMobile);
+
   const handleLogout = async () => {
     try {
       await fetch('/api/v1/auth/logout', { method: 'POST' });
@@ -74,7 +80,7 @@ export default function AdminSidebar() {
   };
 
   const sidebarContent = (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <div className="flex items-center gap-3 border-b border-muted-200 p-6">
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-lg font-bold text-white">
           <Shield className="h-6 w-6" />
@@ -137,7 +143,10 @@ export default function AdminSidebar() {
     <>
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-md lg:hidden"
+        aria-label="Open navigation menu"
+        aria-expanded={mobileOpen}
+        aria-controls="admin-sidebar"
+        className="fixed left-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-lg bg-white shadow-md lg:hidden"
       >
         <Menu className="h-5 w-5 text-secondary-800" />
       </button>
@@ -150,12 +159,15 @@ export default function AdminSidebar() {
       )}
 
       <aside
+        id="admin-sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-lg transition-transform lg:hidden',
+          // The nav is far taller than a phone viewport, so the panel itself
+          // must scroll — otherwise the lower links and Logout are unreachable.
+          'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col overflow-y-auto overscroll-contain bg-white pb-[env(safe-area-inset-bottom)] shadow-lg transition-transform lg:hidden',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex items-center justify-between border-b border-muted-200 px-6 py-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-muted-200 bg-white px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
             <span className="font-heading text-lg font-bold text-secondary-800">
@@ -164,9 +176,10 @@ export default function AdminSidebar() {
           </Link>
           <button
             onClick={() => setMobileOpen(false)}
-            className="rounded-lg p-1 hover:bg-muted-100"
+            aria-label="Close navigation menu"
+            className="-mr-2 rounded-lg p-2 text-muted-600 transition-colors hover:bg-muted-100"
           >
-            <X className="h-5 w-5 text-muted-600" />
+            <X className="h-5 w-5" />
           </button>
         </div>
         {sidebarContent}

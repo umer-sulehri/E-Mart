@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import {
   Search,
@@ -8,16 +8,16 @@ import {
   UserX,
   UserCheck,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   Users,
   LogIn,
 } from 'lucide-react';
-import { cn, formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
+import Pagination from '@/components/ui/Pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import type { ProfileRow } from '@/types/supabase';
 
 type UserRole = 'customer' | 'seller' | 'admin';
@@ -45,11 +45,18 @@ function SkeletonRow() {
 }
 
 export default function AdminUsersPage() {
+  return (
+    <Suspense>
+      <AdminUsersContent />
+    </Suspense>
+  );
+}
+
+function AdminUsersContent() {
   const [users, setUsers] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
@@ -58,6 +65,10 @@ export default function AdminUsersPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const itemsPerPage = 10;
+
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [search, roleFilter],
+  });
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -88,13 +99,18 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, [fetchUsers]);
 
+  // Debounced commit: the page reset is handled by `usePageParam` reacting to
+  // `search` changing, so it is not duplicated here.
   const handleSearchChange = (value: string) => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setSearch(value);
-      setCurrentPage(1);
-    }, 400);
+    debounceTimer.current = setTimeout(() => setSearch(value), 400);
   };
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
 
   const handleBlock = async (userId: string) => {
     setActionLoading(userId);
@@ -222,9 +238,6 @@ export default function AdminUsersPage() {
 
   const getInitials = (f: string, l: string) => `${(f ?? '')[0] ?? ''}${(l ?? '')[0] ?? ''}`.toUpperCase();
 
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-
   return (
     <div className="space-y-6">
       <div>
@@ -247,7 +260,8 @@ export default function AdminUsersPage() {
             </div>
             <select
               value={roleFilter}
-              onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              aria-label="Filter by role"
               className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
             >
               <option value="all">All Roles</option>
@@ -347,7 +361,7 @@ export default function AdminUsersPage() {
                       </tr>
                       {expandedUser === user.id && (
                         <tr>
-                          <td colSpan={5} className="bg-muted-50 px-6 py-4">
+                          <td colSpan={5} className="bg-muted-50 px-3 py-4 sm:px-6">
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                               <div>
                                 <p className="text-xs font-medium text-muted-500">Full Name</p>
@@ -384,47 +398,16 @@ export default function AdminUsersPage() {
           </table>
         </div>
 
-        {totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-muted-500">
-              {totalItems > 0 ? `Showing ${startItem} to ${endItem} of ${totalItems}` : 'No results'}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const p = currentPage <= 3 ? i + 1 : currentPage + i - 2;
-                if (p < 1 || p > totalPages) return null;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setCurrentPage(p)}
-                    className={cn(
-                      'h-8 w-8 rounded-lg text-sm font-medium transition-colors',
-                      currentPage === p
-                        ? 'bg-primary text-white'
-                        : 'border border-muted-200 text-muted-600 hover:bg-muted-50'
-                    )}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          variant="table"
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          itemLabel="users"
+          className="mt-4"
+        />
       </div>
 
       <ConfirmDialog

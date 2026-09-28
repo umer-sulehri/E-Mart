@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, type FormEvent } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Store, Star, Package, ChevronRight, Loader2, Search } from 'lucide-react';
 import Breadcrumb from '@/components/ui/Breadcrumb';
-import Pagination from '@/components/product/Pagination';
+import Pagination from '@/components/ui/Pagination';
 import Input from '@/components/ui/Input';
+import { usePageParam } from '@/hooks/usePageParam';
 import { tryParseJson } from '@/lib/api';
 
 const ITEMS_PER_PAGE = 12;
@@ -23,12 +25,33 @@ interface Seller {
 }
 
 export default function SellersPage() {
+  // `usePageParam` reads `useSearchParams`, which opts the route out of static
+  // rendering and must sit behind a Suspense boundary.
+  return (
+    <Suspense>
+      <SellersContent />
+    </Suspense>
+  );
+}
+
+function SellersContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  // `?q=` is the committed term and the single source of truth for the fetch;
+  // `searchInput` is only what is currently in the box. Keeping them apart is
+  // what makes the search shareable without firing a request per keystroke.
   const [searchInput, setSearchInput] = useState('');
+  const search = searchParams.get('q') ?? '';
+
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [search],
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -45,18 +68,25 @@ export default function SellersPage() {
         const json = await tryParseJson<{
           success: boolean;
           data?: Seller[];
-          meta?: { totalPages: number };
+          meta?: { totalPages: number; totalItems: number };
         }>(res);
         if (!cancelled) {
           if (json?.success) {
             setSellers(json.data || []);
             setTotalPages(json.meta?.totalPages || 1);
+            setTotalItems(json.meta?.totalItems || 0);
           } else {
             setSellers([]);
+            setTotalItems(0);
+            setTotalPages(1);
           }
         }
       } catch {
-        if (!cancelled) setSellers([]);
+        if (!cancelled) {
+          setSellers([]);
+          setTotalItems(0);
+          setTotalPages(1);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -65,6 +95,16 @@ export default function SellersPage() {
     fetchSellers();
     return () => { cancelled = true; };
   }, [currentPage, search]);
+
+  const handleSearch = (event: FormEvent) => {
+    event.preventDefault();
+    const params = new URLSearchParams(searchParams.toString());
+    const term = searchInput.trim();
+    if (term) params.set('q', term);
+    else params.delete('q');
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <>
@@ -89,11 +129,8 @@ export default function SellersPage() {
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
           <form
             className="mx-auto mb-8 max-w-xl"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setCurrentPage(1);
-              setSearch(searchInput.trim());
-            }}
+            onSubmit={handleSearch}
+            role="search"
           >
             <Input
               icon={<Search className="h-5 w-5 text-muted-400" />}
@@ -169,13 +206,15 @@ export default function SellersPage() {
               </div>
 
               {totalPages > 1 && (
-                <div className="mt-8">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                  />
-                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={ITEMS_PER_PAGE}
+                  itemLabel="sellers"
+                  scrollToTop={false}
+                />
               )}
             </>
           )}

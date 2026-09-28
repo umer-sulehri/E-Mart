@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeOrTerm } from "@/lib/search-safe";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
+    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
 
     let query = supabase
       .from("reviews")
@@ -54,6 +56,9 @@ export async function GET(request: NextRequest) {
     }
 
     query = query.order("created_at", { ascending: false });
+
+    // Ranged after every filter, so `count` describes the filtered set.
+    query = query.range(offset, offset + limit - 1);
 
     const { data: reviews, error, count } = await query;
 
@@ -83,12 +88,24 @@ export async function GET(request: NextRequest) {
       user_email: r.profiles?.email,
     }));
 
+    // Moderation counters must cover every review, not the twenty on screen.
+    // Derived from a status-only projection so the cards stay correct once the
+    // table is paginated, and independent of `status` / `search` so they do not
+    // shift around as the admin types or switches tabs.
+    const { data: statusRows } = await supabase.from("reviews").select("status");
+    const stats = { total: 0, pending: 0, approved: 0, flagged: 0, rejected: 0 };
+    for (const row of statusRows || []) {
+      stats.total += 1;
+      if (row.status in stats) {
+        stats[row.status as keyof typeof stats] += 1;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: normalized,
-      meta: {
-        totalItems: count || 0,
-      },
+      stats,
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(

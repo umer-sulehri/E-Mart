@@ -309,7 +309,7 @@ function RoleLoginForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-[38px] text-muted-400 transition-colors hover:text-secondary"
+            aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-1 top-[34px] flex h-9 w-9 items-center justify-center rounded-md text-muted-400 transition-colors hover:bg-muted-100 hover:text-secondary"
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>

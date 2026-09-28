@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
 import {
   X,
   Apple,
@@ -60,18 +61,16 @@ interface MobileNavProps {
 export default function MobileNav({ open, onClose }: MobileNavProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  // Reference-counted: the cart drawer can be opened from inside this menu, and
+  // a plain body.overflow reset on unmount would re-enable scrolling behind it.
+  useBodyScrollLock(open);
+  useEscapeKey(open, onClose);
+
+  // A new sheet should start collapsed rather than inheriting the last
+  // category the user drilled into.
   useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [open, onClose]);
+    if (open) setExpanded(null);
+  }, [open]);
 
   return (
     <>
@@ -93,11 +92,11 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           open ? 'translate-x-0' : '-translate-x-full invisible'
         )}
       >
-        <div className="flex items-center justify-between p-4 border-b border-muted-200">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-muted-200 bg-white p-4">
           <h2 className="text-lg font-bold text-secondary">E-Mart Menu</h2>
           <button
             onClick={onClose}
-            className="p-2 -mr-2 rounded-lg hover:bg-muted-100 hover:text-primary transition-colors"
+            className="-mr-2 rounded-lg p-2.5 text-muted transition-colors hover:bg-muted-100 hover:text-primary"
             aria-label="Close menu"
           >
             <X className="h-6 w-6" />

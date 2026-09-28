@@ -130,7 +130,7 @@ export default function Footer() {
                   <a
                     key={social.label}
                     href={social.href}
-                    className="flex h-9 w-9 items-center justify-center rounded border border-muted-100 text-muted hover:bg-muted-100 hover:text-dark transition-colors"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-muted-100 text-muted hover:bg-muted-100 hover:text-dark transition-colors"
                     aria-label={social.label}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -228,13 +228,15 @@ export default function Footer() {
         </div>
       </div>
 
-      <div id="footer-bottom" className="border-t border-muted-200 mt-4">
+      {/* pb clears the fixed mobile bottom nav so the credit line and
+          cookie-settings link are never trapped behind it. */}
+      <div id="footer-bottom" className="border-t border-muted-200 mt-4 pb-[calc(56px+env(safe-area-inset-bottom))] lg:pb-0">
         <div className="container mx-auto px-4 sm:px-6 lg:px-12 py-5">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-muted">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-muted text-center md:text-left">
             <div className="copyright">
               &copy; {new Date().getFullYear()} E-Mart. All rights reserved.
             </div>
-            <div className="credit-link text-start md:text-end">
+            <div className="credit-link text-center md:text-end">
               HTML Template by <a href="https://templatesjungle.com/" className="hover:text-dark">TemplatesJungle</a> Distributed By <a href="https://themewagon.com" className="hover:text-dark">ThemeWagon</a>
             </div>
           </div>

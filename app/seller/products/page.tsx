@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useRouter } from 'next/navigation';
@@ -10,14 +10,14 @@ import {
   Search,
   Edit,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   Package,
 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
+import Pagination from '@/components/ui/Pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ProductQuotaBar from '@/components/seller/ProductQuotaBar';
 import { useProductQuota } from '@/hooks/useProductQuota';
@@ -32,29 +32,36 @@ const statusVariant: Record<string, 'success' | 'warning' | 'default'> = {
 function SkeletonRow() {
   return (
     <tr className="border-b border-muted-50">
-      <td className="px-6 py-4"><div className="h-4 w-4 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4">
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-4 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 animate-pulse rounded-lg bg-muted-200" />
           <div className="h-4 w-32 animate-pulse rounded bg-muted-200" />
         </div>
       </td>
-      <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-10 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-10 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
     </tr>
   );
 }
 
 export default function SellerProductsPage() {
+  return (
+    <Suspense>
+      <SellerProductsContent />
+    </Suspense>
+  );
+}
+
+function SellerProductsContent() {
   const router = useRouter();
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -63,6 +70,10 @@ export default function SellerProductsPage() {
   const ITEMS_PER_PAGE = 10;
   const { quota, loading: quotaLoading } = useProductQuota();
   const quotaExhausted = quota?.exhausted === true;
+
+  const { page, setPage } = usePageParam({
+    resetOn: [search, statusFilter],
+  });
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -95,11 +106,14 @@ export default function SellerProductsPage() {
 
   const handleSearchChange = (value: string) => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setSearch(value);
-      setPage(1);
-    }, 400);
+    debounceTimer.current = setTimeout(() => setSearch(value), 400);
   };
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
 
   const handleDelete = async (id: string) => {
     setDeleting(id);
@@ -118,9 +132,6 @@ export default function SellerProductsPage() {
       setDeleting(null);
     }
   };
-
-  const startItem = (page - 1) * ITEMS_PER_PAGE + 1;
-  const endItem = Math.min(page * ITEMS_PER_PAGE, totalItems);
 
   return (
     <div className="space-y-6">
@@ -208,7 +219,7 @@ export default function SellerProductsPage() {
                     )
                   : products.map((product) => (
                       <tr key={product.id} className="border-b border-muted-50 transition-colors hover:bg-muted-50/50">
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-4 sm:px-6">
                           <div className="flex items-center gap-3">
                             <div className="dashboard-image-cell h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted-100">
                               {product.images?.[0] ? (
@@ -225,8 +236,8 @@ export default function SellerProductsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-muted-600">{product.sku}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-4 sm:px-6 text-muted-600">{product.sku}</td>
+                        <td className="px-3 py-4 sm:px-6">
                           <div>
                             {product.discount_price ? (
                               <>
@@ -238,17 +249,17 @@ export default function SellerProductsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-4 sm:px-6">
                           <span className={cn('font-medium', product.stock_quantity === 0 ? 'text-danger' : 'text-secondary-800')}>
                             {product.stock_quantity}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-4 sm:px-6">
                           <Badge variant={product.is_active ? 'success' : 'warning'}>
                             {product.is_active ? 'Active' : 'Inactive'}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-4 sm:px-6">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => router.push(`/seller/products/${product.id}/edit`)}
@@ -272,44 +283,17 @@ export default function SellerProductsPage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-muted-100 px-6 py-4">
-            <p className="text-sm text-muted-500">
-              {totalItems > 0 ? `Showing ${startItem} to ${endItem} of ${totalItems} products` : 'No results'}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const p = page <= 3 ? i + 1 : page + i - 2;
-                if (p < 1 || p > totalPages) return null;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={cn(
-                      'h-8 w-8 rounded-lg text-sm font-medium transition-colors',
-                      p === page
-                        ? 'bg-primary text-white'
-                        : 'text-muted-600 hover:bg-muted-50'
-                    )}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="border-t border-muted-100 px-3 py-4 sm:px-6">
+            <Pagination
+              variant="table"
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              itemLabel="products"
+              className="mt-0"
+            />
           </div>
         )}
       </div>

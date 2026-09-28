@@ -6,8 +6,11 @@ import { ThumbsUp, ChevronDown, PenLine, Loader2, Flag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StarRating from '@/components/ui/StarRating';
 import Button from '@/components/ui/Button';
+import Pagination from '@/components/ui/Pagination';
 import { formatDate, cn } from '@/lib/utils';
 import { tryParseJson } from '@/lib/api';
+
+const ITEMS_PER_PAGE = 10;
 
 export interface Review {
   id: string;
@@ -64,6 +67,8 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
     const [helpfulClicked, setHelpfulClicked] = React.useState<Set<string>>(new Set());
     const [reviews, setReviews] = React.useState<Review[]>([]);
     const [totalReviews, setTotalReviews] = React.useState(0);
+    const [page, setPage] = React.useState(1);
+    const [totalPages, setTotalPages] = React.useState(1);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
 
@@ -77,9 +82,16 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
       setError(null);
 
       try {
-        const sortParam = sortBy === 'helpful' ? 'newest' : sortBy;
+        // Sort and page both go to the server. Sorting the rows that came back
+        // would rank only the reviews that happen to be on the current page, and
+        // a fixed `page=1&limit=20` left every later review unreachable.
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: String(ITEMS_PER_PAGE),
+          sort: sortBy,
+        });
         const res = await fetch(
-          `/api/v1/products/${encodeURIComponent(productSlug)}/reviews?page=1&limit=20&sort=${sortParam}`,
+          `/api/v1/products/${encodeURIComponent(productSlug)}/reviews?${params.toString()}`,
           { cache: 'no-store' }
         );
 
@@ -102,7 +114,7 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
               } | null;
             }[];
           };
-          meta?: { totalItems?: number };
+          meta?: { totalItems?: number; totalPages?: number };
         }>(res);
 
         if (!res.ok || !json?.success || !json.data) {
@@ -129,11 +141,10 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
           createdAt: r.created_at ?? '',
         }));
 
-        if (sortBy === 'helpful') {
-          fetched.sort((a, b) => b.helpfulCount - a.helpfulCount);
-        }
-
+        // The order comes from the server (see the `sort=helpful` branch), so
+        // the rows are rendered as received rather than re-ranked locally.
         setReviews(fetched);
+        setTotalPages(json.meta?.totalPages || 1);
         setTotalReviews(json.meta?.totalItems || fetched.length);
         onReviewCountChange?.(json.meta?.totalItems || fetched.length);
       } catch (err: unknown) {
@@ -141,11 +152,21 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
       } finally {
         setLoading(false);
       }
-    }, [productSlug, sortBy, onReviewCountChange]);
+    }, [productSlug, sortBy, page, onReviewCountChange]);
 
     React.useEffect(() => {
       fetchReviews();
     }, [fetchReviews]);
+
+    // A new sort makes the current page meaningless, so start over at page 1
+    // instead of asking the API for page 4 of a differently-ordered result set.
+    const selectSort = (option: SortOption) => {
+      setShowSortDropdown(false);
+      setSortBy((previous) => {
+        if (option !== previous) setPage(1);
+        return option;
+      });
+    };
 
     // Re-fetch when a sibling notifies us that a review was just submitted.
     React.useEffect(() => {
@@ -242,10 +263,7 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
                       (option) => (
                         <button
                           key={option}
-                          onClick={() => {
-                            setSortBy(option);
-                            setShowSortDropdown(false);
-                          }}
+                          onClick={() => selectSort(option)}
                           className={cn(
                             'flex w-full items-center px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted-50',
                             sortBy === option && 'font-medium text-primary'
@@ -376,6 +394,18 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
               </div>
             ))}
           </div>
+        )}
+
+        {!loading && !error && totalPages > 1 && (
+          <Pagination
+            className="pt-2"
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalItems={totalReviews}
+            itemsPerPage={ITEMS_PER_PAGE}
+            itemLabel="reviews"
+          />
         )}
       </div>
     );

@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Search } from 'lucide-react';
-import { cn, formatPrice, formatDate } from '@/lib/utils';
+import { formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
+import Pagination from '@/components/ui/Pagination';
+import { usePageParam } from '@/hooks/usePageParam';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { OrderRow } from '@/types/supabase';
+
+const ITEMS_PER_PAGE = 12;
 
 type OrderStatusType = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -35,22 +40,36 @@ function SkeletonRow() {
 }
 
 export default function AdminOrdersPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <AdminOrdersContent />
+    </Suspense>
+  );
+}
+
+function AdminOrdersContent() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const search = useDebounce(searchInput, 400).trim();
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-  const itemsPerPage = 12;
+
+  // A new search term or status makes the current page meaningless, so both
+  // reset to page 1 rather than leaving the user on page 4 of a new result set.
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [search, statusFilter],
+    totalPages,
+  });
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.set('page', String(currentPage));
-      params.set('limit', String(itemsPerPage));
+      params.set('limit', String(ITEMS_PER_PAGE));
       if (search) params.set('search', search);
       if (statusFilter !== 'all') params.set('status', statusFilter);
 
@@ -75,11 +94,7 @@ export default function AdminOrdersPage() {
   }, [fetchOrders]);
 
   const handleSearchChange = (value: string) => {
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setSearch(value);
-      setCurrentPage(1);
-    }, 400);
+    setSearchInput(value);
   };
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatusType) => {
@@ -102,9 +117,6 @@ export default function AdminOrdersPage() {
       toast.error('Failed to update status');
     }
   };
-
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
     <div className="space-y-6">
@@ -129,7 +141,7 @@ export default function AdminOrdersPage() {
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => setStatusFilter(e.target.value)}
             className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
           >
             <option value="all">All Status</option>
@@ -206,44 +218,17 @@ export default function AdminOrdersPage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-muted-500">
-              {totalItems > 0 ? `Showing ${startItem} to ${endItem} of ${totalItems}` : 'No results'}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-              >
-                ← Prev
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const p = currentPage <= 3 ? i + 1 : currentPage + i - 2;
-                if (p < 1 || p > totalPages) return null;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setCurrentPage(p)}
-                    className={cn(
-                      'h-8 w-8 rounded-lg text-sm font-medium transition-colors',
-                      currentPage === p
-                        ? 'bg-primary text-white'
-                        : 'border border-muted-200 text-muted-600 hover:bg-muted-50'
-                    )}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-              >
-                Next →
-              </button>
-            </div>
+          <div className="border-t border-muted-100 px-3 py-4 sm:px-6">
+            <Pagination
+              variant="table"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              itemLabel="orders"
+              className="mt-0"
+            />
           </div>
         )}
       </div>

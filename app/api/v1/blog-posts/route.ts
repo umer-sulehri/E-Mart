@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
+import { safeOrTerm } from "@/lib/search-safe";
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 10 });
     const category = searchParams.get("category") || "";
-    const offset = (page - 1) * limit;
+    const search = (searchParams.get("search") || "").trim();
 
     let query = supabase
       .from("blog_posts")
@@ -21,6 +22,15 @@ export async function GET(request: NextRequest) {
       query = query.eq("category", category);
     }
 
+    // Search runs here rather than in the browser: filtering the current page
+    // client-side can only ever match the posts that happen to be on it, so
+    // results would silently disappear on later pages.
+    if (search) {
+      const escaped = safeOrTerm(search);
+      query = query.or(`title.ilike.%${escaped}%,excerpt.ilike.%${escaped}%`);
+    }
+
+    // Ranged after every filter, so `count` describes the same set the rows do.
     query = query.range(offset, offset + limit - 1);
 
     const { data, error, count } = await query;
@@ -54,14 +64,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: normalized,
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(

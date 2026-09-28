@@ -27,13 +27,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      {/* Anchored bottom-centre on phones: `top-right` lands on the sticky
+          header, and `gutter` clears the fixed mobile bottom nav. */}
       <Toaster
-        position="top-right"
+        position="bottom-center"
+        gutter={72}
+        containerStyle={{ padding: '0 8px' }}
         toastOptions={{
           duration: 3000,
           style: {
             background: '#364127',
             color: '#fff',
+            maxWidth: 'calc(100vw - 2rem)',
           },
           success: {
             iconTheme: {

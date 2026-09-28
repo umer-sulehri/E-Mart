@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import toast from 'react-hot-toast';
 import { computeCartMetrics } from '@/lib/cartMetrics';
+import { CART_STORAGE_KEY } from '@/lib/storage-keys';
 import type { CartItem } from '@/types';
 
 interface CartState {
@@ -257,7 +258,7 @@ export const useCartStore = create<CartState>()(
       uniqueItemCount: () => computeCartMetrics(get().items).uniqueItemCount,
     }),
     {
-      name: 'emart-cart',
+      name: CART_STORAGE_KEY,
     }
   )
 );

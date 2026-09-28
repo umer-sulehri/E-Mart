@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  AUTH_COOKIE_OPTIONS,
+  IMPERSONATION_COOKIE_PATH,
+  USER_ROLE_COOKIE_MAX_AGE,
+} from "@/lib/supabase/cookie-options";
 
 const RESTORE_COOKIE = "emart_admin_restore";
 const IMPERSONATE_COOKIE = "emart_impersonating";
-
-const COOKIE_OPTIONS = {
-  path: "/",
-  sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
-  maxAge: 60 * 60,
-};
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,8 +39,11 @@ export async function POST(request: NextRequest) {
       message: "Admin session restored",
     });
 
-    response.cookies.delete(RESTORE_COOKIE);
-    response.cookies.delete(IMPERSONATE_COOKIE);
+    // The path must match the one the cookies were written with, otherwise the
+    // browser treats these as different cookies and they survive logout.
+    const scopedOptions = { path: IMPERSONATION_COOKIE_PATH };
+    response.cookies.set(RESTORE_COOKIE, "", { ...scopedOptions, maxAge: 0 });
+    response.cookies.set(IMPERSONATE_COOKIE, "", { ...scopedOptions, maxAge: 0 });
 
     const {
       data: { user },
@@ -57,8 +58,8 @@ export async function POST(request: NextRequest) {
 
       if (profile?.role) {
         response.cookies.set("sb-user-role", profile.role, {
-          ...COOKIE_OPTIONS,
-          httpOnly: true,
+          ...AUTH_COOKIE_OPTIONS,
+          maxAge: USER_ROLE_COOKIE_MAX_AGE,
         });
       }
     }

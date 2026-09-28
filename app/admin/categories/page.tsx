@@ -284,13 +284,15 @@ export default function AdminCategoriesPage() {
                   </Badge>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between text-xs text-muted-500">
-                  <span>{cat.description || 'No description'}</span>
-                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button onClick={() => startEdit(cat)} className="rounded p-1 text-muted-500 hover:bg-muted-100 hover:text-primary">
+                <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-500">
+                  <span className="min-w-0 break-words">{cat.description || 'No description'}</span>
+                  {/* Mobile-first: the actions are always visible on touch
+                      devices, which have no hover to reveal them. */}
+                  <div className="flex shrink-0 items-center gap-1 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                    <button onClick={() => startEdit(cat)} aria-label={`Edit ${cat.name}`} className="rounded p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary">
                       <Edit3 className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => setDeleteTarget(cat)} className="rounded p-1 text-muted-500 hover:bg-danger-50 hover:text-danger">
+                    <button onClick={() => setDeleteTarget(cat)} aria-label={`Delete ${cat.name}`} className="rounded p-2 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>

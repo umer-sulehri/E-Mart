@@ -120,7 +120,7 @@ export default function SellerDebugPage() {
 
       <div className="divide-y divide-muted-50 rounded-xl bg-white shadow-sm">
         {results.map((r) => (
-          <div key={r.key} className="flex items-center gap-4 px-6 py-4">
+          <div key={r.key} className="flex items-center gap-4 px-3 py-4 sm:px-6">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-secondary-800">
                 {ENDPOINTS.find((e) => e.key === r.key)?.label}

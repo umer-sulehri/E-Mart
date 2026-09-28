@@ -11,6 +11,7 @@ import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useAddToCart } from '@/hooks/useAddToCart';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
 import { useCompareToggle } from '@/hooks/useCompareToggle';
+import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
 import { useAuthStore } from '@/store/authStore';
 import { formatPrice, calculateDiscount } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -51,21 +52,19 @@ export default function QuickViewModal({
     toggleWishlist,
     wishlistLoading,
   } = useAddToWishlist(product?.id ?? '', product?.name ?? '', { isAuthenticated });
-  const { isCompared, toggle: compareToggle, dialog: compareDialog } =
-    useCompareToggle();
+  const { isCompared, toggle: compareToggle } = useCompareToggle();
   const isInCompare = product ? isCompared(product.id) : false;
 
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // Reference-counted so opening QuickView from the cart drawer does not
+  // re-enable background scrolling behind the still-open drawer.
+  useBodyScrollLock(open);
+  useEscapeKey(open, onClose);
+
   useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    panelRef.current?.focus();
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose]);
+    if (open) panelRef.current?.focus();
+  }, [open]);
 
   if (!open || !product) return null;
 
@@ -76,28 +75,33 @@ export default function QuickViewModal({
     : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
       <div
         className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={onClose}
       />
+      {/* Height-capped shell: the panel itself scrolls, so the discount badge,
+          price and Add to Cart stay reachable on a 360px-tall phone. The close
+          button lives in a non-scrolling header for the same reason. */}
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={product.name}
         tabIndex={-1}
-        className="relative w-full max-w-3xl rounded-2xl bg-white shadow-xl outline-none"
+        className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl outline-none sm:max-w-3xl sm:max-h-[90vh] sm:rounded-2xl"
       >
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-muted-500 shadow-sm transition-colors hover:text-secondary"
-          aria-label="Close"
-        >
-          <X size={18} />
-        </button>
+        <div className="flex shrink-0 items-center justify-end px-3 pt-3 sm:absolute sm:right-4 sm:top-4 sm:z-10 sm:p-0">
+          <button
+            onClick={onClose}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-muted-500 shadow-sm transition-colors hover:bg-muted-100 hover:text-secondary"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2">
+        <div className="grid flex-1 grid-cols-1 gap-6 overflow-y-auto overscroll-contain p-6 pt-0 sm:grid-cols-2 sm:pt-6">
           {/* Image */}
           <div className="relative aspect-square overflow-hidden rounded-xl bg-muted-50">
             <ImageWithFallback
@@ -260,8 +264,6 @@ export default function QuickViewModal({
           </div>
         </div>
       </div>
-
-      {compareDialog}
     </div>
   );
 }

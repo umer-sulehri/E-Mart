@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
   Wallet,
@@ -8,11 +8,11 @@ import {
   XCircle,
   Clock,
   Banknote,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import Pagination from '@/components/ui/Pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 
 type PayoutStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -37,11 +37,17 @@ interface AdminPayoutSummary {
   pending_balance: number;
 }
 
+// The endpoint builds this with `buildPaginationMeta`, which is camelCase. It
+// used to be hand-declared as snake_case here, so every field read as
+// `undefined`, `totalPages` stayed 1 and the paginator never rendered — rows
+// past the first page were unreachable.
 interface AdminPayoutMeta {
-  current_page: number;
-  total_pages: number;
-  total_items: number;
-  has_next_page?: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 interface AdminPayoutsResponse {
@@ -53,6 +59,8 @@ interface AdminPayoutsResponse {
 }
 
 const VALID_STATUSES: PayoutStatus[] = ['pending', 'processing', 'completed', 'failed'];
+
+const ITEMS_PER_PAGE = 20;
 
 const statusStyles: Record<PayoutStatus, string> = {
   pending: 'bg-muted-100 text-muted-700',
@@ -96,21 +104,32 @@ function SkeletonBlock({ className = 'h-4 w-full' }: { className?: string }) {
 }
 
 export default function AdminPayoutsPage() {
+  return (
+    <Suspense>
+      <AdminPayoutsContent />
+    </Suspense>
+  );
+}
+
+function AdminPayoutsContent() {
   const [payouts, setPayouts] = useState<AdminPayout[]>([]);
   const [summary, setSummary] = useState<AdminPayoutSummary | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [statusFilter],
+  });
+
   const fetchPayouts = useCallback(async () => {
     setLoading(true);
     try {
       const query = new URLSearchParams({
         page: String(currentPage),
-        limit: '20',
+        limit: String(ITEMS_PER_PAGE),
       });
       if (statusFilter) query.set('status', statusFilter);
 
@@ -124,14 +143,20 @@ export default function AdminPayoutsPage() {
 
       setPayouts(data.data || []);
       setSummary(data.summary || null);
-      setTotalPages(data.meta?.total_pages || 1);
-      setTotalItems(data.meta?.total_items || 0);
+      const pages = data.meta?.totalPages || 1;
+      setTotalPages(pages);
+      setTotalItems(data.meta?.totalItems || 0);
+      // Marking a payout as completed or failed can drop it out of the status
+      // tab being viewed, which can leave the current page past the end.
+      if (currentPage > pages) {
+        setCurrentPage(pages);
+      }
     } catch {
       toast.error('Failed to load payouts. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [currentPage, statusFilter]);
+  }, [currentPage, statusFilter, setCurrentPage]);
 
   useEffect(() => {
     fetchPayouts();
@@ -238,7 +263,7 @@ export default function AdminPayoutsPage() {
                 ? Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i} className="border-b border-muted-50">
                       {Array.from({ length: 6 }).map((_, j) => (
-                        <td key={j} className="px-6 py-4">
+                        <td key={j} className="px-3 py-4 sm:px-6">
                           <SkeletonBlock />
                         </td>
                       ))}
@@ -260,22 +285,22 @@ export default function AdminPayoutsPage() {
                     )
                     : payouts.map((payout) => (
                         <tr key={payout.id} className="border-b border-muted-50 hover:bg-muted-25">
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-4 sm:px-6">
                             <p className="font-medium text-secondary-800">{payout.seller_name}</p>
                             {payout.seller_email && (
                               <p className="text-xs text-muted-400">{payout.seller_email}</p>
                             )}
                           </td>
-                          <td className="px-6 py-4 font-semibold text-secondary-800">
+                          <td className="px-3 py-4 sm:px-6 font-semibold text-secondary-800">
                             {formatCurrency(payout.amount)}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-4 sm:px-6">
                             <span className="flex items-center gap-1.5 text-muted-600">
                               <Banknote className="h-4 w-4" />
                               {payout.method}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-4 sm:px-6">
                             <Badge className={statusStyles[payout.status]}>
                               <span className="flex items-center gap-1">
                                 {statusIcon(payout.status)}
@@ -283,10 +308,10 @@ export default function AdminPayoutsPage() {
                               </span>
                             </Badge>
                           </td>
-                          <td className="px-6 py-4 text-muted-500">
+                          <td className="px-3 py-4 sm:px-6 text-muted-500">
                             {formatDate(payout.created_at)}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-4 sm:px-6">
                             <div className="flex flex-wrap gap-2">
                               {payout.status === 'pending' && (
                                 <>
@@ -339,30 +364,17 @@ export default function AdminPayoutsPage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-muted-100 px-6 py-4">
-            <p className="text-xs text-muted-500">
-              {totalItems} total · page {currentPage} of {totalPages}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="border-t border-muted-100 px-3 py-4 sm:px-6">
+            <Pagination
+              variant="simple"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              itemLabel="payouts"
+              className="mt-0"
+            />
           </div>
         )}
       </div>

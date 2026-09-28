@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status"); // open | resolved | all
+    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
 
     let query = supabase
       .from("contact_submissions")
@@ -40,6 +42,9 @@ export async function GET(request: NextRequest) {
 
     if (status === "resolved") query = query.eq("is_resolved", true);
     else if (status === "open") query = query.eq("is_resolved", false);
+
+    // Ranged after the filter, so `count` describes the filtered set.
+    query = query.range(offset, offset + limit - 1);
 
     const { data: submissions, error, count } = await query;
 
@@ -53,7 +58,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: submissions || [],
-      meta: { totalItems: count || 0 },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch {
     return NextResponse.json(

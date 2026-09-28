@@ -215,7 +215,7 @@ export default function CartPage() {
 
               {/* Right: Order Summary */}
               <div className="lg:col-span-4">
-                <div className="sticky top-24">
+                <div className="sticky top-[var(--header-h)] lg:top-24">
                   <CartSummary />
                 </div>
               </div>

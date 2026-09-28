@@ -95,20 +95,28 @@ const ToggleSwitch = ({
   checked: boolean;
   onChange: (v: boolean) => void;
 }) => (
+  // The button is a 44px touch target (p-2 + 24px track) wrapping a visually
+  // 24px track, so enlarging the hit area does not distort the switch.
   <button
     type="button"
+    role="switch"
+    aria-checked={checked}
     onClick={() => onChange(!checked)}
-    className={cn(
-      'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors',
-      checked ? 'bg-primary' : 'bg-muted-300'
-    )}
+    className="flex h-11 w-[60px] shrink-0 cursor-pointer items-center p-2"
   >
     <span
       className={cn(
-        'inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform',
-        checked ? 'translate-x-6' : 'translate-x-1'
+        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+        checked ? 'bg-primary' : 'bg-muted-300'
       )}
-    />
+    >
+      <span
+        className={cn(
+          'inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform',
+          checked ? 'translate-x-6' : 'translate-x-1'
+        )}
+      />
+    </span>
   </button>
 );
 

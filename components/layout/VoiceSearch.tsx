@@ -178,10 +178,10 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
         type="button"
         onClick={handleToggle}
         className={cn(
-          'rounded-lg p-2 transition-colors',
+          'rounded-lg p-2.5 transition-colors md:p-2',
           isListening
             ? 'bg-danger text-white'
-            : 'text-muted hover:text-secondary hover:bg-muted-100'
+            : 'text-muted transition-colors hover:text-secondary hover:bg-muted-100'
         )}
         title={isListening ? 'Stop voice search' : 'Search by voice'}
         aria-label={isListening ? 'Stop voice search' : 'Search by voice'}
@@ -197,15 +197,14 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
       </button>
 
       {error && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-lg border border-danger-200 bg-white p-3 shadow-lg">
-          <div className="flex items-start justify-between">
-            {/* Assertive: this reports a failure the user is waiting on. */}
-            <p role="alert" className="text-xs text-danger">
+      <div className="absolute right-0 top-full z-50 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-lg border border-danger-200 bg-white p-3 shadow-lg">
+        <div className="flex items-start justify-between">
+          <p role="alert" className="text-xs text-danger">
               {error}
             </p>
             <button
               onClick={handleClear}
-              className="ml-2 text-danger hover:text-danger-600"
+              className="-mr-1 ml-2 rounded p-1.5 text-danger transition-colors hover:bg-danger-50 hover:text-danger-600"
               aria-label="Dismiss voice search error"
             >
               <X className="h-4 w-4" />
@@ -215,7 +214,7 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
       )}
 
       {isListening && !error && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-lg border border-primary-200 bg-white p-3 shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-lg border border-primary-200 bg-white p-3 shadow-lg">
           <p className="mb-2 text-xs font-semibold text-secondary-800">Listening…</p>
           <div className="mb-2 flex items-center gap-1">
             {[0, 1, 2].map((i) => (

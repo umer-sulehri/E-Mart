@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import {
   Search,
   CheckCircle2,
@@ -17,6 +18,11 @@ import {
 import { cn } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Pagination from '@/components/ui/Pagination';
+import { useDebounce } from '@/hooks/useDebounce';
+import { usePageParam } from '@/hooks/usePageParam';
+
+const ITEMS_PER_PAGE = 20;
 
 type SellerStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
@@ -37,6 +43,14 @@ interface Seller {
   productCount: number;
 }
 
+interface SellerStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  suspended: number;
+}
+
 const statusMap: Record<SellerStatus, { variant: 'warning' | 'success' | 'danger' | 'default'; label: string }> = {
   pending: { variant: 'warning', label: 'Pending' },
   approved: { variant: 'success', label: 'Approved' },
@@ -45,29 +59,82 @@ const statusMap: Record<SellerStatus, { variant: 'warning' | 'success' | 'danger
 };
 
 export default function AdminSellersPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <AdminSellersContent />
+    </Suspense>
+  );
+}
+
+function AdminSellersContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [sellers, setSellers] = useState<Seller[]>([]);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [stats, setStats] = useState<SellerStats>({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    suspended: 0,
+  });
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  // The box is controlled; the committed term is debounced, otherwise every
+  // keystroke is a request and the page flickers through empty result sets.
+  const [searchInput, setSearchInput] = useState('');
+  const search = useDebounce(searchInput, 400).trim();
+  const statusFilter = searchParams.get('status') ?? 'all';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [acting, setActing] = useState<string | null>(null);
 
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [search, statusFilter],
+  });
+
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const params = new URLSearchParams({ status: statusFilter });
-      if (search.trim()) params.set('search', search.trim());
+      const params = new URLSearchParams({
+        status: statusFilter,
+        page: String(currentPage),
+        limit: String(ITEMS_PER_PAGE),
+      });
+      if (search) params.set('search', search);
       const res = await fetch(`/api/v1/admin/sellers?${params.toString()}`);
       const json = await res.json();
-      if (json.success) setSellers(json.data || []);
-      else setError(json.error || 'Failed to load sellers');
+      if (json.success) {
+        setSellers(json.data || []);
+        setStats(json.stats || {
+          total: 0, pending: 0, approved: 0, rejected: 0, suspended: 0,
+        });
+        const items = json.meta?.totalItems ?? 0;
+        const pages = json.meta?.totalPages ?? 1;
+        setTotalItems(items);
+        setTotalPages(pages);
+        // Approving or rejecting a seller drops them out of a filtered view, so
+        // the last page can end up past the end of the result set. Pull back to
+        // the final page that still has rows instead of showing an empty table.
+        if (currentPage > pages) {
+          setCurrentPage(pages);
+        }
+      } else {
+        setError(json.error || 'Failed to load sellers');
+        setSellers([]);
+        setTotalItems(0);
+        setTotalPages(1);
+      }
     } catch {
       setError('Failed to load sellers');
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, search]);
+  }, [statusFilter, search, currentPage, setCurrentPage]);
 
   useEffect(() => {
     load();
@@ -93,19 +160,16 @@ export default function AdminSellersPage() {
     }
   };
 
-  const total = sellers.length;
-  const pendingCount = sellers.filter((s) => s.status === 'pending').length;
-  const approvedCount = sellers.filter((s) => s.status === 'approved').length;
-  const suspendedCount = sellers.filter((s) => s.status === 'suspended').length;
+  const pendingCount = stats.pending;
 
   const getInitials = (name: string) =>
     name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
-  const stats = [
-    { label: 'Total Sellers', value: total, icon: Store, cls: 'bg-primary-100 text-primary-600' },
-    { label: 'Pending Approval', value: pendingCount, icon: Clock, cls: 'bg-warning-100 text-warning-600' },
-    { label: 'Active', value: approvedCount, icon: ShieldCheck, cls: 'bg-success-100 text-success-600' },
-    { label: 'Suspended', value: suspendedCount, icon: UserX, cls: 'bg-danger-100 text-danger-600' },
+  const cards = [
+    { label: 'Total Sellers', value: stats.total, icon: Store, cls: 'bg-primary-100 text-primary-600' },
+    { label: 'Pending Approval', value: stats.pending, icon: Clock, cls: 'bg-warning-100 text-warning-600' },
+    { label: 'Active', value: stats.approved, icon: ShieldCheck, cls: 'bg-success-100 text-success-600' },
+    { label: 'Suspended', value: stats.suspended, icon: UserX, cls: 'bg-danger-100 text-danger-600' },
   ];
 
   return (
@@ -120,7 +184,7 @@ export default function AdminSellersPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {cards.map((stat) => (
           <div key={stat.label} className="rounded-xl bg-white p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', stat.cls)}>
@@ -152,16 +216,24 @@ export default function AdminSellersPage() {
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
             <input
-              type="text"
+              type="search"
               placeholder="Search sellers..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Search sellers"
               className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              const params = new URLSearchParams(searchParams.toString());
+              if (e.target.value === 'all') params.delete('status');
+              else params.set('status', e.target.value);
+              params.delete('page');
+              router.push(`${pathname}?${params.toString()}`);
+            }}
+            aria-label="Filter by status"
             className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
           >
             <option value="all">All Status</option>
@@ -287,6 +359,20 @@ export default function AdminSellersPage() {
             </table>
           </div>
         )}
+
+        {!loading && sellers.length > 0 && totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination
+              variant="table"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              itemLabel="sellers"
+            />
+          </div>
+        )}
       </div>
 
       {expanded && (
@@ -320,10 +406,10 @@ function SellerDetail({
 }) {
   if (!seller) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-        <h3 className="text-lg font-bold text-secondary-800">{seller.name}</h3>
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-xl sm:rounded-2xl sm:pb-6">
+        <h3 className="break-words text-lg font-bold text-secondary-800">{seller.name}</h3>
         <p className="text-sm text-muted-500">{seller.description || 'No description'}</p>
         <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
           <div>

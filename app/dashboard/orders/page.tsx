@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
@@ -9,9 +9,13 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Pagination from '@/components/ui/Pagination';
 import Skeleton from '@/components/ui/Skeleton';
+import { usePageParam } from '@/hooks/usePageParam';
 import { formatPrice, formatDate, cn } from '@/lib/utils';
 import type { Order, OrderItem } from '@/types';
+
+const ITEMS_PER_PAGE = 10;
 
 type FilterStatus = 'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -37,15 +41,28 @@ const statusVariant: Record<string, 'success' | 'warning' | 'primary' | 'danger'
 };
 
 export default function OrdersPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <OrdersContent />
+    </Suspense>
+  );
+}
+
+function OrdersContent() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<FilterStatus>('all');
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const perPage = 10;
+
+  // Changing tab makes the current page meaningless, so the tab switch resets it.
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [activeTab],
+    totalPages,
+  });
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -53,7 +70,7 @@ export default function OrdersPage() {
         setLoading(true);
         const params = new URLSearchParams({
           page: currentPage.toString(),
-          limit: perPage.toString(),
+          limit: String(ITEMS_PER_PAGE),
         });
         if (activeTab !== 'all') {
           params.set('status', activeTab);
@@ -84,7 +101,6 @@ export default function OrdersPage() {
 
   const handleTabChange = (tab: FilterStatus) => {
     setActiveTab(tab);
-    setCurrentPage(1);
   };
 
   const getOrderItems = (order: Order): OrderItem[] => {
@@ -229,22 +245,15 @@ export default function OrdersPage() {
           })}
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-colors',
-                    currentPage === page
-                      ? 'bg-primary text-white'
-                      : 'text-muted-600 hover:bg-muted-100'
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
+            <Pagination
+              className="mt-8"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              itemLabel="orders"
+            />
           )}
         </div>
       )}

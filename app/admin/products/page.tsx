@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import toast from 'react-hot-toast';
 import {
@@ -15,7 +15,9 @@ import {
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
+import Pagination from '@/components/ui/Pagination';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
+import { usePageParam } from '@/hooks/usePageParam';
 import type { ProductRow } from '@/types/supabase';
 
 function SkeletonRow() {
@@ -38,16 +40,27 @@ function SkeletonRow() {
 }
 
 export default function AdminProductsPage() {
+  return (
+    <Suspense>
+      <AdminProductsContent />
+    </Suspense>
+  );
+}
+
+function AdminProductsContent() {
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [moderating, setModerating] = useState<string | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const itemsPerPage = 15;
+
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [search, statusFilter],
+  });
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -78,13 +91,18 @@ export default function AdminProductsPage() {
     fetchProducts();
   }, [fetchProducts]);
 
+  // The committed term is debounced, so the page reset is driven by `search`
+  // changing rather than done inline here.
   const handleSearchChange = (value: string) => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setSearch(value);
-      setCurrentPage(1);
-    }, 400);
+    debounceTimer.current = setTimeout(() => setSearch(value), 400);
   };
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
 
   const handleModeration = async (productId: string, status: string) => {
     setModerating(productId);
@@ -150,7 +168,8 @@ export default function AdminProductsPage() {
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label="Filter by status"
             className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
           >
             <option value="all">All Status</option>
@@ -258,29 +277,16 @@ export default function AdminProductsPage() {
           </table>
         </div>
 
-        {totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-muted-500">
-              Page {currentPage} of {totalPages} ({totalItems} products)
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-              >
-                ← Prev
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-              >
-                Next →
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          variant="table"
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          itemLabel="products"
+          className="mt-4"
+        />
       </div>
     </div>
   );

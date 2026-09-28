@@ -38,7 +38,7 @@ export default async function AdminLayout({
       <div className="flex gap-6 p-4 lg:p-6">
         <AdminSidebar />
 
-        <div className="min-w-0 flex-1">
+        {/* pt-14 clears the fixed mobile drawer toggle, which would otherwise sit`r`n            on top of the page heading. */}`r`n        <div className="min-w-0 flex-1 pt-14 lg:pt-0">
           <DashboardHeader />
 
           <main className="mt-4">{children}</main>

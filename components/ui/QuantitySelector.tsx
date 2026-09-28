@@ -42,7 +42,7 @@ const QuantitySelector = React.forwardRef<HTMLDivElement, QuantitySelectorProps>
           onClick={() => canDecrement && onChange(value - 1)}
           disabled={!canDecrement}
           className={cn(
-            "flex h-9 w-9 items-center justify-center text-lg font-medium transition-colors",
+            "flex h-11 w-11 items-center justify-center text-lg font-medium transition-colors md:h-9 md:w-9",
             "hover:bg-muted-50 active:bg-muted-100",
             "disabled:pointer-events-none disabled:text-muted-300"
           )}
@@ -56,7 +56,7 @@ const QuantitySelector = React.forwardRef<HTMLDivElement, QuantitySelectorProps>
           readOnly
           aria-label={isLoading ? "Updating quantity" : "Quantity"}
           className={cn(
-            "h-9 w-12 border-x border-muted-200 bg-white text-center text-sm font-medium",
+            "h-11 w-14 border-x border-muted-200 bg-white text-center text-sm font-medium md:h-9 md:w-12",
             "text-secondary-800 outline-none",
             "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           )}
@@ -66,7 +66,7 @@ const QuantitySelector = React.forwardRef<HTMLDivElement, QuantitySelectorProps>
           onClick={() => canIncrement && onChange(value + 1)}
           disabled={!canIncrement}
           className={cn(
-            "flex h-9 w-9 items-center justify-center text-lg font-medium transition-colors",
+            "flex h-11 w-11 items-center justify-center text-lg font-medium transition-colors md:h-9 md:w-9",
             "hover:bg-muted-50 active:bg-muted-100",
             "disabled:pointer-events-none disabled:text-muted-300"
           )}

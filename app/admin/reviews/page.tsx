@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import {
   Search,
   CheckCircle2,
@@ -18,7 +18,12 @@ import {
 import { cn } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import Pagination from '@/components/ui/Pagination';
+import { useDebounce } from '@/hooks/useDebounce';
+import { usePageParam } from '@/hooks/usePageParam';
 import toast from 'react-hot-toast';
+
+const ITEMS_PER_PAGE = 20;
 
 type ReviewStatus = 'pending' | 'approved' | 'flagged' | 'rejected';
 
@@ -37,6 +42,27 @@ interface AdminReview {
   user_email?: string;
 }
 
+/**
+ * Moderation counters for every review, computed server-side. Deriving them
+ * from `reviews` would count only the rows on the current page while the cards
+ * are labelled as totals.
+ */
+interface ReviewStats {
+  total: number;
+  pending: number;
+  approved: number;
+  flagged: number;
+  rejected: number;
+}
+
+const EMPTY_STATS: ReviewStats = {
+  total: 0,
+  pending: 0,
+  approved: 0,
+  flagged: 0,
+  rejected: 0,
+};
+
 const getStatusBadge = (status: ReviewStatus) => {
   const map: Record<ReviewStatus, { variant: 'success' | 'warning' | 'danger'; label: string }> = {
     pending: { variant: 'warning', label: 'Pending' },
@@ -52,25 +78,57 @@ const getStatusBadge = (status: ReviewStatus) => {
 };
 
 export default function AdminReviewsPage() {
-  const [search, setSearch] = useState('');
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <AdminReviewsContent />
+    </Suspense>
+  );
+}
+
+function AdminReviewsContent() {
+  // The box is controlled; the committed term is debounced, otherwise every
+  // keystroke is a request and the table flickers through empty result sets.
+  const [searchInput, setSearchInput] = useState('');
+  const search = useDebounce(searchInput, 400).trim();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [reviews, setReviews] = useState<AdminReview[]>([]);
+  const [stats, setStats] = useState<ReviewStats>(EMPTY_STATS);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acting, setActing] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminReview | null>(null);
 
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [search, statusFilter],
+  });
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(ITEMS_PER_PAGE),
+      });
       if (statusFilter !== 'all') params.set('status', statusFilter);
-      if (search.trim()) params.set('search', search.trim());
+      if (search) params.set('search', search);
       const res = await fetch(`/api/v1/admin/reviews?${params.toString()}`);
       const json = await res.json();
-      if (json.success) setReviews(json.data || []);
-      else {
+      if (json.success) {
+        setReviews(json.data || []);
+        setStats(json.stats || EMPTY_STATS);
+        const pages = json.meta?.totalPages || 1;
+        setTotalPages(pages);
+        setTotalItems(json.meta?.totalItems || 0);
+        // Moderating a review can remove it from the active status tab, which
+        // can leave the current page past the end of the result set.
+        if (currentPage > pages) {
+          setCurrentPage(pages);
+        }
+      } else {
         const msg = json.error || 'Failed to load reviews';
         setError(msg);
         toast.error(msg);
@@ -82,7 +140,7 @@ export default function AdminReviewsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter]);
+  }, [search, statusFilter, currentPage, setCurrentPage]);
 
   useEffect(() => {
     load();
@@ -126,10 +184,7 @@ export default function AdminReviewsPage() {
     }
   };
 
-  const total = reviews.length;
-  const pendingCount = reviews.filter((r) => r.status === 'pending').length;
-  const flaggedCount = reviews.filter((r) => r.status === 'flagged').length;
-  const approvedCount = reviews.filter((r) => r.status === 'approved').length;
+  const flaggedCount = stats.flagged;
 
   const getInitials = (name: string) =>
     name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -149,7 +204,7 @@ export default function AdminReviewsPage() {
               <MessageSquare className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-secondary-800">{total}</p>
+              <p className="text-2xl font-bold text-secondary-800">{stats.total}</p>
               <p className="text-xs text-muted-500">Total Visible</p>
             </div>
           </div>
@@ -160,7 +215,7 @@ export default function AdminReviewsPage() {
               <Clock className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-secondary-800">{pendingCount}</p>
+              <p className="text-2xl font-bold text-secondary-800">{stats.pending}</p>
               <p className="text-xs text-muted-500">Pending Approval</p>
             </div>
           </div>
@@ -182,7 +237,7 @@ export default function AdminReviewsPage() {
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-secondary-800">{approvedCount}</p>
+              <p className="text-2xl font-bold text-secondary-800">{stats.approved}</p>
               <p className="text-xs text-muted-500">Approved</p>
             </div>
           </div>
@@ -208,16 +263,18 @@ export default function AdminReviewsPage() {
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
             <input
-              type="text"
+              type="search"
               placeholder="Search reviews..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Search reviews"
               className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label="Filter by status"
             className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
           >
             <option value="all">All Status</option>
@@ -354,6 +411,17 @@ export default function AdminReviewsPage() {
             ))}
           </div>
         )}
+
+        <Pagination
+          variant="table"
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={totalItems}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemLabel="reviews"
+          className="mt-4"
+        />
       </div>
 
       <ConfirmDialog

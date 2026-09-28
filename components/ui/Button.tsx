@@ -22,10 +22,13 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-success text-white hover:bg-success-600 active:bg-success-700 focus-visible:ring-success/40",
 };
 
+// `sm` is used for dense desktop toolbars but is also the smallest control
+// reachable by touch, so it keeps a 44px-tall hit area via py-2.5 (32px+12px
+// line box) while staying visually compact at the `md` breakpoint and up.
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "text-xs px-3 py-1.5 gap-1.5",
-  md: "text-sm px-4 py-2 gap-2",
-  lg: "text-base px-6 py-3 gap-2.5",
+  sm: "text-xs px-3 py-2.5 gap-1.5 md:py-1.5",
+  md: "text-sm px-4 py-2.5 gap-2 md:py-2",
+  lg: "text-base px-6 py-3.5 gap-2.5 md:py-3",
 };
 
 const roundedStyles: Record<ButtonRounded, string> = {

@@ -250,16 +250,16 @@ export default async function BlogDetailPage({
               {/* Share Buttons */}
               <div className="mt-8 flex items-center gap-3">
                 <span className="text-sm font-medium text-secondary-800">Share:</span>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white transition-colors hover:bg-blue-700">
+                <button aria-label="Share on Facebook" className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-white transition-colors hover:bg-blue-700">
                   <Facebook size={16} />
                 </button>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-500 text-white transition-colors hover:bg-sky-600">
+                <button aria-label="Share on X" className="flex h-11 w-11 items-center justify-center rounded-full bg-sky-500 text-white transition-colors hover:bg-sky-600">
                   <Twitter size={16} />
                 </button>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500 text-white transition-colors hover:bg-green-600">
+                <button aria-label="Copy link" className="flex h-11 w-11 items-center justify-center rounded-full bg-green-500 text-white transition-colors hover:bg-green-600">
                   <Share2 size={16} />
                 </button>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full bg-muted-200 text-secondary-700 transition-colors hover:bg-muted-300">
+                <button aria-label="Copy link" className="flex h-11 w-11 items-center justify-center rounded-full bg-muted-200 text-secondary-700 transition-colors hover:bg-muted-300">
                   <LinkIcon size={16} />
                 </button>
               </div>

@@ -34,9 +34,7 @@ export default function ProductDetailClient({
   const [addingToCart, setAddingToCart] = React.useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const addToServer = useCartStore((s) => s.addToServer);
-  const compareItems = useCompareStore((s) => s.items);
-  const { isCompared, toggle: compareToggle, dialog: compareDialog } =
-    useCompareToggle();
+  const { isCompared, toggle: compareToggle } = useCompareToggle();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const pathname = usePathname();
@@ -49,23 +47,16 @@ export default function ProductDetailClient({
   const isInCompare = isCompared(product.id);
 
   // Keep the /compare deep link (?products=slug1,slug2) shareable by syncing
-  // the URL whenever the persisted compare list changes.
-  const syncCompareUrl = (items: { slug: string }[]) => {
-    if (items.length === 0) {
+  // the URL whenever the tray changes.
+  const syncCompareUrl = (slugs: string[]) => {
+    if (slugs.length === 0) {
       router.replace('/compare', { scroll: false });
     } else {
-      const slugs = items
-        .map((i) => i.slug)
-        .filter(Boolean)
-        .join(',');
-      router.replace(`/compare?products=${slugs}`, { scroll: false });
+      router.replace(`/compare?products=${slugs.join(',')}`, { scroll: false });
     }
   };
 
   const handleAddToCompare = () => {
-    // URL sync is the caller's concern; the hook owns the store transition,
-    // the rules, the dialog and the toast.
-    const before = compareItems.length;
     compareToggle({
       id: product.id,
       name: product.name,
@@ -80,14 +71,17 @@ export default function ProductDetailClient({
       brand: product.brand?.name || '',
       inStock: product.stockQuantity > 0,
     });
-    // Removal leaves the list one shorter, addition makes it one longer.
-    if (compareItems.length !== before) {
-      const next =
-        compareItems.length < before
-          ? compareItems.filter((i) => i.id !== product.id)
-          : [...compareItems, { slug: product.slug }];
-      syncCompareUrl(next);
-    }
+    // The store has already been mutated by the toggle, but this component has
+    // not re-rendered yet, so its own binding of the tray is still the
+    // pre-toggle value. Reading `getState()` is the only way to see the list the
+    // user will actually land on; comparing against the stale local binding is
+    // why this sync used to silently never fire.
+    syncCompareUrl(
+      useCompareStore
+        .getState()
+        .items.map((i) => i.slug)
+        .filter(Boolean)
+    );
   };
 
   const handleAddToCart = async () => {
@@ -187,7 +181,9 @@ export default function ProductDetailClient({
   );
 
   return (
-    <div className="flex flex-col gap-5">
+    // pb-24 clears the fixed sticky Add-to-Cart bar (py-3 + 44px button), so
+    // the last review/spec block is never trapped underneath it on a phone.
+    <div className="flex flex-col gap-5 pb-24 lg:pb-0">
       {/* Category + Brand / Store (clickable meta shown above the title) */}
       {(product.category?.name || product.brand?.name || (product.vendor?.name && product.vendor.slug)) && (
         <nav
@@ -438,8 +434,6 @@ export default function ProductDetailClient({
           </Button>
         </div>
       </div>
-
-      {compareDialog}
     </div>
   );
 }

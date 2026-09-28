@@ -1,11 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Clock, MessagesSquare } from 'lucide-react';
+import { Clock, MessagesSquare } from 'lucide-react';
 import Skeleton from '@/components/ui/Skeleton';
 import Button from '@/components/ui/Button';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import Pagination from '@/components/ui/Pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import toast from 'react-hot-toast';
 import ReviewCard from './ReviewCard';
 import ReviewFormModal from './ReviewFormModal';
@@ -32,15 +34,33 @@ export default function MyReviewsPanel({
   status = '',
   refreshKey = 0,
 }: MyReviewsPanelProps) {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <MyReviewsPanelContent status={status} refreshKey={refreshKey} />
+    </Suspense>
+  );
+}
+
+function MyReviewsPanelContent({
+  status = '',
+  refreshKey = 0,
+}: MyReviewsPanelProps) {
   const [reviews, setReviews] = useState<MyReviewData[]>([]);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [sort, setSort] = useState('recent');
 
   const [editing, setEditing] = useState<MyReviewData | null>(null);
   const [deleting, setDeleting] = useState<MyReviewData | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Re-ordering the list makes the current page meaningless, so the page resets
+  // to 1 whenever the sort or the status tab changes.
+  const { page, setPage } = usePageParam({
+    resetOn: [sort, status],
+    totalPages: meta?.totalPages,
+  });
 
   const load = useCallback(async () => {
     try {
@@ -93,7 +113,6 @@ export default function MyReviewsPanel({
 
   const changeSort = (value: string) => {
     setSort(value);
-    setPage(1);
   };
 
   if (loading && reviews.length === 0) {
@@ -168,28 +187,17 @@ export default function MyReviewsPanel({
       )}
 
       {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!meta.hasPreviousPage}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </Button>
-          <span className="text-sm text-muted-500">
-            Page {meta.currentPage} of {meta.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!meta.hasNextPage}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="pt-1">
+          <Pagination
+            variant="table"
+            currentPage={page}
+            totalPages={meta.totalPages}
+            onPageChange={setPage}
+            totalItems={meta.totalItems}
+            itemsPerPage={PAGE_SIZE}
+            itemLabel="reviews"
+            className="mt-0"
+          />
         </div>
       )}
 
