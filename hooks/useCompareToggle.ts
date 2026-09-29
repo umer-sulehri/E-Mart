@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import {
   useCompareStore,
   MAX_COMPARE_ITEMS,
-  MAX_SAVED_COMPARE_ITEMS,
   type CompareItem,
 } from '@/store/compareStore';
 import { trackEvent } from '@/lib/analytics';
@@ -32,8 +31,8 @@ export interface UseCompareToggle {
   /**
    * Add the product if it fits, or remove it if already present.
    *
-   * Adding never fails on category grounds: a product from another category is
-   * saved to its own group and surfaces in the compare page's switcher rail.
+   * Adding is refused when the tray already holds a different category, because
+   * a specification table across unrelated products has no rows worth lining up.
    */
   toggle: (product: ComparableProduct) => void;
 }
@@ -65,7 +64,6 @@ function toCompareItem(product: ComparableProduct): CompareItem {
  */
 export function useCompareToggle(): UseCompareToggle {
   const items = useCompareStore((s) => s.items);
-  const activeCategoryId = useCompareStore((s) => s.activeCategoryId);
   const addItem = useCompareStore((s) => s.addItem);
   const removeItem = useCompareStore((s) => s.removeItem);
 
@@ -87,27 +85,21 @@ export function useCompareToggle(): UseCompareToggle {
       const decision = addItem(item);
       if (decision.allowed) {
         trackEvent({ action: 'compare_add', category: 'product', label: product.slug });
-
-        if (decision.isNewGroup && items.length > 0) {
-          // The product is safe, it just is not in the group currently on
-          // screen. Say so, otherwise the card's pressed state flips with no
-          // visible change to the table and the control feels broken.
-          toast.success(`Saved to compare · ${decision.groupLabel}`);
-        } else {
-          toast.success('Added to compare');
-        }
+        toast.success('Added to compare');
         return;
       }
 
       switch (decision.reason) {
+        case 'category-mismatch':
+          // The most common refusal, so it gets the most specific wording: which
+          // category the tray is holding, and what the user has to do next.
+          toast.error(
+            `Your compare list has ${decision.label} products. Only products from the same category can be compared — clear the list to start a new one.`
+          );
+          break;
         case 'category-full':
           toast.error(
             `You can compare up to ${MAX_COMPARE_ITEMS} ${decision.label} products. Remove one to swap it.`
-          );
-          break;
-        case 'tray-full':
-          toast.error(
-            `Your compare list is full (${MAX_SAVED_COMPARE_ITEMS}). Remove a product to add another.`
           );
           break;
         case 'duplicate':

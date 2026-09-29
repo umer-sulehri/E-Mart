@@ -1,24 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, X, Plus, BarChart3, Trash2, Star, Layers } from 'lucide-react';
+import { ShoppingCart, X, Plus, BarChart3, Trash2, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
-import CompareGroupRail from '@/components/compare/CompareGroupRail';
 import { useHydrated } from '@/hooks/useHydrated';
 import {
   useCompareStore,
   MAX_COMPARE_ITEMS,
-  MAX_SAVED_COMPARE_ITEMS,
-  remainingTraySlots,
+  lockedCategoryId,
+  remainingCompareSlots,
   type CompareItem,
 } from '@/store/compareStore';
-import {
-  groupItemsByCategory,
-  resolveActiveGroup,
-  resolveGroupLabel,
-} from '@/lib/compare-rules';
+import { resolveGroupLabel } from '@/lib/compare-rules';
 import { useCartStore } from '@/store';
 import { tryParseJson } from '@/lib/api';
 import { trackEvent } from '@/lib/analytics';
@@ -38,7 +33,7 @@ interface SearchResult {
   categoryId: string;
 }
 
-type Notice = { tone: 'limit' | 'tray'; message: string } | null;
+type Notice = { tone: 'limit' | 'mismatch'; message: string } | null;
 
 export default function ComparePage({
   initialProductSlugs = [],
@@ -51,10 +46,8 @@ export default function ComparePage({
   const hydrated = useHydrated();
 
   const items = useCompareStore((s) => s.items);
-  const activeCategoryId = useCompareStore((s) => s.activeCategoryId);
   const removeItem = useCompareStore((s) => s.removeItem);
   const clearAll = useCompareStore((s) => s.clearAll);
-  const setActiveCategory = useCompareStore((s) => s.setActiveCategory);
   const addItemToCart = useCartStore((s) => s.addItem);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,17 +65,15 @@ export default function ComparePage({
   }, [notice]);
 
   /**
-   * The tray is partitioned by category. Only the active group is ever
-   * compared — the rest wait in the rail below it.
+   * The tray holds a single category: the one its first saved product belongs to.
+   * Every item in it is therefore comparable with every other, so `items` is the
+   * comparison — no grouping or switching needed.
    */
-  const groups = useMemo(() => groupItemsByCategory(items), [items]);
-  const activeGroup = useMemo(
-    () => resolveActiveGroup(groups, activeCategoryId),
-    [groups, activeCategoryId]
-  );
-  const comparing = activeGroup?.items ?? [];
-  const trayRoom = remainingTraySlots(items.length);
-  const roomInActiveGroup = Math.max(0, MAX_COMPARE_ITEMS - comparing.length);
+  const comparing = items;
+  const trayCategoryId = lockedCategoryId(items);
+  const trayLabel = items[0] ? resolveGroupLabel(items[0]) : '';
+  const trayRoom = remainingCompareSlots(items);
+  const trayFull = trayRoom === 0;
 
   // Hydrate the tray from a deep link (?products=slug1,slug2) so shared links
   // work without requiring the local persisted store.
@@ -97,10 +88,10 @@ export default function ComparePage({
     let cancelled = false;
     (async () => {
       // Fetched concurrently, so the slot budget is computed from the snapshot
-      // taken above rather than from the mutating list. A deep link may span
-      // categories; the tray now holds those in separate groups, so the budget
-      // is the tray's own cap rather than a per-category one.
-      const budget = remainingTraySlots(existing.length);
+      // taken above rather than from the mutating list. A deep link may name
+      // products from several categories; the store refuses the ones that do not
+      // match, so the budget only needs to cover the first category.
+      const budget = remainingCompareSlots(existing);
       await Promise.all(
         missing.slice(0, budget).map(async (slug) => {
           try {
@@ -129,9 +120,11 @@ export default function ComparePage({
             const p = json.data;
             // Fall back to the oldest of the three category sources: an
             // explicit category, the first in the array, then the raw FK. A
-            // product whose category still cannot be resolved is saved under
-            // the uncategorised group rather than dropped, because losing a
-            // deep-linked product silently is worse than labelling it vaguely.
+            // product whose category still cannot be resolved keeps an empty id
+            // and is saved under one "Uncategorised" label rather than dropped,
+            // because losing a deep-linked product silently is worse than
+            // labelling it vaguely. It then only compares with other products
+            // of equally unknown category, which is the honest outcome.
             const categoryId =
               p.category?.id || p.categories?.[0]?.id || p.category_id || '';
             const item: CompareItem = {
@@ -163,19 +156,6 @@ export default function ComparePage({
       cancelled = true;
     };
   }, [initialProductSlugs]);
-
-  const handleActivateGroup = (categoryId: string) => {
-    setActiveCategory(categoryId);
-    const group = groups.find((g) => g.categoryId === categoryId);
-    if (group) {
-      trackEvent({
-        action: 'compare_group_switch',
-        category: 'product',
-        label: group.label,
-      });
-      toast.success(`Comparing ${group.items.length} ${group.label} products`);
-    }
-  };
 
   const handleRemove = (productId: string) => {
     removeItem(productId);
@@ -248,25 +228,21 @@ export default function ComparePage({
 
     if (decision.allowed) {
       setSearchResults((prev) => prev.filter((r) => r.id !== product.id));
-      toast.success(
-        decision.isNewGroup
-          ? `Saved to compare · ${decision.groupLabel}`
-          : 'Added to compare'
-      );
+      toast.success('Added to compare');
       return;
     }
 
     switch (decision.reason) {
+      case 'category-mismatch':
+        setNotice({
+          tone: 'mismatch',
+          message: `Your compare list has ${decision.label} products. Only products from the same category can be compared — clear the list to start a new one.`,
+        });
+        break;
       case 'category-full':
         setNotice({
           tone: 'limit',
           message: `You can compare up to ${MAX_COMPARE_ITEMS} ${decision.label} products. Remove one to swap it.`,
-        });
-        break;
-      case 'tray-full':
-        setNotice({
-          tone: 'tray',
-          message: `Your compare list is full (${MAX_SAVED_COMPARE_ITEMS}). Remove a product to add another.`,
         });
         break;
       case 'duplicate':
@@ -364,17 +340,13 @@ export default function ComparePage({
           </Link>
           <p className="text-xs text-muted-400">
             You can compare up to {MAX_COMPARE_ITEMS} products from the same
-            category, and save up to {MAX_SAVED_COMPARE_ITEMS} in total.
+            category. Products from a different category cannot be added to the
+            same table.
           </p>
         </div>
       </div>
     );
   }
-
-  const activeLabel = activeGroup?.label ?? '';
-  const otherGroups = groups.filter(
-    (group) => group.categoryId !== activeGroup?.categoryId
-  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -385,13 +357,7 @@ export default function ComparePage({
           </h1>
           <p className="mt-1 text-sm text-muted-500">
             Comparing {comparing.length} of {MAX_COMPARE_ITEMS} products
-            {activeLabel && <> in {activeLabel}</>}
-            {otherGroups.length > 0 && (
-              <>
-                {' '}
-                &middot; {items.length} saved across {groups.length} categories
-              </>
-            )}
+            {trayLabel && <> in {trayLabel}</>}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -455,12 +421,12 @@ export default function ComparePage({
             <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {searchResults.map((product) => {
                 const alreadySaved = items.some((i) => i.id === product.id);
-                const landsInActiveGroup =
-                  !!activeGroup && product.categoryId === activeGroup.categoryId;
-                const savedSlots = items.filter(
-                  (i) => i.categoryId === product.categoryId
-                ).length;
-                const groupFull = savedSlots >= MAX_COMPARE_ITEMS;
+                // The tray is locked to one category, so a result from anywhere
+                // else is shown but cannot be added. Saying so up front is
+                // better than a click that silently refuses.
+                const matchesTray =
+                  trayCategoryId === null ||
+                  product.categoryId === trayCategoryId;
 
                 return (
                   <li
@@ -480,32 +446,44 @@ export default function ComparePage({
                     <p className="mt-1 text-xs font-bold text-primary">
                       Rs. {(product.discountPrice || product.price).toLocaleString()}
                     </p>
-                    {landsInActiveGroup ? (
-                      <p className="mt-1.5 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                        Same category
-                      </p>
-                    ) : (
-                      <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-muted-200 px-2 py-0.5 text-[10px] font-semibold text-muted-600">
-                        <Layers size={9} aria-hidden="true" />
-                        Saves to {resolveGroupLabel(product)}
-                      </p>
-                    )}
+                    {/* Positive styling is reserved for a result that can
+                        actually join the table, so the pill reads as a state
+                        rather than a decoration. */}
+                    <p
+                      className={
+                        matchesTray && trayCategoryId !== null
+                          ? 'mt-1.5 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary'
+                          : 'mt-1.5 inline-flex rounded-full bg-muted-200 px-2 py-0.5 text-[10px] font-semibold text-muted-600'
+                      }
+                    >
+                      {matchesTray
+                        ? trayCategoryId === null
+                          ? 'Sets the category'
+                          : 'Same category'
+                        : resolveGroupLabel(product)}
+                    </p>
                     <button
                       type="button"
                       onClick={() => handleAddToCompare(product)}
-                      disabled={alreadySaved || groupFull}
+                      disabled={alreadySaved || !matchesTray || trayFull}
                       aria-label={
                         alreadySaved
                           ? `${product.name} is already saved`
-                          : `Add ${product.name} to compare`
+                          : !matchesTray
+                            ? `${product.name} is in ${resolveGroupLabel(product)}, and your list is comparing ${trayLabel}`
+                            : trayFull
+                              ? `Your compare list is full, remove a product to add ${product.name}`
+                              : `Add ${product.name} to compare`
                       }
                       className="mt-2 w-full rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:bg-muted-100 disabled:text-muted-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       {alreadySaved
                         ? 'Saved'
-                        : groupFull
-                          ? `${MAX_COMPARE_ITEMS} max`
-                          : '+ Compare'}
+                        : !matchesTray
+                          ? 'Other category'
+                          : trayFull
+                            ? `${MAX_COMPARE_ITEMS} max`
+                            : '+ Compare'}
                     </button>
                   </li>
                 );
@@ -519,20 +497,10 @@ export default function ComparePage({
         </div>
       )}
 
-      {otherGroups.length > 0 && (
-        <CompareGroupRail
-          groups={groups}
-          activeCategoryId={activeGroup?.categoryId ?? ''}
-          totalSaved={items.length}
-          onActivate={handleActivateGroup}
-          onRemove={handleRemove}
-        />
-      )}
-
       <div className="overflow-x-auto rounded-2xl border border-muted-100 bg-white shadow-sm">
         <table className="w-full min-w-[600px]">
           <caption className="sr-only">
-            {`Comparing ${comparing.length} ${activeLabel} products side by side`}
+            {`Comparing ${comparing.length} ${trayLabel} products side by side`}
           </caption>
           <thead>
             <tr className="border-b border-muted-100">
@@ -674,16 +642,17 @@ export default function ComparePage({
         </table>
       </div>
 
-      {/* A single-product group has nothing to compare, so say so rather than
-          presenting a one-column table that looks broken. */}
+      {/* A single product has nothing to be compared against, so say so rather
+          than presenting a one-column table that looks broken. */}
       {comparing.length === 1 && (
         <p className="mt-4 text-center text-xs text-muted-500">
-          Add another {activeLabel} product to see them side by side.
+          Add another {trayLabel} product to see them side by side.
         </p>
       )}
 
-      {/* Announced politely rather than as an alert: it reports a state the user
-          can already see on the page. */}
+      {/* The tray is capped and the user can see the table full, so this only
+          reports the reason a click was refused rather than announcing a new
+          state. */}
       {notice && (
         <p
           role="status"
@@ -693,18 +662,10 @@ export default function ComparePage({
         </p>
       )}
 
-      {/* Keyboard users need a way back to the saved groups once the table has
-          pushed the rail off screen. */}
-      {otherGroups.length > 0 && (
+      {trayRoom > 0 && (
         <p className="mt-6 text-center text-xs text-muted-500">
-          {roomInActiveGroup} more {activeLabel} product
-          {roomInActiveGroup === 1 ? '' : 's'} can be added to this table.{' '}
-          <a
-            href="#compare-rail-heading"
-            className="font-medium text-primary underline underline-offset-2"
-          >
-            Back to saved categories
-          </a>
+          {trayRoom} more {trayLabel} product{trayRoom === 1 ? '' : 's'} can be
+          added to this table.
         </p>
       )}
     </div>
