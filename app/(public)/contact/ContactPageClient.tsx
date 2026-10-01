@@ -209,7 +209,7 @@ export default function ContactPageClient() {
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Write your message here..."
-                    className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                    className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                       errors.message
                         ? 'border-danger focus:border-danger focus:ring-danger/20'
                         : 'border-muted-200'

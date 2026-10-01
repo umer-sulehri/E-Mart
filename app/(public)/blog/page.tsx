@@ -397,7 +397,7 @@ function BlogContent() {
                     placeholder="Search articles..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-10 pr-4 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400" />
                 </div>
@@ -471,7 +471,7 @@ function BlogContent() {
                 <input
                   type="email"
                   placeholder="Your email"
-                  className="mb-3 w-full rounded-lg bg-white/20 px-4 py-2.5 text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/40"
+                  className="mb-3 w-full rounded-lg bg-white/20 px-4 py-2.5 text-base sm:text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/40"
                 />
                 <button className="w-full rounded-lg bg-white py-2.5 text-sm font-bold text-primary transition-colors hover:bg-muted-100">
                   Subscribe

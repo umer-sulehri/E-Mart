@@ -194,7 +194,7 @@ export default function ReviewFormModal({
             }}
             placeholder="Summarize your experience"
             className={cn(
-              'w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+              'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
               'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
               errors.title ? 'border-danger' : 'border-muted-200'
             )}
@@ -218,7 +218,7 @@ export default function ReviewFormModal({
             placeholder="Tell others about your experience with this product..."
             rows={4}
             className={cn(
-              'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+              'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
               'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
               errors.comment ? 'border-danger' : 'border-muted-200'
             )}

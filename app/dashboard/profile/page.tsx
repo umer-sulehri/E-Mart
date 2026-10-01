@@ -271,7 +271,7 @@ export default function ProfilePage() {
                 type="email"
                 disabled
                 value={user?.email ?? ''}
-                className="w-full rounded-lg border border-muted-200 bg-muted-50 px-3.5 py-2.5 text-sm text-muted-600"
+                className="w-full rounded-lg border border-muted-200 bg-muted-50 px-3.5 py-2.5 text-base sm:text-sm text-muted-600"
               />
               {user?.isEmailVerified ? (
                 <Badge variant="success">Verified</Badge>

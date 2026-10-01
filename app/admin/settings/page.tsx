@@ -359,8 +359,10 @@ export default function AdminSettingsPage() {
     }
   };
 
+  // `text-base sm:text-sm`: iOS Safari zooms on focus for any control under
+  // 16px, so the mobile floor is a platform constraint, not a type choice.
   const inputClass =
-    'w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
+    'w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
   const selectClass =
     'w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-700 focus:border-primary focus:outline-none';
 

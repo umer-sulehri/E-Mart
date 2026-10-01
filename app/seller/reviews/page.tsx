@@ -304,7 +304,7 @@ function SellerReviewsContent() {
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
                             placeholder="Write your reply..."
-                            className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                           />
                           <div className="mt-2 flex gap-2">
                             <Button size="sm" onClick={() => handleReply(review.id)} disabled={submittingReply}>

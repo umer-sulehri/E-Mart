@@ -194,7 +194,7 @@ export default function FaqPageClient() {
                   setOpenIndex(null);
                 }}
                 placeholder="Search questions..."
-                className="w-full rounded-full border border-muted-200 bg-white py-3 pl-10 pr-4 text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-full border border-muted-200 bg-white py-3 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
           </div>

@@ -228,7 +228,7 @@ export default function AdminAccountPage() {
                 type="email"
                 value={profile?.email || ''}
                 disabled
-                className="w-full cursor-not-allowed rounded-lg border border-muted-200 bg-muted-50 px-3 py-2 text-sm text-muted-500"
+                className="w-full cursor-not-allowed rounded-lg border border-muted-200 bg-muted-50 px-3 py-2 text-base sm:text-sm text-muted-500"
               />
               <p className="mt-1 text-xs text-muted-500">
                 Email cannot be changed from here.
@@ -258,7 +258,7 @@ export default function AdminAccountPage() {
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 pr-10 text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 pr-10 text-base sm:text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   <button
                     type="button"
@@ -279,7 +279,7 @@ export default function AdminAccountPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <p className="text-xs text-muted-500">

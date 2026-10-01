@@ -99,7 +99,7 @@ export default function ChangePasswordPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="Enter current password"
-                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <button
                 type="button"
@@ -125,7 +125,7 @@ export default function ChangePasswordPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <button
                 type="button"
@@ -204,7 +204,7 @@ export default function ChangePasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"
                 className={cn(
-                  'w-full rounded-lg border bg-white py-2.5 pl-3.5 pr-11 text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2',
+                  'w-full rounded-lg border bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2',
                   confirmPassword.length > 0
                     ? passwordsMatch
                       ? 'border-success focus:border-success focus:ring-success/20'

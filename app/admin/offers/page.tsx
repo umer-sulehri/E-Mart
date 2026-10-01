@@ -305,7 +305,7 @@ function AdminOffersContent() {
               placeholder="Search products..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -500,7 +500,7 @@ function AdminOffersContent() {
                                 saveField(product.id, 'discount_price', val);
                               }
                             }}
-                            className="w-28 rounded-lg border border-muted-200 px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
+                            className="w-28 rounded-lg border border-muted-200 px-2 py-1.5 text-base sm:text-sm focus:border-primary focus:outline-none"
                             aria-label={`Discount price for ${product.name}`}
                           />
                         </div>

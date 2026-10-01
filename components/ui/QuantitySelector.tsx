@@ -56,7 +56,7 @@ const QuantitySelector = React.forwardRef<HTMLDivElement, QuantitySelectorProps>
           readOnly
           aria-label={isLoading ? "Updating quantity" : "Quantity"}
           className={cn(
-            "h-11 w-14 border-x border-muted-200 bg-white text-center text-sm font-medium md:h-9 md:w-12",
+            "h-11 w-14 border-x border-muted-200 bg-white text-center text-base sm:text-sm font-medium md:h-9 md:w-12",
             "text-secondary-800 outline-none",
             "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           )}

@@ -23,8 +23,13 @@ export default function ProductSpecifications({
   }
 
   return (
-    <div className={cn('overflow-hidden rounded-2xl', className)}>
-      <table className="w-full text-sm">
+    <div
+      className={cn(
+        'overflow-x-auto overscroll-x-contain rounded-2xl border border-muted-200',
+        className
+      )}
+    >
+      <table className="min-w-full text-sm">
         <tbody>
           {specifications.map((spec, index) => (
             <tr
@@ -36,7 +41,9 @@ export default function ProductSpecifications({
               <td className="px-5 py-3 font-medium text-secondary-800">
                 {spec.key}
               </td>
-              <td className="px-5 py-3 text-muted-600">{spec.value}</td>
+              <td className="max-w-[12rem] whitespace-normal break-words px-5 py-3 text-muted-600 sm:max-w-none">
+                {spec.value}
+              </td>
             </tr>
           ))}
         </tbody>

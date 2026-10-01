@@ -316,7 +316,7 @@ function SellerPayoutsContent() {
               }}
               placeholder={`Min Rs. ${MIN_PAYOUT_AMOUNT.toLocaleString()}`}
               min={MIN_PAYOUT_AMOUNT}
-              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+              className={`w-full rounded-lg border px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
                 fieldErrors.amount
                   ? 'border-danger focus:border-danger focus:ring-danger/20'
                   : 'border-muted-200 focus:border-primary focus:ring-primary/20'
@@ -354,7 +354,7 @@ function SellerPayoutsContent() {
                   ? 'Account name / IBAN'
                   : 'Mobile number (03xx-xxxxxxx)'
               }
-              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+              className={`w-full rounded-lg border px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
                 fieldErrors.accountDetails
                   ? 'border-danger focus:border-danger focus:ring-danger/20'
                   : 'border-muted-200 focus:border-primary focus:ring-primary/20'

@@ -93,7 +93,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           // scroll container: the menu is far taller than any phone viewport
           // and the sticky header stays pinned while the links scroll beneath
           // it. Bottom padding clears the home indicator on the last category.
-          'fixed top-0 left-0 z-[121] h-full w-[300px] max-w-[85vw] overflow-y-auto overscroll-contain bg-white pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-xl transition-transform duration-300 ease-in-out',
+          'fixed top-0 left-0 z-[121] h-[100dvh] w-[300px] max-w-[85vw] overflow-y-auto overscroll-contain bg-white pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-xl transition-transform duration-300 ease-in-out',
           open ? 'translate-x-0' : '-translate-x-full invisible'
         )}
       >

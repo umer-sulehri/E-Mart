@@ -80,7 +80,7 @@ const Newsletter = React.forwardRef<HTMLDivElement, NewsletterProps>(
                       </label>
                       <input
                         type="email"
-                        className="w-full rounded-none border-0 bg-white p-3 text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full rounded-none border-0 bg-white p-3 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2 focus:ring-primary"
                         name="email"
                         id="email"
                         placeholder="Email Address"

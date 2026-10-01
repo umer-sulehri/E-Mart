@@ -140,7 +140,7 @@ function SearchBar({ className }: { className?: string }) {
             if (suggestions.length > 0) setOpen(true);
           }}
           placeholder="Search for more than 20,000 products"
-          className="flex-1 bg-transparent border-0 text-sm text-secondary placeholder:text-muted focus:outline-none px-3 py-1"
+          className="flex-1 bg-transparent border-0 text-base sm:text-sm text-secondary placeholder:text-muted focus:outline-none px-3 py-1"
           aria-label="Search products"
         />
         {query && (

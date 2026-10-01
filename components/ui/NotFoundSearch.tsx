@@ -27,7 +27,7 @@ export default function NotFoundSearch() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search products..."
         aria-label="Search products"
-        className="flex-1 bg-transparent px-4 py-2 text-sm text-secondary placeholder:text-muted-400 focus:outline-none"
+        className="flex-1 bg-transparent px-4 py-2 text-base sm:text-sm text-secondary placeholder:text-muted-400 focus:outline-none"
       />
       <button
         type="submit"

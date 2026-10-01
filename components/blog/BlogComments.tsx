@@ -133,7 +133,7 @@ export default function BlogComments({ postId }: { postId: string }) {
           placeholder="Write a comment..."
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="w-full rounded-lg border border-muted-200 px-4 py-3 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full rounded-lg border border-muted-200 px-4 py-3 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           rows={3}
         />
         <div className="mt-3 flex justify-end">

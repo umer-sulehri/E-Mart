@@ -168,7 +168,7 @@ export default function AdminSidebar() {
           // the viewport, so the panel grows instead of scrolling and the page
           // scrolls behind a locked body. Scrolling lives on an explicit
           // `min-h-0 flex-1` region below instead.
-          'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-white shadow-lg transition-transform lg:hidden',
+          'fixed left-0 top-0 z-50 flex h-[100dvh] w-72 max-w-[85vw] flex-col bg-white shadow-lg transition-transform lg:hidden',
           mobileOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'
         )}
       >
