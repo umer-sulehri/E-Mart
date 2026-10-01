@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect, useCallback } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   Loader2,
   Mail,
@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
-import { useDebounce } from '@/hooks/useDebounce';
 import { usePageParam } from '@/hooks/usePageParam';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { PAGE_SIZE } from '@/lib/pagination';
 import { cn } from '@/lib/utils';
 
@@ -41,14 +41,12 @@ export default function AdminContactPage() {
 
 function AdminContactContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  // Controlled box, debounced term: typing "sales" must not fire a request per
-  // keystroke and flicker the list through empty result sets.
-  const [searchInput, setSearchInput] = useState('');
-  const search = useDebounce(searchInput, 400).trim();
+  // Typing "sales" must not fire a request per keystroke and flicker the list
+  // through empty result sets, and the term belongs in the URL so an inbox view
+  // can be shared or restored.
+  const { search, searchInput, setSearchInput, setFilters } = useUrlFilters();
   const filter = (searchParams.get('status') ?? 'all') as Filter;
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -109,12 +107,7 @@ function AdminContactContent() {
   }, [load]);
 
   const setFilterParam = (next: Filter) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (next === 'all') params.delete('status');
-    else params.set('status', next);
-    params.delete('page');
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    setFilters({ status: next === 'all' ? null : next });
   };
 
   const toggleResolved = async (sub: Submission) => {
@@ -186,7 +179,7 @@ function AdminContactContent() {
             <input
               type="text"
               placeholder="Search submissions..."
-              value={search}
+              value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />

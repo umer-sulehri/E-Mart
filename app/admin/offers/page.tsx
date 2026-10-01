@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   Search,
   Loader2,
@@ -19,8 +19,8 @@ import { cn, formatPrice } from '@/lib/utils';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import Pagination from '@/components/ui/Pagination';
 import { resolveImage } from '@/lib/imageLoader';
-import { useDebounce } from '@/hooks/useDebounce';
 import { usePageParam } from '@/hooks/usePageParam';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { PAGE_SIZE } from '@/lib/pagination';
 
 interface OfferProduct {
@@ -60,8 +60,6 @@ export default function AdminOffersPage() {
 
 function AdminOffersContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
 
   const [products, setProducts] = useState<OfferProduct[]>([]);
   const [sellers, setSellers] = useState<SellerOption[]>([]);
@@ -72,9 +70,10 @@ function AdminOffersContent() {
   });
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  // Controlled box, debounced term: every keystroke would otherwise be a request.
-  const [searchInput, setSearchInput] = useState('');
-  const search = useDebounce(searchInput, 400).trim();
+  // Filters live in the URL, so a given view of this table is shareable and
+  // survives a refresh or a back/forward step.
+  const { search, searchInput, setSearchInput, setFilters, clearSearch } =
+    useUrlFilters();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<{ id: string; field: string } | null>(null);
@@ -99,22 +98,17 @@ function AdminOffersContent() {
   );
 
   const { page: currentPage, setPage: setCurrentPage } = usePageParam({
-    resetOn: [search, statusFilter, sellerFilter.join(',')],
+    resetOn: [
+      search,
+      statusFilter,
+      sellerFilter.join(','),
+      // Primitives, not `typeFilter`: serializeResetKey stringifies its inputs,
+      // and an object would collapse to "[object Object]" for every toggle.
+      typeFilter.featured,
+      typeFilter.isNew,
+      typeFilter.discounted,
+    ],
   });
-
-  const setParam = useCallback(
-    (key: string, value: string | null) => {
-      const params = new URLSearchParams(searchParams.toString());
-      // Filters are the page's real state, so they go in the history stack and
-      // Back actually undoes a filter change.
-      if (!value) params.delete(key);
-      else params.set(key, value);
-      params.delete('page');
-      const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-    },
-    [searchParams, pathname, router]
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -232,7 +226,7 @@ function AdminOffersContent() {
     const next = sellerFilter.includes(slug)
       ? sellerFilter.filter((s) => s !== slug)
       : [...sellerFilter, slug];
-    setParam('sellers', next.join(','));
+    setFilters({ sellers: next.join(',') });
   };
 
   const activeFilterCount =
@@ -242,17 +236,14 @@ function AdminOffersContent() {
     (search ? 1 : 0);
 
   const resetFilters = () => {
-    setSearchInput('');
-    setParam('sellers', null);
-    setParam('featured', null);
-    setParam('isNew', null);
-    setParam('onSale', null);
-    setParam('status', null);
+    // One navigation, not one per key: each per-key update rebuilds the query
+    // from the same stale `searchParams`, so all but the last would be dropped.
+    clearSearch({ sellers: null, featured: null, isNew: null, onSale: null, status: null });
   };
 
   const toggleType = (key: keyof typeof typeFilter) => {
     const param = key === 'discounted' ? 'onSale' : key;
-    setParam(param, typeFilter[key] ? null : 'true');
+    setFilters({ [param]: typeFilter[key] ? null : 'true' });
   };
 
   return (
@@ -399,7 +390,9 @@ function AdminOffersContent() {
           {/* Status filter */}
           <select
             value={statusFilter}
-            onChange={(e) => setParam('status', e.target.value === 'all' ? null : e.target.value)}
+            onChange={(e) =>
+              setFilters({ status: e.target.value === 'all' ? null : e.target.value })
+            }
             className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-800 focus:border-primary focus:outline-none"
           >
             <option value="all">All Statuses</option>
