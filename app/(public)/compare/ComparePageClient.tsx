@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, X, Plus, BarChart3, Trash2, Star } from 'lucide-react';
+import { ShoppingCart, X, Plus, BarChart3, Trash2, Star, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useHydrated } from '@/hooks/useHydrated';
@@ -14,6 +14,7 @@ import {
   type CompareItem,
 } from '@/store/compareStore';
 import { resolveGroupLabel } from '@/lib/compare-rules';
+import { resolvePriceDisplay } from '@/lib/utils';
 import { useCartStore } from '@/store';
 import { tryParseJson } from '@/lib/api';
 import { trackEvent } from '@/lib/analytics';
@@ -33,7 +34,15 @@ interface SearchResult {
   categoryId: string;
 }
 
-type Notice = { tone: 'limit' | 'mismatch'; message: string } | null;
+type Notice =
+  | { tone: 'limit'; message: string }
+  | { tone: 'mismatch'; message: string; product: SearchResult }
+  | null;
+
+/** The figure a picker result advertises: the sale price when there is one. */
+function resultPrice(product: SearchResult): number {
+  return resolvePriceDisplay(product.price, product.discountPrice).current;
+}
 
 export default function ComparePage({
   initialProductSlugs = [],
@@ -165,9 +174,16 @@ export default function ComparePage({
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     try {
-      const res = await fetch(
-        `/api/v1/products?search=${encodeURIComponent(searchQuery)}&limit=8`
-      );
+      // The tray holds one category, so the picker only offers that category.
+      // Filtering server-side (not just hiding the mismatches afterwards) means
+      // a search for a broad term returns a full page of comparable products
+      // rather than a handful of disabled ones.
+      const params = new URLSearchParams({
+        search: searchQuery.trim(),
+        limit: '8',
+      });
+      if (trayCategoryId) params.set('categoryId', trayCategoryId);
+      const res = await fetch(`/api/v1/products?${params.toString()}`);
       if (!res.ok) return;
       const data = await tryParseJson<{
         data?: {
@@ -185,23 +201,24 @@ export default function ComparePage({
       }>(res);
       if (!data?.data) return;
 
-      const mapped: SearchResult[] = data.data.map((p) => ({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        price: p.price,
-        discountPrice: p.discount_price,
-        rating: p.rating || 0,
-        reviewCount: p.review_count || 0,
-        image: p.images?.[0] || '/images/product-thumb-1.webp',
-        category: p.categories?.[0]?.name || '',
-        categoryId: p.categories?.[0]?.id || p.category_id || '',
-      }));
-      // Already-saved products are dropped so the list never offers an "add"
-      // button that would report a duplicate.
-      setSearchResults((prev) => [
-        ...mapped.filter((m) => !prev.some((saved) => saved.id === m.id)),
-      ]);
+      const savedIds = new Set(items.map((i) => i.id));
+      const mapped: SearchResult[] = data.data
+        // Already-saved products are dropped, so the list never offers an "add"
+        // button that would only report a duplicate.
+        .filter((p) => !savedIds.has(p.id))
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          price: p.price,
+          discountPrice: p.discount_price ?? undefined,
+          rating: p.rating || 0,
+          reviewCount: p.review_count || 0,
+          image: p.images?.[0] || '/images/product-thumb-1.webp',
+          category: p.categories?.[0]?.name || '',
+          categoryId: p.categories?.[0]?.id || p.category_id || '',
+        }));
+      setSearchResults(mapped);
     } catch {
       // Leave the previous results in place rather than blanking the panel.
     } finally {
@@ -236,7 +253,8 @@ export default function ComparePage({
       case 'category-mismatch':
         setNotice({
           tone: 'mismatch',
-          message: `Your compare list has ${decision.label} products. Only products from the same category can be compared — clear the list to start a new one.`,
+          message: `Your compare list is comparing ${decision.label} products. Only products from the same category can be compared — clear the list to start a new one.`,
+          product,
         });
         break;
       case 'category-full':
@@ -355,9 +373,19 @@ export default function ComparePage({
           <h1 className="font-heading text-2xl font-bold text-secondary-800">
             Compare Products
           </h1>
-          <p className="mt-1 text-sm text-muted-500">
-            Comparing {comparing.length} of {MAX_COMPARE_ITEMS} products
-            {trayLabel && <> in {trayLabel}</>}
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-500">
+            <span>
+              Comparing {comparing.length} of {MAX_COMPARE_ITEMS} products
+            </span>
+            {/* The tray is locked to one category, so naming it is what tells the
+                shopper why a product they can see elsewhere on the site cannot
+                be added here. */}
+            {trayLabel && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                <Tag size={12} aria-hidden="true" />
+                Comparing in: {trayLabel}
+              </span>
+            )}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -389,9 +417,14 @@ export default function ComparePage({
           id="compare-search-panel"
           className="mb-8 rounded-2xl border border-muted-100 bg-white p-6 shadow-sm"
         >
-          <h2 className="mb-4 text-sm font-semibold text-secondary-700">
-            Search Products to Compare
+          <h2 className="mb-1 text-sm font-semibold text-secondary-700">
+            Add a {trayLabel || 'product'} to compare
           </h2>
+          <p className="mb-4 text-xs text-muted-500">
+            {trayLabel
+              ? `Only ${trayLabel} products can join this table.`
+              : 'The first product you add decides which category you can compare.'}
+          </p>
           <div className="flex gap-3">
             {/* A placeholder is not an accessible name, and this input has no
                 visible label. */}
@@ -444,7 +477,7 @@ export default function ComparePage({
                       {product.name}
                     </p>
                     <p className="mt-1 text-xs font-bold text-primary">
-                      Rs. {(product.discountPrice || product.price).toLocaleString()}
+                      Rs. {resultPrice(product).toLocaleString()}
                     </p>
                     {/* Positive styling is reserved for a result that can
                         actually join the table, so the pill reads as a state
@@ -498,15 +531,26 @@ export default function ComparePage({
       )}
 
       <div className="overflow-x-auto rounded-2xl border border-muted-100 bg-white shadow-sm">
-        <table className="w-full min-w-[600px]">
+        <table className="w-full min-w-[640px] table-fixed">
           <caption className="sr-only">
             {`Comparing ${comparing.length} ${trayLabel} products side by side`}
           </caption>
+          <colgroup>
+            {/* `table-fixed` plus an explicit feature-column width is what makes
+                the product columns equal width: with auto layout the widest
+                product name sets every other column's width. The feature column
+                is sticky so the row labels stay readable while the products
+                scroll sideways on a phone. */}
+            <col className="w-36 sm:w-44" />
+            {comparing.map((item) => (
+              <col key={item.id} />
+            ))}
+          </colgroup>
           <thead>
             <tr className="border-b border-muted-100">
               <th
                 scope="col"
-                className="w-40 p-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-500"
+                className="sticky left-0 z-10 w-36 bg-white p-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-500 sm:w-44"
               >
                 Feature
               </th>
@@ -549,38 +593,57 @@ export default function ComparePage({
             </ComparisonRow>
 
             <ComparisonRow label="Price" comparing={comparing} striped>
-              {(item) =>
-                item.discountPrice ? (
+              {(item) => {
+                const { current, original } = resolvePriceDisplay(
+                  item.price,
+                  item.discountPrice
+                );
+                return (
                   <div>
-                    <span className="text-sm font-bold text-danger">
-                      Rs. {item.discountPrice.toLocaleString()}
+                    <span
+                      className={
+                        original !== null
+                          ? 'text-sm font-bold text-danger'
+                          : 'text-sm font-bold text-secondary-800'
+                      }
+                    >
+                      Rs. {current.toLocaleString()}
                     </span>
-                    <span className="ml-2 text-xs text-muted-400 line-through">
-                      Rs. {item.price.toLocaleString()}
-                    </span>
+                    {original !== null && (
+                      <span className="ml-2 text-xs text-muted-400 line-through">
+                        Rs. {original.toLocaleString()}
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <span className="text-sm font-bold text-secondary-800">
-                    Rs. {item.price.toLocaleString()}
-                  </span>
-                )
-              }
+                );
+              }}
             </ComparisonRow>
 
             <ComparisonRow label="Rating" comparing={comparing}>
               {(item) => (
                 <div className="flex items-center justify-center gap-1">
-                  <Star
-                    size={14}
-                    className="fill-warning text-warning"
-                    aria-hidden="true"
-                  />
-                  <span className="text-sm font-medium text-secondary-700">
-                    {item.rating > 0 ? item.rating.toFixed(1) : 'N/A'}
-                  </span>
-                  {item.reviewCount > 0 && (
-                    <span className="text-xs text-muted-400">
-                      ({item.reviewCount})
+                  {item.rating > 0 ? (
+                    <>
+                      <Star
+                        size={14}
+                        className="fill-warning text-warning"
+                        aria-hidden="true"
+                      />
+                      <span className="text-sm font-medium text-secondary-700">
+                        {item.rating.toFixed(1)}
+                      </span>
+                      {item.reviewCount > 0 && (
+                        <span className="text-xs text-muted-400">
+                          ({item.reviewCount})
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    // An empty star beside "N/A" read as a zero-star product
+                    // rather than an unrated one, and the abbreviation meant
+                    // nothing to a shopper.
+                    <span className="text-sm text-muted-400">
+                      No ratings yet
                     </span>
                   )}
                 </div>
@@ -598,7 +661,7 @@ export default function ComparePage({
             <ComparisonRow label="Brand" comparing={comparing}>
               {(item) => (
                 <span className="text-sm text-secondary-600">
-                  {item.brand || 'N/A'}
+                  {item.brand || 'Not specified'}
                 </span>
               )}
             </ComparisonRow>
@@ -620,7 +683,7 @@ export default function ComparePage({
             <tr className="border-t border-muted-100">
               <th
                 scope="row"
-                className="p-4 text-left text-sm font-semibold text-secondary-700"
+                className="sticky left-0 z-10 bg-white p-4 text-left text-sm font-semibold text-secondary-700"
               >
                 Action
               </th>
@@ -654,12 +717,48 @@ export default function ComparePage({
           reports the reason a click was refused rather than announcing a new
           state. */}
       {notice && (
-        <p
+        <div
           role="status"
-          className="fixed left-1/2 z-[60] w-[min(90vw,28rem)] -translate-x-1/2 rounded-xl bg-secondary-800 px-4 py-3 text-center text-sm font-medium text-white shadow-lg bottom-[calc(72px+env(safe-area-inset-bottom))] lg:bottom-4"
+          className="fixed left-1/2 z-[60] flex w-[min(90vw,32rem)] -translate-x-1/2 flex-col gap-3 rounded-xl bg-secondary-800 px-4 py-3 text-sm font-medium text-white shadow-lg bottom-[calc(72px+env(safe-area-inset-bottom))] lg:bottom-4"
         >
-          {notice.message}
-        </p>
+          <p>{notice.message}</p>
+          {notice.tone === 'mismatch' && (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  useCompareStore.getState().replaceWith({
+                    id: notice.product.id,
+                    name: notice.product.name,
+                    slug: notice.product.slug,
+                    price: notice.product.price,
+                    discountPrice: notice.product.discountPrice,
+                    rating: notice.product.rating,
+                    reviewCount: notice.product.reviewCount,
+                    image: notice.product.image,
+                    category: notice.product.category,
+                    categoryId: notice.product.categoryId,
+                    brand: '',
+                    inStock: true,
+                  });
+                  setSearchResults([]);
+                  setNotice(null);
+                  toast.success('Compare list cleared — now showing this product');
+                }}
+                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                Clear &amp; add this instead
+              </button>
+              <button
+                type="button"
+                onClick={() => setNotice(null)}
+                className="text-xs font-medium text-muted-200 underline underline-offset-2 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                Keep current list
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {trayRoom > 0 && (
@@ -689,11 +788,14 @@ function ComparisonRow({
   striped?: boolean;
   children: (item: CompareItem) => ReactNode;
 }) {
+  // Matches the row background exactly: a sticky cell that is transparent lets
+  // the product columns show through it as they slide underneath.
+  const rowClass = striped ? 'bg-muted-50/50' : 'bg-white';
   return (
     <tr className={striped ? 'bg-muted-50/50' : undefined}>
       <th
         scope="row"
-        className="p-4 text-left text-sm font-semibold text-secondary-700"
+        className={`sticky left-0 z-10 p-4 text-left text-sm font-semibold text-secondary-700 ${rowClass}`}
       >
         {label}
       </th>

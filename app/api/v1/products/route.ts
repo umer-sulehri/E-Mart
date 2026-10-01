@@ -16,6 +16,10 @@ export async function GET(request: NextRequest) {
         : 12;
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
+    // The compare tray is locked to one category and identifies it by uuid, not
+    // slug, so a slug-only filter cannot express "only the category already in
+    // the table". Also matches sub-categories, mirroring the slug filter below.
+    const categoryId = searchParams.get("categoryId") || "";
     const brand = searchParams.get("brand") || "";
     const categories =
       searchParams
@@ -87,6 +91,21 @@ export async function GET(request: NextRequest) {
         const ids = Array.from(categoryIds);
         query = query.or(
           `category_id.in.(${ids.join(",")}),subcategory_id.in.(${ids.join(",")})`
+        );
+      }
+    }
+
+    if (categoryId) {
+      // A uuid is supplied directly, so there is no slug lookup to widen with
+      // sub-categories here; the compare tray's lock is on the exact category.
+      // A malformed value matches nothing rather than being ignored, so a bad
+      // id can never widen the picker back to the whole catalogue.
+      const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuid.test(categoryId)) {
+        query = query.eq("id", "00000000-0000-0000-0000-000000000000");
+      } else {
+        query = query.or(
+          `category_id.eq.${categoryId},subcategory_id.eq.${categoryId}`
         );
       }
     }

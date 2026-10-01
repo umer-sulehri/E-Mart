@@ -10,11 +10,13 @@ import QuantitySelector from '@/components/ui/QuantitySelector';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useAddToCart } from '@/hooks/useAddToCart';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
-import { useCompareToggle } from '@/hooks/useCompareToggle';
+import {
+  useCompareToggle,
+  type ComparableProduct,
+} from '@/hooks/useCompareToggle';
 import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
 import { useAuthStore } from '@/store/authStore';
-import { formatPrice, calculateDiscount } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import { formatPrice, resolvePriceDisplay, cn } from '@/lib/utils';
 
 export interface QuickViewProduct {
   id: string;
@@ -52,7 +54,8 @@ export default function QuickViewModal({
     toggleWishlist,
     wishlistLoading,
   } = useAddToWishlist(product?.id ?? '', product?.name ?? '', { isAuthenticated });
-  const { isCompared, toggle: compareToggle } = useCompareToggle();
+  const { isCompared, toggle: compareToggle, eligibilityFor } =
+    useCompareToggle();
   const isInCompare = product ? isCompared(product.id) : false;
 
   const panelRef = useRef<HTMLDivElement>(null);
@@ -68,11 +71,28 @@ export default function QuickViewModal({
 
   if (!open || !product) return null;
 
-  const hasDiscount =
-    product.discountPrice != null && product.discountPrice < product.price;
-  const discount = hasDiscount
-    ? calculateDiscount(product.price, product.discountPrice!)
-    : 0;
+  const {
+    current: price,
+    original,
+    discountPercent: discount,
+  } = resolvePriceDisplay(product.price, product.discountPrice);
+  const hasDiscount = original !== null;
+
+  const compareProduct: ComparableProduct = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    price: product.price,
+    discountPrice: product.discountPrice,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+    image: product.image,
+    category: product.category?.name,
+    categoryId: product.categoryId,
+    inStock: (product.stockQuantity ?? 0) > 0,
+  };
+  const eligibility = eligibilityFor(compareProduct);
+  const compareBlocked = eligibility.state === 'blocked' ? eligibility : null;
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
@@ -157,11 +177,11 @@ export default function QuickViewModal({
             {/* Price */}
             <div className="mt-4 flex items-baseline gap-2">
               <span className="text-2xl font-bold text-dark">
-                {formatPrice(product.discountPrice ?? product.price)}
+                {formatPrice(price)}
               </span>
               {hasDiscount && (
                 <span className="text-sm text-muted-400 line-through">
-                  {formatPrice(product.price)}
+                  {formatPrice(original)}
                 </span>
               )}
             </div>
@@ -226,26 +246,18 @@ export default function QuickViewModal({
                   variant={isInCompare ? 'primary' : 'outline'}
                   size="md"
                   className="px-3"
-                  onClick={() =>
-                    compareToggle({
-                      id: product.id,
-                      name: product.name,
-                      slug: product.slug,
-                      price: product.price,
-                      discountPrice: product.discountPrice,
-                      rating: product.rating,
-                      reviewCount: product.reviewCount,
-                      image: product.image,
-                      category: product.category?.name,
-                      categoryId: product.categoryId,
-                      inStock: (product.stockQuantity ?? 0) > 0,
-                    })
-                  }
+                  onClick={() => compareToggle(compareProduct)}
+                  // Marked, not disabled: the click still reaches the guarded
+                  // store action, which explains the refusal and offers to
+                  // replace the tray.
+                  title={compareBlocked ? compareBlocked.message : undefined}
                   aria-pressed={isInCompare}
                   aria-label={
                     isInCompare
                       ? `Remove ${product.name} from compare`
-                      : `Add ${product.name} to compare`
+                      : compareBlocked
+                        ? compareBlocked.message
+                        : `Add ${product.name} to compare`
                   }
                 >
                   <GitCompareArrows size={16} />

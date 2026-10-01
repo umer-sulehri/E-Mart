@@ -16,7 +16,10 @@ import { useCartStore } from '@/store/cartStore';
 import { useCompareStore } from '@/store/compareStore';
 import { useAuthStore } from '@/store/authStore';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
-import { useCompareToggle } from '@/hooks/useCompareToggle';
+import {
+  useCompareToggle,
+  type ComparableProduct,
+} from '@/hooks/useCompareToggle';
 import type { Product } from '@/types';
 
 export interface ProductDetailClientProps {
@@ -34,7 +37,8 @@ export default function ProductDetailClient({
   const [addingToCart, setAddingToCart] = React.useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const addToServer = useCartStore((s) => s.addToServer);
-  const { isCompared, toggle: compareToggle } = useCompareToggle();
+  const { isCompared, toggle: compareToggle, eligibilityFor } =
+    useCompareToggle();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const pathname = usePathname();
@@ -56,21 +60,26 @@ export default function ProductDetailClient({
     }
   };
 
+  const compareProduct: ComparableProduct = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    price: product.price,
+    discountPrice: product.discountPrice,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+    image: product.images?.[0] || '/images/product-thumb-1.webp',
+    category: product.category?.name || '',
+    categoryId: product.categoryId,
+    brand: product.brand?.name || '',
+    inStock: product.stockQuantity > 0,
+  };
+  const compareEligibility = eligibilityFor(compareProduct);
+  const compareBlocked =
+    compareEligibility.state === 'blocked' ? compareEligibility : null;
+
   const handleAddToCompare = () => {
-    compareToggle({
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: product.price,
-      discountPrice: product.discountPrice,
-      rating: product.rating,
-      reviewCount: product.reviewCount,
-      image: product.images?.[0] || '/images/product-thumb-1.webp',
-      category: product.category?.name || '',
-      categoryId: product.categoryId,
-      brand: product.brand?.name || '',
-      inStock: product.stockQuantity > 0,
-    });
+    compareToggle(compareProduct);
     // The store has already been mutated by the toggle, but this component has
     // not re-rendered yet, so its own binding of the tray is still the
     // pre-toggle value. Reading `getState()` is the only way to see the list the
@@ -176,6 +185,8 @@ export default function ProductDetailClient({
     });
   };
 
+  // Derived from the server's `resolvePriceDisplay`, so the figure shown here
+  // and the one in the JSON-LD offer can never disagree.
   const priceDisplay = formatPrice(
     hasDiscount ? product.discountPrice! : product.price
   );
@@ -328,8 +339,22 @@ export default function ProductDetailClient({
           variant={isInCompare ? 'outline' : 'ghost'}
           size="lg"
           onClick={handleAddToCompare}
-          aria-label={isInCompare ? 'Remove from compare' : 'Add to compare'}
-          title={isInCompare ? 'Remove from compare' : 'Add to compare'}
+          aria-label={
+            isInCompare
+              ? 'Remove from compare'
+              : compareBlocked
+                ? compareBlocked.message
+                : 'Add to compare'
+          }
+          // Marked, not disabled, so the refusal still explains itself and
+          // offers to replace the tray.
+          title={
+            isInCompare
+              ? 'Remove from compare'
+              : compareBlocked
+                ? compareBlocked.message
+                : 'Add to compare'
+          }
           className="col-span-1 lg:col-span-1"
         >
           <GitCompareArrows

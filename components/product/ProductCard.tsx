@@ -7,10 +7,10 @@ import StarRating from "@/components/ui/StarRating";
 import QuickViewModal from "@/components/product/QuickViewModal";
 import { useAddToCart } from "@/hooks/useAddToCart";
 import { useAddToWishlist } from "@/hooks/useAddToWishlist";
-import { useCompareToggle } from "@/hooks/useCompareToggle";
+import { useCompareToggle, type ComparableProduct } from "@/hooks/useCompareToggle";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import QuantitySelector from "@/components/ui/QuantitySelector";
-import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
+import { formatPrice, resolvePriceDisplay, cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 
 export interface Product {
@@ -49,11 +49,35 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
       toggleWishlist,
       wishlistLoading,
     } = useAddToWishlist(product.id, product.name, { isAuthenticated });
-    const { isCompared, toggle: compareToggle } = useCompareToggle();
+    const { isCompared, toggle: compareToggle, eligibilityFor } =
+      useCompareToggle();
     const isInCompare = isCompared(product.id);
-    const discount = product.discountPrice
-      ? calculateDiscount(product.price, product.discountPrice)
-      : 0;
+
+    // One payload, shared by the eligibility check and the click handler, so the
+    // button's state and what the click actually submits cannot disagree.
+    // `eligibilityFor` is a pure, cheap check over the tray, so it needs no
+    // memoisation.
+    const compareProduct: ComparableProduct = {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      discountPrice: product.discountPrice ?? undefined,
+      rating: product.rating,
+      reviewCount: product.reviewCount,
+      image: product.image,
+      category: product.category?.name || '',
+      categoryId: product.categoryId,
+      brand: product.brand?.name || '',
+      inStock: (product.stockQuantity ?? 0) > 0,
+    };
+    const compareEligibility = eligibilityFor(compareProduct);
+    const compareBlocked =
+      compareEligibility.state === 'blocked' ? compareEligibility : null;
+    const { current: price, original, discountPercent } = resolvePriceDisplay(
+      product.price,
+      product.discountPrice
+    );
 
     return (
       <div
@@ -73,32 +97,30 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
           </Link>
 
           {/* Compare toggle sits on the image rather than in the button row,
-              which is already at capacity on small screens. */}
+              which is already at capacity on small screens.
+
+              A product from another category is marked rather than disabled:
+              disabling it would strand the shopper with no way to reach the
+              "Clear & add this instead" action, and would look broken next to
+              a fully enabled grid of identical cards. The muted ring plus the
+              tooltip says why, and the click still explains it in a toast. */}
           <button
-            onClick={() =>
-              compareToggle({
-                id: product.id,
-                name: product.name,
-                slug: product.slug,
-                price: product.price,
-                discountPrice: product.discountPrice ?? undefined,
-                rating: product.rating,
-                reviewCount: product.reviewCount,
-                image: product.image,
-                category: product.category?.name || '',
-                categoryId: product.categoryId,
-                brand: product.brand?.name || '',
-                inStock: (product.stockQuantity ?? 0) > 0,
-              })
-            }
+            onClick={() => compareToggle(compareProduct)}
+            title={compareBlocked ? compareBlocked.message : undefined}
             className={cn(
-              "absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-white/90 shadow-sm ring-1 ring-muted-200 backdrop-blur transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-              isInCompare ? "text-primary ring-primary" : "text-dark"
+              "absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-white/90 shadow-sm ring-1 backdrop-blur transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+              isInCompare
+                ? "text-primary ring-primary"
+                : compareBlocked
+                  ? "text-muted-400 ring-muted-200"
+                  : "text-dark ring-muted-200"
             )}
             aria-label={
               isInCompare
                 ? `Remove ${product.name} from compare`
-                : `Add ${product.name} to compare`
+                : compareBlocked
+                  ? compareBlocked.message
+                  : `Add ${product.name} to compare`
             }
             aria-pressed={isInCompare}
           >
@@ -126,19 +148,17 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
           {/* Footer zone — mt-auto pins price/buttons to the bottom */}
           <div className="mt-auto w-full pt-2">
             <div className="flex min-h-[28px] flex-wrap items-center justify-center gap-x-2 gap-y-1">
-              {product.discountPrice && (
+              {original !== null && (
                 <del className="text-xs text-muted-500 sm:text-sm">
-                  {formatPrice(product.price)}
+                  {formatPrice(original)}
                 </del>
               )}
               <span className="text-base font-semibold text-dark sm:text-lg">
-                {product.discountPrice
-                  ? formatPrice(product.discountPrice)
-                  : formatPrice(product.price)}
+                {formatPrice(price)}
               </span>
-              {discount > 0 && (
+              {discountPercent > 0 && (
                 <span className="rounded-none border border-muted-300 px-1 py-0.5 text-[10px] font-normal leading-none text-muted-600">
-                  {discount}% OFF
+                  {discountPercent}% OFF
                 </span>
               )}
               {product.badge && (

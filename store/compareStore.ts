@@ -38,6 +38,16 @@ interface CompareState {
   items: CompareItem[];
   /** Save a product, or explain why it was refused. */
   addItem: (item: CompareItem) => AddItemDecision;
+  /**
+   * Discard the current tray and start a new comparison with `item`.
+   *
+   * This is the action behind the "Clear & add this instead" affordance shown
+   * when a product from another category is refused. It deliberately bypasses
+   * the category check — the point is to replace the tray, not to join it — but
+   * still refuses a duplicate, and still caps the result, so it cannot be used
+   * to smuggle a mixed list back in.
+   */
+  replaceWith: (item: CompareItem) => void;
   removeItem: (productId: string) => void;
   clearAll: () => void;
   hasItem: (productId: string) => boolean;
@@ -69,6 +79,15 @@ export const useCompareStore = create<CompareState>()(
         }
         return decision;
       },
+
+      replaceWith: (item) =>
+        set((state) => {
+          // An item already saved needs no swap: keeping the existing tray means
+          // an "add" that was already a no-op cannot throw away a comparison the
+          // user built up.
+          if (state.items.some((i) => i.id === item.id)) return state;
+          return { items: [item] };
+        }),
 
       removeItem: (productId) =>
         set((state) => ({
