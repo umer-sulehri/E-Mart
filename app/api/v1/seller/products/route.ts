@@ -8,9 +8,14 @@ import { rateLimitByUserId, rateLimitHeaders } from "@/lib/rate-limit";
 import {
   checkProductUploadQuota,
   recordProductUpload,
+  exemptQuotaStatus,
+  isQuotaExempt,
+  dailyLimitErrorResponse,
+  isDailyLimitDatabaseError,
+  MAX_PRODUCTS_PER_DAY,
   PRODUCT_UPLOAD_ATTEMPT_LIMIT,
   PRODUCT_UPLOAD_ATTEMPT_WINDOW_MS,
-  QUOTA_EXCEEDED_MESSAGE,
+  type QuotaStatus,
 } from "@/lib/seller-quota";
 
 export async function GET(request: NextRequest) {
@@ -199,49 +204,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Daily upload quota (10 per rolling 24h). Checked after payload validation
-    // so malformed requests do not consume a slot, and before brand resolution
-    // and the slug-collision scan so a rejected upload does no further work.
-    let quota;
-    try {
-      quota = await checkProductUploadQuota(supabase, vendor.id);
-    } catch (quotaError) {
-      // Fail closed: if usage cannot be determined we cannot safely hand out
-      // a slot, so surface the failure instead of allowing the upload through.
-      console.error("[v1/seller/products/route] quota check failed:", quotaError);
-      return NextResponse.json(
-        { success: false, error: "Could not verify upload allowance. Please try again." },
-        { status: 503, headers: { "Retry-After": "30" } }
-      );
+    // Daily product allowance (see lib/seller-quota.ts). Checked after payload
+    // validation so malformed requests do not consume a slot, and before brand
+    // resolution and the slug-collision scan so a rejected upload does no
+    // further work.
+    let quota: QuotaStatus;
+
+    if (isQuotaExempt(profile?.role)) {
+      // Admins are exempt by default so catalogue curation is never throttled.
+      quota = exemptQuotaStatus(MAX_PRODUCTS_PER_DAY);
+    } else {
+      try {
+        quota = await checkProductUploadQuota(supabase, vendor.id);
+      } catch (quotaError) {
+        // Fail closed: if usage cannot be determined we cannot safely hand out
+        // a slot, so surface the failure instead of allowing the upload through.
+        console.error("[v1/seller/products/route] quota check failed:", quotaError);
+        return NextResponse.json(
+          { success: false, error: "Could not verify upload allowance. Please try again." },
+          { status: 503, headers: { "Retry-After": "30" } }
+        );
+      }
     }
 
-    if (quota.remaining === 0) {
-      const resetAt = quota.resetAt ?? Date.now() + 24 * 60 * 60 * 1000;
-      const retryAfterSec =
-        quota.retryAfterSec ?? Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
-
-      return NextResponse.json(
-        {
-          success: false,
-          error: QUOTA_EXCEEDED_MESSAGE,
-          meta: {
-            remaining: 0,
-            limit: quota.limit,
-            used: quota.used,
-            resetAt: new Date(resetAt).toISOString(),
-            retryAfterSec,
-          },
-        },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(retryAfterSec),
-            "X-RateLimit-Limit": String(quota.limit),
-            "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": String(Math.ceil(resetAt / 1000)),
-          },
-        }
-      );
+    if (!quota.exempt && quota.remaining === 0) {
+      const limited = dailyLimitErrorResponse(quota);
+      return NextResponse.json(limited.body, { status: 429, headers: limited.headers });
     }
 
 
@@ -314,6 +302,20 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      // The authoritative gate. Two concurrent requests can both pass the check
+      // above; the BEFORE INSERT trigger refuses whichever one would take the
+      // allowance past the limit. Surface it as the same 429 rather than a 500,
+      // so the seller sees the allowance rather than a server fault.
+      if (isDailyLimitDatabaseError(error)) {
+        const limited = dailyLimitErrorResponse({
+          ...quota,
+          used: quota.limit,
+          remaining: 0,
+          source: 'database',
+        });
+        return NextResponse.json(limited.body, { status: 429, headers: limited.headers });
+      }
+
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 500 }

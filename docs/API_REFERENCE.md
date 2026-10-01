@@ -10,9 +10,82 @@ Base path: `/api/v1`. All handlers return JSON.
 |-------|------|-------------|
 | `success` | `boolean` | Whether the request succeeded |
 | `data` | `any` | Payload on success (list/detail/created record) |
-| `error` | `string` | Message on failure (or `none` when no data field) |
-| `meta` | `object` | Pagination: `currentPage`, `totalPages`, `totalItems`, `itemsPerPage`, `hasNextPage`, `hasPreviousPage` |
+| `error` | `string \| object` | Message on failure. Most routes send a bare string; documented limit/rate-limit responses send `{ code, message }` so the client can branch on `code` instead of matching text |
+| `meta` | `object` | Pagination: `currentPage`, `totalPages`, `totalItems`, `itemsPerPage`, `hasNextPage`, `hasPreviousPage`. Quota responses reuse `meta` for `limit`, `used`, `remaining`, `resetAt` |
 | `summary` | `object[]` | Aggregates where applicable (e.g. orders) |
+
+## Daily product upload limit
+
+A seller may create at most **10 products per calendar day**. The day window is
+fixed: it starts at midnight `Asia/Karachi` (PKT, UTC+05:00) and ends at the
+next PKT midnight. `resetAt` is always that instant.
+
+Rules:
+
+- **Creations only.** `PUT`/`PATCH` on a product never consumes a slot.
+- **Deleted products still count.** The count has no status filter, so deleting
+  a product and re-adding it does not free a slot. Drafts and archived products
+  count too.
+- **Counted per creator** (`vendor_id`); vendors never share an allowance.
+- **Admins are exempt** by default (`QUOTA_EXEMPT_ADMINS` / the
+  `exempt_admins_from_daily_product_limit` setting).
+- Enforced on `POST /api/v1/seller/products` and
+  `POST /api/v1/seller/products/import`, plus a Postgres `BEFORE INSERT`
+  trigger as the authoritative race-safe gate.
+
+Single source of truth: `MAX_PRODUCTS_PER_DAY` in `lib/product-limit.ts`
+(client-safe) and `lib/seller-quota.ts` (server, re-exports it); the
+authoritative copy is `app_settings.max_products_per_day`, read by the trigger
+via `supabase/2027-product-daily-limit.sql`.
+
+### Limit response
+
+`429` with `error.code = "DAILY_PRODUCT_LIMIT"`:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "DAILY_PRODUCT_LIMIT",
+    "message": "Daily limit of 10 products reached. Try again tomorrow."
+  },
+  "meta": {
+    "limit": 10,
+    "used": 10,
+    "remaining": 0,
+    "resetAt": "2026-03-15T19:00:00.000Z"
+  }
+}
+```
+
+Headers: `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`,
+`X-RateLimit-Reset`.
+
+If the allowance cannot be read, routes fail closed with `503` and
+`Retry-After: 30` rather than granting an unaccounted slot.
+
+### CSV import over quota
+
+`POST /api/v1/seller/products/import` imports the rows that fit and **names
+every row it refused** rather than dropping them silently. A partial import that
+hit the ceiling returns `429` with `data.rejectedOverQuota` and a
+`rowErrors[]` entry per refused row.
+
+```json
+{
+  "success": true,
+  "data": {
+    "imported": 3,
+    "totalParsed": 10,
+    "skippedDuplicates": 0,
+    "rejectedOverQuota": 7,
+    "rowErrors": [
+      { "row": 0, "error": "\"Widget\" not imported: daily limit of 10 products reached. Try again tomorrow." }
+    ]
+  },
+  "meta": { "limit": 10, "used": 10, "remaining": 0, "resetAt": "2026-03-15T19:00:00.000Z" }
+}
+```
 
 ## Auth
 

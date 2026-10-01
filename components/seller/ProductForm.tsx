@@ -10,6 +10,7 @@ import Badge from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { uploadImageFile } from '@/lib/image-upload';
+import { formatQuotaResetClock } from '@/lib/product-limit';
 
 interface ImageEntry {
   file?: File;
@@ -42,6 +43,11 @@ interface ProductFormProps {
    * page explains why. Only meaningful for `mode === 'add'`.
    */
   quotaBlocked?: boolean;
+  /**
+   * ISO timestamp of the next Asia/Karachi midnight, so the disabled state can
+   * say when the allowance refills rather than only "tomorrow".
+   */
+  quotaResetAt?: string | null;
 }
 
 interface CategoryOption {
@@ -71,6 +77,7 @@ export default function ProductForm({
   mode,
   onSubmit,
   quotaBlocked = false,
+  quotaResetAt = null,
 }: ProductFormProps) {
   const [form, setForm] = useState<ProductFormData>({
     ...defaultData,
@@ -81,6 +88,12 @@ export default function ProductForm({
   const [categories, setCategories] = useState<CategoryOption[]>(CATEGORIES as unknown as CategoryOption[]);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // The reset clock is only rendered after mount: the server has no idea when
+  // the browser's clock ticks over, so formatting Date.now() during SSR would
+  // hydrate-mismatch.
+  const [quotaClockReady, setQuotaClockReady] = useState(false);
+  useEffect(() => setQuotaClockReady(true), []);
 
   // Editing an existing product does not consume an upload slot, so the quota
   // must never lock a seller out of their own catalogue.
@@ -517,7 +530,13 @@ export default function ProductForm({
         </Button>
         {mode === 'add' && quotaBlocked && (
           <p className="text-sm text-danger" role="status">
-            Daily limit reached. Try again tomorrow.
+            {/* Reset time comes from the server (next Asia/Karachi midnight), so
+                it states when *this seller's* allowance refills, not a guess. */}
+            Daily limit reached. Try again tomorrow
+            {quotaResetAt
+              ? ` at ${formatQuotaResetClock(quotaResetAt, quotaClockReady)} PKT`
+              : ''}
+            .
           </p>
         )}
       </div>

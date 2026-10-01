@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getProductUploadQuota } from "@/lib/seller-quota";
+import {
+  getProductUploadQuota,
+  exemptQuotaStatus,
+  isQuotaExempt,
+  MAX_PRODUCTS_PER_DAY,
+} from "@/lib/seller-quota";
 
 /**
  * Daily product-upload allowance for the signed-in seller.
@@ -51,7 +56,11 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    const quota = await getProductUploadQuota(supabase, vendor.id);
+    // Admins are exempt by default (see isQuotaExempt), so their bar never shows
+// as exhausted and the upload button is never disabled for them.
+const quota = isQuotaExempt(profile?.role)
+      ? exemptQuotaStatus(MAX_PRODUCTS_PER_DAY)
+      : await getProductUploadQuota(supabase, vendor.id);
 
     return NextResponse.json({
       success: true,
@@ -60,11 +69,16 @@ export async function GET(_request: NextRequest) {
         limit: quota.limit,
         remaining: quota.remaining,
         resetAt: quota.resetAt === null ? null : new Date(quota.resetAt).toISOString(),
-        exhausted: quota.remaining === 0,
+        exhausted: !quota.exempt && quota.remaining === 0,
+        exempt: quota.exempt === true,
+        // When the day window rolls over, in the quota timezone. Lets the UI
+        // say "resets at midnight PKT" without duplicating the zone logic.
+        timezone: "Asia/Karachi",
       },
       meta: {
         remaining: quota.remaining,
         limit: quota.limit,
+        used: quota.used,
         resetAt: quota.resetAt === null ? null : new Date(quota.resetAt).toISOString(),
         retryAfterSec: quota.retryAfterSec,
       },

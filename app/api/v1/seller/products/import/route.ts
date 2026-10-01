@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseCsv } from "@/lib/csv";
+import {
+  checkProductUploadQuota,
+  recordProductUpload,
+  exemptQuotaStatus,
+  isQuotaExempt,
+  dailyLimitErrorResponse,
+  isDailyLimitDatabaseError,
+  planImportAgainstQuota,
+  MAX_PRODUCTS_PER_DAY,
+  type QuotaStatus,
+} from "@/lib/seller-quota";
 
 interface ImportRow {
   name: string;
@@ -59,12 +70,35 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (!vendor) {
+if (!vendor) {
       return NextResponse.json(
         { success: false, error: "Seller profile not found" },
         { status: 404 }
       );
     }
+
+    // Daily product allowance, enforced on this path exactly as it is on the
+    // single-product create route. Without it, CSV import was an unlimited
+    // bypass of the limit. Checked before the file is even parsed so a seller
+    // who is already done for the day gets an immediate, actionable 429.
+    let quota: QuotaStatus;
+
+    if (isQuotaExempt(profile?.role)) {
+      quota = exemptQuotaStatus(MAX_PRODUCTS_PER_DAY);
+    } else {
+      try {
+        quota = await checkProductUploadQuota(supabase, vendor.id);
+      } catch (quotaError) {
+        // Fail closed, matching the create route.
+        console.error("[v1/seller/products/import/route] quota check failed:", quotaError);
+        return NextResponse.json(
+          { success: false, error: "Could not verify upload allowance. Please try again." },
+          { status: 503, headers: { "Retry-After": "30" } }
+        );
+      }
+    }
+
+    const quotaExhausted = !quota.exempt && quota.remaining === 0;
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -128,12 +162,19 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    if (imports.length === 0) {
+if (imports.length === 0) {
       const firstError =
         rowErrors.length > 0
           ? `No valid rows to import. First error (row ${rowErrors[0].row}): ${rowErrors[0].error}`
           : "No valid product rows found";
       return NextResponse.json({ success: false, error: firstError }, { status: 400 });
+    }
+
+    // Nothing to import and no allowance left: reject before touching the
+    // database, so the seller sees the limit rather than a spurious 400.
+    if (quotaExhausted && imports.length > 0) {
+      const limited = dailyLimitErrorResponse(quota);
+      return NextResponse.json(limited.body, { status: 429, headers: limited.headers });
     }
 
     // Resolve categories and brands by name (create them if missing).
@@ -201,11 +242,22 @@ export async function POST(request: NextRequest) {
       if (!existingSku) uniqueImports.push(item);
     }
 
-    let inserted = 0;
+let inserted = 0;
     const insertedIds: string[] = [];
     const errors: { name: string; error: string }[] = [];
 
-    for (const item of uniqueImports) {
+    // Rows beyond the remaining allowance are rejected rather than silently
+    // dropped, so the seller knows exactly how many were skipped and why. The
+    // import stops as soon as the allowance is spent rather than looping
+    // through thousands of doomed inserts. planImportAgainstQuota is pure and
+    // unit tested in lib/__tests__/seller-quota.test.ts.
+    const plan = planImportAgainstQuota(uniqueImports, quota);
+
+    // Grows to hold every row refused because of the allowance, whether refused
+    // up front by the plan or mid-loop by the database trigger.
+    const overQuotaRows: ImportRow[] = [...plan.rejected];
+
+    for (const item of plan.accepted) {
       try {
         const category_id = await resolveCategory(item.categoryName);
         const subcategory_id = await resolveCategory(item.subcategoryName);
@@ -250,6 +302,14 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (error) {
+          // The authoritative gate again: a concurrent import or a direct insert
+          // can exhaust the allowance between the check above and this insert.
+          // This row and everything after it are refused by the database, so
+          // report them as over-quota rather than as raw database errors.
+          if (isDailyLimitDatabaseError(error)) {
+            overQuotaRows.push(item, ...plan.accepted.slice(plan.accepted.indexOf(item) + 1));
+            break;
+          }
           errors.push({ name: item.name, error: error.message });
         } else {
           inserted++;
@@ -266,18 +326,54 @@ export async function POST(request: NextRequest) {
 
     const skipped = imports.length - uniqueImports.length;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        imported: inserted,
-        totalParsed: imports.length,
-        skippedDuplicates: skipped,
-        rowErrors,
-        errors,
-        insertedIds,
+    // Advance the Redis counter for every row that landed, so the cheap
+    // fast-path rejection stays in step with the database. Fire and forget:
+    // the rows are already committed, so a Redis hiccup must not fail a
+    // successful import.
+    for (let i = 0; i < inserted; i++) {
+      void recordProductUpload(vendor.id);
+    }
+
+    // Name every row the allowance refused, so the seller can fix them and
+    // retry tomorrow instead of guessing which products went missing.
+    for (const item of overQuotaRows) {
+      rowErrors.push({
+        row: 0,
+        error: `"${item.name}" not imported: daily limit of ${quota.limit} products reached. Try again tomorrow.`,
+      });
+    }
+
+    const overQuota = overQuotaRows.length;
+    const usedAfter = quota.used + inserted;
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          imported: inserted,
+          totalParsed: imports.length,
+          skippedDuplicates: skipped,
+          rejectedOverQuota: overQuota,
+          rowErrors,
+          errors,
+          insertedIds,
+        },
+        meta: {
+          limit: quota.limit,
+          used: usedAfter,
+          remaining: Math.max(0, quota.limit - usedAfter),
+          resetAt: quota.resetAt === null ? null : new Date(quota.resetAt).toISOString(),
+        },
+        message:
+          overQuota > 0
+            ? `Imported ${inserted} product(s). ${overQuota} row(s) rejected: daily limit of ${quota.limit} products reached. Try again tomorrow.`
+            : `Imported ${inserted} product(s)`,
       },
-      message: `Imported ${inserted} product(s)`,
-    });
+      // A partial import that hit the ceiling is a limit outcome, not a success
+      // with warnings, so the client can surface it as a toast and disable the
+      // control for the rest of the day.
+      overQuota > 0 ? { status: 429, headers: dailyLimitErrorResponse({ ...quota, used: quota.limit }).headers } : undefined
+    );
   } catch (error) {
     console.error("[v1/seller/products/import/route] error:", error);
     return NextResponse.json(

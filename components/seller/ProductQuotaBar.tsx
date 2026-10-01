@@ -1,26 +1,35 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Upload, AlertTriangle } from 'lucide-react';
+import { Upload, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { formatDuration } from '@/lib/format-duration';
+import { formatQuotaResetClock } from '@/lib/product-limit';
 import { cn } from '@/lib/utils';
 
 export interface ProductQuota {
   used: number;
   limit: number;
   remaining: number;
-  /** ISO timestamp when the next slot frees, or null when the window is empty. */
+  /** ISO timestamp of the next Asia/Karachi midnight, or null when exempt. */
   resetAt: string | null;
   exhausted: boolean;
+  /** True when the allowance does not apply (admins are exempt by default). */
+  exempt?: boolean;
+  /** IANA zone the day boundary is measured in. */
+  timezone?: string;
 }
 
 /**
- * Live daily upload quota for the seller dashboard.
+ * Live daily upload allowance for the seller dashboard.
  *
  * Counts down in place once mounted. The first render deliberately shows a
  * static label instead of a computed duration: the server has no idea when the
  * browser's clock ticks over, so rendering `Date.now()` on the server would
  * hydrate-mismatch.
+ *
+ * The day boundary is midnight Asia/Karachi (see lib/seller-quota.ts), so the
+ * reset time is rendered in that zone rather than the viewer's — a seller in
+ * another timezone must still see when *their* allowance refills.
  */
 export default function ProductQuotaBar({
   quota,
@@ -53,10 +62,34 @@ export default function ProductQuotaBar({
 
   if (!quota) return null;
 
-  const { used, limit, remaining, resetAt, exhausted } = quota;
+  const { used, limit, remaining, resetAt, exhausted, exempt } = quota;
   const percent = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
   const resetMs = resetAt ? new Date(resetAt).getTime() : 0;
   const countdown = now !== null && resetMs > now ? formatDuration(resetMs - now) : null;
+
+  // Midnight PKT, rendered as a wall-clock time. Only after mount, so the
+  // server-rendered markup cannot disagree with the browser's clock.
+  const resetClock = formatQuotaResetClock(resetAt, now !== null);
+
+  if (exempt) {
+    return (
+      <section
+        className={cn(
+          'rounded-xl border border-muted-100 bg-white p-4 shadow-sm',
+          className
+        )}
+        aria-label="Daily product upload allowance"
+      >
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="size-5 shrink-0 text-secondary" aria-hidden="true" />
+          <p className="text-sm font-medium text-secondary-800">
+            <span className="font-semibold">No daily upload limit</span> for admin
+            accounts.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -65,7 +98,7 @@ export default function ProductQuotaBar({
         exhausted ? 'border-danger-200' : 'border-muted-100',
         className
       )}
-      aria-label="Daily product upload allowance"
+      aria-label="Products created today"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
@@ -76,9 +109,8 @@ export default function ProductQuotaBar({
           )}
           <p className="truncate text-sm font-medium text-secondary-800">
             <span className="font-semibold">
-              {used} of {limit}
-            </span>{' '}
-            products uploaded today
+              Products today: {used} / {limit}
+            </span>
           </p>
         </div>
 
@@ -95,6 +127,7 @@ export default function ProductQuotaBar({
         aria-valuenow={used}
         aria-valuemin={0}
         aria-valuemax={limit}
+        aria-valuetext={`${used} of ${limit} products created today`}
         aria-label={`${used} of ${limit} daily product uploads used`}
       >
         <div
@@ -114,12 +147,18 @@ export default function ProductQuotaBar({
         {exhausted ? (
           <>
             Daily limit reached. Try again tomorrow
-            {countdown ? ` — resets in ${countdown}` : ''}.
+            {resetClock ? ` at ${resetClock} PKT` : ''}
+            {countdown ? ` (in ${countdown})` : ''}.
           </>
         ) : countdown ? (
-          <>Allowance refreshes in {countdown}.</>
+          <>
+            You can publish {remaining} more {remaining === 1 ? 'product' : 'products'} today
+            {resetClock ? `. Resets at ${resetClock} PKT` : ''}.
+          </>
         ) : (
-          <>You can publish {remaining} more {remaining === 1 ? 'product' : 'products'} today.</>
+          <>
+            You can publish {remaining} more {remaining === 1 ? 'product' : 'products'} today.
+          </>
         )}
       </p>
     </section>

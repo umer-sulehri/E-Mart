@@ -10,11 +10,20 @@ import { useProductQuota } from '@/hooks/useProductQuota';
 import { tryParseJson } from '@/lib/api';
 import { trackEvent } from '@/lib/analytics';
 import { formatDuration } from '@/lib/format-duration';
+// Client component: the limit constant comes from the dependency-free module,
+// not lib/seller-quota.ts, which imports Supabase and @vercel/kv.
+import { MAX_PRODUCTS_PER_DAY } from '@/lib/product-limit';
 
 export default function AddProductPage() {
   const router = useRouter();
   const { quota, loading: quotaLoading, refresh, setQuota } = useProductQuota();
   const quotaExhausted = quota?.exhausted === true;
+
+  // This block only renders once the client-side quota fetch has resolved, so
+  // reading the clock here cannot mismatch the server render.
+  const quotaResetIn = quota?.resetAt
+    ? new Date(quota.resetAt).getTime() - Date.now()
+    : 0;
 
   const handleSubmit = async (data: ProductFormData) => {
     try {
@@ -42,9 +51,17 @@ export default function AddProductPage() {
       });
       const json = await tryParseJson<{
         success: boolean;
-        error?: string;
+        error?: string | { code?: string; message?: string };
         meta?: { remaining?: number; limit?: number; used?: number; resetAt?: string };
       }>(res);
+
+      // The daily-limit response uses the standard envelope, where `error` is
+      // an object; most other routes return a bare string. Normalise once here
+      // so neither path renders "[object Object]".
+      const errorMessage =
+        typeof json?.error === 'string'
+          ? json.error
+          : json?.error?.message ?? null;
 
       if (res.status === 429) {
         const meta = json?.meta;
@@ -61,18 +78,20 @@ export default function AddProductPage() {
           used: meta?.used ?? null,
         });
 
-        toast.error(`${json?.error || 'Daily product limit reached.'}${waitFor}`, {
+        toast.error(`${errorMessage ?? 'Daily product limit reached.'}${waitFor}`, {
           duration: 8000,
         });
 
         // Keep the panel in step with the server instead of leaving the seller
         // looking at a stale "3 of 10" after being rejected.
         setQuota({
-          used: meta?.used ?? quota?.limit ?? 10,
-          limit: meta?.limit ?? quota?.limit ?? 10,
+          used: meta?.used ?? quota?.limit ?? MAX_PRODUCTS_PER_DAY,
+          limit: meta?.limit ?? quota?.limit ?? MAX_PRODUCTS_PER_DAY,
           remaining: 0,
           resetAt: meta?.resetAt ?? null,
           exhausted: true,
+          exempt: false,
+          timezone: quota?.timezone,
         });
         return;
       }
@@ -81,7 +100,7 @@ export default function AddProductPage() {
         toast.success('Product created successfully');
         // Advance the local count immediately so the quota bar is correct on
         // return, without a second round trip.
-        if (quota) {
+        if (quota && !quota.exempt) {
           setQuota({
             ...quota,
             used: quota.used + 1,
@@ -90,7 +109,7 @@ export default function AddProductPage() {
         }
         router.push('/seller/products');
       } else {
-        toast.error(json?.error || 'Failed to create product');
+        toast.error(errorMessage || 'Failed to create product');
       }
     } catch {
       toast.error('Failed to create product');
@@ -139,13 +158,18 @@ export default function AddProductPage() {
 
       {quotaExhausted && (
         <div className="rounded-xl border border-danger-200 bg-danger-50 p-4 text-sm text-danger-700">
-          <p className="font-medium">You have used all {quota?.limit ?? 10} uploads for today.</p>
+          <p className="font-medium">
+            You have used all {quota?.limit ?? MAX_PRODUCTS_PER_DAY} uploads for today.
+          </p>
           <p className="mt-1">
-            Your allowance refreshes automatically
-            {quota?.resetAt
-              ? ` in ${formatDuration(new Date(quota.resetAt).getTime() - Date.now())}`
-              : ' shortly'}
-            . Editing your existing products is not affected.
+            {/* Only countdown while the reset is genuinely ahead of us; a stale
+                timestamp must not render a negative duration. */}
+            {quotaResetIn ? (
+              <>Your allowance refreshes automatically in {formatDuration(quotaResetIn)}.</>
+            ) : (
+              <>Your allowance refreshes automatically at midnight PKT.</>
+            )}{' '}
+            Editing your existing products is not affected.
           </p>
           <Link
             href="/seller/products"
@@ -157,7 +181,12 @@ export default function AddProductPage() {
       )}
 
       {/* Form */}
-      <ProductForm mode="add" onSubmit={handleSubmit} quotaBlocked={quotaExhausted} />
+      <ProductForm
+        mode="add"
+        onSubmit={handleSubmit}
+        quotaBlocked={quotaExhausted}
+        quotaResetAt={quota?.resetAt ?? null}
+      />
     </div>
   );
 }
