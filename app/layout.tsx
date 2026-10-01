@@ -71,9 +71,15 @@ export const metadata: Metadata = {
     images: ['/images/og-image.jpg'],
   },
   icons: {
-    icon: '/images/logo.webp',
-    shortcut: '/images/logo.webp',
-    apple: '/images/logo.webp',
+    // Square PNG rather than /images/logo.webp: that file is a 241x54
+    // wordmark, which browsers either letterbox into a box or stretch, and
+    // iOS does not accept WebP for apple-touch-icon at all.
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/icons/icon-192.png',
+    apple: '/icons/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
   robots: {
@@ -109,7 +115,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     '@type': 'Organization',
     name: 'E-Mart',
     url: SITE_URL,
-    logo: `${SITE_URL}/images/logo.webp`,
+    // 512px square rather than the 241x54 wordmark: Google's knowledge-panel
+    // guidance asks for a logo at least 112x112 that represents the brand
+    // mark, and a wide wordmark is a poor fit for that slot.
+    logo: `${SITE_URL}/icons/icon-512.png`,
     description:
       'Multi-vendor marketplace for organic groceries and everyday essentials, delivered across Pakistan.',
     sameAs: [],
