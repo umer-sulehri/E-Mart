@@ -24,6 +24,12 @@ interface ImportRow {
   subcategoryName: string;
   brandName: string;
   imageUrl: string;
+  /**
+   * 1-based line in the uploaded CSV, header included, so a rejection can point
+   * the seller at the row to fix. Row 0 means "not attributable to a line",
+   * which is better than quoting a wrong line number.
+   */
+  row: number;
 }
 
 function slugify(input: string): string {
@@ -157,8 +163,9 @@ if (!vendor) {
         stock: isNaN(stock) ? 0 : stock,
         categoryName: get(row, "category_name") || get(row, "category") || "",
         subcategoryName: get(row, "subcategory_name") || get(row, "subcategory") || "",
-        brandName: get(row, "brand_name") || get(row, "brand") || "",
+brandName: get(row, "brand_name") || get(row, "brand") || "",
         imageUrl: get(row, "image_url") || get(row, "image") || "",
+        row: line,
       });
     });
 
@@ -338,7 +345,9 @@ let inserted = 0;
     // retry tomorrow instead of guessing which products went missing.
     for (const item of overQuotaRows) {
       rowErrors.push({
-        row: 0,
+        // The real CSV line, so the seller can open the file at that row. A
+        // constant 0 gave nothing to go on.
+        row: item.row,
         error: `"${item.name}" not imported: daily limit of ${quota.limit} products reached. Try again tomorrow.`,
       });
     }

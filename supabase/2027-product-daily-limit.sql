@@ -10,6 +10,10 @@
 --   the app layer does not: a direct PostgREST insert from a client holding the
 --   anon key, or a future import path. One rule, every entry point.
 --
+--   Note the trigger takes a per-vendor advisory lock before counting. A trigger
+--   that only counted would still be check-then-insert, and would still lose the
+--   race it exists to win; see step 3.
+--
 -- The window is a fixed calendar day in Asia/Karachi (PKT, UTC+05:00), matching
 -- lib/seller-quota.ts. PKT has observed no DST since 2009, so the offset is
 -- constant; it is still expressed as a rule rather than hardcoded arithmetic so
@@ -20,6 +24,8 @@
 --   - Deleted products still count. The count has no status filter, so removing
 --     a product and re-adding it cannot buy another slot.
 --   - Counted per creator (vendor_id).
+--   - created_at is overwritten with the server's NOW() on insert, so the quota
+--     window cannot be dodged by supplying a timestamp from another day.
 --   - Rows with a NULL vendor_id are not counted against anyone (products whose
 --     vendor was deleted get vendor_id NULL via ON DELETE SET NULL). They are
 --     allowed; a platform-owned row cannot be attributed to a seller.
@@ -129,7 +135,8 @@ AS $$
 DECLARE
   v_limit    INTEGER := public.max_products_per_day();
   v_used     INTEGER;
-  v_start    TIMESTAMPTZ := public.quota_day_start(COALESCE(NEW.created_at, NOW()));
+  v_now      TIMESTAMPTZ := NOW();
+  v_start    TIMESTAMPTZ := public.quota_day_start(v_now);
 BEGIN
   -- Rows not attributable to a seller are not charged to any seller.
   IF NEW.vendor_id IS NULL THEN
@@ -150,16 +157,31 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  -- Serialise concurrent inserts by this one vendor. Without it the count below
+  -- is still check-then-insert: two requests that arrive together both read the
+  -- same v_used, both pass, and the seller ends up over the limit. The lock is
+  -- transaction-scoped, so it is released automatically on commit or rollback and
+  -- a failed insert cannot wedge the vendor's quota. Keyed on vendor_id, so
+  -- unrelated vendors never contend and a busy catalogue does not serialise.
+  PERFORM pg_advisory_xact_lock(hashtextextended(NEW.vendor_id::TEXT, 0));
+
+  -- Server-authoritative creation time. Left as the caller's value, a client
+  -- could set created_at to yesterday and be counted in neither window: every
+  -- row lands outside today's range, so the allowance would never be consumed
+  -- and the limit could be bypassed entirely. Assigning here makes the value the
+  -- quota is measured against the one the database observed.
+  NEW.created_at := v_now;
+
   SELECT count(*) INTO v_used
     FROM public.products p
    WHERE p.vendor_id = NEW.vendor_id
      AND p.created_at >= v_start
-     AND p.created_at <  public.quota_day_reset(COALESCE(NEW.created_at, NOW()));
+     AND p.created_at <  public.quota_day_reset(v_now);
 
   IF v_used >= v_limit THEN
     RAISE EXCEPTION
       'DAILY_PRODUCT_LIMIT: seller % has created % of % products for % (resets at %)',
-      NEW.vendor_id, v_used, v_limit, v_start, public.quota_day_reset(COALESCE(NEW.created_at, NOW()))
+      NEW.vendor_id, v_used, v_limit, v_start, public.quota_day_reset(v_now)
       USING ERRCODE = 'P0001';
   END IF;
 
@@ -208,3 +230,23 @@ CREATE INDEX IF NOT EXISTS idx_products_vendor_created_at
 --
 -- Then smoke-test the limit end to end as a seller: the 11th product of the day
 -- should return HTTP 429 with error.code = 'DAILY_PRODUCT_LIMIT'.
+--
+-- To prove the concurrency guard rather than assume it, run two inserts for the
+-- same vendor at once and check only one survives:
+--
+--   BEGIN;
+--   -- seed a vendor with v_used = limit - 1, in a separate committed session
+--   INSERT INTO public.products (name, vendor_id, /* ... */)
+--   SELECT 'concurrent probe A', v_id FROM ...;
+--   -- and the same from a second session, started before the first commits
+--
+-- Exactly one must succeed; the other must raise DAILY_PRODUCT_LIMIT. Without the
+-- advisory lock both succeed and the seller is over the limit.
+
+-- ---------------------------------------------------------------------------
+-- 6. Required index for the lock
+-- ---------------------------------------------------------------------------
+
+-- hashtextextended over vendor_id is what the advisory lock keys on; the existing
+-- (vendor_id, created_at DESC) index in step 4 already covers the count that
+-- follows it, so no additional index is required here.

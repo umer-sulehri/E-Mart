@@ -71,6 +71,9 @@ every row it refused** rather than dropping them silently. A partial import that
 hit the ceiling returns `429` with `data.rejectedOverQuota` and a
 `rowErrors[]` entry per refused row.
 
+The `row` field is the 1-based line in the uploaded CSV, header included, so the
+seller can open the file at exactly that line.
+
 ```json
 {
   "success": true,
@@ -80,12 +83,18 @@ hit the ceiling returns `429` with `data.rejectedOverQuota` and a
     "skippedDuplicates": 0,
     "rejectedOverQuota": 7,
     "rowErrors": [
-      { "row": 0, "error": "\"Widget\" not imported: daily limit of 10 products reached. Try again tomorrow." }
+      { "row": 8, "error": "\"Widget\" not imported: daily limit of 10 products reached. Try again tomorrow." }
     ]
   },
   "meta": { "limit": 10, "used": 10, "remaining": 0, "resetAt": "2026-03-15T19:00:00.000Z" }
 }
 ```
+
+Note the envelope: a partial import is still a `success`, because rows were
+written and `data` reports what landed. The `429` status and `Retry-After` are
+what tell the client the seller is now blocked for the rest of the day. Clients
+must therefore branch on the status code, not on `success`, to decide whether to
+disable the upload control.
 
 ## Auth
 
