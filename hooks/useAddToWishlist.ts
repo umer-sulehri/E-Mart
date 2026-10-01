@@ -21,20 +21,15 @@ export function useAddToWishlist(
 
     (async () => {
       try {
-        const res = await fetch('/api/v1/wishlist?limit=10000');
+        // One-row membership probe. Fetching the whole wishlist per card meant a
+        // grid fired a full list request for every product, and started silently
+        // reporting "not saved" for anyone past the page limit.
+        const res = await fetch(
+          `/api/v1/wishlist?productId=${encodeURIComponent(productId)}`
+        );
         if (!res.ok) return;
         const data = await res.json();
-        if (data.success && Array.isArray(data.data)) {
-          // API rows are `{ product_id, products: { id, ... } }`. Detect whether
-          // this product is already saved in any supported shape.
-          const has = data.data.some((entry: any) => {
-            const pid = entry?.product_id ?? entry?.productId;
-            const nested =
-              entry?.products?.id ?? entry?.products?.product_id ?? entry?.product?.id;
-            return pid === productId || nested === productId;
-          });
-          if (!cancelled) setIsWishlisted(Boolean(has));
-        }
+        if (!cancelled && data.success) setIsWishlisted(Boolean(data.data?.saved));
       } catch {
         // ignore – keep current state
       }

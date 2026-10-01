@@ -21,7 +21,7 @@ export interface PaginationBounds {
 }
 
 export interface PaginationOptions {
-  /** Page size used when the request omits `limit`. Defaults to 20. */
+  /** Page size used when the request omits `limit`. Defaults to {@link PAGE_SIZE}. */
   defaultLimit?: number;
   /**
    * Hard ceiling on `limit`. Uncapped `limit` is a trivial way for a client to
@@ -32,7 +32,31 @@ export interface PaginationOptions {
   minLimit?: number;
 }
 
-export const DEFAULT_PAGE_LIMIT = 20;
+/**
+ * The site-wide page size: every list of users, products, sellers, orders,
+ * reviews, blog posts and so on shows at most this many rows per page.
+ *
+ * This is the single source of truth. It was previously duplicated as 22 local
+ * `ITEMS_PER_PAGE` constants across the list pages, with eight different values
+ * (4, 8, 10, 12, 15, 20, 25, 50) — which is how the admin consent audit ended
+ * up at 25/page while the rest of the site sat at 10 or 15.
+ *
+ * API routes must not hard-code it either: pass it as `defaultLimit` to
+ * {@link parsePagination} so a request that omits `limit` gets this value.
+ */
+export const PAGE_SIZE = 10;
+
+/** Page size used when a request omits `limit`. */
+export const DEFAULT_PAGE_LIMIT = PAGE_SIZE;
+
+/**
+ * Hard ceiling on a client-supplied `limit`.
+ *
+ * Deliberately higher than {@link PAGE_SIZE}: bulk operations and CSV exports
+ * must be able to pull the full filtered set in a few requests, and a 10-row
+ * ceiling would turn every export into hundreds of round trips. The 10-item rule
+ * governs what a list *displays*, not what the API may return on request.
+ */
 export const MAX_PAGE_LIMIT = 100;
 
 /**

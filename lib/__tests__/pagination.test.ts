@@ -7,6 +7,7 @@ import {
   DEFAULT_PAGE_LIMIT,
   MAX_PAGE_LIMIT,
   MAX_PAGE,
+  PAGE_SIZE,
 } from '../pagination';
 
 function params(query = ''): URLSearchParams {
@@ -80,6 +81,24 @@ describe('parsePagination', () => {
   it('treats an empty limit as absent rather than as zero', () => {
     const { limit } = parsePagination(params('page=2&limit='));
     expect(limit).toBe(DEFAULT_PAGE_LIMIT);
+  });
+});
+
+describe('PAGE_SIZE', () => {
+  it('is the default limit, so an omitted ?limit= matches the grid', () => {
+    // The two constants are only useful if they cannot drift: a page asking for
+    // PAGE_SIZE rows and a route answering with DEFAULT_PAGE_LIMIT rows must
+    // agree, or the last page renders short.
+    expect(DEFAULT_PAGE_LIMIT).toBe(PAGE_SIZE);
+    expect(parsePagination(params()).limit).toBe(PAGE_SIZE);
+  });
+
+  it('lets bulk callers exceed it while capping the request', () => {
+    // Exports must be able to pull the whole filtered set, so the hard ceiling
+    // is deliberately looser than what a list displays.
+    expect(MAX_PAGE_LIMIT).toBeGreaterThan(PAGE_SIZE);
+    expect(parsePagination(params(`limit=${MAX_PAGE_LIMIT}`)).limit).toBe(MAX_PAGE_LIMIT);
+    expect(parsePagination(params(`limit=${MAX_PAGE_LIMIT + 1}`)).limit).toBe(MAX_PAGE_LIMIT);
   });
 });
 
