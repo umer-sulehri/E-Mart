@@ -31,3 +31,10 @@ jobs:
 
       - name: Tests
         run: npm test
+
+      # Typecheck and lint both pass on code that cannot build: `next build`
+      # is the only step that resolves App Router segment config, server/client
+      # boundaries and route handlers. A build break would otherwise reach main
+      # and only surface on Vercel.
+      - name: Build
+        run: npm run build
