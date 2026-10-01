@@ -5,7 +5,7 @@ import ProductCarousel from '@/components/product/ProductCarousel';
 import ProductTabs from '@/components/product/ProductTabs';
 import ProductDetailClient from './ProductDetailClient';
 import Breadcrumb from '@/components/ui/Breadcrumb';
-import { calculateDiscount } from '@/lib/utils';
+import { resolvePriceDisplay } from '@/lib/utils';
 import { generateProductMetadata } from '@/lib/seo';
 import { apiProductToCardProduct, tryParseJson, type ApiProduct } from '@/lib/api';
 import { getSiteUrl } from '@/lib/absolute-url';
@@ -215,11 +215,12 @@ export default async function ProductDetailPage({
 
   const relatedProducts = await fetchRelatedProducts(slug);
 
-  const hasDiscount =
-    product.discountPrice != null && product.discountPrice < product.price;
-  const discount = hasDiscount
-    ? calculateDiscount(product.price, product.discountPrice!)
-    : 0;
+  const {
+    current: salePrice,
+    original: originalPrice,
+    discountPercent: discount,
+  } = resolvePriceDisplay(product.price, product.discountPrice);
+  const hasDiscount = originalPrice !== null;
 
   return (
     <>
@@ -243,7 +244,7 @@ export default async function ProductDetailPage({
             offers: {
               '@type': 'Offer',
               priceCurrency: 'PKR',
-              price: product.discountPrice ?? product.price,
+              price: salePrice,
               availability:
                 product.stockQuantity > 0
                   ? 'https://schema.org/InStock'

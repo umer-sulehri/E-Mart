@@ -9,7 +9,7 @@ import { useAuthStore } from '@/store/authStore';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
 import ShareWishlist from '@/components/wishlist/ShareWishlist';
-import { formatPrice, calculateDiscount } from '@/lib/utils';
+import { formatPrice, resolvePriceDisplay } from '@/lib/utils';
 import type { Product } from '@/types';
 
 interface WishlistEntry {
@@ -176,9 +176,8 @@ export default function WishlistPage() {
             const product = entry.product;
             if (!product) return null;
             const price = product.discountPrice ?? product.price;
-            const discount = product.discountPrice
-              ? calculateDiscount(product.price, product.discountPrice)
-              : 0;
+            const { current, original, discountPercent: discount } =
+              resolvePriceDisplay(product.price, product.discountPrice);
             const inStock = product.stockQuantity > 0 && product.isActive;
             const imageUrl = product.images?.[0] || '/images/placeholder.webp';
             const isRemoving = removingId === entry.productId;
@@ -212,13 +211,13 @@ export default function WishlistPage() {
                 </h3>
 
                 <div className="mt-2 flex items-center gap-2">
-                  {product.discountPrice ? (
+                  {original !== null ? (
                     <>
                       <del className="text-xs text-muted-500">
-                        {formatPrice(product.price)}
+                        {formatPrice(original)}
                       </del>
                       <span className="text-sm font-bold text-primary">
-                        {formatPrice(product.discountPrice)}
+                        {formatPrice(current)}
                       </span>
                       <span className="rounded border border-muted-200 bg-white px-1 py-0.5 text-[10px] text-muted-600">
                         {discount}% OFF

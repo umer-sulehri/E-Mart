@@ -15,7 +15,7 @@ import {
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import Button from '@/components/ui/Button';
 import ShareWishlist from '@/components/wishlist/ShareWishlist';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, resolvePriceDisplay } from '@/lib/utils';
 import { tryParseJson } from '@/lib/api';
 
 interface WishlistItem {
@@ -254,7 +254,12 @@ export default function WishlistPage() {
                 <ShareWishlist />
               </div>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((item) => (
+                {items.map((item) => {
+                  const { current, original } = resolvePriceDisplay(
+                    item.price,
+                    item.discountPrice
+                  );
+                  return (
                   <div
                     key={item.id}
                     className="rounded-2xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
@@ -284,11 +289,11 @@ export default function WishlistPage() {
 
                       <div className="mt-2 flex items-baseline gap-2">
                         <span className="text-lg font-bold text-primary">
-                          {formatPrice(item.discountPrice ?? item.price)}
+                          {formatPrice(current)}
                         </span>
-                        {item.discountPrice && (
+                        {original !== null && (
                           <span className="text-sm text-muted-400 line-through">
-                            {formatPrice(item.price)}
+                            {formatPrice(original)}
                           </span>
                         )}
                       </div>
@@ -314,7 +319,8 @@ export default function WishlistPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
