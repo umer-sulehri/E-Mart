@@ -1,5 +1,54 @@
 import type { CartItem } from '@/types';
 
+/** Persisted cart schema version. Bump when `CartItem` changes shape. */
+export const CART_STORAGE_VERSION = 2;
+
+/**
+ * Line-item shape saved before `CART_STORAGE_VERSION` 2, when `CartItem.product`
+ * embedded a full `Product` and the thumbnail lived in an `images[]` array.
+ * Only the fields the cart reads are carried forward.
+ */
+export interface LegacyCartItem extends Omit<CartItem, 'product'> {
+  product?: {
+    id?: string;
+    name?: string;
+    slug?: string;
+    image?: string;
+    images?: string[];
+    stockQuantity?: number;
+  };
+}
+
+export interface LegacyCartState {
+  items?: LegacyCartItem[];
+}
+
+/**
+ * Rewrites a cart persisted under an older schema version into the current one.
+ *
+ * A user with a v1 cart must not silently lose their basket after deploy, so
+ * the full embedded `Product` is narrowed to the snapshot the cart renders and
+ * `images[0]` becomes the single `image` field.
+ */
+export function migrateCartState(persisted: unknown): unknown {
+  const state = persisted as LegacyCartState | undefined;
+  if (!state || !Array.isArray(state.items)) return persisted;
+
+  return {
+    ...state,
+    items: state.items.map(({ product, ...item }) => ({
+      ...item,
+      product: {
+        id: product?.id ?? item.productId,
+        name: product?.name ?? 'Product',
+        slug: product?.slug ?? '',
+        image: product?.image ?? product?.images?.[0],
+        stockQuantity: product?.stockQuantity ?? 0,
+      },
+    })),
+  };
+}
+
 export interface CartMetrics {
   /** Number of unique product line items in the cart. */
   uniqueItemCount: number;

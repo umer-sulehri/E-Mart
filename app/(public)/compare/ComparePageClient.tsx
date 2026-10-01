@@ -18,7 +18,7 @@ import { resolvePriceDisplay } from '@/lib/utils';
 import { useCartStore } from '@/store';
 import { tryParseJson } from '@/lib/api';
 import { trackEvent } from '@/lib/analytics';
-import type { CartItem, Category, Product } from '@/types';
+import type { CartItem } from '@/types';
 
 interface SearchResult {
   id: string;
@@ -270,48 +270,20 @@ export default function ComparePage({
   };
 
   const handleAddToCart = (item: CompareItem) => {
-    // The tray stores a snapshot, not a full product row, so the fields the
-    // cart never reads (description, sku, brand entity) are left empty rather
-    // than invented. Every field `CartItem` requires is present, so this needs
-    // no type assertion.
+    // The cart persists to localStorage, so only the snapshot fields the cart
+    // renders are stored. Prices are carried on the line item itself.
     const now = new Date().toISOString();
-    const category: Category = {
-      id: item.categoryId,
-      name: resolveGroupLabel(item),
-      slug:
-        item.category?.trim().toLowerCase().replace(/\s+/g, '-') ||
-        `category-${item.categoryId}`,
-      isActive: true,
-      displayOrder: 0,
-      createdAt: now,
-      updatedAt: now,
-    };
-    const product: Product = {
-      id: item.id,
-      name: item.name,
-      slug: item.slug,
-      description: '',
-      price: item.price,
-      discountPrice: item.discountPrice,
-      stockQuantity: item.inStock ? 1 : 0,
-      sku: '',
-      category,
-      categoryId: item.categoryId,
-      rating: item.rating,
-      reviewCount: item.reviewCount,
-      isActive: true,
-      isFeatured: false,
-      isNew: false,
-      images: item.image ? [item.image] : [],
-      tags: item.brand ? [item.brand] : [],
-      createdAt: now,
-      updatedAt: now,
-    };
     const unitPrice = item.discountPrice || item.price;
     const cartItem: CartItem = {
       id: `compare-${item.id}`,
       productId: item.id,
-      product,
+      product: {
+        id: item.id,
+        name: item.name,
+        slug: item.slug,
+        image: item.image,
+        stockQuantity: item.inStock ? 1 : 0,
+      },
       unitPrice,
       quantity: 1,
       totalPrice: unitPrice,

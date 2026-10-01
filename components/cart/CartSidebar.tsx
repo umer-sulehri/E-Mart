@@ -138,7 +138,7 @@ export default function CartSidebar() {
                     {/* Thumbnail */}
                     <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-muted-50">
                       <ImageWithFallback
-                        src={resolveImage(item.product.images?.[0])}
+                        src={resolveImage(item.product.image)}
                         alt={item.product.name}
                         fill
                         className="object-contain p-1"

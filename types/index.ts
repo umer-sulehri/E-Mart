@@ -219,10 +219,26 @@ export type ProductUpdateInput = Partial<ProductCreateInput> & { id: string };
 // Cart Types
 // ========================
 
+/**
+ * Minimal product snapshot the cart actually reads (name, thumbnail, stock).
+ *
+ * The cart is persisted to localStorage, so it deliberately does NOT embed a
+ * full `Product` (description, specifications, vendor entity, timestamps, and
+ * the whole image array are several KB per line item and are never rendered).
+ * Prices live on the line item itself as `unitPrice`/`totalPrice`.
+ */
+export interface CartProduct {
+  id: string;
+  name: string;
+  slug: string;
+  image?: string;
+  stockQuantity: number;
+}
+
 export interface CartItem {
   id: string;
   productId: string;
-  product: Product;
+  product: CartProduct;
   quantity: number;
   unitPrice: number;
   totalPrice: number;

@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import toast from 'react-hot-toast';
-import { computeCartMetrics } from '@/lib/cartMetrics';
+import {
+  computeCartMetrics,
+  migrateCartState,
+  CART_STORAGE_VERSION,
+} from '@/lib/cartMetrics';
 import { CART_STORAGE_KEY } from '@/lib/storage-keys';
 import type { CartItem } from '@/types';
 
@@ -145,25 +149,13 @@ export const useCartStore = create<CartState>()(
             const serverItems: CartItem[] = data.data.items.map((item: any) => {
               const p = item.product || {};
               const unitPrice = p.discount_price ?? p.price ?? 0;
+              const images = Array.isArray(p.images) ? p.images : [];
               const product = {
                 id: p.id || item.productId,
                 name: p.name || 'Product',
                 slug: p.slug || '',
-                description: p.description || '',
-                price: p.price ?? 0,
-                discountPrice: p.discount_price,
+                image: images[0],
                 stockQuantity: p.stock_quantity ?? 0,
-                sku: p.sku || '',
-                category: { id: '', name: '', slug: '' },
-                categoryId: '',
-                rating: p.rating ?? 0,
-                reviewCount: p.review_count ?? 0,
-                isActive: p.is_active ?? true,
-                isFeatured: false,
-                isNew: false,
-                images: Array.isArray(p.images) ? p.images : [],
-                createdAt: p.created_at || '',
-                updatedAt: p.updated_at || '',
               };
               return {
                 id: item.id,
@@ -259,6 +251,11 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: CART_STORAGE_KEY,
+      version: CART_STORAGE_VERSION,
+      // Rebuilds carts saved under an older schema so an existing basket
+      // survives the deploy. Functions and the transient `isLoading` flag are
+      // not written by Zustand's default partializer.
+      migrate: migrateCartState,
     }
   )
 );

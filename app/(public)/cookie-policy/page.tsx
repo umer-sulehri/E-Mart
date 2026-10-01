@@ -186,9 +186,15 @@ export default function CookiePolicyPage() {
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart-cart</td>
                         <td className="py-2 pr-4">Preference</td>
-                        <td className="py-2 pr-4">Cart contents and any applied coupon</td>
+                        <td className="py-2 pr-4">
+                          Cart contents and any applied coupon. Each line stores only the
+                          product id, name, link slug, thumbnail, and remaining stock — the
+                          price is kept as the line total
+                        </td>
                         <td className="py-2 pr-4">Local storage, emptied when you check out</td>
-                        <td className="py-2 text-xs text-secondary-600">Local storage (no card data is ever stored)</td>
+                        <td className="py-2 text-xs text-secondary-600">
+                          Local storage (no card data is ever stored)
+                        </td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart-auth</td>
