@@ -253,9 +253,16 @@ export const useCartStore = create<CartState>()(
       name: CART_STORAGE_KEY,
       version: CART_STORAGE_VERSION,
       // Rebuilds carts saved under an older schema so an existing basket
-      // survives the deploy. Functions and the transient `isLoading` flag are
-      // not written by Zustand's default partializer.
+      // survives the deploy.
       migrate: migrateCartState,
+      // Without this the whole state object is serialized and the transient
+      // `isLoading` flag is written to localStorage and restored on next load.
+      partialize: (state) => ({
+        items: state.items,
+        couponCode: state.couponCode,
+        discount: state.discount,
+        freeShipping: state.freeShipping,
+      }),
     }
   )
 );
