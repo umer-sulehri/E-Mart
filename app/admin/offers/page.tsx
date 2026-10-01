@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Search,
   Loader2,
@@ -16,7 +17,11 @@ import {
 import toast from 'react-hot-toast';
 import { cn, formatPrice } from '@/lib/utils';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
+import Pagination from '@/components/ui/Pagination';
 import { resolveImage } from '@/lib/imageLoader';
+import { useDebounce } from '@/hooks/useDebounce';
+import { usePageParam } from '@/hooks/usePageParam';
+import { PAGE_SIZE } from '@/lib/pagination';
 
 interface OfferProduct {
   id: string;
@@ -42,49 +47,78 @@ interface SellerOption {
 
 type SavingId = string | null;
 
+type OfferStats = { featured: number; isNew: number; discounted: number };
+
 export default function AdminOffersPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <AdminOffersContent />
+    </Suspense>
+  );
+}
+
+function AdminOffersContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [products, setProducts] = useState<OfferProduct[]>([]);
   const [sellers, setSellers] = useState<SellerOption[]>([]);
-  const [search, setSearch] = useState('');
-  const [sellerFilter, setSellerFilter] = useState<string[]>([]);
-  const [typeFilter, setTypeFilter] = useState({
-    featured: false,
-    isNew: false,
-    discounted: false,
+  const [stats, setStats] = useState<OfferStats>({
+    featured: 0,
+    isNew: 0,
+    discounted: 0,
   });
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [sellerDropdownOpen, setSellerDropdownOpen] = useState(false);
-  const sellerDropdownRef = useRef<HTMLDivElement>(null);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  // Controlled box, debounced term: every keystroke would otherwise be a request.
+  const [searchInput, setSearchInput] = useState('');
+  const search = useDebounce(searchInput, 400).trim();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<{ id: string; field: string } | null>(null);
   const [justSaved, setJustSaved] = useState<SavingId>(null);
-  useEffect(() => {
-    let cancelled = false;
-    toast('Loading offers...');
-    fetch('/api/v1/admin/products?limit=500&status=all')
-      .then((res) => res.json())
-      .then((json) => {
-        if (!cancelled) {
-          if (json.success) setProducts(json.data || []);
-          else setError(json.error || 'Failed to load products');
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError('Failed to load products');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [sellerDropdownOpen, setSellerDropdownOpen] = useState(false);
+  const sellerDropdownRef = useRef<HTMLDivElement>(null);
 
-  // All sellers (for the seller filter). Only admins can read this endpoint.
+  // Filters live in the URL, so a given view of this table is shareable and
+  // survives a refresh or a back/forward step.
+  const statusFilter = searchParams.get('status') ?? 'all';
+  const sellerFilter = useMemo(
+    () => (searchParams.get('sellers') ?? '').split(',').filter(Boolean),
+    [searchParams]
+  );
+  const typeFilter = useMemo(
+    () => ({
+      featured: searchParams.get('featured') === 'true',
+      isNew: searchParams.get('isNew') === 'true',
+      discounted: searchParams.get('onSale') === 'true',
+    }),
+    [searchParams]
+  );
+
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [search, statusFilter, sellerFilter.join(',')],
+  });
+
+  const setParam = useCallback(
+    (key: string, value: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      // Filters are the page's real state, so they go in the history stack and
+      // Back actually undoes a filter change.
+      if (!value) params.delete(key);
+      else params.set(key, value);
+      params.delete('page');
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [searchParams, pathname, router]
+  );
+
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/v1/admin/sellers')
+    fetch('/api/v1/admin/sellers?limit=100')
       .then((res) => res.json())
       .then((json) => {
         if (!cancelled && json.success && Array.isArray(json.data)) {
@@ -106,6 +140,50 @@ export default function AdminOffersPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        status: statusFilter,
+        page: String(currentPage),
+        limit: String(PAGE_SIZE),
+      });
+      if (search) params.set('search', search);
+      if (sellerFilter.length > 0) params.set('sellers', sellerFilter.join(','));
+      if (typeFilter.featured) params.set('featured', 'true');
+      if (typeFilter.isNew) params.set('isNew', 'true');
+      if (typeFilter.discounted) params.set('onSale', 'true');
+
+      const res = await fetch(`/api/v1/admin/products?${params.toString()}`);
+      const json = await res.json();
+      if (json.success) {
+        setProducts(json.data || []);
+        if (json.stats) setStats(json.stats);
+        const items = json.meta?.totalItems ?? 0;
+        const pages = json.meta?.totalPages ?? 1;
+        setTotalItems(items);
+        setTotalPages(pages);
+        // Marking a row can drop it out of the current filter, leaving the last
+        // page empty. Fall back to the final page that still has rows.
+        if (currentPage > pages) setCurrentPage(pages);
+      } else {
+        setError(json.error || 'Failed to load products');
+        setProducts([]);
+        setTotalItems(0);
+        setTotalPages(1);
+      }
+    } catch {
+      setError('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, search, sellerFilter, typeFilter, currentPage, setCurrentPage]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const saveField = useCallback(
     async (id: string, field: string, value: unknown) => {
@@ -150,45 +228,12 @@ export default function AdminOffersPage() {
     []
   );
 
-  const filtered = useMemo(() => {
-    return products.filter((p) => {
-      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (sellerFilter.length > 0) {
-        const slug = p.vendors?.slug || '';
-        const name = sellerName(p.vendors);
-        const matched = sellerFilter.some((s) => {
-          const seller = sellers.find((x) => x.slug === s || x.name === s);
-          return (seller?.slug === slug) || seller?.name === name || slug === s || name === s;
-        });
-        if (!matched) return false;
-      }
-      if (typeFilter.featured && !p.is_featured) return false;
-      if (typeFilter.isNew && !p.is_new) return false;
-      if (typeFilter.discounted && p.discount_price == null) return false;
-      if (statusFilter === 'active' && !p.is_active) return false;
-      if (statusFilter === 'inactive' && p.is_active) return false;
-      return true;
-    });
-  }, [products, search, sellerFilter, typeFilter, statusFilter, sellers, sellerName]);
-
-  const stats = useMemo(() => {
-    return {
-      featured: products.filter((p) => p.is_featured).length,
-      isNew: products.filter((p) => p.is_new).length,
-      discounted: products.filter((p) => p.discount_price != null).length,
-    };
-  }, [products]);
-
-  // Count of offers per seller (within the loaded, pre-filter dataset).
-  const sellerCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const p of products) {
-      const slug = p.vendors?.slug || '';
-      if (!slug) continue;
-      counts.set(slug, (counts.get(slug) || 0) + 1);
-    }
-    return counts;
-  }, [products]);
+  const toggleSeller = (slug: string) => {
+    const next = sellerFilter.includes(slug)
+      ? sellerFilter.filter((s) => s !== slug)
+      : [...sellerFilter, slug];
+    setParam('sellers', next.join(','));
+  };
 
   const activeFilterCount =
     (sellerFilter.length > 0 ? 1 : 0) +
@@ -197,23 +242,18 @@ export default function AdminOffersPage() {
     (search ? 1 : 0);
 
   const resetFilters = () => {
-    setSearch('');
-    setSellerFilter([]);
-    setTypeFilter({ featured: false, isNew: false, discounted: false });
-    setStatusFilter('all');
+    setSearchInput('');
+    setParam('sellers', null);
+    setParam('featured', null);
+    setParam('isNew', null);
+    setParam('onSale', null);
+    setParam('status', null);
   };
 
   const toggleType = (key: keyof typeof typeFilter) => {
-    setTypeFilter((prev) => ({ ...prev, [key]: !prev[key] }));
+    const param = key === 'discounted' ? 'onSale' : key;
+    setParam(param, typeFilter[key] ? null : 'true');
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -272,8 +312,8 @@ export default function AdminOffersPage() {
             <input
               type="text"
               placeholder="Search products..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
@@ -306,11 +346,7 @@ export default function AdminOffersPage() {
                         type="checkbox"
                         checked={checked}
                         onChange={() => {
-                          setSellerFilter((prev) =>
-                            checked
-                              ? prev.filter((s) => s !== seller.slug)
-                              : [...prev, seller.slug]
-                          );
+                          toggleSeller(seller.slug);
                         }}
                         className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
                       />
@@ -325,9 +361,6 @@ export default function AdminOffersPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-secondary-800">{seller.name}</p>
-                        <p className="text-[11px] text-muted-500">
-                          {sellerCounts.get(seller.slug) || 0} offers
-                        </p>
                       </div>
                     </label>
                   );
@@ -366,7 +399,7 @@ export default function AdminOffersPage() {
           {/* Status filter */}
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+            onChange={(e) => setParam('status', e.target.value === 'all' ? null : e.target.value)}
             className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-800 focus:border-primary focus:outline-none"
           >
             <option value="all">All Statuses</option>
@@ -406,7 +439,7 @@ export default function AdminOffersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-muted-50">
-              {filtered.map((product) => (
+              {products.map((product) => (
                 <tr key={product.id} className="hover:bg-muted-50/50">
                   <td className="py-3">
                     <div className="flex items-center gap-3">
@@ -486,7 +519,15 @@ export default function AdminOffersPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {loading && (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-muted-500">
+                    <Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin text-primary" />
+                    Loading products
+                  </td>
+                </tr>
+              )}
+              {!loading && products.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-10 text-center text-muted-500">
                     No products match the current filters
@@ -496,6 +537,16 @@ export default function AdminOffersPage() {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={totalItems}
+          itemsPerPage={PAGE_SIZE}
+          itemLabel="products"
+          variant="table"
+        />
       </div>
     </div>
   );
