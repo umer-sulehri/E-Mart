@@ -1,7 +1,14 @@
 import type { Metadata } from 'next';
 import { SITE_CONFIG } from './constants';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+// Canonicals and OG URLs must be absolute and must never be localhost: a
+// canonical pointing at localhost tells search engines the real page lives on a
+// developer's machine. NEXT_PUBLIC_SITE_URL is set in the Vercel project, so the
+// fallback is the live host rather than a dev URL — a wrong absolute URL is a
+// far smaller SEO problem than an unusable one.
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://e-mart-sand-pi.vercel.app'
+).replace(/\/$/, '');
 
 interface ProductMetadataInput {
   name: string;
@@ -15,13 +22,15 @@ export function generateProductMetadata(product: ProductMetadataInput): Metadata
   const description =
     product.shortDescription || product.description?.slice(0, 160) || '';
   const imageUrl = product.images?.[0] || SITE_CONFIG.ogImage;
-  const url = product.slug
-    ? `${SITE_URL}/products/${product.slug}`
-    : undefined;
+  const path = product.slug ? `/products/${product.slug}` : undefined;
+  const url = path ? `${SITE_URL}${path}` : undefined;
 
   return {
     title: product.name,
     description,
+    // Without this, a product reachable under several query-string or pagination
+    // variants is indexed as separate URLs competing with each other.
+    alternates: url ? { canonical: url } : undefined,
     openGraph: {
       title: product.name,
       description,
@@ -56,6 +65,7 @@ export function generatePageMetadata(
   return {
     title,
     description,
+    alternates: url ? { canonical: url } : undefined,
     openGraph: {
       title,
       description,

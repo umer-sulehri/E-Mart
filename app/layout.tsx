@@ -101,9 +101,29 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Organization markup for the whole site. Product and BreadcrumbList are
+  // emitted per page; without this the brand itself is only inferable from the
+  // domain, which is what a knowledge-panel candidate needs.
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'E-Mart',
+    url: SITE_URL,
+    logo: `${SITE_URL}/images/logo.webp`,
+    description:
+      'Multi-vendor marketplace for organic groceries and everyday essentials, delivered across Pakistan.',
+    sameAs: [],
+  };
+
   return (
     <html lang="en" className={`${nunito.variable} ${openSans.variable}`}>
       <body className="font-body">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd).replace(/</g, '\\u003c'),
+          }}
+        />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
