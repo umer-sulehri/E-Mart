@@ -30,7 +30,9 @@ export default async function DashboardLayout({
       <div className="flex gap-6 p-4 lg:p-6">
         <DashboardSidebar />
 
-        {/* pt-14 clears the fixed mobile drawer toggle, which would otherwise sit`r`n            on top of the page heading. */}`r`n        <div className="min-w-0 flex-1 pt-14 lg:pt-0">
+        {/* pt-14 clears the fixed mobile drawer toggle, which would otherwise sit
+            on top of the page heading. */}
+        <div className="min-w-0 flex-1 pt-14 lg:pt-0">
           <DashboardHeader />
 
           {/* Breadcrumb */}

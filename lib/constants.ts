@@ -200,3 +200,19 @@ export const SHIPPING_METHODS = [
   { id: "express", name: "Express Delivery", days: "1-2 days", price: 150 },
   { id: "same_day", name: "Same Day Delivery", days: "Within 24 hours", price: 250 },
 ] as const;
+
+// The secondary navigation, shown as the "Pages" dropdown in the header and as a
+// section in the mobile drawer. Declared once so the two cannot drift apart -
+// they previously did, and the mobile menu was missing every page that was not
+// already a quick link.
+export const PAGES_LINKS = [
+  { label: "About Us", href: "/about" },
+  { label: "Shop", href: "/products" },
+  { label: "Cart", href: "/cart" },
+  { label: "Checkout", href: "/checkout" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
+  { label: "Compare Products", href: "/compare" },
+  { label: "Help Center", href: "/help" },
+] as const;
+

@@ -156,17 +156,22 @@ export default function SellerSidebar() {
         />
       )}
 
-      {/* Mobile sidebar */}
+{/* Mobile sidebar */}
       <aside
         id="app-sidebar"
         className={cn(
-          // The nav is far taller than a phone viewport, so the panel itself must
-          // scroll - otherwise the lower links and Logout are unreachable.
-          'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col overflow-y-auto overscroll-contain bg-white pb-[env(safe-area-inset-bottom)] shadow-lg transition-transform lg:hidden',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          // The nav is far taller than a phone viewport, so a scroll container
+          // is mandatory - otherwise the lower links and Logout are unreachable.
+          // The panel must NOT be that container: it is a column flexbox, and a
+          // flex item's default `min-height: auto` stops the child shrinking to
+          // the viewport, so the panel grows instead of scrolling and the page
+          // scrolls behind a locked body. Scrolling lives on an explicit
+          // `min-h-0 flex-1` region below instead.
+          'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-white shadow-lg transition-transform lg:hidden',
+          mobileOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'
         )}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-muted-200 bg-white px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-muted-200 bg-white px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
             <span className="font-heading text-lg font-bold text-secondary-800">
@@ -181,13 +186,21 @@ export default function SellerSidebar() {
             <X className="h-5 w-5" />
           </button>
         </div>
-        {sidebarContent}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+          {sidebarContent}
+        </div>
       </aside>
 
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 lg:block">
-        <div className="sticky top-4 rounded-xl bg-white shadow-sm">
-          {sidebarContent}
+        {/* Capped to the viewport so the menu scrolls inside a pinned panel.
+            `sticky` alone cannot do this: it offsets an element of its own
+            height, so a menu taller than the viewport still runs off the
+            bottom and those links are only reachable by scrolling the page. */}
+        <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-xl bg-white shadow-sm">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+            {sidebarContent}
+          </div>
         </div>
       </aside>
     </>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
+import { PAGES_LINKS } from '@/lib/constants';
 import {
   X,
   Apple,
@@ -88,7 +89,11 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
         aria-label="Mobile navigation"
         aria-hidden={!open}
         className={cn(
-          'fixed top-0 left-0 z-[121] h-full w-[300px] max-w-[85vw] bg-white shadow-xl transition-transform duration-300 ease-in-out overflow-y-auto',
+          // Not a flex container, so `overflow-y-auto` here is a reliable
+          // scroll container: the menu is far taller than any phone viewport
+          // and the sticky header stays pinned while the links scroll beneath
+          // it. Bottom padding clears the home indicator on the last category.
+          'fixed top-0 left-0 z-[121] h-full w-[300px] max-w-[85vw] overflow-y-auto overscroll-contain bg-white pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-xl transition-transform duration-300 ease-in-out',
           open ? 'translate-x-0' : '-translate-x-full invisible'
         )}
       >
@@ -115,6 +120,27 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
               ] as const
             ).map((link) => (
               <li key={link.label}>
+                <Link
+                  href={link.href}
+                  onClick={onClose}
+                  className="block py-2 text-sm font-medium text-secondary hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* The header nav is hidden below `md`, so without this section the
+            drawer - the mobile nav - was missing About, Blog, Contact,
+            Compare and Help entirely. Rendered from the shared list so the two
+            cannot drift apart again. */}
+        <div className="px-4 py-3 border-b border-muted-200">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted mb-2">Pages</p>
+          <ul className="grid grid-cols-2 gap-x-4">
+            {PAGES_LINKS.map((link) => (
+              <li key={link.href + link.label}>
                 <Link
                   href={link.href}
                   onClick={onClose}

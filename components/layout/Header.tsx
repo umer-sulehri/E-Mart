@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
 import { tryParseJson } from '@/lib/api';
+import { PAGES_LINKS } from '@/lib/constants';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import MobileNav from './MobileNav';
@@ -206,25 +207,28 @@ function SearchBar({ className }: { className?: string }) {
 function PagesDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
+    function handleEscape(e: KeyboardEvent) {
+      // Without this, a keyboard user who opens the menu can tab past the last
+      // link and has no way back except activating the trigger again, which is
+      // not discoverable as a "close" affordance.
+      if (e.key === 'Escape' && open) {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const items = [
-    { label: 'About Us', href: '/about' },
-    { label: 'Shop', href: '/products' },
-    { label: 'Cart', href: '/cart' },
-    { label: 'Checkout', href: '/checkout' },
-    { label: 'Blog', href: '/blog' },
-    { label: 'Contact', href: '/contact' },
-    { label: 'Compare Products', href: '/compare' },
-    { label: 'Help Center', href: '/help' },
-  ];
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [open]);
 
   const handleItemClick = (href: string) => {
     setOpen(false);
@@ -236,11 +240,12 @@ function PagesDropdown() {
   return (
     <div ref={ref} className="relative">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-1 py-2 hover:text-primary transition-colors"
         aria-expanded={open}
-        aria-haspopup="menu"
+        aria-controls="pages-menu"
       >
         Pages
         <ChevronDown
@@ -248,8 +253,15 @@ function PagesDropdown() {
         />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-0 min-w-[220px] rounded-xl border border-muted-100 bg-white p-2 shadow-lg">
-          {items.map((item) => (
+        // Anchored right below `lg`: the trigger sits beside the icon cluster,
+        // so `left-0` would push the panel off the viewport edge on the narrower
+        // layouts. Capped height plus its own scroll means a long list can
+        // never grow down into the mobile bottom nav.
+        <div
+          id="pages-menu"
+          className="absolute right-0 top-full z-50 mt-0 max-h-[70vh] min-w-[220px] overflow-y-auto overscroll-contain rounded-xl border border-muted-100 bg-white p-2 shadow-lg lg:left-0 lg:right-auto"
+        >
+          {PAGES_LINKS.map((item) => (
             <Link
               key={item.href + item.label}
               href={item.href}
@@ -459,8 +471,12 @@ export default function Header() {
               </div>
             </div>
 
+            {/* Shown from `md` up, not just `lg`: between 768 and 1023px the
+                search bar moves to its own full-width row, so this nav was
+                hidden even though that row had ample space next to the icon
+                cluster - the widest header layout had the fewest links. */}
             <nav
-              className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase text-dark"
+              className="hidden md:flex items-center gap-6 text-sm font-bold uppercase text-dark"
               aria-label="Main navigation"
             >
               <PagesDropdown />
