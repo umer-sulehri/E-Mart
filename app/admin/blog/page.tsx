@@ -9,10 +9,9 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import { formatDate } from '@/lib/utils';
-
-const ITEMS_PER_PAGE = 20;
 
 interface BlogPost {
   id: string;

@@ -17,10 +17,9 @@ import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import type { CouponRow } from '@/types/supabase';
-
-const ITEMS_PER_PAGE = 20;
 
 function SkeletonRow() {
   return (

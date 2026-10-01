@@ -18,6 +18,7 @@ import {
 import SectionHeader from '@/components/ui/SectionHeader';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import { useDebounce } from '@/hooks/useDebounce';
 import { tryParseJson } from '@/lib/api';
@@ -127,8 +128,6 @@ const CATEGORIES_LIST = [
 ];
 
 const POPULAR_POSTS = MOCK_POSTS.slice(0, 3);
-
-const ITEMS_PER_PAGE = 4;
 
 export default function BlogPage() {
   // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import toast from 'react-hot-toast';
 import { tryParseJson } from '@/lib/api';
@@ -34,9 +35,6 @@ interface Review {
   helpful: number;
   helpfulByUser: boolean;
 }
-
-
-const ITEMS_PER_PAGE = 4;
 
 export default function ReviewsPage() {
   // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.

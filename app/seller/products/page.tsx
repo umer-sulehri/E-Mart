@@ -17,6 +17,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ProductQuotaBar from '@/components/seller/ProductQuotaBar';
@@ -67,7 +68,6 @@ function SellerProductsContent() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProductRow | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-  const ITEMS_PER_PAGE = 10;
   const { quota, loading: quotaLoading } = useProductQuota();
   const quotaExhausted = quota?.exhausted === true;
 

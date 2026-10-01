@@ -16,6 +16,7 @@ import {
 import { cn, formatPrice } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE } from '@/lib/pagination';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
 import { usePageParam } from '@/hooks/usePageParam';
 import type { ProductRow } from '@/types/supabase';
@@ -56,7 +57,6 @@ function AdminProductsContent() {
   const [totalItems, setTotalItems] = useState(0);
   const [moderating, setModerating] = useState<string | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-  const itemsPerPage = 15;
 
   const { page: currentPage, setPage: setCurrentPage } = usePageParam({
     resetOn: [search, statusFilter],
@@ -67,7 +67,7 @@ function AdminProductsContent() {
     try {
       const params = new URLSearchParams();
       params.set('page', String(currentPage));
-      params.set('limit', String(itemsPerPage));
+      params.set('limit', String(PAGE_SIZE));
       if (search) params.set('search', search);
       if (statusFilter !== 'all') params.set('status', statusFilter);
 
@@ -283,7 +283,7 @@ function AdminProductsContent() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
+          itemsPerPage={PAGE_SIZE}
           itemLabel="products"
           className="mt-4"
         />

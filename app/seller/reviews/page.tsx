@@ -7,14 +7,13 @@ import { formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import { cn } from '@/lib/utils';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { ReviewRow } from '@/types/supabase';
 
 const filterTabs = ['All', '5-star', '4-star', '3-star', '2-star', '1-star'];
-
-const ITEMS_PER_PAGE = 10;
 
 /**
  * Rating summary over every review the seller has, returned by the endpoint.

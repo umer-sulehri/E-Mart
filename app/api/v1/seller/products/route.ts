@@ -5,6 +5,7 @@ import { slugify } from "@/lib/utils";
 import { safeSearchPattern, safeOrTerm } from "@/lib/search-safe";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 import { rateLimitByUserId, rateLimitHeaders } from "@/lib/rate-limit";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 import {
   checkProductUploadQuota,
   recordProductUpload,
@@ -61,11 +62,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+const { page, limit, offset } = parsePagination(searchParams);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status");
-    const offset = (page - 1) * limit;
 
     let query = supabase
       .from("products")
@@ -85,7 +84,10 @@ export async function GET(request: NextRequest) {
     if (status === "active") query = query.eq("is_active", true);
     else if (status === "inactive") query = query.eq("is_active", false);
 
+// id is the tiebreaker so two products created in the same instant cannot swap
+    // between requests and appear on two pages at once.
     query = query.order("created_at", { ascending: false });
+    query = query.order("id", { ascending: false });
     query = query.range(offset, offset + limit - 1);
 
     const { data: products, error, count } = await query;
@@ -100,14 +102,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: products || [],
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     console.error("[v1/seller/products/route] error:", error);

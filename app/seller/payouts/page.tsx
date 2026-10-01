@@ -6,11 +6,10 @@ import { Wallet, Clock, CheckCircle, XCircle, CreditCard, Plus } from 'lucide-re
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import { formatPrice, formatDate } from '@/lib/utils';
 import type { PayoutMethod } from '@/components/seller/PayoutMethodModal';
-
-const ITEMS_PER_PAGE = 20;
 
 interface Payout {
   id: string;

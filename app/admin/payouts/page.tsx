@@ -12,6 +12,7 @@ import {
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 
 type PayoutStatus = 'pending' | 'processing' | 'completed' | 'failed';
@@ -59,8 +60,6 @@ interface AdminPayoutsResponse {
 }
 
 const VALID_STATUSES: PayoutStatus[] = ['pending', 'processing', 'completed', 'failed'];
-
-const ITEMS_PER_PAGE = 20;
 
 const statusStyles: Record<PayoutStatus, string> = {
   pending: 'bg-muted-100 text-muted-700',

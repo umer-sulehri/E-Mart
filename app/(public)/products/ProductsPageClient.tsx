@@ -8,6 +8,7 @@ import type { Product } from '@/components/product/ProductCard';
 import ProductFilters from '@/components/product/ProductFilters';
 import ProductGrid from '@/components/product/ProductGrid';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import SortDropdown, { type SortValue } from '@/components/product/SortDropdown';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { usePageParam } from '@/hooks/usePageParam';
@@ -28,8 +29,6 @@ import {
   type ApiProduct,
   type ApiListResponse,
 } from '@/lib/api';
-
-const ITEMS_PER_PAGE = 15;
 
 const RATING_LABELS: Record<number, string> = {
   1: '1★ & up',

@@ -7,11 +7,10 @@ import Image from 'next/image';
 import { Store, Star, Package, ChevronRight, Loader2, Search } from 'lucide-react';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import Input from '@/components/ui/Input';
 import { usePageParam } from '@/hooks/usePageParam';
 import { tryParseJson } from '@/lib/api';
-
-const ITEMS_PER_PAGE = 12;
 
 interface Seller {
   id: string;

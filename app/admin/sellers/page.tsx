@@ -19,10 +19,9 @@ import { cn } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { useDebounce } from '@/hooks/useDebounce';
 import { usePageParam } from '@/hooks/usePageParam';
-
-const ITEMS_PER_PAGE = 20;
 
 type SellerStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 

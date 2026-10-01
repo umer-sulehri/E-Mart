@@ -7,11 +7,10 @@ import { formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { OrderRow } from '@/types/supabase';
-
-const ITEMS_PER_PAGE = 12;
 
 type OrderStatusType = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 

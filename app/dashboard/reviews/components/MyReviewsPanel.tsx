@@ -7,6 +7,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import Button from '@/components/ui/Button';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import toast from 'react-hot-toast';
 import ReviewCard from './ReviewCard';
@@ -27,8 +28,6 @@ interface Meta {
   hasNextPage: boolean;
   hasPreviousPage: boolean;
 }
-
-const PAGE_SIZE = 8;
 
 export default function MyReviewsPanel({
   status = '',

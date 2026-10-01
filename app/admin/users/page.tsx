@@ -17,6 +17,7 @@ import Button from '@/components/ui/Button';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ExportCsvButton from '@/components/ui/ExportCsvButton';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE } from '@/lib/pagination';
 import { usePageParam } from '@/hooks/usePageParam';
 import type { ProfileRow } from '@/types/supabase';
 
@@ -64,7 +65,6 @@ function AdminUsersContent() {
   const [deleteTarget, setDeleteTarget] = useState<ProfileRow | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-  const itemsPerPage = 10;
 
   const { page: currentPage, setPage: setCurrentPage } = usePageParam({
     resetOn: [search, roleFilter],
@@ -75,7 +75,7 @@ function AdminUsersContent() {
     try {
       const params = new URLSearchParams();
       params.set('page', String(currentPage));
-      params.set('limit', String(itemsPerPage));
+      params.set('limit', String(PAGE_SIZE));
       if (search) params.set('search', search);
       if (roleFilter !== 'all') params.set('role', roleFilter);
 
@@ -404,7 +404,7 @@ function AdminUsersContent() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
+          itemsPerPage={PAGE_SIZE}
           itemLabel="users"
           className="mt-4"
         />

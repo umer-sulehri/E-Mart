@@ -10,12 +10,11 @@ import { useAuthStore } from '@/store/authStore';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import Skeleton from '@/components/ui/Skeleton';
 import { usePageParam } from '@/hooks/usePageParam';
 import { formatPrice, formatDate, cn } from '@/lib/utils';
 import type { Order, OrderItem } from '@/types';
-
-const ITEMS_PER_PAGE = 10;
 
 type FilterStatus = 'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 

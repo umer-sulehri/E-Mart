@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeSearchPattern } from "@/lib/search-safe";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const { page, limit, offset } = parsePagination(searchParams);
     const search = searchParams.get("search") || "";
-    const offset = (page - 1) * limit;
 
     let query = supabase
       .from("vendors")
@@ -23,7 +22,10 @@ export async function GET(request: NextRequest) {
       query = query.ilike("name", safeSearchPattern(search));
     }
 
+    // total_sales is not unique, so id is the tiebreaker that keeps pages from
+    // duplicating or skipping two vendors with the same sales total.
     query = query.order("total_sales", { ascending: false });
+    query = query.order("id", { ascending: false });
     query = query.range(offset, offset + limit - 1);
 
     const { data, error, count } = await query;
@@ -38,14 +40,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: data || [],
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(
