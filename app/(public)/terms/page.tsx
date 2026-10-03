@@ -1,17 +1,16 @@
-import { type Metadata } from 'next';
+import { type Metadata } from 'next'
+import { generatePageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Terms & Conditions',
-  description:
-    'Review the E-Mart terms and conditions governing your use of our online grocery store, including orders, payments, shipping, returns, and account policies.',
-  openGraph: {
-    title: 'Terms & Conditions | E-Mart',
-    description:
-      'Review the E-Mart terms and conditions governing your use of our online grocery store, including orders, payments, shipping, returns, and account policies.',
-  },
-};
+export const metadata: Metadata = generatePageMetadata(
+  'Terms & Conditions',
+  'Review the E-Mart terms and conditions governing your use of our online grocery store, including orders, payments, shipping, returns, and account policies.',
+  // The page really does live at `/terms`. A `vercel.json` redirect used to
+  // send `/terms` to a `/terms-and-conditions` route that does not exist, so
+  // this page was unreachable from the footer, register and checkout.
+  '/terms'
+);
 
 const sections = [
   { id: 'acceptance', label: 'Acceptance of Terms' },

@@ -1,17 +1,13 @@
-import { type Metadata } from 'next';
+import { type Metadata } from 'next'
+import { generatePageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Cookie Policy',
-  description:
-    'Learn how E-Mart uses cookies and similar technologies, what each type does, and how you can control or withdraw your consent at any time.',
-  openGraph: {
-    title: 'Cookie Policy | E-Mart',
-    description:
-      'Learn how E-Mart uses cookies and similar technologies, what each type does, and how you can control or withdraw your consent at any time.',
-  },
-};
+export const metadata: Metadata = generatePageMetadata(
+  'Cookie Policy',
+  'Learn how E-Mart uses cookies and similar technologies, what each type does, and how you can control or withdraw your consent at any time.',
+  '/cookie-policy'
+);
 
 const tocSections = [
   { id: 'what-are-cookies', label: 'What Are Cookies?' },

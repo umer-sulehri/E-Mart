@@ -27,6 +27,11 @@ const openSans = Open_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // The homepage had no canonical, so every variant that resolves to it
+  // (trailing slash, non-www) was indexable as a separate URL. Pages with
+  // their own metadata override this, which is why the static content pages
+  // go through `generatePageMetadata`.
+  alternates: { canonical: '/' },
   title: {
     default: 'E-Mart - Organic Foods at your Doorsteps',
     template: '%s | E-Mart - Organic Grocery Store',

@@ -1,17 +1,13 @@
-import { type Metadata } from 'next';
+import { type Metadata } from 'next'
+import { generatePageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy',
-  description:
-    'Read the E-Mart privacy policy to understand how we collect, use, and protect your personal information when you shop on our organic grocery platform.',
-  openGraph: {
-    title: 'Privacy Policy | E-Mart',
-    description:
-      'Read the E-Mart privacy policy to understand how we collect, use, and protect your personal information when you shop on our organic grocery platform.',
-  },
-};
+export const metadata: Metadata = generatePageMetadata(
+  'Privacy Policy',
+  'Read the E-Mart privacy policy to understand how we collect, use, and protect your personal information when you shop on our organic grocery platform.',
+  '/privacy-policy'
+);
 
 const tocSections = [
   { id: 'info-we-collect', label: 'Information We Collect' },
