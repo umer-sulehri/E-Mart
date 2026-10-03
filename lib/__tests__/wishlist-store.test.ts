@@ -102,6 +102,45 @@ describe('wishlist store', () => {
     expect(state.count).toBe(0);
   });
 
+  // The drawer renders `items`, and writes the list endpoint's rows in through
+  // `setItems`. When it held its own copy in component state, `removeItem`
+  // updated the store (the header badge dropped) while the row on screen came
+  // from the other list, so nothing visibly happened.
+  it('removes a row the drawer loaded through setItems', () => {
+    useWishlistStore
+      .getState()
+      .setItems([makeItem('p1'), makeItem('p2'), makeItem('p3')]);
+
+    expect(useWishlistStore.getState().items).toHaveLength(3);
+
+    useWishlistStore.getState().removeItem('p2');
+
+    const state = useWishlistStore.getState();
+    expect(state.items.map((item) => item.productId)).toEqual(['p1', 'p3']);
+    expect(state.count).toBe(0);
+  });
+
+  it('replaces the preview list rather than appending to it', () => {
+    const store = useWishlistStore.getState();
+    store.setItems([makeItem('p1'), makeItem('p2')]);
+    store.setItems([makeItem('p3')]);
+
+    expect(useWishlistStore.getState().items.map((i) => i.productId)).toEqual([
+      'p3',
+    ]);
+  });
+
+  it('caps a setItems list to the preview limit', () => {
+    const many = Array.from({ length: WISHLIST_DRAWER_LIMIT + 5 }, (_, i) =>
+      makeItem(`p${i}`)
+    );
+    useWishlistStore.getState().setItems(many);
+
+    expect(useWishlistStore.getState().items).toHaveLength(
+      WISHLIST_DRAWER_LIMIT
+    );
+  });
+
   it('toggles open state', () => {
     useWishlistStore.getState().toggle();
     expect(useWishlistStore.getState().isOpen).toBe(true);

@@ -42,6 +42,16 @@ interface WishlistState {
   markRemoved: (productId: string) => void;
   /** Add the full row once the server has echoed it back. */
   addItem: (item: WishlistPreviewItem) => void;
+  /**
+   * Replace the preview list with what the list endpoint just returned.
+   *
+   * The drawer used to hold these rows in its own `useState`, which meant a
+   * removal went to the store (badge drops) while the row it was removing from
+   * was a different list entirely — so the card stayed on screen until the
+   * drawer was closed and reopened. Writing through the store gives the drawer
+   * and `removeItem` one list, and keeps the preview capped and newest-first.
+   */
+  setItems: (items: WishlistPreviewItem[]) => void;
   /** Drop the full row when it is removed from the drawer. */
   removeItem: (productId: string) => void;
   open: () => void;
@@ -165,6 +175,8 @@ export const useWishlistStore = create<WishlistState>()((set, get) => ({
           }
     );
   },
+
+  setItems: (items) => set({ items: items.slice(0, WISHLIST_DRAWER_LIMIT) }),
 
   removeItem: (productId) => {
     get().markRemoved(productId);

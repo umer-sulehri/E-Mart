@@ -13,6 +13,13 @@ import { WISHLIST_DRAWER_LIMIT } from '@/lib/constants';
 import Button from '@/components/ui/Button';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 
+/** `toWishlistItem` drops a product that was deleted after being saved. */
+function isWishlistItem(
+  item: ReturnType<typeof toWishlistItem>
+): item is NonNullable<ReturnType<typeof toWishlistItem>> {
+  return item !== null;
+}
+
 /**
  * The wishlist as a right-hand side drawer, mirroring `CartSidebar`.
  *
@@ -22,21 +29,24 @@ import ImageWithFallback from '@/components/ui/ImageWithFallback';
  * the header heart can still act as a single tap target instead of a navigation
  * step away from every product page.
  *
- * The item list is fetched on open rather than held in the store: the store's
- * summary only knows ids (see `hydrate`), and a wishlist's products carry image
- * and price data that would make the store a second cache of the list endpoint.
+ * The rows live in `useWishlistStore`, not in local state, so `removeItem`
+ * removes the row the shopper tapped. The store's summary only knows ids (see
+ * `hydrate`); the full rows are written in through `setItems` when the drawer
+ * opens, because a wishlist's products carry image and price data that would
+ * make the store a second cache of nothing useful if it were fetched on mount.
  */
 export default function WishlistDrawer() {
   const isOpen = useWishlistStore((s) => s.isOpen);
   const close = useWishlistStore((s) => s.close);
   const removeItem = useWishlistStore((s) => s.removeItem);
+  const setItems = useWishlistStore((s) => s.setItems);
   const count = useWishlistStore((s) => s.count);
   const hydrate = useWishlistStore((s) => s.hydrate);
+  const items = useWishlistStore((s) => s.items);
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const hydrated = useHydrated();
 
-  const [items, setItems] = useState<ReturnType<typeof toWishlistItem>[]>([]);
   const [loading, setLoading] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +62,7 @@ export default function WishlistDrawer() {
   useBodyScrollLock(isOpen);
   useEscapeKey(isOpen, close);
 
-  // Seed the id set for the header badge. Only once per session — the store
+  // Seeds the id set for the header badge. Only once per session — the store
   // guards on `status === 'idle'`, so every card mounting is a no-op.
   useEffect(() => {
     if (hydrated && isAuthenticated) hydrate();
@@ -60,10 +70,7 @@ export default function WishlistDrawer() {
 
   // Sign-out must not leave the previous shopper's items on screen.
   useEffect(() => {
-    if (hydrated && !isAuthenticated) {
-      useWishlistStore.getState().reset();
-      setItems([]);
-    }
+    if (hydrated && !isAuthenticated) useWishlistStore.getState().reset();
   }, [hydrated, isAuthenticated]);
 
   const loadItems = useCallback(async () => {
@@ -78,7 +85,7 @@ export default function WishlistDrawer() {
         data?: Parameters<typeof toWishlistItem>[0][];
       }>(res);
       if (json?.success && Array.isArray(json.data)) {
-        setItems(json.data.map(toWishlistItem).filter(Boolean));
+        setItems(json.data.map(toWishlistItem).filter(isWishlistItem));
       }
     } catch {
       // Leave the previous list in place; the drawer is a preview, so a stale
@@ -86,7 +93,7 @@ export default function WishlistDrawer() {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, setItems]);
 
   // Fetch on open, not on mount: a shopper who never opens the drawer should
   // not pay for the list request.
@@ -197,7 +204,6 @@ export default function WishlistDrawer() {
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
               <ul className="divide-y divide-muted-100">
                 {items.map((item) => {
-                  if (!item) return null;
                   const { current, original } = resolvePriceDisplay(
                     item.price,
                     item.discountPrice
