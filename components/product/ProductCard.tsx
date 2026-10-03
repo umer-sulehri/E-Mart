@@ -181,7 +181,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 </p>
               )}
 
-            <div className="button-area w-full pt-3.5 lg:px-0 lg:pb-3">
+            <div className="button-area w-full pb-1 pt-3.5 lg:px-0 lg:pb-3">
               <div className="flex items-stretch gap-1.5 sm:gap-2">
                 <QuantitySelector
                   value={quantity}

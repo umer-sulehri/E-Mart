@@ -32,12 +32,14 @@
 
      The bottom padding is larger below `sm` than above it. On a phone the
      action row (quantity, add to cart, quick view, wishlist) sits in normal
-     flow, so it is the last thing in the card and 16px of padding left it
-     visually flush with the card edge. 20px gives it room to breathe; the
-     desktop card keeps 16px because there the row overlays on hover and the
-     extra padding would just make every tile taller. */
+     flow, so it is the last thing in the card and it needs real white space
+     under it: 16px left the row visually flush with the card edge, and the
+     shopper read the buttons as belonging to the page rather than the card.
+     28px puts the whole row clearly inside the card. The desktop card keeps
+     16px because from `lg` the row overlays on hover and the extra padding
+     would just make every tile taller. */
   .product-item {
-    @apply relative rounded-2xl bg-white p-4 pb-5 transition-shadow duration-300;
+    @apply relative rounded-2xl bg-white p-4 pb-7 transition-shadow duration-300;
     box-shadow: 0 0 22px rgba(0, 0, 0, 0);
   }
 
