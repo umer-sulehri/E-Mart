@@ -11,7 +11,7 @@ import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 25 });
+    const { page, limit, offset } = parsePagination(searchParams);
     const supabase = await createClient();
 
     const {
@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
         { count: "exact" }
       )
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {

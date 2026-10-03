@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   parsePagination,
   buildPaginationMeta,
@@ -178,5 +180,75 @@ describe('page range', () => {
   it('never reports a start beyond the total on a stale page', () => {
     // A `?page=99` against a 3-page result set must not print "91-0 of 12".
     expect(pageRangeEnd(99, 10, 12)).toBe(12);
+  });
+});
+
+describe('route wiring', () => {
+  const API_ROOT = join(process.cwd(), 'app', 'api', 'v1');
+
+  function routeFiles(dir: string): string[] {
+    return readdirSync(dir).flatMap((entry) => {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) return routeFiles(full);
+      return entry === 'route.ts' ? [full] : [];
+    });
+  }
+
+  const routes = routeFiles(API_ROOT);
+
+  it('finds the API routes', () => {
+    // Guards the two assertions below from passing vacuously if the walk breaks.
+    expect(routes.length).toBeGreaterThan(50);
+  });
+
+  it('has no route overriding the page size', () => {
+    // Thirteen routes once passed `{ defaultLimit: 20 | 25 | 50 }`. The client
+    // asked for PAGE_SIZE rows and the pager assumed PAGE_SIZE, so a route
+    // answering 50 rows rendered a "Page 1 of 3" pager over 50 cards and the
+    // last two pages were unreachable. One page size, one source.
+    const offenders = routes.filter((file) => {
+      const source = readFileSync(file, 'utf8');
+      return /parsePagination\([^)]*defaultLimit/.test(source);
+    });
+
+    expect(
+      offenders.map((file) => file.slice(process.cwd().length + 1))
+    ).toEqual([]);
+  });
+
+  it('pairs every parsePagination call with buildPaginationMeta', () => {
+    // `parsePagination` without `buildPaginationMeta` is how
+    // `admin/brands` ended up emitting a bare `{ totalItems }`, which
+    // <Pagination> cannot read — the table simply had no pager.
+    const offenders: string[] = [];
+
+    for (const file of routes) {
+      const source = readFileSync(file, 'utf8');
+      if (!source.includes('parsePagination')) continue;
+      if (!source.includes('buildPaginationMeta')) {
+        offenders.push(file.slice(process.cwd().length + 1));
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('orders every ranged query with an id tiebreaker', () => {
+    // `.range()` combined with an ORDER BY on a non-unique column can serve a
+    // row twice or skip it entirely across a page boundary. `created_at`
+    // collides on same-second writes, `name` on shared product names.
+    const offenders: string[] = [];
+
+    for (const file of routes) {
+      const source = readFileSync(file, 'utf8');
+      if (!source.includes('.range(')) continue;
+
+      const orders = [...source.matchAll(/\.order\(\s*"([a-z_]+)"/g)].map((m) => m[1]);
+      if (orders.length === 0 || orders.includes('id')) continue;
+
+      offenders.push(`${file.slice(process.cwd().length + 1)}: ${orders.join(', ')}`);
+    }
+
+    expect(offenders).toEqual([]);
   });
 });

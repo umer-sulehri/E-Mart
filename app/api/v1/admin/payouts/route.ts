@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
+    const { page, limit, offset } = parsePagination(searchParams);
     const status = searchParams.get("status");
 
     if (status && !VALID_STATUSES.includes(status)) {
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       data: payoutRows,
       error,
       count,
-    } = await query.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
+    } = await query.order("created_at", { ascending: false }).order("id", { ascending: false }).range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json(

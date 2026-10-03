@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 import {
@@ -17,7 +17,22 @@ import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ImageUploader from '@/components/ui/ImageUploader';
+import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE } from '@/lib/pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import type { CategoryRow } from '@/types/supabase';
+
+interface CategoryStats {
+  totalCategories: number;
+  activeCategories: number;
+  totalProducts: number;
+}
+
+const EMPTY_STATS: CategoryStats = {
+  totalCategories: 0,
+  activeCategories: 0,
+  totalProducts: 0,
+};
 
 function SkeletonCard() {
   return (
@@ -37,7 +52,19 @@ function SkeletonCard() {
 }
 
 export default function AdminCategoriesPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <AdminCategoriesContent />
+    </Suspense>
+  );
+}
+
+function AdminCategoriesContent() {
   const [categories, setCategories] = useState<CategoryRow[]>([]);
+  const [stats, setStats] = useState<CategoryStats>(EMPTY_STATS);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,13 +77,26 @@ export default function AdminCategoriesPage() {
     displayOrder: 0,
   });
 
-  const fetchCategories = async () => {
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam();
+
+  const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/categories');
+      const res = await fetch(
+        `/api/v1/admin/categories?page=${currentPage}&limit=${PAGE_SIZE}`
+      );
       const data = await res.json();
       if (data.success) {
-        setCategories(data.data);
+        setCategories(data.data || []);
+        setStats(data.stats || EMPTY_STATS);
+        const pages = data.meta?.totalPages || 1;
+        setTotalPages(pages);
+        setTotalItems(data.meta?.totalItems || 0);
+        // Deleting the last row on the last page leaves the current page past
+        // the end of the result set, which would render an empty grid.
+        if (currentPage > pages) {
+          setCurrentPage(pages);
+        }
       } else {
         toast.error(data.error || 'Failed to load categories');
       }
@@ -65,11 +105,11 @@ export default function AdminCategoriesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, setCurrentPage]);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const handleCreate = async () => {
     if (!newCategory.name.trim()) {
@@ -151,9 +191,6 @@ export default function AdminCategoriesPage() {
     setShowForm(true);
   };
 
-  const totalProducts = categories.reduce((sum: number, c: CategoryRow) => sum + (c.product_count || 0), 0);
-  const activeCategories = categories.filter((c: CategoryRow) => c.is_active).length;
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -162,7 +199,7 @@ export default function AdminCategoriesPage() {
           <p className="text-sm text-muted-500">Organize your product catalog</p>
         </div>
         <Button onClick={() => { setShowForm(!showForm); setEditingId(null); setNewCategory({ name: '', description: '', imageUrl: '', displayOrder: 0 }); }}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Add Category
         </Button>
       </div>
@@ -171,10 +208,10 @@ export default function AdminCategoriesPage() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-              <Grid className="h-5 w-5" />
+              <Grid className="size-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-secondary-800">{loading ? '...' : categories.length}</p>
+              <p className="text-2xl font-bold text-secondary-800">{loading && !totalItems ? '...' : stats.totalCategories.toLocaleString()}</p>
               <p className="text-xs text-muted-500">Total Categories</p>
             </div>
           </div>
@@ -182,10 +219,10 @@ export default function AdminCategoriesPage() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-100 text-success-600">
-              <Eye className="h-5 w-5" />
+              <Eye className="size-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-secondary-800">{loading ? '...' : activeCategories}</p>
+              <p className="text-2xl font-bold text-secondary-800">{loading && !totalItems ? '...' : stats.activeCategories.toLocaleString()}</p>
               <p className="text-xs text-muted-500">Active</p>
             </div>
           </div>
@@ -193,10 +230,10 @@ export default function AdminCategoriesPage() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning-100 text-warning-600">
-              <Package className="h-5 w-5" />
+              <Package className="size-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-secondary-800">{loading ? '...' : totalProducts.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-secondary-800">{loading && !totalItems ? '...' : stats.totalProducts.toLocaleString()}</p>
               <p className="text-xs text-muted-500">Total Products</p>
             </div>
           </div>
@@ -208,7 +245,7 @@ export default function AdminCategoriesPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-secondary-800">{editingId ? 'Edit Category' : 'Add New Category'}</h2>
             <button onClick={() => { setShowForm(false); setEditingId(null); }} className="rounded-lg p-1 text-muted-500 hover:bg-muted-100">
-              <X className="h-5 w-5" />
+              <X className="size-5" />
             </button>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -271,7 +308,7 @@ export default function AdminCategoriesPage() {
                       {cat.image_url ? (
                         <Image src={cat.image_url} alt={cat.name} width={40} height={40} className="h-10 w-10 rounded object-cover" />
                       ) : (
-                        <Grid className="h-5 w-5 text-primary" />
+                        <Grid className="size-5 text-primary" />
                       )}
                     </div>
                     <div>
@@ -290,16 +327,35 @@ export default function AdminCategoriesPage() {
                       devices, which have no hover to reveal them. */}
                   <div className="flex shrink-0 items-center gap-1 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                     <button onClick={() => startEdit(cat)} aria-label={`Edit ${cat.name}`} className="rounded p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary">
-                      <Edit3 className="h-3.5 w-3.5" />
+                      <Edit3 className="size-3.5" />
                     </button>
                     <button onClick={() => setDeleteTarget(cat)} aria-label={`Delete ${cat.name}`} className="rounded p-2 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger">
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="size-3.5" />
                     </button>
                   </div>
                 </div>
               </div>
             ))}
       </div>
+
+      {!loading && categories.length === 0 && (
+        <div className="rounded-xl bg-white p-12 text-center shadow-sm">
+          <Grid className="mx-auto size-10 text-muted-300" aria-hidden="true" />
+          <p className="mt-3 font-medium text-secondary-800">No categories yet</p>
+          <p className="mt-1 text-sm text-muted-500">
+            Add your first category to organise the product catalogue.
+          </p>
+        </div>
+      )}
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={PAGE_SIZE}
+        itemLabel="categories"
+        onPageChange={setCurrentPage}
+      />
 
       <ConfirmDialog
         open={deleteTarget !== null}

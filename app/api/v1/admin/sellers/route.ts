@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status"); // all | pending | approved | rejected | suspended
     const search = searchParams.get("search") || "";
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
+    const { page, limit, offset } = parsePagination(searchParams);
 
     let query = supabase
       .from("vendors")
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         "*, profiles(first_name, last_name, email, created_at), products(count)",
         { count: "exact" }
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }).order("id", { ascending: false });
 
     if (status && status !== "all") {
       query = query.eq("status", status);

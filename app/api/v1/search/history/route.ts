@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       .select("id, query, results_count, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .limit(limit);
 
     if (error) {
@@ -112,6 +113,7 @@ export async function POST(request: NextRequest) {
       .select("id")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(MAX_HISTORY, 100000);
 
     if (ids && ids.length > 0) {

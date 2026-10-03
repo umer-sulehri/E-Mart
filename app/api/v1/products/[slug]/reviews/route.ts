@@ -12,7 +12,7 @@ export async function GET(
   try {
     const { slug } = await params;
     const { searchParams } = new URL(request.url);
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 10 });
+    const { page, limit, offset } = parsePagination(searchParams);
     const sort = searchParams.get("sort") || "newest";
 
     const supabase = await createClient();
@@ -41,20 +41,23 @@ export async function GET(
       .in("status", ["approved", "pending"]);
 
     if (sort === "oldest") {
-      query = query.order("created_at", { ascending: true });
+      query = query.order("created_at", { ascending: true }).order("id", { ascending: true });
     } else if (sort === "highest") {
-      query = query.order("rating", { ascending: false });
+      query = query.order("rating", { ascending: false }).order("id", { ascending: false });
     } else if (sort === "lowest") {
-      query = query.order("rating", { ascending: true });
+      query = query.order("rating", { ascending: true }).order("id", { ascending: true });
     } else if (sort === "helpful") {
       // Ordered in SQL, not re-sorted in the browser: ranking only the rows that
       // happen to be on the current page makes "Most Helpful" mean "most helpful
       // of the newest N", and hides a highly-voted review on a later page.
-      // `created_at` breaks ties so the order is stable across requests.
+      // `created_at` then `id` break ties so the order is stable across
+      // requests. The tiebreaker has to come last, after the real sort keys —
+      // putting `id` between them would make "Most Helpful" order by id.
       query = query.order("helpful_count", { ascending: false });
       query = query.order("created_at", { ascending: false });
+      query = query.order("id", { ascending: false });
     } else {
-      query = query.order("created_at", { ascending: false });
+      query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
     }
 
     query = query.range(offset, offset + limit - 1);

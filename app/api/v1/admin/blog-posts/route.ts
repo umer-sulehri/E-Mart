@@ -34,12 +34,13 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
+    const { page, limit, offset } = parsePagination(searchParams);
 
     const { data, error, count } = await supabase
       .from("blog_posts")
       .select("*", { count: "exact" })
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {

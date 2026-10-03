@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
+    const { page, limit, offset } = parsePagination(searchParams);
 
     let query = supabase
       .from("reviews")
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    query = query.order("created_at", { ascending: false });
+    query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
 
     // Ranged after every filter, so `count` describes the filtered set.
     query = query.range(offset, offset + limit - 1);

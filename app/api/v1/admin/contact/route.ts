@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status"); // open | resolved | all
     const search = (searchParams.get("search") || "").trim();
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
+    const { page, limit, offset } = parsePagination(searchParams);
 
     let query = supabase
       .from("contact_submissions")

@@ -12,7 +12,7 @@ export async function GET(
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 12 });
+    const { page, limit, offset } = parsePagination(searchParams);
     const sort = searchParams.get("sort") || "newest";
     const search = searchParams.get("search") || "";
 
@@ -37,19 +37,19 @@ export async function GET(
 
     switch (sort) {
       case "price_asc":
-        productQuery = productQuery.order("price", { ascending: true });
+        productQuery = productQuery.order("price", { ascending: true }).order("id", { ascending: true });
         break;
       case "price_desc":
-        productQuery = productQuery.order("price", { ascending: false });
+        productQuery = productQuery.order("price", { ascending: false }).order("id", { ascending: false });
         break;
       case "rating":
-        productQuery = productQuery.order("rating", { ascending: false });
+        productQuery = productQuery.order("rating", { ascending: false }).order("id", { ascending: false });
         break;
       case "popular":
-        productQuery = productQuery.order("review_count", { ascending: false });
+        productQuery = productQuery.order("review_count", { ascending: false }).order("id", { ascending: false });
         break;
       default:
-        productQuery = productQuery.order("created_at", { ascending: false });
+        productQuery = productQuery.order("created_at", { ascending: false }).order("id", { ascending: false });
     }
 
     if (search) {

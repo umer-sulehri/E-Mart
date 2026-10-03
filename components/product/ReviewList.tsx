@@ -2,15 +2,15 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { ThumbsUp, ChevronDown, PenLine, Loader2, Flag } from 'lucide-react';
+import { ThumbsUp, ChevronDown, PenLine, Flag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StarRating from '@/components/ui/StarRating';
 import Button from '@/components/ui/Button';
 import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE } from '@/lib/pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import { formatDate, cn } from '@/lib/utils';
 import { tryParseJson } from '@/lib/api';
-
-const ITEMS_PER_PAGE = 10;
 
 export interface Review {
   id: string;
@@ -61,16 +61,44 @@ function ReviewSkeleton() {
 }
 
 const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
-  ({ productSlug, onWriteReview, onReviewCountChange, refreshSignal, className }, ref) => {
+  (props, ref) => (
+    // The page number lives in the URL, which means this component reads
+    // `useSearchParams`. That opts the product route out of static rendering,
+    // so the boundary has to sit here rather than at the page level - and the
+    // `ref` has to be forwarded into the inner component for `ProductTabs` to
+    // keep scrolling to the reviews tab.
+    <React.Suspense fallback={<div ref={ref} className={cn('space-y-6', props.className)} />}>
+      <ReviewListContent {...props} containerRef={ref} />
+    </React.Suspense>
+  )
+);
+
+interface ReviewListContentProps extends ReviewListProps {
+  containerRef: React.Ref<HTMLDivElement>;
+}
+
+function ReviewListContent({
+  productSlug,
+  onWriteReview,
+  onReviewCountChange,
+  refreshSignal,
+  className,
+  containerRef,
+}: ReviewListContentProps) {
     const [sortBy, setSortBy] = React.useState<SortOption>('newest');
     const [showSortDropdown, setShowSortDropdown] = React.useState(false);
     const [helpfulClicked, setHelpfulClicked] = React.useState<Set<string>>(new Set());
     const [reviews, setReviews] = React.useState<Review[]>([]);
     const [totalReviews, setTotalReviews] = React.useState(0);
-    const [page, setPage] = React.useState(1);
     const [totalPages, setTotalPages] = React.useState(1);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
+
+    // `page` in the URL rather than `useState`. Local state lost the reader's
+    // place on refresh, on back/forward, and on a shared link, and the reviews
+    // list is the one place on the product page where that is most noticeable.
+    // `resetOn` makes a sort change drop a stale page automatically.
+    const { page, setPage } = usePageParam({ resetOn: [sortBy, productSlug] });
 
     const fetchReviews = React.useCallback(async () => {
       if (!productSlug) {
@@ -87,7 +115,7 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
         // a fixed `page=1&limit=20` left every later review unreachable.
         const params = new URLSearchParams({
           page: String(page),
-          limit: String(ITEMS_PER_PAGE),
+          limit: String(PAGE_SIZE),
           sort: sortBy,
         });
         const res = await fetch(
@@ -147,25 +175,29 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
         setTotalPages(json.meta?.totalPages || 1);
         setTotalReviews(json.meta?.totalItems || fetched.length);
         onReviewCountChange?.(json.meta?.totalItems || fetched.length);
+
+        // A review can be deleted or moderated away, which can leave `?page=`
+        // pointing past the end.
+        const pages = json.meta?.totalPages || 1;
+        if (page > pages) {
+          setPage(pages);
+        }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Something went wrong');
       } finally {
         setLoading(false);
       }
-    }, [productSlug, sortBy, page, onReviewCountChange]);
+    }, [productSlug, sortBy, page, onReviewCountChange, setPage]);
 
     React.useEffect(() => {
       fetchReviews();
     }, [fetchReviews]);
 
-    // A new sort makes the current page meaningless, so start over at page 1
-    // instead of asking the API for page 4 of a differently-ordered result set.
+    // `usePageParam`'s `resetOn` rewrites the URL back to page 1 when the sort
+    // changes, so there is no manual reset here.
     const selectSort = (option: SortOption) => {
       setShowSortDropdown(false);
-      setSortBy((previous) => {
-        if (option !== previous) setPage(1);
-        return option;
-      });
+      setSortBy(option);
     };
 
     // Re-fetch when a sibling notifies us that a review was just submitted.
@@ -236,7 +268,7 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
     };
 
     return (
-      <div ref={ref} className={cn('space-y-6', className)}>
+      <div ref={containerRef} className={cn('space-y-6', className)}>
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-heading text-lg font-bold text-secondary-800">
@@ -403,14 +435,17 @@ const ReviewList = React.forwardRef<HTMLDivElement, ReviewListProps>(
             totalPages={totalPages}
             onPageChange={setPage}
             totalItems={totalReviews}
-            itemsPerPage={ITEMS_PER_PAGE}
+            itemsPerPage={PAGE_SIZE}
             itemLabel="reviews"
+            // `usePageParam` navigates without scrolling, so the reader is not
+            // yanked back to the top of a long product page on every page
+            // change - they stay on the reviews section they just clicked from.
+            scrollToTop={false}
           />
         )}
       </div>
     );
-  }
-);
+}
 
 ReviewList.displayName = 'ReviewList';
 

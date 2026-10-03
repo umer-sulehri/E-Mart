@@ -96,6 +96,38 @@ what tell the client the seller is now blocked for the rest of the day. Clients
 must therefore branch on the status code, not on `success`, to decide whether to
 disable the upload control.
 
+## Pagination
+
+Every list route pages the same way, through `parsePagination` /
+`buildPaginationMeta` in `lib/pagination.ts`.
+
+| Query param | Default | Notes |
+|-------------|---------|-------|
+| `page` | `1` | 1-based. Anything that is not a positive integer is read as 1 |
+| `limit` | `PAGE_SIZE` (10) | Clamped server-side; a client cannot ask for the whole table |
+
+The response `meta` is always the full block — `currentPage`, `totalPages`,
+`totalItems`, `itemsPerPage`, `hasNextPage`, `hasPreviousPage` — never a bare
+`{ totalItems }`, because that is what `<Pagination>` reads. There are no
+per-route `defaultLimit` overrides: an override was the reason one admin table
+quietly served 50 rows while the pager assumed 10.
+
+Rows whose joined parent has since been deleted join back as `null`. Clients are
+expected to drop those rows rather than render a blank card.
+
+Ordering is always `ORDER BY <sort>, id`. The `id` tiebreaker is not optional:
+several of these sort columns (`created_at` on two comments written in the same
+second, `name` on two brands sharing a name) are not unique, so without it a row
+can be served twice across a page boundary or skipped entirely.
+
+Client-side, the page number lives in `?page=` rather than in React state —
+`hooks/usePageParam.ts` — so every paginated view is shareable, survives a
+refresh, and cooperates with browser back/forward. Changing a filter drops the
+stale page automatically.
+
+Supporting indexes: `supabase/2027-pagination-indexes.sql` (run once in the
+Supabase SQL editor; it is idempotent).
+
 ## Auth
 
 - Public routes need no session (e.g. `products`, `blog-posts`, `sellers`, `banners`, `reviews` GET).
@@ -110,7 +142,10 @@ Buyer shipping addresses.
 
 | Method(s) | Endpoint |
 |-----------|----------|
+| GET | /api/v1/auth/addresses |
 | POST | /api/v1/addresses |
+
+`GET /api/v1/auth/addresses` is paginated and orders defaults first, then newest.
 
 ## /admin
 
@@ -199,6 +234,9 @@ Blog articles (public GET, admin/seller CRUD).
 | GET | /api/v1/blog-posts/[id] |
 | GET, POST | /api/v1/blog-posts/[id]/comments |
 
+Comments are paginated, newest first. `GET /api/v1/blog-posts` orders published
+articles by `published_at`.
+
 ## /brands
 
 Endpoints in the brands group.
@@ -224,6 +262,13 @@ Product taxonomy.
 |-----------|----------|
 | GET | /api/v1/categories |
 | GET | /api/v1/categories/[id]/children |
+
+`GET /api/v1/admin/categories` is paginated over **top-level categories only**
+(`parent_id IS NULL`), with each row's `subcategories` fetched in one follow-up
+query. Paging the flat table would split a parent from its children, and
+`totalItems` would count children that are not independently listed. The response
+also carries `stats` (`totalCategories`, `activeCategories`, `totalProducts`)
+because the admin stat cards cannot be derived from one page.
 
 ## /contact
 
@@ -379,8 +424,32 @@ Buyer wishlist.
 | Method(s) | Endpoint |
 |-----------|----------|
 | GET, POST | /api/v1/wishlist |
+| GET | /api/v1/wishlist/summary |
 | POST | /api/v1/wishlist/share |
 | DELETE | /api/v1/wishlist/[productId] |
+
+### GET /api/v1/wishlist
+
+Paginated. Each row is `{ id, product_id, created_at, products }` where
+`products` is the joined product, or `null` if it has since been deleted or
+deactivated — clients must drop those rows rather than render them.
+
+`?productId=` switches to the legacy single-row membership probe and returns
+`{ saved: boolean }` instead. Prefer `/wishlist/summary`: the probe costs one
+request per product card on a grid.
+
+### GET /api/v1/wishlist/summary
+
+One request for everything the header badge and every product-card heart need:
+the total count and the full set of saved product ids.
+
+```json
+{ "success": true, "data": { "count": 12, "productIds": ["…", "…"] } }
+```
+
+No pagination — this is deliberately the whole set, because the client uses it
+to answer "is this product saved?" in memory. It is a single indexed scan of the
+caller's own rows, capped by how many products one shopper has saved.
 
 ## Review status semantics
 

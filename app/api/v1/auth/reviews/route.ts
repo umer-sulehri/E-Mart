@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
+    const { page, limit, offset } = parsePagination(searchParams);
     const status = searchParams.get("status") || "";
     const sort = searchParams.get("sort") || "recent";
 
@@ -38,11 +38,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (sort === "highest") {
-      query = query.order("rating", { ascending: false });
+      query = query.order("rating", { ascending: false }).order("id", { ascending: false });
     } else if (sort === "lowest") {
-      query = query.order("rating", { ascending: true });
+      query = query.order("rating", { ascending: true }).order("id", { ascending: true });
     } else {
-      query = query.order("created_at", { ascending: false });
+      query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
     }
 
     const { data, error, count } = await query

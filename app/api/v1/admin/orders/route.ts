@@ -50,7 +50,7 @@ const { searchParams } = new URL(request.url);
       query = query.or(`order_number.ilike.%${escaped}%`);
     }
 
-    query = query.order("created_at", { ascending: false });
+    query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
     query = query.range(offset, offset + limit - 1);
 
     const { data: orders, error, count } = await query;

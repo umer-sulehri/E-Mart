@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 10 });
+    const { page, limit, offset } = parsePagination(searchParams);
 
     // Star tabs have to be filtered here, not in the browser: filtering the
     // current page client-side caps every tab at one page of results and can
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       .from("reviews")
       .select("*, products!inner(vendor_id, name, slug, images), profiles!inner(first_name, last_name, profile_image_url)", { count: "exact" })
       .eq("products.vendor_id", vendor.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }).order("id", { ascending: false });
 
     if (hasValidRating) {
       query = query.eq("rating", rating);

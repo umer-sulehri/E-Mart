@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
+    const { page, limit, offset } = parsePagination(searchParams);
 
     // Payouts are stored in the seller_payouts table keyed by the seller's
     // profile id (user.id), which matches the RLS policy (auth.uid() = seller_id).
@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
       .select("*", { count: "exact" })
       .eq("seller_id", user.id)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {

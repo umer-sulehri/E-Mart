@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { writeAdminLog } from "@/lib/audit";
 import { slugify } from "@/lib/utils";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,27 +33,75 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: categories, error } = await supabase
-      .from("categories")
-      .select("*")
-      .order("display_order", { ascending: true });
+    const { searchParams } = new URL(request.url);
+    const { page, limit, offset } = parsePagination(searchParams);
 
-    if (error) {
+    // Counts for the three stat cards. Derived from the page rows these cards
+    // would report the numbers for 10 categories out of all of them, which is
+    // worse than showing nothing — so they are counted outright instead.
+    const [activeCount, productCount] = await Promise.all([
+      supabase
+        .from("categories")
+        .select("*", { count: "exact", head: true })
+        .is("parent_id", null)
+        .eq("is_active", true),
+      supabase
+        .from("products")
+        .select("*", { count: "exact", head: true })
+        .eq("is_active", true),
+    ]);
+
+    // Page over top-level categories only, then pull their children in one
+    // extra query. Paging the flat table instead would split a parent from
+    // its subcategories, and the admin table renders them as one unit - the
+    // `count` would also then be off, because children are not countable rows.
+    const {
+      data: roots,
+      error: rootsError,
+      count,
+    } = await supabase
+      .from("categories")
+      .select("*", { count: "exact" })
+      .is("parent_id", null)
+      .order("display_order", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, offset + limit - 1);
+
+    if (rootsError) {
       return NextResponse.json(
-        { success: false, error: error.message },
+        { success: false, error: rootsError.message },
         { status: 500 }
       );
     }
 
-    const rows = categories || [];
+    const rows = roots || [];
 
     // Subcategory hierarchy is stored in the categories table via parent_id.
     const childrenByParent = new Map<string, typeof rows>();
-    for (const cat of rows) {
-      if (cat.parent_id) {
-        const list = childrenByParent.get(cat.parent_id) || [];
-        list.push(cat);
-        childrenByParent.set(cat.parent_id, list);
+    if (rows.length > 0) {
+      const { data: children, error: childrenError } = await supabase
+        .from("categories")
+        .select("*")
+        .in(
+          "parent_id",
+          rows.map((cat) => cat.id)
+        )
+        .order("display_order", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (childrenError) {
+        return NextResponse.json(
+          { success: false, error: childrenError.message },
+          { status: 500 }
+        );
+      }
+
+      for (const child of children || []) {
+        if (child.parent_id) {
+          const list = childrenByParent.get(child.parent_id) || [];
+          list.push(child);
+          childrenByParent.set(child.parent_id, list);
+        }
       }
     }
 
@@ -61,7 +110,16 @@ export async function GET(request: NextRequest) {
       subcategories: childrenByParent.get(cat.id) || [],
     }));
 
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({
+      success: true,
+      data,
+      meta: buildPaginationMeta(page, limit, count || 0),
+      stats: {
+        totalCategories: count || 0,
+        activeCategories: activeCount.count || 0,
+        totalProducts: productCount.count || 0,
+      },
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },

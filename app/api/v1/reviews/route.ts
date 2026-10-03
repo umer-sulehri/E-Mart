@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 20 });
+    const { page, limit, offset } = parsePagination(searchParams);
     const ratingParam = Number(searchParams.get("rating") || 0);
     const rating =
       Number.isInteger(ratingParam) && ratingParam >= 1 && ratingParam <= 5
@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error, count } = await query
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {

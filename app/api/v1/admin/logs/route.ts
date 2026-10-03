@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     // Clamped, unlike a bare `parseInt`: `?page=0` or `?limit=-5` would otherwise
     // produce a negative offset and an error from PostgREST.
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 50 });
+    const { page, limit, offset } = parsePagination(searchParams);
     const supabase = await createClient();
 
     const {
@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
         { count: "exact" }
       )
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {

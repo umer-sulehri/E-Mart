@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const { page, limit, offset } = parsePagination(searchParams, { defaultLimit: 10 });
+    const { page, limit, offset } = parsePagination(searchParams);
     const category = searchParams.get("category") || "";
     const search = (searchParams.get("search") || "").trim();
 
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       .from("blog_posts")
       .select("*, profiles(id, first_name, last_name, profile_image_url)", { count: "exact" })
       .eq("status", "published")
-      .order("published_at", { ascending: false });
+      .order("published_at", { ascending: false }).order("id", { ascending: false });
 
     if (category) {
       query = query.eq("category", category);
