@@ -10,6 +10,14 @@ const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || 'https://e-mart-sand-pi.vercel.app'
 ).replace(/\/$/, '');
 
+/**
+ * The canonical public origin. Exported so `app/layout.tsx`, `robots.ts` and
+ * `sitemap.ts` resolve absolute URLs from the same value — these previously
+ * carried three different fallbacks (localhost, the emart.pk placeholder, and
+ * this one), so an unset env var produced a different absolute URL per file.
+ */
+export { SITE_URL };
+
 interface ProductMetadataInput {
   name: string;
   shortDescription?: string;

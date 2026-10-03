@@ -5,6 +5,7 @@ import { Providers } from '@/components/providers';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 import CookieConsent from '@/components/ui/CookieConsent';
+import { SITE_URL } from '@/lib/seo';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -20,7 +21,9 @@ const openSans = Open_Sans({
   display: 'swap',
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+// Comes from `@/lib/seo`, which falls back to the live host rather than
+// localhost: `metadataBase` seeds every relative OG/canonical URL, so a
+// localhost fallback emits unusable absolute links across the whole site.
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

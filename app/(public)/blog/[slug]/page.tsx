@@ -18,6 +18,7 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import BlogComments from '@/components/blog/BlogComments';
 import { sanitizeHtml } from '@/lib/sanitize-html';
 import { tryParseJson } from '@/lib/api';
+import { getSiteUrl } from '@/lib/absolute-url';
 
 interface BlogPost {
   id: string;
@@ -112,8 +113,11 @@ interface BlogDetailPageProps {
 
 async function fetchBlogPost(slug: string): Promise<BlogPost | null> {
   try {
+    // `getSiteUrl` reads the request Host, not NEXT_PUBLIC_SITE_URL: an unset
+    // env var made this self-fetch target localhost on Vercel, so every blog
+    // post resolved to null and 404ed.
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/v1/blog-posts/${slug}`,
+      `${await getSiteUrl()}/api/v1/blog-posts/${slug}`,
       { cache: 'no-store' }
     );
     if (!res.ok) return null;

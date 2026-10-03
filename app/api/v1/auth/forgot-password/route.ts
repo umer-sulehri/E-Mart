@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { rateLimitByIp, rateLimitHeaders } from "@/lib/rate-limit";
+import { SITE_URL } from '@/lib/seo';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -28,11 +29,14 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    // `SITE_URL` last, not `http://localhost:3000`: this URL is emailed to the
+    // recipient, so a localhost fallback ships a dead reset link. The
+    // NEXT_PUBLIC_APP_URL alias is kept for older deployments that still set it.
     const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
       redirectTo: `${
         process.env.NEXT_PUBLIC_SITE_URL ||
         process.env.NEXT_PUBLIC_APP_URL ||
-        "http://localhost:3000"
+        SITE_URL
       }/reset-password`,
     });
 

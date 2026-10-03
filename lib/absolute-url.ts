@@ -1,4 +1,5 @@
 import { headers } from 'next/headers';
+import { SITE_URL } from './seo';
 
 /**
  * Resolves the absolute base URL for same-origin server-side fetches.
@@ -8,6 +9,11 @@ import { headers } from 'next/headers';
  * server-to-API self-fetch targets localhost and fails, collapsing valid product
  * pages into 404s. This reads the incoming request's Host header instead, so it
  * works on Vercel, behind proxies, and on any local dev port.
+ *
+ * Only for same-origin fetches the server makes to itself. Never for SEO
+ * metadata: those URLs go to search engines and social scrapers, which must be
+ * the canonical public origin rather than whatever Host an internal request
+ * carried. Use `SITE_URL` from `@/lib/seo` for those.
  */
 export async function getSiteUrl(): Promise<string> {
   let host: string | null | undefined;
@@ -23,5 +29,5 @@ export async function getSiteUrl(): Promise<string> {
     return `${process.env.NODE_ENV === 'development' ? 'http' : 'https'}://${host}`;
   }
 
-  return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  return SITE_URL;
 }
