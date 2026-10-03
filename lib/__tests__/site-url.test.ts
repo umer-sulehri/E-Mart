@@ -50,7 +50,10 @@ const sources = [
 });
 
 function relative(file: string): string {
-  return file.slice(process.cwd().length + 1);
+  // Always forward slashes. `join` yields OS-native separators, so comparing a
+  // relative() result against a hardcoded path silently passes on Windows and
+  // fails on the Linux CI runner.
+  return file.slice(process.cwd().length + 1).replace(/\\/g, '/');
 }
 
 describe('absolute site URL', () => {
@@ -85,7 +88,7 @@ describe('absolute site URL', () => {
     ];
 
     for (const path of mustUseShared) {
-      const entry = sources.find((s) => relative(s.file).replace(/\\/g, '/') === path);
+      const entry = sources.find((s) => relative(s.file) === path);
       expect(entry, `${path} not found`).toBeDefined();
       expect(entry!.code, `${path} must import SITE_URL`).toMatch(
         /import\s*\{[^}]*\bSITE_URL\b[^}]*\}\s*from\s*['"][@./]*lib\/seo['"]/
@@ -94,18 +97,18 @@ describe('absolute site URL', () => {
   });
 
   it('defines the canonical origin once, in lib/seo', () => {
-    const seo = sources.find((s) => relative(s.file).replace(/\\/g, '/') === 'lib/seo.ts')!;
+    const seo = sources.find((s) => relative(s.file) === 'lib/seo.ts')!;
     expect(seo.code).toContain(PRODUCTION_ORIGIN);
 
     // Exactly one definition site: a second copy is how the drift started.
     const definitions = sources
       .filter((s) => /NEXT_PUBLIC_SITE_URL\s*\|\|\s*['"]https?:/.test(s.code))
       .map((s) => relative(s.file));
-    expect(definitions).toEqual(['lib\\seo.ts']);
+    expect(definitions).toEqual(['lib/seo.ts']);
   });
 
   it('keeps the Host-header helper separate from the canonical origin', () => {
-    const helper = sources.find((s) => relative(s.file) === join('lib', 'absolute-url.ts'))!;
+    const helper = sources.find((s) => relative(s.file) === 'lib/absolute-url.ts')!;
     expect(helper.code).toContain('x-forwarded-host');
     // Same-origin self-fetch only; it must never be the SEO source of truth.
     expect(helper.code).toContain('SITE_URL');

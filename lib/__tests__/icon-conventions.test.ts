@@ -24,9 +24,11 @@ describe('icon conventions', () => {
     ...tsxFiles(join(process.cwd(), 'components')),
   ];
 
-  function relative(file: string): string {
-    return file.slice(process.cwd().length + 1);
-  }
+function relative(file: string): string {
+  // Always forward slashes: `join` yields OS-native separators, so a hardcoded
+  // expectation passes on Windows and fails on the Linux CI runner.
+  return file.slice(process.cwd().length + 1).replace(/\\/g, '/');
+}
 
   function lucideNames(source: string): Set<string> {
     const names = new Set<string>();
