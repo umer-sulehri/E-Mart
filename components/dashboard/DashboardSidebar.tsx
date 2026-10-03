@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
@@ -40,6 +40,16 @@ export default function DashboardSidebar() {
   useBodyScrollLock(mobileOpen);
   useEscapeKey(mobileOpen, closeMobile);
 
+  // The menu is taller than a phone viewport, so the current section can sit
+  // below the fold when the drawer opens. Scroll it back into view, otherwise
+  // opening the menu on `/dashboard/change-password` shows only the top links
+  // with no sign of where you are. `block: 'nearest'` keeps the panel from
+  // scrolling when the link is already visible.
+  const activeRef = useRef<HTMLAnchorElement | null>(null);
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [pathname, mobileOpen]);
+
   const initials = user
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase()
     : 'U';
@@ -66,10 +76,11 @@ export default function DashboardSidebar() {
             link.href === '/dashboard'
               ? pathname === '/dashboard'
               : pathname.startsWith(link.href);
-          return (
+return (
             <Link
               key={link.href}
               href={link.href}
+              ref={isActive ? activeRef : undefined}
               onClick={() => setMobileOpen(false)}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
@@ -78,7 +89,7 @@ export default function DashboardSidebar() {
                   : 'text-muted-600 hover:bg-muted-50 hover:text-secondary-800'
               )}
             >
-              <link.icon className="h-5 w-5 shrink-0" />
+              <link.icon className="size-5 shrink-0" />
               {link.label}
             </Link>
           );
@@ -97,7 +108,7 @@ export default function DashboardSidebar() {
           }}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger-50"
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className="size-5" />
           Logout
         </button>
       </div>
@@ -114,7 +125,7 @@ export default function DashboardSidebar() {
         aria-controls="app-sidebar"
         className="fixed left-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-lg bg-white shadow-md lg:hidden"
       >
-        <Menu className="h-5 w-5 text-secondary-800" />
+        <Menu className="size-5 text-secondary-800" />
       </button>
 
       {/* Mobile overlay */}
@@ -136,7 +147,10 @@ export default function DashboardSidebar() {
           // the child shrinking to the viewport, so the panel grows instead of
           // scrolling and the page scrolls behind a locked body. Scrolling
           // lives on an explicit `min-h-0 flex-1` region below instead.
-          'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-white shadow-lg transition-transform lg:hidden',
+          // `h-[100dvh]` rather than `inset-y-0`: the latter sizes against the
+          // layout viewport, so on a phone the drawer runs under the browser
+          // chrome and its footer sits off-screen.
+          'fixed left-0 top-0 z-50 flex h-[100dvh] w-72 max-w-[85vw] flex-col bg-white shadow-lg transition-transform lg:hidden',
           // Hidden rather than merely off-screen when closed: a translated
           // drawer is still in the tab order, so a keyboard user would tab into
           // links they cannot see.
@@ -145,7 +159,7 @@ export default function DashboardSidebar() {
       >
         <div className="flex shrink-0 items-center justify-between border-b border-muted-200 bg-white px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <Leaf className="h-6 w-6 text-primary" />
+            <Leaf className="size-6 text-primary" />
             <span className="font-heading text-lg font-bold text-secondary-800">
               E-Mart
             </span>
@@ -155,10 +169,10 @@ export default function DashboardSidebar() {
             aria-label="Close navigation menu"
             className="-mr-2 rounded-lg p-2 text-muted-600 transition-colors hover:bg-muted-100"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+        <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
           {sidebarContent}
         </div>
       </aside>
@@ -171,7 +185,7 @@ export default function DashboardSidebar() {
             bottom and the links below the fold are only reachable by scrolling
             the whole page. */}
         <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-xl bg-white shadow-sm">
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+          <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
             {sidebarContent}
           </div>
         </div>

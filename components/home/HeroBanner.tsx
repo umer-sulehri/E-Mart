@@ -44,14 +44,22 @@ const HeroBanner = () => {
         className="object-cover object-center"
         quality={85}
       />
+      {/* Scrim behind the copy only. White hero text over a stock photo cannot
+          be guaranteed to clear WCAG AA on its own — the image is bright and
+          changes with the crop — so the contrast is fixed here rather than
+          hoped for. `pointer-events-none` keeps it from eating the CTA clicks. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/35 to-transparent"
+      />
       <div className="relative container mx-auto px-4">
         <div className="lg:w-1/2">
           <div className="pt-5 mt-5">
-            <h2 className="font-heading text-4xl leading-tight md:text-6xl">
-              <span className="font-bold text-primary">Organic</span> Foods at
-              your <span className="font-bold">Doorsteps</span>
+            <h2 className="font-heading text-4xl leading-tight text-white md:text-6xl">
+              <span className="font-bold text-white">Organic</span> Foods at
+              your <span className="font-bold text-white">Doorsteps</span>
             </h2>
-            <p className="mt-4 text-2xl text-secondary-800">
+            <p className="mt-4 text-2xl text-white/90">
               Dignissim massa diam elementum.
             </p>
             <div className="mt-3 flex gap-3">
@@ -71,11 +79,11 @@ const HeroBanner = () => {
 
             <div className="my-5 grid grid-cols-3 gap-4">
               {stats.map((stat) => (
-                <div key={stat.label} className="text-dark">
-                  <p className="mb-0 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
+                <div key={stat.label} className="text-white">
+                  <p className="mb-0 text-3xl font-bold leading-tight text-white sm:text-4xl md:text-5xl">
                     {stat.value}
                   </p>
-                  <p className="mb-0 text-xs uppercase leading-tight">
+                  <p className="mb-0 text-xs uppercase leading-tight text-white/90">
                     {stat.label}
                   </p>
                 </div>
@@ -92,7 +100,9 @@ const HeroBanner = () => {
               >
                 <div className="flex items-center gap-4">
                   <div className="shrink-0 text-center">
-                    <feature.icon size={48} strokeWidth={1.5} />
+                    {/* 28px, not the 48px this used to be: at 48 the icon was
+                        the loudest thing in a card whose text is 14–18px. */}
+                    <feature.icon size={28} strokeWidth={1.5} className="shrink-0" />
                   </div>
                   <div>
                     <h3 className="text-white">{feature.title}</h3>

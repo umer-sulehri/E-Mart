@@ -76,3 +76,18 @@ buttons and pills are fully rounded (`rounded-full`).
 - `viewportFit: 'cover'` in `app/layout.tsx` is what makes
   `env(safe-area-inset-*)` resolve to a non-zero value. Removing it silently
   disables every safe-area inset in the app.
+- Fixed, non-scrolling panels that own the viewport (drawers, side sheets) use
+  `h-[100dvh]`, not `h-full` or `h-screen`. Both resolve against the *layout*
+  viewport, which on a phone extends behind the browser chrome, so the footer
+  lands under the URL bar.
+- A scroll region inside such a panel needs `min-h-0` before `flex-1`; a flex
+  item's default `min-height: auto` stops it shrinking, so the panel grows and
+  the page scrolls behind a locked body instead.
+- Add `scrollbar-thin` to a scroll container that has a constrained width. The
+  global 8px scrollbar eats horizontal room inside a `w-72` drawer, and Firefox
+  overlay scrollbars cannot be thinned from `::-webkit-scrollbar` alone.
+- Phone-only ergonomics live in `styles/globals.css` under
+  `(hover: none) and (pointer: coarse) and (max-width: 1023px)`: 44px hit areas,
+  and `font-size: 16px` on form controls because iOS zooms the viewport on focus
+  for anything smaller and keeps that zoom until the page is tapped again. Both
+  are deliberately scoped so dense desktop tables keep compact controls.

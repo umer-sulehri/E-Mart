@@ -28,10 +28,23 @@
 }
 
 @layer components {
-  /* Product Item Card */
+  /* Product Item Card
+
+     The bottom padding is larger below `sm` than above it. On a phone the
+     action row (quantity, add to cart, quick view, wishlist) sits in normal
+     flow, so it is the last thing in the card and 16px of padding left it
+     visually flush with the card edge. 20px gives it room to breathe; the
+     desktop card keeps 16px because there the row overlays on hover and the
+     extra padding would just make every tile taller. */
   .product-item {
-    @apply relative rounded-2xl bg-white p-4 transition-shadow duration-300;
+    @apply relative rounded-2xl bg-white p-4 pb-5 transition-shadow duration-300;
     box-shadow: 0 0 22px rgba(0, 0, 0, 0);
+  }
+
+  @media (min-width: 640px) {
+    .product-item {
+      @apply pb-4;
+    }
   }
 
   .product-item:hover {
@@ -443,6 +456,25 @@
   @apply bg-muted-400;
 }
 
+/* Overlay scrollbars only exist on Firefox, so `scrollbar-width` cannot express
+   "thin but visible". The 8px default above also eats horizontal room inside a
+   w-72 drawer, so panels that scroll within a fixed width opt into this. */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-muted-300;
+}
+
 /* ---------------------------------------------------------------------------
    Mobile touch ergonomics
    --------------------------------------------------------------------------- */
@@ -518,6 +550,18 @@ label,
   canvas,
   svg {
     max-width: 100%;
+  }
+
+  /* iOS Safari zooms the viewport when a focused control computes below 16px,
+     and the zoom persists until the page is tapped again - so a `text-sm`
+     filter select silently cost the user their place. It belongs here rather
+     than in each className: the controls span ~20 files and this keeps them in
+     step. Same phone-only guard as the tap targets above, so dense desktop
+     tables keep their compact 14px controls. */
+  select,
+  input:not([type='checkbox']):not([type='radio']),
+  textarea {
+    font-size: 16px;
   }
 }
 
