@@ -128,9 +128,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { error: insertError } = await supabase
+    const { data: created, error: insertError } = await supabase
       .from("wishlist_items")
-      .insert({ user_id: user.id, product_id: productId });
+      .insert({ user_id: user.id, product_id: productId })
+      .select(
+        "id, product_id, created_at, products(name, slug, price, discount_price, images, stock_quantity, is_active)"
+      )
+      .single();
 
     if (insertError) {
       return NextResponse.json(
@@ -139,8 +143,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // The row comes back joined so the client can prepend it to the drawer
+    // without the round trip a "re-fetch the list to see one new item" costs.
     return NextResponse.json(
-      { success: true, message: "Added to wishlist" },
+      { success: true, message: "Added to wishlist", data: created },
       { status: 201 }
     );
   } catch (error) {

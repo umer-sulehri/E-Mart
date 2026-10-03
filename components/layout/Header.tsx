@@ -22,6 +22,7 @@ import { tryParseJson } from '@/lib/api';
 import { PAGES_LINKS } from '@/lib/constants';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
+import { useWishlistStore } from '@/store/wishlistStore';
 import MobileNav from './MobileNav';
 import VoiceSearch from './VoiceSearch';
 
@@ -154,7 +155,7 @@ function SearchBar({ className }: { className?: string }) {
             className="p-1 text-muted hover:text-secondary transition-colors"
             aria-label="Clear search"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
         )}
         <button
@@ -163,9 +164,9 @@ function SearchBar({ className }: { className?: string }) {
           aria-label="Search"
         >
           {loading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Loader2 className="size-5 animate-spin" />
           ) : (
-            <Search className="h-5 w-5" />
+            <Search className="size-5" />
           )}
         </button>
         <VoiceSearch onSearch={submitQuery} />
@@ -318,10 +319,10 @@ function UserMenu({
     return (
       <Link
         href="/login"
-        className="p-2 hover:text-primary transition-colors"
+        className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label="Login / Account"
       >
-        <User className="h-6 w-6" />
+        <User className="size-5 shrink-0" />
       </Link>
     );
   }
@@ -332,14 +333,14 @@ function UserMenu({
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 p-1.5 hover:text-primary transition-colors rounded-full"
+        className="flex min-h-10 items-center gap-1 rounded-full p-1.5 hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label="Account menu"
         aria-expanded={open}
         aria-haspopup="menu"
       >
-        <User className="h-6 w-6" />
+        <User className="size-5 shrink-0" />
         <ChevronDown
-          className={cn('h-4 w-4 text-muted transition-transform', open && 'rotate-180')}
+          className={cn('h-4 w-4 shrink-0 text-muted transition-transform', open && 'rotate-180')}
         />
       </button>
       {open && (
@@ -350,7 +351,7 @@ function UserMenu({
             aria-label="My Account"
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
           >
-            <User className="h-4 w-4" /> My Account
+            <User className="size-4" /> My Account
           </Link>
           <button
             type="button"
@@ -361,7 +362,7 @@ function UserMenu({
             aria-label="Logout"
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger hover:bg-danger/5 transition-colors"
           >
-            <LogOut className="h-4 w-4" /> Logout
+            <LogOut className="size-4" /> Logout
           </button>
         </div>
       )}
@@ -374,6 +375,8 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [categories, setCategories] = useState<{ name: string; slug: string }[]>([]);
   const itemCount = useCartStore((s) => s.uniqueItemCount());
+  const wishlistCount = useWishlistStore((s) => s.count);
+  const openWishlist = useWishlistStore((s) => s.open);
   const navButtonRef = useRef<HTMLButtonElement>(null);
   const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
@@ -424,9 +427,14 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm shadow-sm">
         <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12">
-          <div className="flex flex-wrap items-center justify-between py-3 gap-4">
-
-            <div className="flex items-center gap-2">
+          {/* Mobile is a 3-column grid: burger, logo, icons. The logo is
+              `justify-self-center` in the middle track so it sits truly centred
+              rather than merely left-aligned in leftover space, which is what
+              the old burger+logo pair did. From `md` up this reverts to a
+              wrapping flex row, so the desktop arrangement — nav links, search
+              bar, icon cluster — is untouched. */}
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 py-3 md:flex md:flex-wrap md:justify-between md:gap-4">
+            <div className="col-start-1 flex items-center">
               <button
                 ref={navButtonRef}
                 className="-ml-2 rounded-lg p-2.5 text-secondary transition-colors hover:bg-muted-100 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary md:p-2"
@@ -435,25 +443,32 @@ export default function Header() {
                 aria-expanded={mobileNavOpen}
                 aria-haspopup="dialog"
               >
-                <Menu className="h-6 w-6" />
+                <Menu className="size-5 shrink-0" />
               </button>
-              <Link href="/" className="flex-shrink-0" aria-label="E-Mart Home">
-                <Image
-                  src="/images/logo.svg"
-                  alt="E-Mart logo"
-                  width={160}
-                  height={48}
-                  className="h-auto w-[120px] sm:w-auto"
-                  priority
-                />
-              </Link>
             </div>
+
+            <Link
+              href="/"
+              className="col-start-2 justify-self-center md:order-none md:justify-self-auto"
+              aria-label="E-Mart Home"
+            >
+              <Image
+                src="/images/logo.svg"
+                alt="E-Mart logo"
+                width={160}
+                height={48}
+                // Narrower on phones so the centred logo cannot squeeze the
+                // icon cluster at 320px, where all three tracks have to fit.
+                className="h-auto w-[104px] sm:w-[120px] md:w-auto"
+                priority
+              />
+            </Link>
 
             <div className="hidden lg:block flex-1 max-w-xl mx-auto">
               <div className="flex items-center bg-muted-50 rounded-2xl p-2 border border-muted-200 focus-within:border-primary">
                 <div className="hidden md:block border-r border-muted-300 pr-2">
                   <select
-                    className="bg-transparent border-0 text-sm text-secondary focus:outline-none cursor-pointer py-1 px-2"
+                    className="bg-transparent border-0 text-base sm:text-sm text-secondary focus:outline-none cursor-pointer py-1 px-2"
                     aria-label="Select category"
                     onChange={(e) => {
                       if (e.target.value) {
@@ -482,7 +497,7 @@ export default function Header() {
               <PagesDropdown />
             </nav>
 
-            <ul className="flex items-center gap-5 justify-end m-0 list-none">
+            <ul className="col-start-3 row-start-1 flex items-center gap-1 justify-end m-0 list-none sm:gap-3 md:gap-5">
               <li>
                 <UserMenu
                   user={user}
@@ -491,23 +506,32 @@ export default function Header() {
                 />
               </li>
               <li>
-                <Link
-                  href="/wishlist"
-                  className="p-2 hover:text-primary transition-colors"
-                  aria-label="Wishlist"
+                <button
+                  className="relative flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label={
+                    mounted && wishlistCount > 0
+                      ? `Wishlist, ${wishlistCount} items`
+                      : 'Wishlist'
+                  }
+                  onClick={openWishlist}
                 >
-                  <Heart className="h-6 w-6" />
-                </Link>
+                  <Heart className="size-5 shrink-0" />
+                  {mounted && wishlistCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
+                      {wishlistCount > 99 ? '99+' : wishlistCount}
+                    </span>
+                  )}
+                </button>
               </li>
               <li>
                 <button
-                  className="relative p-2.5 text-secondary transition-colors hover:text-primary md:p-2"
+                  className="relative flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2.5 text-secondary transition-colors hover:text-primary md:p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   aria-label={`Shopping bag, ${itemCount} items`}
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('toggle-cart'));
                   }}
                 >
-                  <ShoppingBag className="h-6 w-6" />
+                  <ShoppingBag className="size-5 shrink-0" />
                   {mounted && itemCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
                       {itemCount > 99 ? '99+' : itemCount}
@@ -517,7 +541,7 @@ export default function Header() {
               </li>
             </ul>
 
-            <div className="w-full lg:hidden">
+            <div className="col-span-3 col-start-1 row-start-2 md:hidden">
               <div className="flex items-center bg-muted-50 rounded-2xl p-2 border border-muted-200 focus-within:border-primary">
                 <SearchBar className="flex-1" />
               </div>
