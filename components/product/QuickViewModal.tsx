@@ -100,25 +100,32 @@ export default function QuickViewModal({
         className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={onClose}
       />
-      {/* Height-capped shell: the panel itself scrolls, so the discount badge,
-          price and Add to Cart stay reachable on a 360px-tall phone. The close
-          button lives in a non-scrolling header for the same reason.
+      {/* A bottom sheet on a phone, a centred dialog from `sm` up.
 
-          `dvh`, not `vh`: on a phone with the URL bar showing, 92vh is taller
-          than the visible area, so the sheet's top - and with it the close
-          button - sat above the fold. Below `sm` the sheet also takes the full
-          dynamic viewport instead of a content height that changed with every
-          product name and description length, which is what made the popup look
-          randomly sized. */}
+          The height is capped, not fixed, and capped in `dvh`: `vh` ignores the
+          mobile URL bar, so a 92vh panel was taller than the visible area and
+          pushed its own top edge — and the close button — off screen. A fixed
+          `100dvh` was the opposite mistake, a full-bleed sheet with rounded top
+          corners and no visible edge. Content height with a cap is what a sheet
+          is supposed to be: short products get a short panel, long ones stop
+          before the browser chrome. The close button sits in a non-scrolling
+          header so it is reachable however long the body gets. */}
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={product.name}
         tabIndex={-1}
-        className="relative flex h-[100dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl outline-none sm:h-auto sm:max-h-[90dvh] sm:max-w-3xl sm:rounded-2xl"
+        className="relative flex max-h-[88dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl outline-none sm:max-h-[90dvh] sm:max-w-3xl sm:rounded-2xl"
       >
-        <div className="flex shrink-0 items-center justify-end px-3 pt-3 sm:absolute sm:right-4 sm:top-4 sm:z-10 sm:p-0">
+        {/* Sheet handle. Decorative, phone-only: a sheet whose top edge is
+            visible needs something that says "this is a panel", and the close
+            button alone reads as a stray icon in the corner. */}
+        <div aria-hidden="true" className="flex shrink-0 justify-center pt-2.5 sm:hidden">
+          <span className="h-1 w-10 rounded-full bg-muted-300" />
+        </div>
+
+        <div className="flex shrink-0 items-center justify-end px-3 pt-1 sm:absolute sm:right-4 sm:top-4 sm:z-10 sm:p-0">
           <button
             onClick={onClose}
             className="flex size-11 items-center justify-center rounded-full bg-white text-muted-500 shadow-sm transition-colors hover:bg-muted-100 hover:text-secondary"
@@ -128,18 +135,21 @@ export default function QuickViewModal({
           </button>
         </div>
 
-        <div className="grid flex-1 grid-cols-1 gap-5 overflow-y-auto overscroll-contain p-4 pt-0 sm:grid-cols-2 sm:gap-6 sm:p-6 sm:pt-6">
+        {/* Explicit per-side padding: `p-4` + `sm:p-6` would race the safe-area
+            bottom inset, and the Add to Cart row has to clear the home
+            indicator on an iPhone. */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 overflow-y-auto overscroll-contain px-4 pt-1 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:grid-cols-2 sm:gap-6 sm:px-6 sm:pt-6 sm:pb-6">
           {/* Image. Capped by viewport height as well as width on a phone: a
               full-width square is taller than half the screen, so it pushed the
               name, price and actions below the fold. `object-contain` because a
               catalogue photo must not be cropped to fill the square. */}
-          <div className="relative mx-auto aspect-square w-full max-w-[min(100%,42dvh)] overflow-hidden rounded-xl bg-muted-50 sm:max-w-none">
+          <div className="relative mx-auto aspect-square w-full max-w-[min(100%,34dvh)] overflow-hidden rounded-xl bg-muted-50 sm:max-w-none">
             <ImageWithFallback
               src={product.image}
               alt={product.name}
               fill
               className="object-contain p-2"
-              sizes="(max-width: 640px) 42dvh, (max-width: 1024px) 50vw, 384px"
+              sizes="(max-width: 640px) 34dvh, (max-width: 1024px) 50vw, 384px"
             />
             {hasDiscount && (
               <Badge
