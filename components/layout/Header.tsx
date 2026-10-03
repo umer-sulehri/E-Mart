@@ -449,14 +449,18 @@ export default function Header() {
 
             <Link
               href="/"
-              className="col-start-2 justify-self-center md:order-none md:justify-self-auto"
+              className="col-start-2 flex items-center justify-center justify-self-center md:order-none md:justify-self-auto"
               aria-label="E-Mart Home"
             >
               <Image
                 src="/images/logo.svg"
                 alt="E-Mart logo"
-                width={160}
-                height={48}
+                // The SVG's own box is 157x41. It was declared as 160x48, and
+                // `h-auto` scales to the declared ratio rather than the file's,
+                // so the wordmark rendered ~15% taller than drawn and read as
+                // sitting high in the row.
+                width={157}
+                height={41}
                 // Narrower on phones so the centred logo cannot squeeze the
                 // icon cluster at 320px, where all three tracks have to fit.
                 className="h-auto w-[104px] sm:w-[120px] md:w-auto"
