@@ -232,7 +232,7 @@ const phoneField =
             className="rounded-lg p-1 text-muted-400 transition-colors hover:bg-muted-100 hover:text-secondary-800"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 

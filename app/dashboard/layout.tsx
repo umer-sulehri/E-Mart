@@ -41,10 +41,10 @@ export default async function DashboardLayout({
               href="/"
               className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary"
             >
-              <Home className="h-3.5 w-3.5" />
+              <Home className="size-3.5" />
               Home
             </Link>
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="size-3.5" />
             <span className="text-secondary-800">Dashboard</span>
           </nav>
 

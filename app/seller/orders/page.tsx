@@ -165,7 +165,7 @@ function SellerOrdersContent() {
                   ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-12 text-center">
-                          <Package className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Package className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No orders found</p>
                         </td>
                       </tr>

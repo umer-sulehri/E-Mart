@@ -263,7 +263,7 @@ function AdminOffersContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning-100 text-warning-600">
-              <Star className="h-5 w-5" />
+              <Star className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{stats.featured}</p>
@@ -274,7 +274,7 @@ function AdminOffersContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-              <Sparkles className="h-5 w-5" />
+              <Sparkles className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{stats.isNew}</p>
@@ -285,7 +285,7 @@ function AdminOffersContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-danger-100 text-danger-600">
-              <BadgePercent className="h-5 w-5" />
+              <BadgePercent className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{stats.discounted}</p>
@@ -299,7 +299,7 @@ function AdminOffersContent() {
       <div className="rounded-xl bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-400" />
             <input
               type="text"
               placeholder="Search products..."
@@ -483,7 +483,7 @@ function AdminOffersContent() {
                   <td className="py-3">
                     {justSaved === product.id ? (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
-                        <Check className="h-4 w-4" /> Saved
+                        <Check className="size-4" /> Saved
                       </span>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -505,7 +505,7 @@ function AdminOffersContent() {
                           />
                         </div>
                         {saving?.id === product.id && saving?.field === 'discount_price' && (
-                          <Save className="h-4 w-4 animate-pulse text-primary" />
+                          <Save className="size-4 animate-pulse text-primary" />
                         )}
                       </div>
                     )}
@@ -515,7 +515,7 @@ function AdminOffersContent() {
               {loading && (
                 <tr>
                   <td colSpan={6} className="py-10 text-center text-muted-500">
-                    <Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin text-primary" />
+                    <Loader2 className="mx-auto mb-2 size-6 animate-spin text-primary" />
                     Loading products
                   </td>
                 </tr>

@@ -153,7 +153,7 @@ function ReviewsContent() {
           </h1>
           <div className="mt-3 flex items-center gap-2 text-sm text-white/70">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">Reviews</span>
           </div>
         </div>

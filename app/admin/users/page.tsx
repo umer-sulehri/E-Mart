@@ -249,7 +249,7 @@ function AdminUsersContent() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 items-center gap-3">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-400" />
               <input
                 type="text"
                 placeholder="Search users..."
@@ -315,7 +315,7 @@ function AdminUsersContent() {
                               className="rounded p-1.5 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
                               title="View Details"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="size-4" />
                             </button>
                             {user.role !== 'admin' && (
                               <button
@@ -324,7 +324,7 @@ function AdminUsersContent() {
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-primary-50 hover:text-primary disabled:opacity-50"
                                 title="Login as this user"
                               >
-                                <LogIn className="h-4 w-4" />
+                                <LogIn className="size-4" />
                               </button>
                             )}
                             {user.is_blocked ? (
@@ -334,7 +334,7 @@ function AdminUsersContent() {
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
                                 title="Unblock User"
                               >
-                                <UserCheck className="h-4 w-4" />
+                                <UserCheck className="size-4" />
                               </button>
                             ) : (
                               <button
@@ -343,7 +343,7 @@ function AdminUsersContent() {
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
                                 title="Block User"
                               >
-                                <UserX className="h-4 w-4" />
+                                <UserX className="size-4" />
                               </button>
                             )}
                             {user.role !== 'admin' && (
@@ -353,7 +353,7 @@ function AdminUsersContent() {
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
                                 title="Delete User"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="size-4" />
                               </button>
                             )}
                           </div>

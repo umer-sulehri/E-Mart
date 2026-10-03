@@ -78,7 +78,7 @@ export default function ChangePasswordPage() {
         href="/dashboard/profile"
         className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="size-4" />
         Back to Profile
       </Link>
 
@@ -107,9 +107,9 @@ export default function ChangePasswordPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-muted-600"
               >
                 {showCurrent ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="size-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="size-4" />
                 )}
               </button>
             </div>
@@ -133,9 +133,9 @@ export default function ChangePasswordPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-muted-600"
               >
                 {showNew ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="size-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="size-4" />
                 )}
               </button>
             </div>
@@ -177,7 +177,7 @@ export default function ChangePasswordPage() {
                         met ? 'bg-success text-white' : 'bg-muted-200'
                       )}
                     >
-                      {met && <Check className="h-2.5 w-2.5" />}
+                      {met && <Check className="size-2.5" />}
                     </div>
                     <span
                       className={cn(
@@ -218,9 +218,9 @@ export default function ChangePasswordPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-muted-600"
               >
                 {showConfirm ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="size-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="size-4" />
                 )}
               </button>
             </div>

@@ -69,7 +69,7 @@ export default function ReviewCard({ review, onEdit, onDelete }: ReviewCardProps
             </Badge>
             {review.is_verified_purchase && (
               <Badge variant="success" className="gap-1">
-                <BadgeCheck className="h-3 w-3" /> Verified Purchase
+                <BadgeCheck className="size-3" /> Verified Purchase
               </Badge>
             )}
           </div>
@@ -85,17 +85,17 @@ export default function ReviewCard({ review, onEdit, onDelete }: ReviewCardProps
               <span className="text-muted-400">({ratingLabels[review.rating]})</span>
             </span>
             <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="size-3.5" />
               {formatDate(review.created_at)}
             </span>
             {review.updated_at && review.updated_at !== review.created_at && (
               <span className="inline-flex items-center gap-1 text-muted-400">
-                <Clock className="h-3.5 w-3.5" />
+                <Clock className="size-3.5" />
                 edited {formatDate(review.updated_at)}
               </span>
             )}
             <span className="inline-flex items-center gap-1">
-              <ThumbsUp className="h-3.5 w-3.5" />
+              <ThumbsUp className="size-3.5" />
               {review.helpful_count ?? 0} helpful
             </span>
             {product?.price != null && (
@@ -119,7 +119,7 @@ export default function ReviewCard({ review, onEdit, onDelete }: ReviewCardProps
       {review.seller_reply && (
         <div className="mt-4 rounded-lg bg-muted-50 p-4">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-secondary-700">
-            <MessageSquareQuote className="h-3.5 w-3.5" />
+            <MessageSquareQuote className="size-3.5" />
             Seller reply
           </p>
           <p className="mt-1 text-sm text-muted-600">{review.seller_reply}</p>
@@ -141,7 +141,7 @@ export default function ReviewCard({ review, onEdit, onDelete }: ReviewCardProps
           onClick={() => onEdit(review)}
           aria-label={`Edit review for ${product?.name ?? 'product'}`}
         >
-          <Pencil className="h-3.5 w-3.5" />
+          <Pencil className="size-3.5" />
           Edit
         </Button>
         <Button
@@ -150,7 +150,7 @@ export default function ReviewCard({ review, onEdit, onDelete }: ReviewCardProps
           onClick={() => onDelete(review)}
           aria-label={`Delete review for ${product?.name ?? 'product'}`}
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="size-3.5" />
           Delete
         </Button>
       </div>

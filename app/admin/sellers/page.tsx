@@ -187,7 +187,7 @@ function AdminSellersContent() {
           <div key={stat.label} className="rounded-xl bg-white p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', stat.cls)}>
-                <stat.icon className="h-5 w-5" />
+                <stat.icon className="size-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-secondary-800">{stat.value}</p>
@@ -201,7 +201,7 @@ function AdminSellersContent() {
       {pendingCount > 0 && (
         <div className="rounded-xl border border-warning-200 bg-warning-50 p-4">
           <div className="flex items-center gap-3">
-            <Clock className="h-5 w-5 text-warning" />
+            <Clock className="size-5 text-warning" />
             <div>
               <p className="font-medium text-secondary-800">{pendingCount} sellers pending approval</p>
               <p className="text-sm text-muted-600">Review and approve new seller registrations</p>
@@ -213,7 +213,7 @@ function AdminSellersContent() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-400" />
             <input
               type="search"
               placeholder="Search sellers..."
@@ -245,7 +245,7 @@ function AdminSellersContent() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary" />
           </div>
         ) : sellers.length === 0 ? (
           <div className="py-16 text-center text-muted-500">No sellers found</div>
@@ -293,7 +293,7 @@ function AdminSellersContent() {
                       <td className="hidden py-3 xl:table-cell">
                         {seller.rating > 0 ? (
                           <div className="flex items-center gap-1">
-                            <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                            <Star className="size-3.5 fill-warning text-warning" />
                             <span className="text-secondary-800">{seller.rating}</span>
                           </div>
                         ) : (
@@ -307,7 +307,7 @@ function AdminSellersContent() {
                             className="rounded p-1.5 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
                             aria-label="View seller"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="size-4" />
                           </button>
                           {seller.status === 'pending' && (
                             <>
@@ -317,7 +317,7 @@ function AdminSellersContent() {
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
                                 aria-label="Approve"
                               >
-                                {acting === seller.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                                {acting === seller.id ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
                               </button>
                               <button
                                 onClick={() => act(seller.id, 'reject')}
@@ -325,7 +325,7 @@ function AdminSellersContent() {
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
                                 aria-label="Reject"
                               >
-                                <XCircle className="h-4 w-4" />
+                                <XCircle className="size-4" />
                               </button>
                             </>
                           )}
@@ -336,7 +336,7 @@ function AdminSellersContent() {
                               className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
                               aria-label="Suspend"
                             >
-                              {acting === seller.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserX className="h-4 w-4" />}
+                              {acting === seller.id ? <Loader2 className="size-4 animate-spin" /> : <UserX className="size-4" />}
                             </button>
                           )}
                           {seller.status === 'suspended' && (
@@ -346,7 +346,7 @@ function AdminSellersContent() {
                               className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
                               aria-label="Restore"
                             >
-                              {acting === seller.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                              {acting === seller.id ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
                             </button>
                           )}
                         </div>
@@ -441,17 +441,17 @@ function SellerDetail({
         <div className="mt-6 flex gap-3">
           {(seller.status === 'pending' || seller.status === 'suspended') && (
             <Button variant="success" size="sm" onClick={onApprove} disabled={acting}>
-              <CheckCircle2 className="h-4 w-4" /> {seller.status === 'suspended' ? 'Restore' : 'Approve'}
+              <CheckCircle2 className="size-4" /> {seller.status === 'suspended' ? 'Restore' : 'Approve'}
             </Button>
           )}
           {seller.status === 'approved' && (
             <Button variant="danger" size="sm" onClick={onSuspend} disabled={acting}>
-              <UserX className="h-4 w-4" /> Suspend
+              <UserX className="size-4" /> Suspend
             </Button>
           )}
           {seller.status === 'pending' && (
             <Button variant="danger" size="sm" onClick={onReject} disabled={acting}>
-              <XCircle className="h-4 w-4" /> Reject
+              <XCircle className="size-4" /> Reject
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={onClose} disabled={acting}>

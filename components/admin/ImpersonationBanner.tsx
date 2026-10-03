@@ -62,7 +62,7 @@ export default function ImpersonationBanner() {
     <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-warning/50 bg-warning/10 px-4 py-2 pb-[calc(0.5rem+56px+env(safe-area-inset-bottom))] shadow-lg backdrop-blur lg:pb-2">
       <div className="container mx-auto flex flex-wrap items-center justify-center gap-3 py-1 text-sm text-secondary-800 sm:justify-between">
         <span className="inline-flex items-center gap-2">
-          <Eye className="h-4 w-4 text-warning" />
+          <Eye className="size-4 text-warning" />
           You are viewing the site as <strong>{info.name}</strong> ({info.role}).
         </span>
         <button
@@ -71,7 +71,7 @@ export default function ImpersonationBanner() {
           disabled={exiting}
           className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-800 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-secondary-700 disabled:opacity-60"
         >
-          <LogOut className="h-3.5 w-3.5" />
+          <LogOut className="size-3.5" />
           {exiting ? 'Exiting...' : 'Exit impersonation'}
         </button>
       </div>

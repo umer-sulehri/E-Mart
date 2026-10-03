@@ -145,7 +145,7 @@ function AdminProductsContent() {
       {flaggedCount > 0 && (
         <div className="rounded-xl border border-danger-200 bg-danger-50 p-4">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-danger" />
+            <AlertTriangle className="size-5 text-danger" />
             <div>
               <p className="font-medium text-secondary-800">{flaggedCount} products flagged for moderation</p>
               <p className="text-sm text-muted-600">Review flagged products for policy violations</p>
@@ -157,7 +157,7 @@ function AdminProductsContent() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-400" />
             <input
               type="text"
               placeholder="Search products..."
@@ -203,7 +203,7 @@ function AdminProductsContent() {
                             {product.images?.[0] ? (
                               <ImageWithFallback src={product.images[0]} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
                             ) : (
-                              <Package className="h-5 w-5 text-muted-400" />
+                              <Package className="size-5 text-muted-400" />
                             )}
                           </div>
                           <div className="min-w-0">
@@ -236,7 +236,7 @@ function AdminProductsContent() {
                               className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
                               title="Approve"
                             >
-                              <CheckCircle2 className="h-4 w-4" />
+                              <CheckCircle2 className="size-4" />
                             </button>
                           )}
                           {product.moderation_status !== 'flagged' && product.is_active && (
@@ -246,7 +246,7 @@ function AdminProductsContent() {
                               className="rounded p-1.5 text-muted-500 transition-colors hover:bg-warning-50 hover:text-warning disabled:opacity-50"
                               title="Flag"
                             >
-                              <Flag className="h-4 w-4" />
+                              <Flag className="size-4" />
                             </button>
                           )}
                           {product.moderation_status !== 'removed' && (
@@ -256,7 +256,7 @@ function AdminProductsContent() {
                               className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
                               title="Remove"
                             >
-                              <ShieldAlert className="h-4 w-4" />
+                              <ShieldAlert className="size-4" />
                             </button>
                           )}
                           {product.moderation_status === 'removed' && (
@@ -266,7 +266,7 @@ function AdminProductsContent() {
                               className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
                               title="Reactivate (make Active)"
                             >
-                              <RotateCcw className="h-4 w-4" />
+                              <RotateCcw className="size-4" />
                             </button>
                           )}
                         </div>

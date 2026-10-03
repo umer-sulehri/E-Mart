@@ -209,7 +209,7 @@ export default function CookieConsent() {
                 className="ml-4 text-muted transition-colors hover:text-secondary"
                 aria-label="Close cookie settings"
               >
-                <X className="h-5 w-5" />
+                <X className="size-5" />
               </button>
             </div>
 

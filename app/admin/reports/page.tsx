@@ -336,7 +336,7 @@ export default function AdminReportsPage() {
             <option value="1y">Last year</option>
           </select>
           <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4" />
+            <Download className="size-4" />
             Export
           </Button>
         </div>
@@ -355,7 +355,7 @@ export default function AdminReportsPage() {
                 : 'text-muted-500 hover:text-secondary-700'
             )}
           >
-            <tab.icon className="h-4 w-4" />
+            <tab.icon className="size-4" />
             {tab.label}
           </button>
         ))}
@@ -370,27 +370,27 @@ export default function AdminReportsPage() {
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
-                  icon={<DollarSign className="h-5 w-5" />}
+                  icon={<DollarSign className="size-5" />}
                   iconBg="bg-primary-100 text-primary-600"
                   label="Total Revenue"
                   value={formatCurrency(salesData.totalRevenue)}
                   change={salesData.revenueChange}
                 />
                 <MetricCard
-                  icon={<ShoppingCart className="h-5 w-5" />}
+                  icon={<ShoppingCart className="size-5" />}
                   iconBg="bg-blue-100 text-blue-600"
                   label="Total Orders"
                   value={salesData.totalOrders.toLocaleString()}
                   change={salesData.ordersChange}
                 />
                 <MetricCard
-                  icon={<BarChart3 className="h-5 w-5" />}
+                  icon={<BarChart3 className="size-5" />}
                   iconBg="bg-warning-100 text-warning-600"
                   label="Avg Order Value"
                   value={formatCurrency(salesData.averageOrderValue)}
                 />
                 <MetricCard
-                  icon={<TrendingUp className="h-5 w-5" />}
+                  icon={<TrendingUp className="size-5" />}
                   iconBg="bg-success-100 text-success-600"
                   label="Revenue/Day"
                   value={formatCurrency(Math.round(salesData.totalRevenue / 30))}
@@ -440,25 +440,25 @@ export default function AdminReportsPage() {
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
-                  icon={<Package className="h-5 w-5" />}
+                  icon={<Package className="size-5" />}
                   iconBg="bg-primary-100 text-primary-600"
                   label="Total Products"
                   value={productsData.totalProducts.toLocaleString()}
                 />
                 <MetricCard
-                  icon={<ShoppingBag className="h-5 w-5" />}
+                  icon={<ShoppingBag className="size-5" />}
                   iconBg="bg-success-100 text-success-600"
                   label="Active"
                   value={productsData.activeProducts.toLocaleString()}
                 />
                 <MetricCard
-                  icon={<Package className="h-5 w-5" />}
+                  icon={<Package className="size-5" />}
                   iconBg="bg-muted-200 text-muted-600"
                   label="Inactive"
                   value={productsData.inactiveProducts.toLocaleString()}
                 />
                 <MetricCard
-                  icon={<AlertTriangle className="h-5 w-5" />}
+                  icon={<AlertTriangle className="size-5" />}
                   iconBg="bg-danger-100 text-danger-600"
                   label="Low Stock Alerts"
                   value={productsData.lowStockAlerts.length.toString()}
@@ -500,7 +500,7 @@ export default function AdminReportsPage() {
                           <p className="text-xs text-muted-500">{item.reviews} reviews</p>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-warning text-warning" />
+                          <Star className="size-4 fill-warning text-warning" />
                           <span className="font-semibold text-secondary-800">{item.rating}</span>
                         </div>
                       </div>
@@ -538,26 +538,26 @@ export default function AdminReportsPage() {
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
-                  icon={<Users className="h-5 w-5" />}
+                  icon={<Users className="size-5" />}
                   iconBg="bg-primary-100 text-primary-600"
                   label="Total Users"
                   value={usersData.totalUsers.toLocaleString()}
                 />
                 <MetricCard
-                  icon={<TrendingUp className="h-5 w-5" />}
+                  icon={<TrendingUp className="size-5" />}
                   iconBg="bg-blue-100 text-blue-600"
                   label="New Users"
                   value={usersData.newUsersThisPeriod.toLocaleString()}
                   change={usersData.newUsersChange}
                 />
                 <MetricCard
-                  icon={<UserCheck className="h-5 w-5" />}
+                  icon={<UserCheck className="size-5" />}
                   iconBg="bg-success-100 text-success-600"
                   label="Active Sellers"
                   value={usersData.activeSellers.toString()}
                 />
                 <MetricCard
-                  icon={<ShoppingBag className="h-5 w-5" />}
+                  icon={<ShoppingBag className="size-5" />}
                   iconBg="bg-warning-100 text-warning-600"
                   label="Active Buyers"
                   value={usersData.activeBuyers.toLocaleString()}
@@ -639,7 +639,7 @@ function MetricCard({
                   isNegative ? 'text-danger' : change >= 0 ? 'text-success' : 'text-danger'
                 )}
               >
-                {change >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                {change >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
                 {Math.abs(change)}%
               </span>
             )}

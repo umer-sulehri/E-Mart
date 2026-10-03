@@ -160,7 +160,7 @@ export default function AdminStoresPage() {
           <p className="text-sm text-muted-500">Manage brands and store affiliations</p>
         </div>
         <Button variant="primary" onClick={openCreate}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Add Brand
         </Button>
       </div>
@@ -176,7 +176,7 @@ export default function AdminStoresPage() {
               {editing ? 'Edit Brand' : 'New Brand'}
             </h2>
             <button onClick={() => setShowForm(false)} className="rounded p-1 text-muted-500 hover:bg-muted-100">
-              <X className="h-5 w-5" />
+              <X className="size-5" />
             </button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -229,7 +229,7 @@ export default function AdminStoresPage() {
           </label>
           <div className="mt-6 flex gap-3">
             <Button variant="primary" onClick={submit} disabled={saving || !form.name || !form.slug}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
               {editing ? 'Update Brand' : 'Create Brand'}
             </Button>
             <Button variant="outline" onClick={() => setShowForm(false)} disabled={saving}>
@@ -241,7 +241,7 @@ export default function AdminStoresPage() {
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="relative mb-4">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-400" />
           <input
             type="text"
             placeholder="Search brands..."
@@ -253,7 +253,7 @@ export default function AdminStoresPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary" />
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -262,7 +262,7 @@ export default function AdminStoresPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-                      <Building2 className="h-5 w-5" />
+                      <Building2 className="size-5" />
                     </div>
                     <div>
                       <p className="font-semibold text-secondary-800">{brand.name}</p>
@@ -288,7 +288,7 @@ export default function AdminStoresPage() {
                         rel="noopener noreferrer"
                         className="rounded p-1.5 text-muted-500 hover:bg-muted-100 hover:text-primary"
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <ExternalLink className="size-4" />
                       </a>
                     )}
                     <button
@@ -301,7 +301,7 @@ export default function AdminStoresPage() {
                       onClick={() => openEdit(brand)}
                       className="rounded p-1.5 text-muted-500 hover:bg-muted-100 hover:text-primary"
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="size-4" />
                     </button>
                     <button
                       onClick={() => remove(brand.id)}
@@ -309,9 +309,9 @@ export default function AdminStoresPage() {
                       className="rounded p-1.5 text-muted-500 hover:bg-danger-50 hover:text-danger"
                     >
                       {deleting === brand.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin" />
                       ) : (
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="size-4" />
                       )}
                     </button>
                   </div>

@@ -175,7 +175,7 @@ function AdminContactContent() {
             ))}
           </div>
           <div className="relative w-full sm:w-72">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-400" />
             <input
               type="text"
               placeholder="Search submissions..."
@@ -188,11 +188,11 @@ function AdminContactContent() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary" />
           </div>
         ) : submissions.length === 0 ? (
           <div className="mt-6 rounded-lg bg-muted-50 py-12 text-center text-muted-500">
-            <MessageSquare className="mx-auto mb-2 h-8 w-8" />
+            <MessageSquare className="mx-auto mb-2 size-8" />
             No submissions found
           </div>
         ) : (
@@ -207,7 +207,7 @@ function AdminContactContent() {
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-                    <Mail className="h-5 w-5" />
+                    <Mail className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -248,11 +248,11 @@ function AdminContactContent() {
                       )}
                     >
                       {updating === sub.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin" />
                       ) : sub.is_resolved ? (
-                        <RotateCcw className="h-4 w-4" />
+                        <RotateCcw className="size-4" />
                       ) : (
-                        <CheckCircle2 className="h-4 w-4" />
+                        <CheckCircle2 className="size-4" />
                       )}
                       {sub.is_resolved ? 'Mark as Open' : 'Mark as Resolved'}
                     </button>
@@ -278,7 +278,7 @@ function AdminContactContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning-100 text-warning-600">
-              <Mail className="h-5 w-5" />
+              <Mail className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{openCount}</p>
@@ -289,7 +289,7 @@ function AdminContactContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-100 text-success-600">
-              <MailOpen className="h-5 w-5" />
+              <MailOpen className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{resolvedCount}</p>

@@ -120,7 +120,7 @@ function AdminBlogContent() {
         </div>
         <Link href="/admin/blog/new">
           <Button size="sm">
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             New Post
           </Button>
         </Link>
@@ -145,7 +145,7 @@ function AdminBlogContent() {
                   ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center">
-                          <Newspaper className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Newspaper className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No blog posts found</p>
                         </td>
                       </tr>
@@ -182,19 +182,19 @@ function AdminBlogContent() {
                               target="_blank"
                               className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="size-4" />
                             </Link>
                             <Link
                               href={`/admin/blog/${post.id}`}
                               className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
                             >
-                              <Pencil className="h-4 w-4" />
+                              <Pencil className="size-4" />
                             </Link>
                             <button
                               onClick={() => confirmDelete(post)}
                               className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="size-4" />
                             </button>
                           </div>
                         </td>

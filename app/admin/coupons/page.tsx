@@ -219,7 +219,7 @@ function AdminCouponsContent() {
           <p className="text-sm text-muted-500">Create and manage discount coupons</p>
         </div>
         <Button onClick={() => { setShowForm(!showForm); resetForm(); }}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Create Coupon
         </Button>
       </div>
@@ -228,7 +228,7 @@ function AdminCouponsContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-              <Tag className="h-5 w-5" />
+              <Tag className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{loading ? '...' : totalItems}</p>
@@ -239,7 +239,7 @@ function AdminCouponsContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-100 text-success-600">
-              <Percent className="h-5 w-5" />
+              <Percent className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">
@@ -252,7 +252,7 @@ function AdminCouponsContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-danger-100 text-danger-600">
-              <DollarSign className="h-5 w-5" />
+              <DollarSign className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">
@@ -269,7 +269,7 @@ function AdminCouponsContent() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-secondary-800">{editingId ? 'Edit Coupon' : 'Create New Coupon'}</h2>
             <button onClick={() => { setShowForm(false); resetForm(); }} className="rounded-lg p-1 text-muted-500 hover:bg-muted-100">
-              <X className="h-5 w-5" />
+              <X className="size-5" />
             </button>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -384,7 +384,7 @@ function AdminCouponsContent() {
                   ? (
                       <tr>
                         <td colSpan={8} className="px-6 py-12 text-center">
-                          <Tag className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Tag className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No coupons yet</p>
                         </td>
                       </tr>
@@ -429,13 +429,13 @@ function AdminCouponsContent() {
                                 onClick={() => startEdit(coupon)}
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-primary-50 hover:text-primary"
                               >
-                                <Edit3 className="h-4 w-4" />
+                                <Edit3 className="size-4" />
                               </button>
                               <button
                                 onClick={() => setDeleteTarget(coupon)}
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="size-4" />
                               </button>
                             </div>
                           </td>

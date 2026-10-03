@@ -111,7 +111,7 @@ function RoleSelector({
                   meta.accent ? 'bg-danger/10 text-danger group-hover:bg-danger group-hover:text-white' : 'bg-primary-50 text-primary group-hover:bg-primary group-hover:text-white'
                 )}
               >
-                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Icon className="h-6 w-6" />}
+                {loading ? <Loader2 className="size-6 animate-spin" /> : <Icon className="h-6 w-6" />}
               </span>
               <span className="flex-1">
                 <span className="block font-semibold text-secondary">Open {meta.label} dashboard</span>
@@ -282,7 +282,7 @@ function RoleLoginForm() {
           onClick={() => setRole(null)}
           className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-500"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Change role
+          <ArrowLeft className="size-3.5" /> Change role
         </button>
       </div>
 
@@ -292,7 +292,7 @@ function RoleLoginForm() {
           label="Email"
           type="email"
           placeholder="you@example.com"
-          icon={<Mail className="h-4 w-4" />}
+          icon={<Mail className="size-4" />}
           error={errors.email?.message}
           {...register('email')}
         />
@@ -302,7 +302,7 @@ function RoleLoginForm() {
             label="Password"
             type={showPassword ? 'text' : 'password'}
             placeholder="Enter your password"
-            icon={<Lock className="h-4 w-4" />}
+            icon={<Lock className="size-4" />}
             error={errors.password?.message}
             {...register('password')}
           />
@@ -311,7 +311,7 @@ function RoleLoginForm() {
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-1 top-[34px] flex h-9 w-9 items-center justify-center rounded-md text-muted-400 transition-colors hover:bg-muted-100 hover:text-secondary"
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         </div>
 
@@ -369,9 +369,9 @@ function RoleLoginForm() {
         )}
       >
         {meta.accent ? (
-          <Shield className="h-3.5 w-3.5" />
+          <Shield className="size-3.5" />
         ) : (
-          <CheckCircle2 className="h-3.5 w-3.5" />
+          <CheckCircle2 className="size-3.5" />
         )}
         {meta.accent
           ? 'Admin access is provisioned by an administrator and only works for approved accounts.'

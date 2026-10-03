@@ -225,7 +225,7 @@ function SellerCouponsContent() {
           <p className="text-sm text-muted-500">Create and manage discount coupons</p>
         </div>
         <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Create Coupon
         </Button>
       </div>
@@ -237,7 +237,7 @@ function SellerCouponsContent() {
               {editingId ? 'Edit Coupon' : 'Create New Coupon'}
             </h3>
             <button onClick={() => setShowForm(false)} className="rounded-lg p-1 hover:bg-muted-100">
-              <X className="h-5 w-5 text-muted-600" />
+              <X className="size-5 text-muted-600" />
             </button>
           </div>
 
@@ -258,7 +258,7 @@ function SellerCouponsContent() {
                   className="rounded-lg border border-muted-200 px-3 py-2 text-muted-600 transition-colors hover:bg-muted-50"
                   title="Auto-generate code"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className="size-4" />
                 </button>
               </div>
             </div>
@@ -385,7 +385,7 @@ function SellerCouponsContent() {
               {loading ? (
                 <tr>
                   <td colSpan={8} className="py-10 text-center">
-                    <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
+                    <Loader2 className="mx-auto size-6 animate-spin text-primary" />
                   </td>
                 </tr>
               ) : coupons.length === 0 ? (
@@ -399,7 +399,7 @@ function SellerCouponsContent() {
                   <tr key={coupon.id} className="border-b border-muted-50 transition-colors hover:bg-muted-50/50">
                     <td className="px-3 py-4 sm:px-6">
                       <div className="flex items-center gap-2">
-                        <Tag className="h-4 w-4 text-primary" />
+                        <Tag className="size-4 text-primary" />
                         <span className="font-mono font-semibold text-secondary-800">{coupon.code}</span>
                       </div>
                     </td>
@@ -437,21 +437,21 @@ function SellerCouponsContent() {
                           className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-primary-50 hover:text-primary"
                           title="Edit"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="size-4" />
                         </button>
                         <button
                           onClick={() => toggleActive(coupon)}
                           className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-muted-100"
                           title={coupon.is_active ? 'Deactivate' : 'Activate'}
                         >
-                          <RefreshCw className="h-4 w-4" />
+                          <RefreshCw className="size-4" />
                         </button>
                         <button
                           onClick={() => setDeleteTarget(coupon)}
                           className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-danger-50 hover:text-danger"
                           title="Delete"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="size-4" />
                         </button>
                       </div>
                     </td>

@@ -144,7 +144,7 @@ function RegisterContent() {
               )}
               aria-pressed={role === 'customer'}
             >
-              <ShoppingBag className="h-6 w-6" />
+              <ShoppingBag className="size-6" />
               <span className="text-sm font-semibold">Buyer</span>
               <span className="text-xs text-muted-400">Shop organic groceries</span>
             </button>
@@ -159,7 +159,7 @@ function RegisterContent() {
               )}
               aria-pressed={role === 'seller'}
             >
-              <Store className="h-6 w-6" />
+              <Store className="size-6" />
               <span className="text-sm font-semibold">Seller</span>
               <span className="text-xs text-muted-400">Open your own store</span>
             </button>
@@ -170,14 +170,14 @@ function RegisterContent() {
           <Input
             label="First Name"
             placeholder="John"
-            icon={<User className="h-4 w-4" />}
+            icon={<User className="size-4" />}
             error={errors.firstName?.message}
             {...register('firstName')}
           />
           <Input
             label="Last Name"
             placeholder="Doe"
-            icon={<User className="h-4 w-4" />}
+            icon={<User className="size-4" />}
             error={errors.lastName?.message}
             {...register('lastName')}
           />
@@ -187,7 +187,7 @@ function RegisterContent() {
           label="Email"
           type="email"
           placeholder="you@example.com"
-          icon={<Mail className="h-4 w-4" />}
+          icon={<Mail className="size-4" />}
           error={errors.email?.message}
           {...register('email')}
         />
@@ -196,7 +196,7 @@ function RegisterContent() {
           <Input
             label="Store Name"
             placeholder="My Awesome Store"
-            icon={<Store className="h-4 w-4" />}
+            icon={<Store className="size-4" />}
             error={errors.storeName?.message}
             {...register('storeName')}
           />
@@ -208,7 +208,7 @@ function RegisterContent() {
               label="Password"
               type={showPassword ? 'text' : 'password'}
               placeholder="Create a strong password"
-              icon={<Lock className="h-4 w-4" />}
+              icon={<Lock className="size-4" />}
               error={errors.password?.message}
               {...register('password')}
             />
@@ -217,7 +217,7 @@ function RegisterContent() {
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-1 top-[34px] flex h-9 w-9 items-center justify-center rounded-md text-muted-400 transition-colors hover:bg-muted-100 hover:text-secondary"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
           </div>
           {passwordValue && (
@@ -244,7 +244,7 @@ function RegisterContent() {
             label="Confirm Password"
             type={showConfirmPassword ? 'text' : 'password'}
             placeholder="Confirm your password"
-            icon={<Lock className="h-4 w-4" />}
+            icon={<Lock className="size-4" />}
             error={errors.confirmPassword?.message}
             {...register('confirmPassword')}
           />
@@ -253,7 +253,7 @@ function RegisterContent() {
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} className="absolute right-1 top-[34px] flex h-9 w-9 items-center justify-center rounded-md text-muted-400 transition-colors hover:bg-muted-100 hover:text-secondary"
           >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         </div>
 

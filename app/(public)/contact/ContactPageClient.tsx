@@ -145,7 +145,7 @@ export default function ContactPageClient() {
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">Contact Us</span>
           </div>
         </div>
@@ -228,12 +228,12 @@ export default function ContactPageClient() {
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="size-4 animate-spin" />
                       Sending...
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4" />
+                      <Send className="size-4" />
                       Send Message
                     </>
                   )}

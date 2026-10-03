@@ -116,7 +116,7 @@ export default function AdminAccountPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -146,18 +146,18 @@ export default function AdminAccountPage() {
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                <User className="h-8 w-8" />
+                <User className="size-8" />
               </div>
               <div>
                 <p className="text-lg font-bold text-secondary-800">
                   {profile?.firstName} {profile?.lastName}
                 </p>
                 <p className="flex items-center gap-1 text-sm text-muted-500">
-                  <Mail className="h-3.5 w-3.5" /> {profile?.email}
+                  <Mail className="size-3.5" /> {profile?.email}
                 </p>
                 <div className="mt-2">
                   <Badge variant="primary" size="sm">
-                    <Shield className="mr-1 h-3 w-3" /> {getRoleLabel(profile?.role || '')}
+                    <Shield className="mr-1 size-3" /> {getRoleLabel(profile?.role || '')}
                   </Badge>
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default function AdminAccountPage() {
             </div>
             <div className="mt-6">
               <Button variant="primary" type="submit" disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                 Save Changes
               </Button>
             </div>
@@ -244,7 +244,7 @@ export default function AdminAccountPage() {
 
           <form onSubmit={changePassword} className="rounded-xl bg-white p-6 shadow-sm">
             <h2 className="mb-4 flex items-center gap-2 font-semibold text-secondary-800">
-              <KeyRound className="h-5 w-5 text-primary" />
+              <KeyRound className="size-5 text-primary" />
               Change Password
             </h2>
             <div className="space-y-4">
@@ -266,7 +266,7 @@ export default function AdminAccountPage() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-secondary"
                     aria-label="Toggle password visibility"
                   >
-                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
               </div>
@@ -288,7 +288,7 @@ export default function AdminAccountPage() {
             </div>
             <div className="mt-6">
               <Button variant="primary" type="submit" disabled={changingPw}>
-                {changingPw ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+                {changingPw ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
                 Update Password
               </Button>
             </div>

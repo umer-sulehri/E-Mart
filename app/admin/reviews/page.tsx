@@ -200,7 +200,7 @@ function AdminReviewsContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-              <MessageSquare className="h-5 w-5" />
+              <MessageSquare className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{stats.total}</p>
@@ -211,7 +211,7 @@ function AdminReviewsContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning-100 text-warning-600">
-              <Clock className="h-5 w-5" />
+              <Clock className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{stats.pending}</p>
@@ -222,7 +222,7 @@ function AdminReviewsContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-danger-100 text-danger-600">
-              <ShieldAlert className="h-5 w-5" />
+              <ShieldAlert className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{flaggedCount}</p>
@@ -233,7 +233,7 @@ function AdminReviewsContent() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-100 text-success-600">
-              <CheckCircle2 className="h-5 w-5" />
+              <CheckCircle2 className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{stats.approved}</p>
@@ -247,7 +247,7 @@ function AdminReviewsContent() {
       {flaggedCount > 0 && (
         <div className="rounded-xl border border-danger-200 bg-danger-50 p-4">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-danger" />
+            <AlertTriangle className="size-5 text-danger" />
             <div>
               <p className="font-medium text-secondary-800">{flaggedCount} flagged reviews need attention</p>
               <p className="text-sm text-muted-600">Reviews flagged by users or for policy violations</p>
@@ -260,7 +260,7 @@ function AdminReviewsContent() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-400" />
             <input
               type="search"
               placeholder="Search reviews..."
@@ -286,11 +286,11 @@ function AdminReviewsContent() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary" />
           </div>
         ) : error ? (
           <div className="py-16 text-center">
-            <AlertTriangle className="mx-auto mb-3 h-10 w-10 text-danger" />
+            <AlertTriangle className="mx-auto mb-3 size-10 text-danger" />
             <p className="font-medium text-secondary-800">Failed to load reviews</p>
             <p className="mt-1 text-sm text-muted-500">{error}</p>
             <button
@@ -358,7 +358,7 @@ function AdminReviewsContent() {
 
                 <div className="mt-3 flex items-center justify-between">
                   <div className="flex items-center gap-1 text-xs text-muted-400">
-                    <ThumbsUp className="h-3 w-3" />
+                    <ThumbsUp className="size-3" />
                     {review.helpful_count} found this helpful
                   </div>
                   <div className="flex items-center gap-1">
@@ -368,7 +368,7 @@ function AdminReviewsContent() {
                         disabled={acting === review.id}
                         className="rounded px-2.5 py-1 text-xs font-medium text-success transition-colors hover:bg-success-50 disabled:opacity-50"
                       >
-                        <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />
+                        <CheckCircle2 className="mr-1 inline size-3.5" />
                         Approve
                       </button>
                     )}
@@ -378,7 +378,7 @@ function AdminReviewsContent() {
                         disabled={acting === review.id}
                         className="rounded px-2.5 py-1 text-xs font-medium text-warning-700 transition-colors hover:bg-warning-50 disabled:opacity-50"
                       >
-                        <Flag className="mr-1 inline h-3.5 w-3.5" />
+                        <Flag className="mr-1 inline size-3.5" />
                         Flag
                       </button>
                     )}
@@ -388,7 +388,7 @@ function AdminReviewsContent() {
                         disabled={acting === review.id}
                         className="rounded px-2.5 py-1 text-xs font-medium text-secondary-700 transition-colors hover:bg-muted-100 disabled:opacity-50"
                       >
-                        <Ban className="mr-1 inline h-3.5 w-3.5" />
+                        <Ban className="mr-1 inline size-3.5" />
                         Reject
                       </button>
                     )}
@@ -398,9 +398,9 @@ function AdminReviewsContent() {
                       className="rounded px-2.5 py-1 text-xs font-medium text-danger transition-colors hover:bg-danger-50 disabled:opacity-50"
                     >
                       {acting === review.id ? (
-                        <Loader2 className="mr-1 inline h-3.5 w-3.5 animate-spin" />
+                        <Loader2 className="mr-1 inline size-3.5 animate-spin" />
                       ) : (
-                        <Trash2 className="mr-1 inline h-3.5 w-3.5" />
+                        <Trash2 className="mr-1 inline size-3.5" />
                       )}
                       Delete
                     </button>

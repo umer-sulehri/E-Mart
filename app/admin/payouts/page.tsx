@@ -88,13 +88,13 @@ function formatDate(value?: string | null): string {
 function statusIcon(status: PayoutStatus) {
   switch (status) {
     case 'completed':
-      return <CheckCircle className="h-3.5 w-3.5" />;
+      return <CheckCircle className="size-3.5" />;
     case 'failed':
-      return <XCircle className="h-3.5 w-3.5" />;
+      return <XCircle className="size-3.5" />;
     case 'processing':
-      return <Clock className="h-3.5 w-3.5" />;
+      return <Clock className="size-3.5" />;
     default:
-      return <Clock className="h-3.5 w-3.5" />;
+      return <Clock className="size-3.5" />;
   }
 }
 
@@ -272,7 +272,7 @@ function AdminPayoutsContent() {
                   ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center">
-                          <Wallet className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Wallet className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No payouts found</p>
                           <p className="mt-1 text-xs text-muted-400">
                             {statusFilter
@@ -295,7 +295,7 @@ function AdminPayoutsContent() {
                           </td>
                           <td className="px-3 py-4 sm:px-6">
                             <span className="flex items-center gap-1.5 text-muted-600">
-                              <Banknote className="h-4 w-4" />
+                              <Banknote className="size-4" />
                               {payout.method}
                             </span>
                           </td>
@@ -319,7 +319,7 @@ function AdminPayoutsContent() {
                                     onClick={() => updateStatus(payout.id, 'processing')}
                                     disabled={updatingId === payout.id}
                                   >
-                                    <Clock className="h-4 w-4" />
+                                    <Clock className="size-4" />
                                     Process
                                   </Button>
                                   <Button
@@ -328,7 +328,7 @@ function AdminPayoutsContent() {
                                     onClick={() => updateStatus(payout.id, 'failed')}
                                     disabled={updatingId === payout.id}
                                   >
-                                    <XCircle className="h-4 w-4" />
+                                    <XCircle className="size-4" />
                                     Reject
                                   </Button>
                                 </>
@@ -340,7 +340,7 @@ function AdminPayoutsContent() {
                                     onClick={() => updateStatus(payout.id, 'completed')}
                                     disabled={updatingId === payout.id}
                                   >
-                                    <CheckCircle className="h-4 w-4" />
+                                    <CheckCircle className="size-4" />
                                     Complete
                                   </Button>
                                   <Button
@@ -349,7 +349,7 @@ function AdminPayoutsContent() {
                                     onClick={() => updateStatus(payout.id, 'failed')}
                                     disabled={updatingId === payout.id}
                                   >
-                                    <XCircle className="h-4 w-4" />
+                                    <XCircle className="size-4" />
                                     Fail
                                   </Button>
                                 </>

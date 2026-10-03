@@ -177,9 +177,9 @@ function SellerPayoutsContent() {
   };
 
   const statusIcon = (status: string) => {
-    if (status === 'completed') return <CheckCircle className="h-4 w-4" />;
-    if (status === 'failed') return <XCircle className="h-4 w-4" />;
-    return <Clock className="h-4 w-4" />;
+    if (status === 'completed') return <CheckCircle className="size-4" />;
+    if (status === 'failed') return <XCircle className="size-4" />;
+    return <Clock className="size-4" />;
   };
 
   return (
@@ -190,7 +190,7 @@ function SellerPayoutsContent() {
           <p className="text-sm text-muted-500">Request and track your earnings payouts</p>
         </div>
         <Button size="sm" onClick={openRequestModal}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Request Payout
         </Button>
       </div>
@@ -246,7 +246,7 @@ function SellerPayoutsContent() {
                   ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center">
-                          <Wallet className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Wallet className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No payouts yet</p>
                           <p className="mt-1 text-xs text-muted-400">Request your first payout to start</p>
                         </td>
@@ -267,7 +267,7 @@ function SellerPayoutsContent() {
                         </td>
                         <td className="px-3 py-4 sm:px-6 text-muted-600 capitalize">
                           <span className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4 text-muted-400" />
+                            <CreditCard className="size-4 text-muted-400" />
                             {payout.method || 'Bank'}
                           </span>
                         </td>

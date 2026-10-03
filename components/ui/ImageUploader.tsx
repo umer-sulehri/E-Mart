@@ -83,7 +83,7 @@ export default function ImageUploader({
               </button>
             </>
           ) : (
-            <UploadCloud className="h-8 w-8 text-muted-400" />
+            <UploadCloud className="size-8 text-muted-400" />
           )}
         </div>
 

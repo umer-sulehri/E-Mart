@@ -217,11 +217,11 @@ export default function OrderDetailPage() {
           href="/dashboard/orders"
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           Back to Orders
         </Link>
         <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-          <Package className="mx-auto h-12 w-12 text-muted-300" />
+          <Package className="mx-auto size-12 text-muted-300" />
           <p className="mt-4 text-lg font-semibold text-secondary-800">Order not found</p>
           <Link href="/dashboard/orders">
             <Button variant="primary" className="mt-4">View All Orders</Button>
@@ -242,7 +242,7 @@ export default function OrderDetailPage() {
         href="/dashboard/orders"
         className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="size-4" />
         Back to Orders
       </Link>
 
@@ -286,7 +286,7 @@ export default function OrderDetailPage() {
                     : 'border-muted-300 bg-white text-muted-400'
                 )}
               >
-                {step.completed ? <Check className="h-3.5 w-3.5" /> : i + 1}
+                {step.completed ? <Check className="size-3.5" /> : i + 1}
               </div>
               <span
                 className={cn(
@@ -365,7 +365,7 @@ export default function OrderDetailPage() {
           {shippingAddr && (
             <div className="rounded-xl bg-white p-6 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary" />
+                <MapPin className="size-4 text-primary" />
                 <h3 className="font-bold text-secondary-800">Shipping Address</h3>
               </div>
               <div className="text-sm text-muted-600 leading-relaxed">
@@ -384,7 +384,7 @@ export default function OrderDetailPage() {
 
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <div className="mb-3 flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-primary" />
+              <CreditCard className="size-4 text-primary" />
               <h3 className="font-bold text-secondary-800">Payment</h3>
             </div>
             <p className="text-sm text-muted-600">
@@ -407,7 +407,7 @@ export default function OrderDetailPage() {
             loading={cancelling}
             onClick={() => setCancelConfirmOpen(true)}
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
             Cancel Order
           </Button>
         )}
@@ -416,12 +416,12 @@ export default function OrderDetailPage() {
             variant="outline"
             onClick={() => router.push(`/dashboard/orders/${orderId}/write-review`)}
           >
-            <Star className="h-4 w-4" />
+            <Star className="size-4" />
             Write Review
           </Button>
         )}
         <Button variant="primary" onClick={handleReorder}>
-          <RotateCcw className="h-4 w-4" />
+          <RotateCcw className="size-4" />
           Re-Order
         </Button>
       </div>

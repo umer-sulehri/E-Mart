@@ -308,7 +308,7 @@ function SellerReviewsContent() {
                           />
                           <div className="mt-2 flex gap-2">
                             <Button size="sm" onClick={() => handleReply(review.id)} disabled={submittingReply}>
-                              <Send className="h-3.5 w-3.5" />
+                              <Send className="size-3.5" />
                               {submittingReply ? 'Sending...' : 'Send Reply'}
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => { setReplyingTo(null); setReplyText(''); }}>
@@ -326,7 +326,7 @@ function SellerReviewsContent() {
                         onClick={() => setReplyingTo(review.id)}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-muted-200 px-3 py-1.5 text-xs font-medium text-muted-600 transition-colors hover:bg-muted-50"
                       >
-                        <MessageSquare className="h-3.5 w-3.5" />
+                        <MessageSquare className="size-3.5" />
                         Reply
                       </button>
                     )}
@@ -337,7 +337,7 @@ function SellerReviewsContent() {
                           disabled={acting === review.id}
                           className="inline-flex items-center gap-1 rounded-lg border border-success-200 px-2.5 py-1.5 text-xs font-medium text-success transition-colors hover:bg-success-50 disabled:opacity-50"
                         >
-                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <CheckCircle2 className="size-3.5" />
                           Approve
                         </button>
                       )}
@@ -347,7 +347,7 @@ function SellerReviewsContent() {
                           disabled={acting === review.id}
                           className="inline-flex items-center gap-1 rounded-lg border border-muted-200 px-2.5 py-1.5 text-xs font-medium text-secondary-700 transition-colors hover:bg-muted-50 disabled:opacity-50"
                         >
-                          <Ban className="h-3.5 w-3.5" />
+                          <Ban className="size-3.5" />
                           Reject
                         </button>
                       )}
@@ -357,9 +357,9 @@ function SellerReviewsContent() {
                         className="inline-flex items-center gap-1 rounded-lg border border-danger-200 px-2.5 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger-50 disabled:opacity-50"
                       >
                         {acting === review.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="size-3.5 animate-spin" />
                         ) : (
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="size-3.5" />
                         )}
                         Delete
                       </button>
@@ -371,7 +371,7 @@ function SellerReviewsContent() {
 
         {!loading && reviews.length === 0 && (
           <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-            <Star className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+            <Star className="mx-auto mb-3 size-10 text-muted-300" />
             <p className="text-sm text-muted-500">
               {activeFilter === 'All'
                 ? 'No reviews yet'

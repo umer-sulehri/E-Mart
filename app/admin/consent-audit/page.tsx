@@ -121,7 +121,7 @@ function AdminConsentAuditContent() {
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => fetchRecords(page)}>
-          <RotateCw className="h-4 w-4" />
+          <RotateCw className="size-4" />
           Refresh
         </Button>
       </div>
@@ -151,7 +151,7 @@ function AdminConsentAuditContent() {
                   ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center">
-                          <Cookie className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Cookie className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No consent records found</p>
                         </td>
                       </tr>

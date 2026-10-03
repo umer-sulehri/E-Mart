@@ -138,9 +138,9 @@ const Toast = ({
     )}
   >
     {type === 'success' ? (
-      <CheckCircle className="h-5 w-5" />
+      <CheckCircle className="size-5" />
     ) : (
-      <AlertCircle className="h-5 w-5" />
+      <AlertCircle className="size-5" />
     )}
     <span className="text-sm font-medium">{message}</span>
     <button onClick={onClose} className="ml-2 text-white/80 hover:text-white">
@@ -390,7 +390,7 @@ export default function AdminSettingsPage() {
                   : 'text-muted-600 hover:bg-muted-50'
               )}
             >
-              <tab.icon className="h-4 w-4" />
+              <tab.icon className="size-4" />
               <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
@@ -508,7 +508,7 @@ export default function AdminSettingsPage() {
               </div>
               <div className="mt-6 flex justify-end">
                 <Button onClick={saveGeneral} loading={saving}>
-                  <Save className="h-4 w-4" />
+                  <Save className="size-4" />
                   Save General Settings
                 </Button>
               </div>
@@ -614,7 +614,7 @@ export default function AdminSettingsPage() {
               </div>
               <div className="mt-6 flex justify-end">
                 <Button onClick={savePayments} loading={saving}>
-                  <Save className="h-4 w-4" />
+                  <Save className="size-4" />
                   Save Payment Settings
                 </Button>
               </div>
@@ -704,7 +704,7 @@ export default function AdminSettingsPage() {
               </div>
               <div className="mt-6 flex justify-end">
                 <Button onClick={saveShipping} loading={saving}>
-                  <Save className="h-4 w-4" />
+                  <Save className="size-4" />
                   Save Shipping Settings
                 </Button>
               </div>
@@ -750,7 +750,7 @@ export default function AdminSettingsPage() {
                 className={cn(inputClass, 'sm:col-span-2')}
               />
               <Button onClick={addSocialLink}>
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
                 Add
               </Button>
             </div>
@@ -764,7 +764,7 @@ export default function AdminSettingsPage() {
             </div>
           ) : socialLinks.length === 0 ? (
             <div className="mt-6 rounded-lg border border-dashed border-muted-300 p-8 text-center">
-              <Share2 className="mx-auto h-8 w-8 text-muted-400" />
+              <Share2 className="mx-auto size-8 text-muted-400" />
               <p className="mt-2 text-sm text-muted-500">
                 No social links yet. Add one above.
               </p>
@@ -777,7 +777,7 @@ export default function AdminSettingsPage() {
                   className="flex items-center justify-between rounded-lg border border-muted-100 p-4"
                 >
                   <div className="flex items-center gap-3">
-                    <GripVertical className="h-4 w-4 text-muted-400" />
+                    <GripVertical className="size-4 text-muted-400" />
                     <div>
                       <p className="font-medium text-secondary-800">
                         {link.platform}
@@ -789,7 +789,7 @@ export default function AdminSettingsPage() {
                         className="flex items-center gap-1 text-sm text-primary hover:underline"
                       >
                         {link.url}
-                        <ExternalLink className="h-3 w-3" />
+                        <ExternalLink className="size-3" />
                       </a>
                     </div>
                   </div>
@@ -802,7 +802,7 @@ export default function AdminSettingsPage() {
                       onClick={() => deleteSocialLink(link.id)}
                       className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-danger/10 hover:text-danger"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="size-4" />
                     </button>
                   </div>
                 </div>

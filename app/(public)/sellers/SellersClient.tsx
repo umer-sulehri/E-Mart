@@ -132,7 +132,7 @@ function SellersContent() {
             role="search"
           >
             <Input
-              icon={<Search className="h-5 w-5 text-muted-400" />}
+              icon={<Search className="size-5 text-muted-400" />}
               type="search"
               placeholder="Search sellers by name..."
               value={searchInput}

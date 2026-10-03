@@ -7,7 +7,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2 text-primary transition-colors hover:text-primary-500">
-            <Leaf className="h-8 w-8" />
+            <Leaf className="size-8" />
             <span className="text-2xl font-bold font-heading text-secondary">E-Mart</span>
           </Link>
         </div>

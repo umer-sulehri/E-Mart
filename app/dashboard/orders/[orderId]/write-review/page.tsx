@@ -179,11 +179,11 @@ export default function WriteReviewPage() {
           href="/dashboard/orders"
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           Back to Orders
         </Link>
         <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-          <Package className="mx-auto h-12 w-12 text-muted-300" />
+          <Package className="mx-auto size-12 text-muted-300" />
           <p className="mt-4 text-lg font-semibold text-secondary-800">Order not found</p>
           <Link href="/dashboard/orders">
             <Button variant="primary" className="mt-4">
@@ -202,7 +202,7 @@ export default function WriteReviewPage() {
           href="/dashboard/orders"
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           Back to Orders
         </Link>
         <Badge variant="primary" size="md">
@@ -225,7 +225,7 @@ export default function WriteReviewPage() {
 
       {items.length === 0 ? (
         <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-          <Package className="mx-auto h-12 w-12 text-muted-300" />
+          <Package className="mx-auto size-12 text-muted-300" />
           <p className="mt-4 text-sm text-muted-500">No items found for this order.</p>
         </div>
       ) : (
@@ -255,7 +255,7 @@ export default function WriteReviewPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium text-secondary-800">{item.name}</p>
                       <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-success">
-                        <CheckCircle2 className="h-4 w-4" />
+                        <CheckCircle2 className="size-4" />
                         Review submitted
                       </p>
                     </div>
@@ -406,9 +406,9 @@ export default function WriteReviewPage() {
                     onClick={() => handleSubmit(item)}
                   >
                     {submitting === item.orderItemId ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="size-4 animate-spin" />
                     ) : (
-                      <Star className="h-4 w-4 fill-current" />
+                      <Star className="size-4 fill-current" />
                     )}
                     Submit Review
                   </Button>
@@ -421,7 +421,7 @@ export default function WriteReviewPage() {
 
       {items.length > 0 && Object.keys(reviewed).length === items.length && (
         <div className="rounded-xl bg-success-50 p-6 text-center">
-          <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
+          <CheckCircle2 className="mx-auto size-10 text-success" />
           <p className="mt-3 font-semibold text-secondary-800">
             All reviews submitted. Thank you!
           </p>

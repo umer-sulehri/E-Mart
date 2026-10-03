@@ -91,7 +91,7 @@ function AdminLogsContent() {
           <p className="text-sm text-muted-500">Track all administrative and system actions</p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchLogs}>
-          <RotateCw className="h-4 w-4" />
+          <RotateCw className="size-4" />
           Refresh
         </Button>
       </div>
@@ -114,7 +114,7 @@ function AdminLogsContent() {
                   ? (
                       <tr>
                         <td colSpan={4} className="px-6 py-12 text-center">
-                          <Activity className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Activity className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No logs found</p>
                         </td>
                       </tr>

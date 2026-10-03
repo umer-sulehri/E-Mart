@@ -149,7 +149,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white">
-            <Package className="h-6 w-6" />
+            <Package className="size-6" />
           </div>
           <div>
             <p className="text-sm text-muted-500">Total Orders</p>
@@ -158,7 +158,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success text-white">
-            <DollarSign className="h-6 w-6" />
+            <DollarSign className="size-6" />
           </div>
           <div>
             <p className="text-sm text-muted-500">Total Spent</p>
@@ -167,7 +167,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-danger text-white">
-            <Heart className="h-6 w-6" />
+            <Heart className="size-6" />
           </div>
           <div>
             <p className="text-sm text-muted-500">Wishlist Items</p>
@@ -176,7 +176,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning text-white">
-            <Clock className="h-6 w-6" />
+            <Clock className="size-6" />
           </div>
           <div>
             <p className="text-sm text-muted-500">Pending Orders</p>
@@ -249,26 +249,26 @@ export default function DashboardPage() {
         <h3 className="mb-4 text-lg font-bold text-secondary-800">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <ActionButton
-            icon={<ShoppingBag className="h-6 w-6 sm:h-8 sm:w-8" />}
+            icon={<ShoppingBag className="size-6 sm:h-8 sm:w-8" />}
             label="Start Shopping"
             href="/products"
             onClick={() => trackEvent({ action: 'cta_click', label: 'start_shopping' })}
           />
           <ActionButton
-            icon={<RotateCcw className="h-6 w-6 sm:h-8 sm:w-8" />}
+            icon={<RotateCcw className="size-6 sm:h-8 sm:w-8" />}
             label="Re-Order"
             onClick={handleReorder}
             disabled={!canReorder}
             loading={reordering}
           />
           <ActionButton
-            icon={<MapPin className="h-6 w-6 sm:h-8 sm:w-8" />}
+            icon={<MapPin className="size-6 sm:h-8 sm:w-8" />}
             label="Track Order"
             href={canTrack && lastOrder ? `/dashboard/orders/${lastOrder.id}` : undefined}
             disabled={!canTrack}
           />
           <ActionButton
-            icon={<Star className="h-6 w-6 sm:h-8 sm:w-8" />}
+            icon={<Star className="size-6 sm:h-8 sm:w-8" />}
             label="Write Review"
             href="/dashboard/reviews"
           />

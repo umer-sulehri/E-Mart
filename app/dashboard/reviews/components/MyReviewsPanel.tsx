@@ -152,9 +152,9 @@ function MyReviewsPanelContent({
       {reviews.length === 0 ? (
         <div className="rounded-xl bg-white px-8 py-12 text-center shadow-sm">
           {status ? (
-            <Clock className="mx-auto h-10 w-10 text-muted-300" />
+            <Clock className="mx-auto size-10 text-muted-300" />
           ) : (
-            <MessagesSquare className="mx-auto h-10 w-10 text-muted-300" />
+            <MessagesSquare className="mx-auto size-10 text-muted-300" />
           )}
           <p className="mt-4 font-semibold text-secondary-800">
             {status ? 'Nothing here yet' : 'No reviews yet'}

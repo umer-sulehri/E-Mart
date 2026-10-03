@@ -116,7 +116,7 @@ export default function SellerEarningsPage() {
           : earningsStats.map((stat) => (
               <div key={stat.label} className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
                 <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.bg} text-white`}>
-                  <stat.icon className="h-6 w-6" />
+                  <stat.icon className="size-6" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-500">{stat.label}</p>
@@ -173,9 +173,9 @@ export default function SellerEarningsPage() {
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
                   {payoutMethod?.preferred_method === 'bank' ? (
-                    <CreditCard className="h-5 w-5 text-primary" />
+                    <CreditCard className="size-5 text-primary" />
                   ) : (
-                    <Smartphone className="h-5 w-5 text-primary" />
+                    <Smartphone className="size-5 text-primary" />
                   )}
                 </div>
                 <div className="min-w-0">

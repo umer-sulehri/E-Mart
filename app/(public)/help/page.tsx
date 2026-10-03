@@ -60,7 +60,7 @@ export default function HelpPage() {
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
       <div className="mb-10 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-100 text-primary">
-          <HelpCircle className="h-8 w-8" />
+          <HelpCircle className="size-8" />
         </div>
         <h1 className="font-heading text-4xl font-bold text-secondary-800">Help Center</h1>
         <p className="mx-auto mt-2 max-w-2xl text-muted-600">
@@ -88,7 +88,7 @@ export default function HelpPage() {
                       className="group flex items-center justify-between py-3 text-sm text-muted-600 hover:text-primary"
                     >
                       {link.label}
-                      <ChevronRight className="h-4 w-4 text-muted-400 transition-transform group-hover:translate-x-0.5" />
+                      <ChevronRight className="size-4 text-muted-400 transition-transform group-hover:translate-x-0.5" />
                     </Link>
                   </li>
                 ))}
@@ -100,7 +100,7 @@ export default function HelpPage() {
 
       <div className="mt-10 flex flex-col items-center justify-center gap-4 rounded-2xl bg-primary-50 p-8 text-center sm:flex-row sm:gap-8">
         <div className="flex items-center gap-3">
-          <Phone className="h-5 w-5 text-primary" />
+          <Phone className="size-5 text-primary" />
           <div className="text-left">
             <p className="text-xs text-muted-500">Call us</p>
             <p className="text-sm font-medium text-secondary-800">+92 300 1234567</p>
@@ -108,14 +108,14 @@ export default function HelpPage() {
         </div>
         <div className="hidden h-8 w-px bg-primary/20 sm:block" />
         <div className="flex items-center gap-3">
-          <Mail className="h-5 w-5 text-primary" />
+          <Mail className="size-5 text-primary" />
           <div className="text-left">
             <p className="text-xs text-muted-500">Email us</p>
             <p className="text-sm font-medium text-secondary-800">support@emart.pk</p>
           </div>
         </div>
         <div className="hidden h-8 w-px bg-primary/20 sm:block" />
-        <MapPin className="h-5 w-5 text-primary" />
+        <MapPin className="size-5 text-primary" />
         <div className="text-left">
           <p className="text-xs text-muted-500">Store hours</p>
           <p className="text-sm font-medium text-secondary-800">Daily, 9am - 11pm</p>

@@ -104,7 +104,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
             className="-mr-2 rounded-lg p-2.5 text-muted transition-colors hover:bg-muted-100 hover:text-primary"
             aria-label="Close menu"
           >
-            <X className="h-6 w-6" />
+            <X className="size-6" />
           </button>
         </div>
 

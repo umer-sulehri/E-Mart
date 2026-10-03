@@ -159,7 +159,7 @@ function OrdersContent() {
         </div>
       ) : orders.length === 0 ? (
         <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-          <Package className="mx-auto h-12 w-12 text-muted-300" />
+          <Package className="mx-auto size-12 text-muted-300" />
           <p className="mt-4 text-lg font-semibold text-secondary-800">
             No orders found
           </p>
@@ -225,14 +225,14 @@ function OrdersContent() {
                   <div className="flex gap-2">
                     <Link href={`/dashboard/orders/${order.id}`}>
                       <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4" />
+                        <Eye className="size-4" />
                         View Details
                       </Button>
                     </Link>
                     {order.status === 'shipped' && (
                       <Link href={`/dashboard/orders/${order.id}`}>
                         <Button variant="ghost" size="sm">
-                          <Truck className="h-4 w-4" />
+                          <Truck className="size-4" />
                           Track
                         </Button>
                       </Link>

@@ -188,10 +188,10 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <nav className="flex items-center gap-2 text-sm text-muted-500">
         <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary">
-          <Home className="h-3.5 w-3.5" />
+          <Home className="size-3.5" />
           Home
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
+        <ChevronRight className="size-3.5" />
         <span className="text-secondary-800">Admin</span>
       </nav>
 
@@ -201,7 +201,7 @@ export default function AdminDashboardPage() {
           <p className="text-sm text-muted-500">Overview of your marketplace</p>
         </div>
         <Button variant="outline" size="sm" onClick={load}>
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="size-4" />
           Refresh
         </Button>
       </div>
@@ -215,11 +215,11 @@ export default function AdminDashboardPage() {
           >
             <div className="flex items-center justify-between">
               <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', stat.color)}>
-                <stat.icon className="h-5 w-5" />
+                <stat.icon className="size-5" />
               </div>
               {stat.change && (
                 <span className={cn('inline-flex items-center gap-1 text-xs font-medium', stat.up ? 'text-success' : 'text-danger')}>
-                  {stat.up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                  {stat.up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
                   {stat.change}
                 </span>
               )}
@@ -235,7 +235,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-secondary-800">Revenue Overview</h2>
             <Link href="/admin/analytics" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-500">
-              View analytics <ArrowRight className="h-3.5 w-3.5" />
+              View analytics <ArrowRight className="size-3.5" />
             </Link>
           </div>
           <div className="mt-4 h-64">
@@ -294,7 +294,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-secondary-800">Recent Orders</h2>
             <Link href="/admin/orders" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-500">
-              View all <ArrowRight className="h-3.5 w-3.5" />
+              View all <ArrowRight className="size-3.5" />
             </Link>
           </div>
           {stats.recentOrders.length === 0 ? (
@@ -343,7 +343,7 @@ export default function AdminDashboardPage() {
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-secondary-800">
-                <UserPlus className="h-4 w-4 text-primary" />
+                <UserPlus className="size-4 text-primary" />
                 Recent Registrations
               </h2>
             </div>
@@ -373,11 +373,11 @@ export default function AdminDashboardPage() {
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-secondary-800">
-                <Clock className="h-4 w-4 text-warning" />
+                <Clock className="size-4 text-warning" />
                 Pending Sellers
               </h2>
               <Link href="/admin/sellers" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-500">
-                Manage <ArrowRight className="h-3.5 w-3.5" />
+                Manage <ArrowRight className="size-3.5" />
               </Link>
             </div>
             {stats.pendingSellers.length === 0 ? (

@@ -186,7 +186,7 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
             />
             {coverUploading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
+                <Loader2 className="size-6 animate-spin text-white" />
               </div>
             )}
             <button
@@ -198,7 +198,7 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
               className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-danger"
               aria-label="Remove cover image"
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </button>
           </div>
         ) : (
@@ -207,7 +207,7 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
             onClick={() => fileInputRef.current?.click()}
             className="flex h-40 w-full max-w-sm flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-200 transition-colors hover:border-primary hover:bg-muted-50"
           >
-            <Upload className="mb-2 h-8 w-8 text-muted-400" />
+            <Upload className="mb-2 size-8 text-muted-400" />
             <p className="text-sm font-medium text-muted-600">Upload cover image</p>
             <p className="text-xs text-muted-400">JPG, PNG, WebP up to 5MB</p>
           </button>
@@ -244,7 +244,7 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
         <Button type="submit" size="lg" disabled={submitting}>
           {submitting ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
               Saving...
             </>
           ) : mode === 'add' ? (

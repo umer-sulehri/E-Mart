@@ -20,7 +20,7 @@ export default function BackToTop() {
         visible ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
-      <ChevronUp className="h-6 w-6" />
+      <ChevronUp className="size-6" />
     </button>
   );
 }

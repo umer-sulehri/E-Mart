@@ -34,7 +34,7 @@ export default function NotFoundSearch() {
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary-500"
         aria-label="Search"
       >
-        <Search className="h-4 w-4" />
+        <Search className="size-4" />
       </button>
     </form>
   );

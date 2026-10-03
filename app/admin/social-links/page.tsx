@@ -172,7 +172,7 @@ export default function AdminSocialLinksPage() {
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-500">{links.length} link(s) configured</p>
         <Button size="sm" onClick={startAdd}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Add Link
         </Button>
       </div>
@@ -190,7 +190,7 @@ export default function AdminSocialLinksPage() {
               }}
               className="rounded-lg p-1 hover:bg-muted-100"
             >
-              <X className="h-5 w-5 text-muted-500" />
+              <X className="size-5 text-muted-500" />
             </button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -244,11 +244,11 @@ export default function AdminSocialLinksPage() {
       <div className="rounded-xl bg-white shadow-sm">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary" />
           </div>
         ) : links.length === 0 ? (
           <div className="py-12 text-center text-muted-500">
-            <Link2 className="mx-auto mb-2 h-8 w-8" />
+            <Link2 className="mx-auto mb-2 size-8" />
             No social links yet
           </div>
         ) : (
@@ -285,14 +285,14 @@ export default function AdminSocialLinksPage() {
                     disabled={busyId === link.id}
                     className="rounded-lg p-1.5 text-muted-500 hover:bg-muted-100 hover:text-secondary-800 disabled:opacity-60"
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="size-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(link.id)}
                     disabled={busyId === link.id}
                     className="rounded-lg p-1.5 text-danger hover:bg-danger-50 disabled:opacity-60"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="size-4" />
                   </button>
                 </li>
               );

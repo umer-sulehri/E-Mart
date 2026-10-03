@@ -172,7 +172,7 @@ function SellerProductsContent() {
               placeholder="Search products by name or SKU..."
               defaultValue={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              icon={<Search className="h-4 w-4" />}
+              icon={<Search className="size-4" />}
             />
           </div>
           <div className="flex gap-3">
@@ -212,7 +212,7 @@ function SellerProductsContent() {
                   ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center">
-                          <Package className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Package className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No products found</p>
                         </td>
                       </tr>
@@ -226,7 +226,7 @@ function SellerProductsContent() {
                                 <ImageWithFallback src={product.images[0]} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
                               ) : (
                                 <div className="flex h-full w-full items-center justify-center">
-                                  <Package className="h-5 w-5 text-muted-400" />
+                                  <Package className="size-5 text-muted-400" />
                                 </div>
                               )}
                             </div>
@@ -265,14 +265,14 @@ function SellerProductsContent() {
                               onClick={() => router.push(`/seller/products/${product.id}/edit`)}
                               className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-primary-50 hover:text-primary"
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="size-4" />
                             </button>
                             <button
                               onClick={() => setDeleteTarget(product)}
                               disabled={deleting === product.id}
                               className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="size-4" />
                             </button>
                           </div>
                         </td>

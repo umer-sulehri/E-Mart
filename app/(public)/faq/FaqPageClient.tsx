@@ -174,7 +174,7 @@ export default function FaqPageClient() {
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">FAQ</span>
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function FaqPageClient() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-12">
           <div className="mx-auto max-w-xl">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-400" />
+              <Search className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-400" />
               <input
                 type="text"
                 value={searchQuery}

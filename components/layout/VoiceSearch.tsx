@@ -189,10 +189,10 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
         {isListening ? (
           <span className="relative flex h-5 w-5 items-center justify-center">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-40" />
-            <Mic className="relative h-5 w-5" />
+            <Mic className="relative size-5" />
           </span>
         ) : (
-          <Mic className="h-5 w-5" />
+          <Mic className="size-5" />
         )}
       </button>
 
@@ -207,7 +207,7 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
               className="-mr-1 ml-2 rounded p-1.5 text-danger transition-colors hover:bg-danger-50 hover:text-danger-600"
               aria-label="Dismiss voice search error"
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </button>
           </div>
         </div>

@@ -213,9 +213,9 @@ export default function ProfilePage() {
               aria-label="Upload profile photo"
             >
               {avatarUploading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-muted-600" />
+                <Loader2 className="size-4 animate-spin text-muted-600" />
               ) : (
-                <Camera className="h-4 w-4 text-muted-600" />
+                <Camera className="size-4 text-muted-600" />
               )}
             </button>
           </div>
@@ -233,7 +233,7 @@ export default function ProfilePage() {
               onClick={() => avatarInputRef.current?.click()}
               disabled={avatarUploading}
             >
-              <Camera className="h-4 w-4" />
+              <Camera className="size-4" />
               {avatarUploading ? 'Uploading...' : 'Change Photo'}
             </Button>
           </div>
@@ -324,7 +324,7 @@ export default function ProfilePage() {
           onClick={() => setDeleteConfirmOpen(true)}
           loading={deleting}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="size-4" />
           Delete Account
         </Button>
       </div>

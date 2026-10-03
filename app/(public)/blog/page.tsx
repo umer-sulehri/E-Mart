@@ -253,7 +253,7 @@ function BlogContent() {
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">Blog</span>
           </div>
         </div>
