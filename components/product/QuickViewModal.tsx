@@ -102,34 +102,44 @@ export default function QuickViewModal({
       />
       {/* Height-capped shell: the panel itself scrolls, so the discount badge,
           price and Add to Cart stay reachable on a 360px-tall phone. The close
-          button lives in a non-scrolling header for the same reason. */}
+          button lives in a non-scrolling header for the same reason.
+
+          `dvh`, not `vh`: on a phone with the URL bar showing, 92vh is taller
+          than the visible area, so the sheet's top - and with it the close
+          button - sat above the fold. Below `sm` the sheet also takes the full
+          dynamic viewport instead of a content height that changed with every
+          product name and description length, which is what made the popup look
+          randomly sized. */}
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={product.name}
         tabIndex={-1}
-        className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl outline-none sm:max-w-3xl sm:max-h-[90vh] sm:rounded-2xl"
+        className="relative flex h-[100dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl outline-none sm:h-auto sm:max-h-[90dvh] sm:max-w-3xl sm:rounded-2xl"
       >
         <div className="flex shrink-0 items-center justify-end px-3 pt-3 sm:absolute sm:right-4 sm:top-4 sm:z-10 sm:p-0">
           <button
             onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-muted-500 shadow-sm transition-colors hover:bg-muted-100 hover:text-secondary"
+            className="flex size-11 items-center justify-center rounded-full bg-white text-muted-500 shadow-sm transition-colors hover:bg-muted-100 hover:text-secondary"
             aria-label="Close"
           >
-            <X size={18} />
+            <X size={18} className="shrink-0" />
           </button>
         </div>
 
-        <div className="grid flex-1 grid-cols-1 gap-6 overflow-y-auto overscroll-contain p-6 pt-0 sm:grid-cols-2 sm:pt-6">
-          {/* Image */}
-          <div className="relative aspect-square overflow-hidden rounded-xl bg-muted-50">
+        <div className="grid flex-1 grid-cols-1 gap-5 overflow-y-auto overscroll-contain p-4 pt-0 sm:grid-cols-2 sm:gap-6 sm:p-6 sm:pt-6">
+          {/* Image. Capped by viewport height as well as width on a phone: a
+              full-width square is taller than half the screen, so it pushed the
+              name, price and actions below the fold. `object-contain` because a
+              catalogue photo must not be cropped to fill the square. */}
+          <div className="relative mx-auto aspect-square w-full max-w-[min(100%,42dvh)] overflow-hidden rounded-xl bg-muted-50 sm:max-w-none">
             <ImageWithFallback
               src={product.image}
               alt={product.name}
               fill
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, 50vw"
+              className="object-contain p-2"
+              sizes="(max-width: 640px) 42dvh, (max-width: 1024px) 50vw, 384px"
             />
             {hasDiscount && (
               <Badge
@@ -203,7 +213,11 @@ export default function QuickViewModal({
               </p>
             )}
 
-            {/* Quantity + Actions */}
+            {/* Quantity + Actions. Two rows on a phone: quantity and Add to
+                Cart share the first, the wishlist and compare toggles take a
+                full-width second row. Four controls in one 343px row left the
+                cart button too narrow for its label and squeezed the toggles to
+                sub-44px targets. From `sm` up they fit side by side again. */}
             <div className="mt-auto flex flex-col gap-3 pt-6">
               <div className="flex items-center gap-3">
                 <QuantitySelector
@@ -214,7 +228,7 @@ export default function QuickViewModal({
                   disabled={product.stockQuantity != null && product.stockQuantity <= 0}
                 />
                 <Button
-                  className="flex-1"
+                  className="min-w-0 flex-1"
                   size="md"
                   onClick={() => {
                     addToCart(product, quantity);
@@ -225,27 +239,31 @@ export default function QuickViewModal({
                     product.stockQuantity <= 0
                   }
                 >
-                  <ShoppingCart size={16} />
-                  Add to Cart
+                  <ShoppingCart size={16} className="shrink-0" />
+                  <span className="truncate">Add to Cart</span>
                 </Button>
+              </div>
+
+              <div className="flex items-stretch gap-3">
                 <Button
                   variant="outline"
                   size="md"
-                  className="px-3"
+                  className="flex-1 sm:flex-none sm:px-3"
                   onClick={toggleWishlist}
                   disabled={wishlistLoading}
                   aria-pressed={isWishlisted}
                 >
                   {isWishlisted ? (
-                    <Check size={16} className="text-primary" />
+                    <Check size={16} className="shrink-0 text-primary" />
                   ) : (
-                    <Heart size={16} />
+                    <Heart size={16} className="shrink-0" />
                   )}
+                  <span>{isWishlisted ? 'Saved' : 'Wishlist'}</span>
                 </Button>
                 <Button
                   variant={isInCompare ? 'primary' : 'outline'}
                   size="md"
-                  className="px-3"
+                  className="flex-1 sm:flex-none sm:px-3"
                   onClick={() => compareToggle(compareProduct)}
                   // Marked, not disabled: the click still reaches the guarded
                   // store action, which explains the refusal and offers to
@@ -260,7 +278,8 @@ export default function QuickViewModal({
                         : `Add ${product.name} to compare`
                   }
                 >
-                  <GitCompareArrows size={16} />
+                  <GitCompareArrows size={16} className="shrink-0" />
+                  <span>Compare</span>
                 </Button>
               </div>
 
@@ -269,7 +288,7 @@ export default function QuickViewModal({
                 onClick={onClose}
                 className="flex items-center justify-center gap-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
               >
-                <Eye size={14} />
+                <Eye size={14} className="shrink-0" />
                 View Full Details
               </Link>
             </div>
