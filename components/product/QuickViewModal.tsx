@@ -170,7 +170,18 @@ export default function QuickViewModal({
               </p>
             )}
 
-            <h2 className="mt-1 font-heading text-xl font-bold text-secondary-800">
+            {/* Clamped and a step smaller on a phone. The sheet's body column
+                is ~343px wide and `body` sets `line-height: 2`, so an
+                unclamped 20px title ran to four lines — 160px of the panel —
+                and pushed the price and Add to Cart below the fold. Two lines at
+                18px carry the name, and the full string stays reachable from the
+                tooltip and "View Full Details". `break-words` covers the
+                unbreakable-SKU case on pointer devices, where the body-level
+                `overflow-wrap` guard does not apply. */}
+            <h2
+              className="mt-1 line-clamp-2 break-words font-heading text-lg font-bold text-secondary-800 sm:line-clamp-3 sm:text-xl"
+              title={product.name}
+            >
               {product.name}
             </h2>
 
