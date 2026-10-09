@@ -425,7 +425,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm shadow-sm">
+      <header className="sticky top-0 z-40 bg-white/95 pt-[var(--safe-area-inset-top,env(safe-area-inset-top))] backdrop-blur-sm shadow-sm">
         <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12">
           {/* Mobile is a 3-column grid: burger, logo, icons. The logo is
               `justify-self-center` in the middle track so it sits truly centred

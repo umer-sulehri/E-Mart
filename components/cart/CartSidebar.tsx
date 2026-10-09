@@ -90,7 +90,7 @@ export default function CartSidebar() {
         }`}
       >
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-muted-200 px-6 py-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
+        <div className="flex shrink-0 items-center justify-between border-b border-muted-200 px-6 py-4 pt-[calc(var(--safe-area-inset-top,env(safe-area-inset-top))+1rem)]">
           <div className="flex items-center gap-2">
             <h2 className="font-heading text-lg font-bold text-secondary-800">
               Shopping Cart
