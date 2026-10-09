@@ -487,12 +487,12 @@
    offset by exactly this or they end up underneath it. `lg` is the desktop
    value, matching `top-24`. */
 :root {
-  --header-h: 140px;
+  --header-h: calc(140px + env(safe-area-inset-top));
 }
 
 @media (min-width: 1024px) {
   :root {
-    --header-h: 96px;
+    --header-h: calc(96px + env(safe-area-inset-top));
   }
 }
 

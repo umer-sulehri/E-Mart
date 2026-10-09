@@ -97,7 +97,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           open ? 'translate-x-0' : '-translate-x-full invisible'
         )}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-muted-200 bg-white p-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-muted-200 bg-white p-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
           <h2 className="text-lg font-bold text-secondary">E-Mart Menu</h2>
           <button
             onClick={onClose}

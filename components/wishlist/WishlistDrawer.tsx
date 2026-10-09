@@ -148,7 +148,7 @@ export default function WishlistDrawer() {
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-muted-200 px-4 py-4 sm:px-6">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-muted-200 px-4 py-4 pt-[calc(env(safe-area-inset-top)+1rem)] sm:px-6">
           <div className="flex min-w-0 items-center gap-2">
             <h2 className="font-heading text-lg font-bold text-secondary-800">
               Wishlist
