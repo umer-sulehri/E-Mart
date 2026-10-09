@@ -198,13 +198,13 @@ export default function ProductDetailClient({
       {/* Category + Brand / Store (clickable meta shown above the title) */}
       {(product.category?.name || product.brand?.name || (product.vendor?.name && product.vendor.slug)) && (
         <nav
-          className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm"
+          className="flex flex-col items-start gap-1.5 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-1.5"
           aria-label="Product category and brand"
         >
           {product.category?.name && product.category.slug && (
             <Link
               href={`/products?category=${encodeURIComponent(product.category.slug)}`}
-              className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 font-bold text-primary transition-colors hover:bg-primary-100 hover:text-primary-700"
+              className="inline-flex w-fit items-center gap-1 rounded-full bg-primary-50 px-3 py-1 font-bold text-primary transition-colors hover:bg-primary-100 hover:text-primary-700"
             >
               <Tag size={13} />
               {product.category.name}
@@ -212,12 +212,12 @@ export default function ProductDetailClient({
           )}
           {product.brand?.name && (
             <>
-              <span className="text-muted-300" aria-hidden="true">
-                â€¢
+              <span className="hidden text-muted-300 sm:inline" aria-hidden="true">
+                &bull;
               </span>
               <Link
                 href={`/products?brands=${encodeURIComponent(product.brand.name)}`}
-                className="font-bold text-primary transition-colors hover:text-primary-500"
+                className="inline-flex w-fit items-center font-bold text-primary transition-colors hover:text-primary-500"
               >
                 {product.brand.name}
               </Link>
@@ -225,12 +225,12 @@ export default function ProductDetailClient({
           )}
           {product.vendor?.name && product.vendor.slug && (
             <>
-              <span className="text-muted-300" aria-hidden="true">
-                â€¢
+              <span className="hidden text-muted-300 sm:inline" aria-hidden="true">
+                &bull;
               </span>
               <Link
                 href={`/sellers/${product.vendor.slug}`}
-                className="font-bold text-primary transition-colors hover:text-primary-500"
+                className="inline-flex w-fit items-center font-bold text-primary transition-colors hover:text-primary-500"
               >
                 {product.vendor.name}
               </Link>
