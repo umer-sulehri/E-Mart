@@ -79,6 +79,15 @@ function RoleSelector({
 }) {
   return (
     <div className="space-y-6">
+      <div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary-500"
+        >
+          <ArrowLeft className="size-4" /> Back to home
+        </Link>
+      </div>
+
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-bold font-heading text-secondary">Welcome to E-Mart</h1>
         <p className="text-sm text-muted-500">
