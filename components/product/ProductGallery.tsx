@@ -87,7 +87,7 @@ const ProductGallery = React.forwardRef<HTMLDivElement, ProductGalleryProps>(
         {/* Main Image */}
         <div
           ref={imageContainerRef}
-          className="relative min-w-0 flex-1 self-start overflow-hidden rounded-xl bg-muted-50"
+          className="relative w-full min-w-0 overflow-hidden rounded-xl bg-muted-50 lg:w-auto lg:flex-1 lg:self-start"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onPointerMove={handlePointerMove}
