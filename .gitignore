@@ -10,6 +10,7 @@ out/
 
 # Misc
 *.tsbuildinfo
+.idea/
 next-env.d.ts
 .DS_Store
 
