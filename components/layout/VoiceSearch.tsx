@@ -3,7 +3,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Mic, X } from 'lucide-react';
-import { VoiceSearchManager, getErrorText } from '@/lib/voice-search';
+import {
+  VoiceSearchManager,
+  getErrorText,
+  nativeSpeechRecognitionSupported,
+} from '@/lib/voice-search';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
@@ -73,7 +77,10 @@ function isSupported() {
     SpeechRecognition?: unknown;
     webkitSpeechRecognition?: unknown;
   };
-  return !!(w.SpeechRecognition || w.webkitSpeechRecognition);
+  return (
+    !!(w.SpeechRecognition || w.webkitSpeechRecognition) ||
+    nativeSpeechRecognitionSupported()
+  );
 }
 
 export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {

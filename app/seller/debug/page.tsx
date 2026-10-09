@@ -71,7 +71,7 @@ export default function SellerDebugPage() {
 
   return (
     <div className="space-y-6">
-      <nav className="flex items-center gap-2 text-sm text-muted-500">
+      <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-500">
         <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary">
           <Home className="size-3.5" />
           Home

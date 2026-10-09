@@ -3,7 +3,7 @@ import { Leaf } from 'lucide-react';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted-50 px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-muted-50 px-4 pt-12 pb-[calc(3rem+80px+env(safe-area-inset-bottom))]">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2 text-primary transition-colors hover:text-primary-500">

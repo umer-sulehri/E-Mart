@@ -109,6 +109,20 @@ export function normalizeRecognitionLang(lang?: string): string {
   return 'en-US';
 }
 
+/**
+ * True when the page is running inside the Capacitor app (native WebView).
+ * Android System WebView ships without the Web Speech API, so the only working
+ * recognizer there is Capacitor's native plugin backed by Android's
+ * SpeechRecognizer service.
+ */
+export function nativeSpeechRecognitionSupported(): boolean {
+  if (typeof window === 'undefined') return false;
+  const w = window as unknown as {
+    Capacitor?: { isNativePlatform?: () => boolean };
+  };
+  return !!w.Capacitor?.isNativePlatform?.();
+}
+
 interface SpeechRecognitionEventLike {
   resultIndex: number;
   results: ArrayLike<{
@@ -145,12 +159,38 @@ function getSpeechRecognition(): SpeechRecognitionConstructor | null {
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
+// The @capacitor-community/speech-recognition surface this manager touches.
+// Typed locally to avoid dragging the Capacitor type graph into the Node test
+// bundle; the runtime module is only ever loaded in the Capacitor WebView.
+interface NativeSpeechRecognition {
+  available(): Promise<{ available: boolean }>;
+  checkPermissions(): Promise<{ speechRecognition: string }>;
+  requestPermissions(): Promise<{ speechRecognition: string }>;
+  start(options?: {
+    language?: string;
+    maxResults?: number;
+    partialResults?: boolean;
+    popup?: boolean;
+  }): Promise<{ matches?: string[] }>;
+  stop(): Promise<void>;
+  addListener(
+    eventName: string,
+    listenerFunc: (data: never) => void
+  ): Promise<{ remove: () => void }>;
+  removeAllListeners(): Promise<void>;
+}
+
+type ListenerHandle = { remove: () => void };
+
 export class VoiceSearchManager {
   private recognition: SpeechRecognitionLike | null = null;
+  private nativeRecognition: NativeSpeechRecognition | null = null;
+  private nativeListenerHandles: ListenerHandle[] = [];
   private isListening = false;
   private timeoutId: ReturnType<typeof setTimeout> | null = null;
   private hasSubmittedFinal = false;
   private pendingTranscript = '';
+  private bestPartial = '';
 
   constructor() {
     const Ctor = getSpeechRecognition();
@@ -161,7 +201,7 @@ export class VoiceSearchManager {
   }
 
   get supported() {
-    return this.recognition !== null;
+    return this.recognition !== null || this.nativeRecognition !== null;
   }
 
   private setupRecognition() {
@@ -248,18 +288,116 @@ export class VoiceSearchManager {
   onError: ((code: string) => void) | null = null;
   onStateChange: ((listening: boolean, transcript: string) => void) | null = null;
 
-  async startListening() {
-    if (!this.recognition) {
-      return { supported: false };
+  // Lazy-load the native plugin only when inside the Capacitor WebView, and
+  // only at runtime: the dynamic import keeps the Node test/SSR bundles free
+  // of the Capacitor runtime entirely.
+  private async loadNativeRecognition(): Promise<NativeSpeechRecognition | null> {
+    try {
+      const [{ Capacitor }, plugin] = await Promise.all([
+        import('@capacitor/core'),
+        import('@capacitor-community/speech-recognition'),
+      ]);
+      if (!Capacitor.isNativePlatform()) return null;
+      return plugin.SpeechRecognition as unknown as NativeSpeechRecognition;
+    } catch {
+      return null;
+    }
+  }
+
+  private async startNativeListening(): Promise<{ ok: boolean; error?: string }> {
+    if (!this.nativeRecognition) {
+      this.nativeRecognition = await this.loadNativeRecognition();
+    }
+    if (!this.nativeRecognition) {
+      return { ok: false, error: 'no-speech' };
     }
 
+    try {
+      const { available } = await this.nativeRecognition.available();
+      if (!available) {
+        return { ok: false, error: 'no-speech' };
+      }
+
+      let permissions = await this.nativeRecognition.checkPermissions();
+      if (permissions.speechRecognition !== 'granted') {
+        permissions = await this.nativeRecognition.requestPermissions();
+        if (permissions.speechRecognition !== 'granted') {
+          return { ok: false, error: 'not-allowed' };
+        }
+      }
+
+      this.nativeListenerHandles = await Promise.all([
+        this.nativeRecognition.addListener('partialResults', (data) => {
+          const matches = (data as { matches?: string[] }).matches ?? [];
+          const text = (matches[0] || '').trim();
+          if (text) this.bestPartial = text;
+          this.pendingTranscript = text;
+          if (this.onStateChange) this.onStateChange(true, text);
+        }),
+        this.nativeRecognition.addListener('listeningState', (data) => {
+          const status = (data as { status?: string }).status;
+          if (status === 'started') {
+            if (this.onStateChange) this.onStateChange(true, this.pendingTranscript);
+            return;
+          }
+          // stopped: hand over the best transcript heard this session.
+          this.isListening = false;
+          if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+          }
+          if (!this.hasSubmittedFinal && this.bestPartial.trim()) {
+            const text = this.bestPartial.trim();
+            this.bestPartial = '';
+            this.hasSubmittedFinal = true;
+            if (this.onResult) this.onResult(text);
+          }
+          if (this.onStateChange) this.onStateChange(false, '');
+        }),
+      ]);
+
+      const browserLang =
+        typeof navigator !== 'undefined'
+          ? navigator.language || navigator.languages?.[0] || ''
+          : '';
+      await this.nativeRecognition.start({
+        // A locale the Android recognizer understands (mirrors the Web Speech
+        // normalization above — e.g. `ur-PK` is real on Android, `en-PK` is not).
+        language: normalizeRecognitionLang(browserLang),
+        maxResults: 5,
+        partialResults: true,
+        popup: false,
+      });
+
+      this.timeoutId = setTimeout(() => this.stopListening(), 8000);
+      return { ok: true };
+    } catch (err) {
+      console.error('Native speech recognition start failed:', err);
+      return { ok: false, error: getMicPermissionErrorCode(err) };
+    }
+  }
+
+  async startListening() {
     if (this.isListening) {
-      return { supported: true };
+      return { supported: this.recognition !== null || this.nativeRecognition !== null };
     }
 
     this.isListening = true;
     this.hasSubmittedFinal = false;
     this.pendingTranscript = '';
+    this.bestPartial = '';
+
+    if (!this.recognition) {
+      // Web Speech API absent (Android System WebView) — try the native
+      // Capacitor plugin backed by Android's SpeechRecognizer.
+      const start = await this.startNativeListening();
+      if (!start.ok) {
+        this.isListening = false;
+        if (this.onError) this.onError(start.error || 'transient');
+        if (this.onStateChange) this.onStateChange(false, '');
+      }
+      return { supported: this.nativeRecognition !== null };
+    }
 
     try {
       // IMPORTANT:
@@ -295,7 +433,13 @@ export class VoiceSearchManager {
   }
 
   stopListening() {
-    if (this.recognition && this.isListening) {
+    if (this.nativeRecognition && this.isListening) {
+      try {
+        this.nativeRecognition.stop();
+      } catch {
+        // ignore
+      }
+    } else if (this.recognition && this.isListening) {
       try {
         this.recognition.stop();
       } catch {
@@ -312,6 +456,24 @@ export class VoiceSearchManager {
   destroy() {
     this.hasSubmittedFinal = true;
     this.pendingTranscript = '';
+    this.bestPartial = '';
+    if (this.nativeRecognition) {
+      this.nativeListenerHandles.forEach((handle) => {
+        try {
+          handle.remove();
+        } catch {
+          // ignore
+        }
+      });
+      this.nativeListenerHandles = [];
+      try {
+        this.nativeRecognition.removeAllListeners();
+      } catch {
+        // ignore
+      }
+      this.nativeRecognition = null;
+      return;
+    }
     if (this.recognition) {
       try {
         this.recognition.abort();

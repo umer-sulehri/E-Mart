@@ -435,9 +435,8 @@ function ProductsContent() {
                   onPageChange={setCurrentPage}
                   totalItems={totalItems}
                   itemsPerPage={ITEMS_PER_PAGE}
-                  itemLabel="products"
-                  scrollToTop={false}
-                />
+itemLabel="products"
+                  />
               </>
             )}
           </div>

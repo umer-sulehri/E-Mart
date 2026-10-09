@@ -71,7 +71,7 @@ export default function TermsPage() {
             </aside>
 
             {/* Content */}
-            <div className="lg:col-span-3 prose prose-sm max-w-none text-secondary-700">
+            <div className="min-w-0 lg:col-span-3 prose prose-sm max-w-none text-secondary-700">
               <p className="mb-4 text-xs text-secondary-500">Last updated: January 1, 2024</p>
 
               <p className="mb-6 leading-relaxed">

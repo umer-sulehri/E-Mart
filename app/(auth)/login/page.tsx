@@ -195,6 +195,10 @@ function RoleLoginForm() {
       }
       login(user);
       toast.success(`Welcome to the ${ROLE_META[role].label} demo!`);
+      // Refresh server state before navigating so the freshly written session
+      // cookie is visible to the destination's first server read (avoids
+      // bouncing back to /login on a cold start).
+      router.refresh();
       router.push(ROLE_META[role].route);
     } catch (error) {
       const message =
@@ -247,6 +251,10 @@ function RoleLoginForm() {
       await mergeGuestCartToServer();
       toast.success('Welcome back!');
       const dest = safeRedirect(user?.role) || dashboardForRole(user?.role);
+      // Refresh server state before navigating so the freshly written session
+      // cookie is visible to the destination's first server read (avoids
+      // bouncing back to /login on a cold start).
+      router.refresh();
       router.push(dest);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Something went wrong');

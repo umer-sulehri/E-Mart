@@ -156,7 +156,7 @@ export default function AdminSidebar() {
         aria-label="Open navigation menu"
         aria-expanded={mobileOpen}
         aria-controls="admin-sidebar"
-        className="fixed left-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-lg bg-white shadow-md lg:hidden"
+        className="fixed left-4 top-[calc(var(--safe-area-inset-top,env(safe-area-inset-top))+1rem)] z-50 flex h-11 w-11 items-center justify-center rounded-lg bg-white shadow-md lg:hidden"
       >
         <Menu className="size-5 text-secondary-800" />
       </button>

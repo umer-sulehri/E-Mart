@@ -5,6 +5,7 @@ import { Providers } from '@/components/providers';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 import CookieConsent from '@/components/ui/CookieConsent';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { SITE_URL } from '@/lib/seo';
 
 const nunito = Nunito({
@@ -151,6 +152,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div id="main-content">{children}</div>
           <ImpersonationBanner />
           <CookieConsent />
+          {/* Fixed bottom nav for phones. Rendered at the root so it exists on
+              every page (public, dashboard, seller, admin, auth), not just the
+              public storefront. Each layout below leaves bottom padding so
+              content is not hidden behind it. */}
+          <MobileBottomNav />
         </Providers>
         <GoogleAnalytics />
       </body>

@@ -7,6 +7,15 @@
     @apply border-muted-200;
   }
 
+  /* A single wide descendant (table, nowrap crumb, long URL) must never be
+     able to push the whole document sideways on a phone. `clip` rather than
+     `hidden` so the page is still scrollable and `position: sticky/fixed`
+     keep working (hidden turns html/body into a scroll container). */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   body {
     @apply font-body text-muted antialiased;
     letter-spacing: 0.03em;
@@ -174,7 +183,7 @@
 
   /* Preloader */
   .preloader-wrapper {
-    @apply fixed left-0 top-0 z-[111] h-screen w-full bg-white;
+    @apply fixed left-0 top-0 z-[111] h-dvh w-full bg-white;
   }
 
   .preloader-wrapper .preloader {

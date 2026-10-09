@@ -64,7 +64,7 @@ export default function CookiePolicyPage() {
               </div>
             </aside>
 
-            <div className="lg:col-span-3 prose prose-sm max-w-none text-secondary-700">
+            <div className="min-w-0 lg:col-span-3 prose prose-sm max-w-none text-secondary-700">
               <p className="mb-4 text-xs text-secondary-500">Last updated: September 23, 2026</p>
 
               <p className="mb-6 leading-relaxed">

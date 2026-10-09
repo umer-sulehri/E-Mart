@@ -38,4 +38,10 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required by @capacitor-community/speech-recognition for in-app voice
+         search. Normal Android apps with RECORD_AUDIO do not need microphone
+         runtime prompts (a mic-only app gets the prompt once at install), but
+         the Capacitor plugin requests it explicitly so the user can grant it
+         from the in-app dialog. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 </manifest>

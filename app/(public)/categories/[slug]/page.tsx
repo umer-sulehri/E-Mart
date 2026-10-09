@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { SlidersHorizontal, X } from 'lucide-react';
 import type { Product } from '@/components/product/ProductCard';
 import ProductFilters, { type FilterState } from '@/components/product/ProductFilters';
-import { activeFilterCount, filterSignature } from '@/lib/filterParams';
+import { activeFilterCount, filterSignature, filtersFromSearchParams, filtersToSearchParams } from '@/lib/filterParams';
 import ProductGrid from '@/components/product/ProductGrid';
 import Pagination from '@/components/ui/Pagination';
 import SortDropdown, { type SortValue } from '@/components/product/SortDropdown';
@@ -51,16 +51,16 @@ export default function CategoryDetailPage() {
 function CategoryDetailContent() {
   const searchParams = useSearchParams();
   const params = useParams();
+  const pathname = usePathname();
+  const router = useRouter();
   const slug = (params?.slug as string) || searchParams.get('category') || '';
 
-  const [filters, setFilters] = useState<FilterState>({
-    categories: slug ? [slug] : [],
-    minPrice: '',
-    maxPrice: '',
-    minRating: 0,
-    brands: [],
-    inStockOnly: false,
-    featuredOnly: false,
+  // URL query params hold the committed secondary filters (price, brand,
+  // rating, stock), so they survive navigation, drive back/forward and are
+  // shareable. The category itself stays in the path -- `slug` -- not the query.
+  const [filters, setFilters] = useState<FilterState>(() => {
+    const fromUrl = filtersFromSearchParams(searchParams);
+    return { ...fromUrl, categories: slug ? [slug] : [] };
   });
   const [sort, setSort] = useState<SortValue>('newest');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -80,6 +80,30 @@ function CategoryDetailContent() {
     // URL changes, so passing it directly would never register a change.
     resetOn: [slug, sort, filterSignature(filters)],
   });
+
+  // Keep state in sync when the user navigates via back/forward into a URL
+  // that carries filter params (e.g. a shared link, or the Back button after
+  // viewing a product).
+  useEffect(() => {
+    const fromUrl = filtersFromSearchParams(searchParams);
+    setFilters({ ...fromUrl, categories: slug ? [slug] : [] });
+  }, [searchParams, slug]);
+
+  const applyFilters = useCallback(
+    (next: FilterState) => {
+      // `scroll: false` keeps the page put while ticking a checkbox in the
+      // drawer/sidebar; the grid updates live underneath.
+      const params = filtersToSearchParams({
+        ...next,
+        categories: slug ? [slug] : [],
+      });
+      // The category is the path on this page, so it does not belong in the
+      // query string too.
+      params.delete('categories');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname, slug]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -138,7 +162,7 @@ function CategoryDetailContent() {
   }, [currentPage, sort, slug, filters]);
 
   const filtersSidebar = (
-    <ProductFilters filters={filters} onFilterChange={setFilters} />
+    <ProductFilters filters={filters} onFilterChange={applyFilters} />
   );
 
   return (
@@ -252,7 +276,6 @@ function CategoryDetailContent() {
                     totalItems={totalItems}
                     itemsPerPage={ITEMS_PER_PAGE}
                     itemLabel="products"
-                    scrollToTop={false}
                   />
                 </>
               )}
