@@ -110,7 +110,7 @@ export default function ReviewFormModal({
   const displayRating = hovered || rating;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
       <div
         className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={onClose}
@@ -120,11 +120,11 @@ export default function ReviewFormModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-form-title"
-        className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-xl sm:rounded-2xl sm:pb-6"
       >
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-muted-400 transition-colors hover:text-secondary"
+          className="absolute right-4 top-4 -mr-2 -mt-2 flex h-11 w-11 items-center justify-center rounded-full text-muted-400 transition-colors hover:bg-muted-100 hover:text-secondary"
           aria-label="Close"
         >
           <X size={20} />
@@ -194,7 +194,7 @@ export default function ReviewFormModal({
             }}
             placeholder="Summarize your experience"
             className={cn(
-              'w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+              'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
               'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
               errors.title ? 'border-danger' : 'border-muted-200'
             )}
@@ -218,7 +218,7 @@ export default function ReviewFormModal({
             placeholder="Tell others about your experience with this product..."
             rows={4}
             className={cn(
-              'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+              'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
               'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
               errors.comment ? 'border-danger' : 'border-muted-200'
             )}

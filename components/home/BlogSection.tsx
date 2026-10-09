@@ -123,11 +123,11 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
               <div className="card-body p-3">
                 <div className="post-meta flex uppercase gap-3 my-2 items-center">
                   <span className="flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" />
+                    <Calendar className="size-3.5" />
                     {post.date}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Tag className="h-3.5 w-3.5" />
+                    <Tag className="size-3.5" />
                     {post.category}
                   </span>
                 </div>
@@ -148,7 +148,7 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
                 >
                   Read More
                   <span className="sr-only"> about {post.title}</span>
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                 </Link>
 
                 <div className="mt-auto flex items-center gap-3 border-t border-muted-100 pt-4">
@@ -162,7 +162,7 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
                     />
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-500">
-                    <User className="h-3 w-3" />
+                    <User className="size-3" />
                     <span>{post.authorName}</span>
                   </div>
                 </div>

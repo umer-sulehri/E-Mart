@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeOrTerm } from "@/lib/search-safe";
 import { writeAdminLog } from "@/lib/audit";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,11 +35,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const { page, limit, offset } = parsePagination(searchParams);
     const search = searchParams.get("search") || "";
     const role = searchParams.get("role");
-    const offset = (page - 1) * limit;
 
     let query = supabase
       .from("profiles")
@@ -55,7 +54,10 @@ export async function GET(request: NextRequest) {
       query = query.eq("role", role);
     }
 
+    // id is the tiebreaker: created_at alone is not unique, so two signups in the
+    // same instant can swap between requests and straddle a page boundary.
     query = query.order("created_at", { ascending: false });
+    query = query.order("id", { ascending: false });
     query = query.range(offset, offset + limit - 1);
 
     const { data: users, error, count } = await query;
@@ -70,14 +72,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: users || [],
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(

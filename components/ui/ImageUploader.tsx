@@ -83,7 +83,7 @@ export default function ImageUploader({
               </button>
             </>
           ) : (
-            <UploadCloud className="h-8 w-8 text-muted-400" />
+            <UploadCloud className="size-8 text-muted-400" />
           )}
         </div>
 
@@ -92,6 +92,7 @@ export default function ImageUploader({
             ref={inputRef}
             type="file"
             accept={accept}
+            aria-label="Image file"
             className="hidden"
             disabled={status === 'uploading' || disabled}
             onChange={(e) => {

@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
-
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk';
+import { SITE_URL as BASE_URL } from '@/lib/seo';
 
 // Some products/blog rows have null or missing timestamp columns. Guard the
 // value so sitemap serialization (Date.toISOString) never receives an invalid

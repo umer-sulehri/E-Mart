@@ -179,7 +179,7 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
   if (items.length === 0) {
     return (
       <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-        <PenLine className="mx-auto h-12 w-12 text-muted-300" />
+        <PenLine className="mx-auto size-12 text-muted-300" />
         <p className="mt-4 text-lg font-semibold text-secondary-800">
           Nothing to review yet
         </p>
@@ -230,7 +230,7 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-secondary-800">{item.name}</p>
                     <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-success">
-                      <CheckCircle2 className="h-4 w-4" />
+                      <CheckCircle2 className="size-4" />
                       Review submitted · pending approval
                     </p>
                   </div>
@@ -341,7 +341,7 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
                   }}
                   placeholder="Summarize your experience"
                   className={cn(
-                    'w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+                    'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
                     'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
                     area.title ? 'border-danger' : 'border-muted-200'
                   )}
@@ -373,7 +373,7 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
                   placeholder="Tell others about your experience with this product..."
                   rows={4}
                   className={cn(
-                    'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+                    'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
                     'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
                     area.comment ? 'border-danger' : 'border-muted-200'
                   )}
@@ -389,9 +389,9 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
                   onClick={() => handleSubmit(item)}
                 >
                   {submitting === item.orderItemId ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    <Star className="h-4 w-4 fill-current" />
+                    <Star className="size-4 fill-current" />
                   )}
                   Submit Review
                 </Button>
@@ -403,7 +403,7 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
 
       {reviewableCount === 0 && (
         <div className="rounded-xl bg-success-50 p-6 text-center">
-          <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
+          <CheckCircle2 className="mx-auto size-10 text-success" />
           <p className="mt-3 font-semibold text-secondary-800">
             All reviews submitted. Thank you!
           </p>

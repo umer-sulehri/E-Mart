@@ -1,17 +1,13 @@
-import { type Metadata } from 'next';
+import { type Metadata } from 'next'
+import { generatePageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Cookie Policy',
-  description:
-    'Learn how E-Mart uses cookies and similar technologies, what each type does, and how you can control or withdraw your consent at any time.',
-  openGraph: {
-    title: 'Cookie Policy | E-Mart',
-    description:
-      'Learn how E-Mart uses cookies and similar technologies, what each type does, and how you can control or withdraw your consent at any time.',
-  },
-};
+export const metadata: Metadata = generatePageMetadata(
+  'Cookie Policy',
+  'Learn how E-Mart uses cookies and similar technologies, what each type does, and how you can control or withdraw your consent at any time.',
+  '/cookie-policy'
+);
 
 const tocSections = [
   { id: 'what-are-cookies', label: 'What Are Cookies?' },
@@ -37,7 +33,7 @@ export default function CookiePolicyPage() {
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">Cookie Policy</span>
           </div>
         </div>
@@ -47,7 +43,7 @@ export default function CookiePolicyPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-12">
           <div className="grid gap-10 lg:grid-cols-4">
             <aside className="lg:col-span-1">
-              <div className="sticky top-24 rounded-2xl bg-muted-50 p-6">
+              <div className="sticky top-[var(--header-h)] lg:top-24 rounded-2xl bg-muted-50 p-6">
                 <h3 className="mb-4 font-heading text-sm font-bold text-secondary-800">
                   Table of Contents
                 </h3>
@@ -81,7 +77,7 @@ export default function CookiePolicyPage() {
                 .
               </p>
 
-              <div id="what-are-cookies" className="scroll-mt-24">
+              <div id="what-are-cookies" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   1. What Are Cookies?
                 </h2>
@@ -93,7 +89,7 @@ export default function CookiePolicyPage() {
                 </p>
               </div>
 
-              <div id="categories" className="scroll-mt-24">
+              <div id="categories" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   2. Cookies We Use
                 </h2>
@@ -134,13 +130,14 @@ export default function CookiePolicyPage() {
                 </div>
               </div>
 
-              <div id="cookie-reference" className="scroll-mt-24">
+              <div id="cookie-reference" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   3. Cookie Reference
                 </h2>
                 <p className="mb-4 leading-relaxed">
                   The table lists every cookie and local-storage key E-Mart sets on your
-                  device. “Session” cookies expire when you close your browser.
+                  device, together with the security flags we apply to each one. “Session”
+                  storage and cookies expire when you close the browser.
                 </p>
                 <div className="mb-4 overflow-x-auto">
                   <table className="w-full border-collapse text-sm">
@@ -149,7 +146,8 @@ export default function CookiePolicyPage() {
                         <th className="py-2 pr-4 font-semibold text-secondary-800">Name</th>
                         <th className="py-2 pr-4 font-semibold text-secondary-800">Type</th>
                         <th className="py-2 pr-4 font-semibold text-secondary-800">Purpose</th>
-                        <th className="py-2 font-semibold text-secondary-800">Expiry</th>
+                        <th className="py-2 pr-4 font-semibold text-secondary-800">Expiry</th>
+                        <th className="py-2 font-semibold text-secondary-800">Security flags</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-muted-100">
@@ -157,61 +155,84 @@ export default function CookiePolicyPage() {
                         <td className="py-2 pr-4 font-mono text-xs">sb-*-auth-token</td>
                         <td className="py-2 pr-4">Essential</td>
                         <td className="py-2 pr-4">Sign-in session (Supabase authentication)</td>
-                        <td className="py-2">30 days (refreshable)</td>
+                        <td className="py-2 pr-4">Up to 400 days; the session token is rotated every time it is refreshed</td>
+                        <td className="py-2 text-xs text-secondary-600">Secure · SameSite=Lax</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">sb-user-role</td>
                         <td className="py-2 pr-4">Essential</td>
                         <td className="py-2 pr-4">Cached role for route protection / menus</td>
-                        <td className="py-2">Session</td>
+                        <td className="py-2 pr-4">1 hour, refreshed on each visit while signed in</td>
+                        <td className="py-2 text-xs text-secondary-600">Secure · HttpOnly · SameSite=Lax</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart_impersonating</td>
                         <td className="py-2 pr-4">Essential / Security</td>
-                        <td className="py-2 pr-4">Temporary admin impersonation guard</td>
-                        <td className="py-2">Session</td>
+                        <td className="py-2 pr-4">Shows the “you are viewing as” banner while an admin is impersonating another account. Stores the display name only, never an email address</td>
+                        <td className="py-2 pr-4">1 hour</td>
+                        <td className="py-2 text-xs text-secondary-600">Secure · SameSite=Lax · sent only to the impersonation endpoint</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart_admin_restore</td>
                         <td className="py-2 pr-4">Essential / Security</td>
-                        <td className="py-2 pr-4">Restores admin identity after impersonation</td>
-                        <td className="py-2">Session</td>
+                        <td className="py-2 pr-4">Temporary admin impersonation guard</td>
+                        <td className="py-2 pr-4">1 hour</td>
+                        <td className="py-2 text-xs text-secondary-600">Secure · HttpOnly · SameSite=Lax · sent only to the impersonation endpoint</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart-cart</td>
                         <td className="py-2 pr-4">Preference</td>
-                        <td className="py-2 pr-4">Cart contents between visits</td>
-                        <td className="py-2">Local storage (cleared on checkout)</td>
+                        <td className="py-2 pr-4">
+                          Cart contents and any applied coupon. Each line stores only the
+                          product id, name, link slug, thumbnail, and remaining stock — the
+                          price is kept as the line total
+                        </td>
+                        <td className="py-2 pr-4">Local storage, emptied when you check out</td>
+                        <td className="py-2 text-xs text-secondary-600">
+                          Local storage (no card data is ever stored)
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 font-mono text-xs">emart-auth</td>
+                        <td className="py-2 pr-4">Essential</td>
+                        <td className="py-2 pr-4">Cached display name, email, role and avatar so the header and menus render before the page loads. Your phone number and date of birth are not stored here — they are loaded on demand from your profile</td>
+                        <td className="py-2 pr-4">Local storage, deleted when you sign out</td>
+                        <td className="py-2 text-xs text-secondary-600">Local storage · cleared on sign-out</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart-compare</td>
                         <td className="py-2 pr-4">Preference</td>
-                        <td className="py-2 pr-4">Products in your compare list</td>
-                        <td className="py-2">Local storage</td>
+                        <td className="py-2 pr-4">Products in your compare list, for the duration of the browsing session only</td>
+                        <td className="py-2 pr-4">Session storage (cleared when the tab session ends)</td>
+                        <td className="py-2 text-xs text-secondary-600">Session storage</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart-review-draft-*</td>
                         <td className="py-2 pr-4">Preference</td>
-                        <td className="py-2 pr-4">Autosaved review drafts</td>
-                        <td className="py-2">Local storage</td>
+                        <td className="py-2 pr-4">Autosaved review drafts, one per product</td>
+                        <td className="py-2 pr-4">Local storage, discarded after 7 days, on submit, or on sign-out</td>
+                        <td className="py-2 text-xs text-secondary-600">Local storage · 7-day expiry</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart-consent</td>
                         <td className="py-2 pr-4">Consent</td>
                         <td className="py-2 pr-4">Your cookie choices</td>
-                        <td className="py-2">13 months</td>
+                        <td className="py-2 pr-4">13 months (390 days)</td>
+                        <td className="py-2 text-xs text-secondary-600">Local storage</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">emart-consent-anon-id</td>
                         <td className="py-2 pr-4">Consent</td>
                         <td className="py-2 pr-4">Random identifier linking your consent to an audit record (no identity)</td>
-                        <td className="py-2">Local storage</td>
+                        <td className="py-2 pr-4">Local storage, until you clear it</td>
+                        <td className="py-2 text-xs text-secondary-600">Local storage · random ID</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 font-mono text-xs">_ga / _gid / _gat</td>
                         <td className="py-2 pr-4">Analytics*</td>
                         <td className="py-2 pr-4">Google Analytics 4 usage measurement</td>
-                        <td className="py-2">2 years / 24h / 1min (removed when you withdraw)</td>
+                        <td className="py-2 pr-4">2 years / 24h / 1min (removed when you withdraw)</td>
+                        <td className="py-2 text-xs text-secondary-600">Set by Google · deleted on withdrawal</td>
                       </tr>
                     </tbody>
                   </table>
@@ -220,9 +241,41 @@ export default function CookiePolicyPage() {
                   * Analytics cookies are only set after you accept analytics cookies and are
                   deleted the moment you turn analytics off.
                 </p>
+                <h3 className="mb-3 font-heading text-base font-bold text-secondary-800">
+                  How we protect these
+                </h3>
+                <ul className="mb-4 list-disc space-y-2 pl-5 text-sm leading-relaxed">
+                  <li>
+                    Every cookie we set is marked <strong>Secure</strong>, so it is never
+                    transmitted over an unencrypted connection, and{' '}
+                    <strong>SameSite=Lax</strong>, so other websites cannot send it with
+                    their own requests to E-Mart.
+                  </li>
+                  <li>
+                    Our sign-in and role cookies are marked <strong>HttpOnly</strong>,
+                    so no script on the page can read them. The temporary
+                    impersonation cookie is readable by our own admin interface so it
+                    can show which account is being viewed, but it is never sent
+                    anywhere except the impersonation endpoint and it never stores
+                    your email address.
+                  </li>
+                  <li>
+                    The two impersonation cookies are restricted to the single URL path that
+                    needs them, so they are not attached to the rest of your browsing.
+                  </li>
+                  <li>
+                    Signing out deletes the cached profile and any saved review drafts from
+                    your browser. Your cart and compare list are not personal records, so they
+                    are kept.
+                  </li>
+                  <li>
+                    We never store payment card details in cookies or local storage — orders
+                    are paid by cash on delivery or e-wallet.
+                  </li>
+                </ul>
               </div>
 
-              <div id="analytics" className="scroll-mt-24">
+              <div id="analytics" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   4. Analytics
                 </h2>
@@ -235,7 +288,7 @@ export default function CookiePolicyPage() {
                 </p>
               </div>
 
-              <div id="local-storage" className="scroll-mt-24">
+              <div id="local-storage" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   5. Local Storage
                 </h2>
@@ -244,18 +297,26 @@ export default function CookiePolicyPage() {
                   remember:
                 </p>
                 <ul className="mb-4 list-disc space-y-2 pl-5">
+                  <li>
+                    A cached copy of your display name, email, role and avatar so the
+                    header and menus appear instantly (<code>emart-auth</code>). Your
+                    phone number and date of birth are never written here, and the whole
+                    entry is deleted when you sign out.
+                  </li>
                   <li>Your cart contents and any applied coupon (<code>emart-cart</code>)</li>
-                  <li>Your compare list (<code>emart-compare</code>)</li>
-                  <li>Autosaved drafts of product reviews (<code>emart-review-draft-*</code>)</li>
+                  <li>Your compare list (<code>emart-compare</code>), kept in session storage for the current tab session only</li>
+                  <li>Autosaved drafts of product reviews (<code>emart-review-draft-*</code>), discarded after 7 days, on submit, or on sign-out</li>
                   <li>Your cookie consent choice (<code>emart-consent</code>) and an anonymous consent identifier (<code>emart-consent-anon-id</code>)</li>
                 </ul>
                 <p className="mb-4 leading-relaxed">
-                  You can clear local storage at any time through your browser&apos;s settings,
-                  which will also reset your cookie choice.
+                  Local storage stays on your device until you clear it, so signing out on a
+                  shared or public computer is the safest way to remove your cached details.
+                  You can also clear local storage at any time through your browser&apos;s
+                  settings, which will also reset your cookie choice.
                 </p>
               </div>
 
-              <div id="third-party" className="scroll-mt-24">
+              <div id="third-party" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   6. Third-Party Cookies
                 </h2>
@@ -272,7 +333,7 @@ export default function CookiePolicyPage() {
                 </p>
               </div>
 
-              <div id="retention" className="scroll-mt-24">
+              <div id="retention" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   7. Retention & Re-prompting
                 </h2>
@@ -285,7 +346,7 @@ export default function CookiePolicyPage() {
                 </p>
               </div>
 
-              <div id="your-choices" className="scroll-mt-24">
+              <div id="your-choices" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   8. Your Choices
                 </h2>
@@ -313,7 +374,7 @@ export default function CookiePolicyPage() {
                 </ul>
               </div>
 
-              <div id="contact-us" className="scroll-mt-24">
+              <div id="contact-us" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   9. Contact Us
                 </h2>

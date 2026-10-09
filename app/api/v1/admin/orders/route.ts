@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 import { safeOrTerm } from "@/lib/search-safe";
 
 export async function GET(request: NextRequest) {
@@ -31,12 +32,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+const { searchParams } = new URL(request.url);
+    const { page, limit, offset } = parsePagination(searchParams);
     const status = searchParams.get("status");
     const search = searchParams.get("search") || "";
-    const offset = (page - 1) * limit;
 
     let query = supabase
       .from("orders")
@@ -51,7 +50,7 @@ export async function GET(request: NextRequest) {
       query = query.or(`order_number.ilike.%${escaped}%`);
     }
 
-    query = query.order("created_at", { ascending: false });
+    query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
     query = query.range(offset, offset + limit - 1);
 
     const { data: orders, error, count } = await query;
@@ -66,14 +65,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: orders || [],
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(

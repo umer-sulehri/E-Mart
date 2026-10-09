@@ -27,14 +27,14 @@ export default function NotFoundSearch() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search products..."
         aria-label="Search products"
-        className="flex-1 bg-transparent px-4 py-2 text-sm text-secondary placeholder:text-muted-400 focus:outline-none"
+        className="flex-1 bg-transparent px-4 py-2 text-base sm:text-sm text-secondary placeholder:text-muted-400 focus:outline-none"
       />
       <button
         type="submit"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary-500"
         aria-label="Search"
       >
-        <Search className="h-4 w-4" />
+        <Search className="size-4" />
       </button>
     </form>
   );

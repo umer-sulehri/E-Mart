@@ -4,6 +4,20 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/utils";
 import { safeSearchPattern, safeOrTerm } from "@/lib/search-safe";
 import { sanitizeHtml } from "@/lib/sanitize-html";
+import { rateLimitByUserId, rateLimitHeaders } from "@/lib/rate-limit";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
+import {
+  checkProductUploadQuota,
+  recordProductUpload,
+  exemptQuotaStatus,
+  isQuotaExempt,
+  dailyLimitErrorResponse,
+  isDailyLimitDatabaseError,
+  MAX_PRODUCTS_PER_DAY,
+  PRODUCT_UPLOAD_ATTEMPT_LIMIT,
+  PRODUCT_UPLOAD_ATTEMPT_WINDOW_MS,
+  type QuotaStatus,
+} from "@/lib/seller-quota";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,11 +62,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+const { page, limit, offset } = parsePagination(searchParams);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status");
-    const offset = (page - 1) * limit;
 
     let query = supabase
       .from("products")
@@ -72,7 +84,10 @@ export async function GET(request: NextRequest) {
     if (status === "active") query = query.eq("is_active", true);
     else if (status === "inactive") query = query.eq("is_active", false);
 
+// id is the tiebreaker so two products created in the same instant cannot swap
+    // between requests and appear on two pages at once.
     query = query.order("created_at", { ascending: false });
+    query = query.order("id", { ascending: false });
     query = query.range(offset, offset + limit - 1);
 
     const { data: products, error, count } = await query;
@@ -87,14 +102,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: products || [],
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     console.error("[v1/seller/products/route] error:", error);
@@ -147,6 +155,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Abuse guard, separate from the daily quota: stops a throttled seller
+    // from spamming this endpoint. Generous enough that creating a full day's
+    // allowance in one burst is never affected.
+    const attempt = await rateLimitByUserId(
+      user.id,
+      PRODUCT_UPLOAD_ATTEMPT_LIMIT,
+      PRODUCT_UPLOAD_ATTEMPT_WINDOW_MS
+    );
+    if (!attempt.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many product upload attempts. Please wait a moment and try again.",
+          meta: {
+            remaining: attempt.remaining,
+            resetAt: new Date(attempt.resetAt).toISOString(),
+            retryAfterSec: attempt.retryAfterSec,
+          },
+        },
+        { status: 429, headers: rateLimitHeaders(attempt) }
+      );
+    }
+
     const body = await request.json();
     const {
       name, description, shortDescription, price, discountPrice,
@@ -167,6 +198,35 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Daily product allowance (see lib/seller-quota.ts). Checked after payload
+    // validation so malformed requests do not consume a slot, and before brand
+    // resolution and the slug-collision scan so a rejected upload does no
+    // further work.
+    let quota: QuotaStatus;
+
+    if (isQuotaExempt(profile?.role)) {
+      // Admins are exempt by default so catalogue curation is never throttled.
+      quota = exemptQuotaStatus(MAX_PRODUCTS_PER_DAY);
+    } else {
+      try {
+        quota = await checkProductUploadQuota(supabase, vendor.id);
+      } catch (quotaError) {
+        // Fail closed: if usage cannot be determined we cannot safely hand out
+        // a slot, so surface the failure instead of allowing the upload through.
+        console.error("[v1/seller/products/route] quota check failed:", quotaError);
+        return NextResponse.json(
+          { success: false, error: "Could not verify upload allowance. Please try again." },
+          { status: 503, headers: { "Retry-After": "30" } }
+        );
+      }
+    }
+
+    if (!quota.exempt && quota.remaining === 0) {
+      const limited = dailyLimitErrorResponse(quota);
+      return NextResponse.json(limited.body, { status: 429, headers: limited.headers });
+    }
+
 
     // Resolve brand by name (or provided id) into brands.brand_id.
     // brands INSERT is admin-only RLS, so creating a new brand must go through
@@ -237,11 +297,31 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      // The authoritative gate. Two concurrent requests can both pass the check
+      // above; the BEFORE INSERT trigger refuses whichever one would take the
+      // allowance past the limit. Surface it as the same 429 rather than a 500,
+      // so the seller sees the allowance rather than a server fault.
+      if (isDailyLimitDatabaseError(error)) {
+        const limited = dailyLimitErrorResponse({
+          ...quota,
+          used: quota.limit,
+          remaining: 0,
+          source: 'database',
+        });
+        return NextResponse.json(limited.body, { status: 429, headers: limited.headers });
+      }
+
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 500 }
       );
     }
+
+    // Only now that the row exists do we advance the Redis counter, so
+    // `redisCount <= dbCount` always holds and a Redis-based rejection can
+    // never be more permissive than the database. Never awaited: the row is
+    // already committed, so a Redis hiccup must not fail a successful upload.
+    void recordProductUpload(vendor.id);
 
     return NextResponse.json(
       { success: true, data: product, message: "Product created successfully" },

@@ -109,7 +109,7 @@ export default function PrivacyControls() {
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={openSettings}>
-            <Cookie className="h-4 w-4" />
+            <Cookie className="size-4" />
             Manage cookies
           </Button>
         </div>
@@ -122,7 +122,7 @@ export default function PrivacyControls() {
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={downloadData} loading={exporting} disabled={exporting}>
-            <Download className="h-4 w-4" />
+            <Download className="size-4" />
             {exporting ? 'Preparing…' : 'Download'}
           </Button>
         </div>
@@ -137,7 +137,7 @@ export default function PrivacyControls() {
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={unsubscribeNewsletter} loading={unsubscribing} disabled={unsubscribing}>
-            <RefreshCcw className="h-4 w-4" />
+            <RefreshCcw className="size-4" />
             Unsubscribe
           </Button>
         </div>
@@ -152,7 +152,7 @@ export default function PrivacyControls() {
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={() => setEraseOpen(true)}>
-            <ShieldCheck className="h-4 w-4" />
+            <ShieldCheck className="size-4" />
             Erase data
           </Button>
         </div>

@@ -114,18 +114,18 @@ export default function EditProductPage() {
           href="/"
           className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary"
         >
-          <Home className="h-3.5 w-3.5" />
+          <Home className="size-3.5" />
           Home
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
+        <ChevronRight className="size-3.5" />
         <Link href="/seller" className="text-muted-500 transition-colors hover:text-primary">
           Seller Dashboard
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
+        <ChevronRight className="size-3.5" />
         <Link href="/seller/products" className="text-muted-500 transition-colors hover:text-primary">
           Products
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
+        <ChevronRight className="size-3.5" />
         <span className="text-secondary-800">Edit Product</span>
       </nav>
 
@@ -135,7 +135,7 @@ export default function EditProductPage() {
           href="/seller/products"
           className="inline-flex items-center gap-2 rounded-lg border border-muted-200 bg-white px-4 py-2 text-sm font-medium text-secondary-700 transition-colors hover:bg-muted-50"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           Back to Products
         </Link>
         <div>

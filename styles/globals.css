@@ -28,10 +28,25 @@
 }
 
 @layer components {
-  /* Product Item Card */
+  /* Product Item Card
+
+     The bottom padding is larger below `sm` than above it. On a phone the
+     action row (quantity, add to cart, quick view, wishlist) sits in normal
+     flow, so it is the last thing in the card and it needs real white space
+     under it: 16px left the row visually flush with the card edge, and the
+     shopper read the buttons as belonging to the page rather than the card.
+     28px puts the whole row clearly inside the card. The desktop card keeps
+     16px because from `lg` the row overlays on hover and the extra padding
+     would just make every tile taller. */
   .product-item {
-    @apply relative rounded-2xl bg-white p-4 transition-shadow duration-300;
+    @apply relative rounded-2xl bg-white p-4 pb-7 transition-shadow duration-300;
     box-shadow: 0 0 22px rgba(0, 0, 0, 0);
+  }
+
+  @media (min-width: 640px) {
+    .product-item {
+      @apply pb-4;
+    }
   }
 
   .product-item:hover {
@@ -42,13 +57,23 @@
     box-shadow: 0px 20px 44px rgba(0, 0, 0, 0.08);
   }
 
-  @media (min-width: 1024px) {
+  /* Only overlay the action row on pointer devices that can actually hover.
+     On touch (`:hover: none`) the row stays in flow, otherwise Add to Cart,
+     quick view and wishlist are permanently unreachable on tablets. */
+  @media (min-width: 1024px) and (hover: hover) {
     .product-item .button-area {
       @apply absolute bottom-0 left-0 z-10 hidden w-full bg-white text-center;
     }
 
-    .product-item:hover .button-area {
+    .product-item:hover .button-area,
+    .product-item:focus-within .button-area {
       @apply block;
+    }
+  }
+
+  @media (min-width: 1024px) and (hover: none) {
+    .product-item .button-area {
+      @apply relative block w-full;
     }
   }
 
@@ -111,11 +136,10 @@
     }
   }
 
-  /* Swiper Navigation */
+  /* Swiper Navigation — 44px so the arrows are comfortably tappable. */
   .swiper-prev,
   .swiper-next {
-    @apply flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-muted-100 text-dark;
-    line-height: 38px;
+    @apply flex h-11 w-11 items-center justify-center rounded-[10px] bg-muted-100 text-dark;
   }
 
   .swiper-prev:hover,
@@ -184,17 +208,9 @@
     left: 3.5em;
   }
 
-  /* Quantity Selector */
+  /* Quantity Selector (layout only — see components/ui/QuantitySelector.tsx) */
   .quantity-selector {
     @apply flex items-center;
-  }
-
-  .quantity-btn {
-    @apply flex h-[26px] w-[26px] items-center justify-center rounded-md border border-muted-200 bg-white text-dark;
-  }
-
-  .quantity-btn:hover {
-    @apply border-primary bg-primary text-white;
   }
 
   /* Border dashed utility */
@@ -210,6 +226,135 @@
   /* Widget Title (footer headings) */
   .widget-title {
     @apply font-heading font-bold text-dark;
+  }
+
+  /* Long-form article styling.
+     The blog post body and the three legal pages are marked up with
+     `prose` classes; without these rules the injected HTML falls back to
+     browser defaults, where a wide image, table or URL forces the whole
+     page to scroll horizontally on a phone. */
+  .prose {
+    @apply text-secondary-700;
+    font-size: 1rem;
+    line-height: 1.75;
+    /* Long words and bare URLs must never widen the page. */
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .prose-lg {
+    font-size: 1.0625rem;
+  }
+
+  .prose-sm {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+
+  .prose > * + * {
+    @apply mt-4;
+  }
+
+  .prose h1 {
+    @apply mt-8 font-heading text-2xl font-bold text-secondary-800;
+  }
+
+  .prose h2 {
+    @apply mt-8 font-heading text-xl font-bold text-secondary-800 sm:text-2xl;
+  }
+
+  .prose h3 {
+    @apply mt-6 font-heading text-lg font-bold text-secondary-800;
+  }
+
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    @apply mt-6 font-heading font-bold text-secondary-800;
+  }
+
+  .prose p {
+    @apply leading-relaxed;
+  }
+
+  .prose a {
+    @apply font-medium text-primary underline underline-offset-2 hover:text-primary-600;
+  }
+
+  .prose strong {
+    @apply font-semibold text-secondary-800;
+  }
+
+  .prose ul {
+    @apply list-disc space-y-1 pl-6;
+  }
+
+  .prose ol {
+    @apply list-decimal space-y-1 pl-6;
+  }
+
+  .prose li > ul,
+  .prose li > ol {
+    @apply mt-1;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-primary-200 pl-4 italic text-secondary-600;
+  }
+
+  .prose hr {
+    @apply my-8 border-muted-200;
+  }
+
+  .prose code {
+    @apply rounded bg-muted-100 px-1.5 py-0.5 font-mono text-[0.9em] text-secondary-800;
+  }
+
+  .prose pre {
+    @apply max-w-full overflow-x-auto rounded-xl bg-muted-50 p-4 text-sm;
+  }
+
+  .prose pre code {
+    @apply bg-transparent p-0;
+  }
+
+  /* Media is capped so an oversized asset can never widen the document. */
+  .prose img,
+  .prose video,
+  .prose iframe {
+    @apply h-auto max-w-full rounded-xl;
+  }
+
+  .prose iframe {
+    @apply w-full aspect-video;
+  }
+
+  .prose figure {
+    @apply my-6;
+  }
+
+  .prose figcaption {
+    @apply mt-2 text-center text-sm text-muted-500;
+  }
+
+  /* Data tables get their own scroll container so wide cells scroll instead
+     of pushing the page sideways. */
+  .prose table {
+    @apply block w-full overflow-x-auto border-collapse text-left text-sm;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .prose thead {
+    @apply border-b-2 border-muted-200;
+  }
+
+  .prose th,
+  .prose td {
+    @apply whitespace-nowrap border-b border-muted-100 px-3 py-2;
+  }
+
+  .prose th {
+    @apply font-semibold text-secondary-800;
   }
 }
 
@@ -311,4 +456,126 @@
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-400;
+}
+
+/* Overlay scrollbars only exist on Firefox, so `scrollbar-width` cannot express
+   "thin but visible". The 8px default above also eats horizontal room inside a
+   w-72 drawer, so panels that scroll within a fixed width opt into this. */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-muted-300;
+}
+
+/* ---------------------------------------------------------------------------
+   Mobile touch ergonomics
+   --------------------------------------------------------------------------- */
+
+/* Height of the sticky <Header>. On phones it is two rows - the logo/control
+   row plus a full-width search row - so it is far taller than the desktop
+   single-row header. Anchors (`scroll-mt`) and sticky sidebars/tables must
+   offset by exactly this or they end up underneath it. `lg` is the desktop
+   value, matching `top-24`. */
+:root {
+  --header-h: calc(140px + env(safe-area-inset-top));
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --header-h: calc(96px + env(safe-area-inset-top));
+  }
+}
+
+/* Kills the ~300ms double-tap-zoom delay on every interactive element, which
+   is what makes a row of small admin/table actions feel broken on a phone. */
+button,
+a,
+input,
+select,
+textarea,
+label,
+[role='button'],
+[role='tab'],
+[role='switch'] {
+  touch-action: manipulation;
+}
+
+/* Minimum 44x44px hit area, applied only on genuinely touch-driven devices.
+   Scoped to phones so the dense desktop admin tables keep their compact rows,
+   and to real controls only - never to decorative wrappers or icons - so table
+   layouts and inline icon/label pairs are not reflowed. */
+@media (hover: none) and (pointer: coarse) and (max-width: 1023px) {
+  button:not([disabled]),
+  a[href],
+  [role='button']:not([aria-disabled='true']),
+  [role='tab'],
+  [role='switch'],
+  input[type='checkbox'],
+  input[type='radio'] {
+    min-height: 44px;
+  }
+
+  /* Icon-only controls also need the width; a bare min-height would leave a
+     32px-wide target that is still easy to miss. */
+  button:has(> svg:only-child),
+  button:has(> span:only-child),
+  [role='button']:has(> svg:only-child) {
+    min-width: 44px;
+  }
+
+  /* Checkboxes/radios are toggled by tapping the label in most forms; keep the
+     input itself small but make the whole control row comfortably tappable. */
+  input[type='checkbox'],
+  input[type='radio'] {
+    min-width: 24px;
+    min-height: 24px;
+  }
+
+  /* Long unbreakable strings (emails, SKUs, URLs, order ids) are the most
+     common source of horizontal page scroll on phones. */
+  body {
+    overflow-wrap: break-word;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  /* iOS Safari zooms the viewport when a focused control computes below 16px,
+     and the zoom persists until the page is tapped again - so a `text-sm`
+     filter select silently cost the user their place. It belongs here rather
+     than in each className: the controls span ~20 files and this keeps them in
+     step. Same phone-only guard as the tap targets above, so dense desktop
+     tables keep their compact 14px controls. */
+  select,
+  input:not([type='checkbox']):not([type='radio']),
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Zoom is still required for users who need it; the common anti-pattern of
+   `user-scalable=no` is never applied here. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

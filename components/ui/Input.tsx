@@ -36,7 +36,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
             className={cn(
-              "w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800",
+              // 16px below `sm`. iOS Safari zooms the viewport on any focus
+              // where the computed font-size is under 16px, and a zoomed-in
+              // field that the user cannot zoom back out of is a trap. This is
+              // a platform floor, not a type preference, so it does not scale
+              // with the breakpoint the way the rest of the padding does.
+              "w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800",
               "placeholder:text-muted-400",
               "transition-colors",
               "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",

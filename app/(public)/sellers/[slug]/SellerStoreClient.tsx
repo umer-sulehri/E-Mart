@@ -7,15 +7,15 @@ import { Suspense } from 'react';
 import { Package, Star, Store } from 'lucide-react';
 import type { Product } from '@/components/product/ProductCard';
 import ProductGrid from '@/components/product/ProductGrid';
-import Pagination from '@/components/product/Pagination';
+import Pagination from '@/components/ui/Pagination';
 import SortDropdown, { type SortValue } from '@/components/product/SortDropdown';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import { useParams, useSearchParams } from 'next/navigation';
+import { usePageParam } from '@/hooks/usePageParam';
 import {
   apiProductToCardProduct,
   tryParseJson,
   type ApiProduct,
-  type ApiListResponse,
 } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 
@@ -43,15 +43,24 @@ function SellerStoreContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [sort, setSort] = useState<SortValue>('newest');
 
   const query = searchParams.get('q') || '';
 
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [query, sort],
+  });
+
   const fetchSeller = useCallback(async () => {
     try {
+      const qs = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(ITEMS_PER_PAGE),
+        sort,
+      });
+      if (query.trim()) qs.set('search', query.trim());
       const res = await fetch(
-        `/api/v1/sellers/${encodeURIComponent(slug)}?page=${currentPage}&limit=${ITEMS_PER_PAGE}&sort=${sort}`
+        `/api/v1/sellers/${encodeURIComponent(slug)}?${qs.toString()}`
       );
       const json = await tryParseJson<{
         success: boolean;
@@ -67,18 +76,11 @@ function SellerStoreContent() {
       }
       setSeller(json.data.seller);
       const mapped = (json.data.products || []).map(apiProductToCardProduct);
-      if (query.trim()) {
-        const q = query.trim().toLowerCase();
-        const filtered = (mapped as Product[]).filter(
-          (p: Product) =>
-            p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q)
-        );
-        setProducts(filtered);
-        setTotalItems(filtered.length);
-      } else {
-        setProducts(mapped);
-        setTotalItems(json.meta?.totalItems || mapped.length);
-      }
+      setProducts(mapped);
+      // The search is applied by the endpoint, not here. Filtering one page
+      // client-side and then reporting the filtered length as the total makes
+      // `totalPages` describe a result set that does not exist.
+      setTotalItems(json.meta?.totalItems ?? mapped.length);
       setTotalPages(json.meta?.totalPages || 1);
       setNotFound(false);
     } catch {
@@ -225,6 +227,10 @@ function SellerStoreContent() {
                     currentPage={currentPage}
                     totalPages={totalPages}
                     onPageChange={setCurrentPage}
+                    totalItems={totalItems}
+                    itemsPerPage={ITEMS_PER_PAGE}
+                    itemLabel="products"
+                    scrollToTop={false}
                   />
                 </>
               )}

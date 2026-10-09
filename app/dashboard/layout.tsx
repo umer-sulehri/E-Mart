@@ -30,19 +30,21 @@ export default async function DashboardLayout({
       <div className="flex gap-6 p-4 lg:p-6">
         <DashboardSidebar />
 
-        <div className="min-w-0 flex-1">
+        {/* pt-14 clears the fixed mobile drawer toggle, which would otherwise sit
+            on top of the page heading. */}
+        <div className="min-w-0 flex-1 pt-14 lg:pt-0">
           <DashboardHeader />
 
           {/* Breadcrumb */}
-          <nav className="mt-4 flex items-center gap-2 text-sm text-muted-500">
+          <nav className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted-500">
             <Link
               href="/"
               className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary"
             >
-              <Home className="h-3.5 w-3.5" />
+              <Home className="size-3.5" />
               Home
             </Link>
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="size-3.5" />
             <span className="text-secondary-800">Dashboard</span>
           </nav>
 

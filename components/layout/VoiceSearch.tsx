@@ -3,7 +3,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Mic, X } from 'lucide-react';
-import { VoiceSearchManager } from '@/lib/voice-search';
+import { VoiceSearchManager, getErrorText } from '@/lib/voice-search';
+import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
 interface VoiceSearchProps {
@@ -95,11 +96,24 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
         setTranscript(text);
         setIsListening(false);
         if (text.trim()) {
+          // Deliberately does not send the transcript to analytics. What the
+          // user said is not needed for a funnel metric, and a spoken query can
+          // contain far more sensitive detail than a typed one.
+          trackEvent({
+            action: 'search_voice',
+            category: 'search',
+            label: 'success',
+          });
           onSearchRef.current(text.trim());
         }
       };
       managerRef.current.onError = (code) => {
         setIsListening(false);
+        trackEvent({
+          action: 'search_voice',
+          category: 'search',
+          label: `error:${code}`,
+        });
         void (async () => {
           const resolved = await diagnoseMicError(code);
           // Component may have unmounted (navigation) while diagnosing.
@@ -164,10 +178,10 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
         type="button"
         onClick={handleToggle}
         className={cn(
-          'rounded-lg p-2 transition-colors',
+          'rounded-lg p-2.5 transition-colors md:p-2',
           isListening
             ? 'bg-danger text-white'
-            : 'text-muted hover:text-secondary hover:bg-muted-100'
+            : 'text-muted transition-colors hover:text-secondary hover:bg-muted-100'
         )}
         title={isListening ? 'Stop voice search' : 'Search by voice'}
         aria-label={isListening ? 'Stop voice search' : 'Search by voice'}
@@ -175,26 +189,32 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
         {isListening ? (
           <span className="relative flex h-5 w-5 items-center justify-center">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-40" />
-            <Mic className="relative h-5 w-5" />
+            <Mic className="relative size-5" />
           </span>
         ) : (
-          <Mic className="h-5 w-5" />
+          <Mic className="size-5" />
         )}
       </button>
 
       {error && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-lg border border-danger-200 bg-white p-3 shadow-lg">
-          <div className="flex items-start justify-between">
-            <p className="text-xs text-danger">{error}</p>
-            <button onClick={handleClear} className="ml-2 text-danger hover:text-danger-600">
-              <X className="h-4 w-4" />
+      <div className="absolute right-0 top-full z-50 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-lg border border-danger-200 bg-white p-3 shadow-lg">
+        <div className="flex items-start justify-between">
+          <p role="alert" className="text-xs text-danger">
+              {error}
+            </p>
+            <button
+              onClick={handleClear}
+              className="-mr-1 ml-2 rounded p-1.5 text-danger transition-colors hover:bg-danger-50 hover:text-danger-600"
+              aria-label="Dismiss voice search error"
+            >
+              <X className="size-4" />
             </button>
           </div>
         </div>
       )}
 
       {isListening && !error && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-lg border border-primary-200 bg-white p-3 shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-lg border border-primary-200 bg-white p-3 shadow-lg">
           <p className="mb-2 text-xs font-semibold text-secondary-800">Listening…</p>
           <div className="mb-2 flex items-center gap-1">
             {[0, 1, 2].map((i) => (
@@ -205,7 +225,10 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
               />
             ))}
           </div>
-          <p className="min-h-4 text-xs text-muted-600">
+          {/* Without a live region, a screen-reader user gets no feedback that
+              recognition is running or what it has heard, which makes the
+              interim transcript useless to them. */}
+          <p aria-live="polite" className="min-h-4 text-xs text-muted-600">
             {transcript || 'Speak now…'}
           </p>
         </div>
@@ -214,29 +237,5 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
   );
 }
 
-function getErrorText(code: string): string {
-  switch (code) {
-    case 'not-allowed':
-    case 'service-not-allowed':
-    case 'permission-denied':
-      return 'Microphone access is blocked. Allow the microphone for this site in your browser, then try again.';
-    case 'policy-blocked':
-      return 'Microphone is blocked by the site\'s security policy. Contact the site administrator — this is a configuration issue, not your device.';
-    case 'no-speech':
-      return 'No speech detected. Please try again.';
-    case 'network':
-      return 'Speech service unavailable. Check your connection.';
-    case 'audio-capture':
-    case 'no-mic':
-      return 'No microphone found. Connect a microphone and try again.';
-    case 'device-busy':
-      return 'Your microphone is in use by another app. Close it and try again.';
-    case 'language-not-supported':
-      return 'Voice search is not available in this language. Try English.';
-    case 'transient':
-    default:
-      return 'Voice recognition stopped unexpectedly. Please try again.';
-  }
-}
 
 export { isSupported };

@@ -60,3 +60,32 @@ export function calculateDiscount(
   if (price <= 0 || discountPrice >= price) return 0;
   return Math.round(((price - discountPrice) / price) * 100);
 }
+
+/**
+ * The pair of numbers a price cell should render.
+ *
+ * `discount_price` is nullable and nothing constrains it to be lower than
+ * `price`, so a row can legitimately hold `price === discount_price` (or an
+ * out-of-range value from a bad seller import). Every price cell used to branch
+ * on `discountPrice` being present, which produced the "Rs. 24,999Rs. 24,999"
+ * rendering on the compare page: a strike-through original next to a sale price
+ * that was the same figure. Branching on `original` being non-null makes the
+ * two numbers agree by construction — the original is only ever returned when it
+ * is genuinely higher, so a duplicated or inverted pair is unrepresentable.
+ *
+ * Centralised so the card, the quick view, both wishlists, the compare table
+ * and the cart cannot each re-derive the condition differently.
+ */
+export function resolvePriceDisplay(
+  price: number,
+  discountPrice?: number | null
+): { current: number; original: number | null; discountPercent: number } {
+  if (discountPrice != null && price > 0 && discountPrice < price) {
+    return {
+      current: discountPrice,
+      original: price,
+      discountPercent: calculateDiscount(price, discountPrice),
+    };
+  }
+  return { current: price, original: null, discountPercent: 0 };
+}

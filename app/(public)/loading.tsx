@@ -5,7 +5,7 @@ export default function PublicLoading() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-white">
       <div className="flex flex-col items-center gap-4">
         <div className="flex items-center gap-2">
-          <Leaf className="h-8 w-8 animate-pulse text-primary" />
+          <Leaf className="size-8 animate-pulse text-primary" />
           <span className="text-2xl font-bold font-heading text-secondary-800">
             E-Mart
           </span>

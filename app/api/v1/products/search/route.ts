@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeOrTerm } from "@/lib/search-safe";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const rawPage = parseInt(searchParams.get("page") || "1", 10);
-    const rawLimit = parseInt(searchParams.get("limit") || "12", 10);
-    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
-    const limit =
-      Number.isFinite(rawLimit) && rawLimit > 0
-        ? Math.min(rawLimit, 100)
-        : 12;
+    const { page, limit, offset } = parsePagination(searchParams);
     const q = searchParams.get("q") || "";
     const category = searchParams.get("category") || "";
     const brand = searchParams.get("brand") || "";
@@ -37,7 +32,6 @@ export async function GET(request: NextRequest) {
     const minRating = Number.isFinite(rawMinRating) ? rawMinRating : undefined;
     const inStock = searchParams.get("inStock");
     const sort = searchParams.get("sort") || "relevance";
-    const offset = (page - 1) * limit;
 
     let query = supabase
       .from("products")
@@ -109,6 +103,11 @@ export async function GET(request: NextRequest) {
         }
     }
 
+    // Every sort key above is non-unique, so two results can tie and Postgres may
+    // return them in either order across requests — putting one result on two
+    // pages, or on none. id is unique, so appending it makes the ordering total.
+    query = query.order("id", { ascending: false });
+
     query = query.range(offset, offset + limit - 1);
 
     const { data, error, count } = await query;
@@ -133,14 +132,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: deduped,
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(

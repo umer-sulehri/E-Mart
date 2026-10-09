@@ -5,6 +5,7 @@ import { Providers } from '@/components/providers';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 import CookieConsent from '@/components/ui/CookieConsent';
+import { SITE_URL } from '@/lib/seo';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -20,10 +21,17 @@ const openSans = Open_Sans({
   display: 'swap',
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+// Comes from `@/lib/seo`, which falls back to the live host rather than
+// localhost: `metadataBase` seeds every relative OG/canonical URL, so a
+// localhost fallback emits unusable absolute links across the whole site.
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // The homepage had no canonical, so every variant that resolves to it
+  // (trailing slash, non-www) was indexable as a separate URL. Pages with
+  // their own metadata override this, which is why the static content pages
+  // go through `generatePageMetadata`.
+  alternates: { canonical: '/' },
   title: {
     default: 'E-Mart - Organic Foods at your Doorsteps',
     template: '%s | E-Mart - Organic Grocery Store',
@@ -71,9 +79,15 @@ export const metadata: Metadata = {
     images: ['/images/og-image.jpg'],
   },
   icons: {
-    icon: '/images/logo.webp',
-    shortcut: '/images/logo.webp',
-    apple: '/images/logo.webp',
+    // Square PNG rather than /images/logo.webp: that file is a 241x54
+    // wordmark, which browsers either letterbox into a box or stretch, and
+    // iOS does not accept WebP for apple-touch-icon at all.
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/icons/icon-192.png',
+    apple: '/icons/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
   robots: {
@@ -93,13 +107,40 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  // Without this the layout viewport is inset to the safe area, so a sticky
+  // header or a fixed mobile bar cannot reach under the notch or the home
+  // indicator, and `env(safe-area-inset-*)` resolves to 0 everywhere.
+  viewportFit: 'cover',
   themeColor: '#6BB252',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Organization markup for the whole site. Product and BreadcrumbList are
+  // emitted per page; without this the brand itself is only inferable from the
+  // domain, which is what a knowledge-panel candidate needs.
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'E-Mart',
+    url: SITE_URL,
+    // 512px square rather than the 241x54 wordmark: Google's knowledge-panel
+    // guidance asks for a logo at least 112x112 that represents the brand
+    // mark, and a wide wordmark is a poor fit for that slot.
+    logo: `${SITE_URL}/icons/icon-512.png`,
+    description:
+      'Multi-vendor marketplace for organic groceries and everyday essentials, delivered across Pakistan.',
+    sameAs: [],
+  };
+
   return (
     <html lang="en" className={`${nunito.variable} ${openSans.variable}`}>
       <body className="font-body">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd).replace(/</g, '\\u003c'),
+          }}
+        />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"

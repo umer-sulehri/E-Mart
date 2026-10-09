@@ -69,14 +69,14 @@ function SectionError({
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg bg-danger-50 p-3 text-sm text-danger">
       <span className="inline-flex items-center gap-2">
-        <AlertTriangle className="h-4 w-4" />
+        <AlertTriangle className="size-4" />
         {message}
       </span>
       <button
         onClick={onRetry}
         className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-danger px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-danger-600"
       >
-        <RefreshCw className="h-3.5 w-3.5" />
+        <RefreshCw className="size-3.5" />
         Retry
       </button>
     </div>
@@ -172,10 +172,10 @@ export default function SellerDashboardPage() {
       <div className="space-y-6">
         <nav className="flex items-center gap-2 text-sm text-muted-500">
           <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary">
-            <Home className="h-3.5 w-3.5" />
+            <Home className="size-3.5" />
             Home
           </Link>
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="size-3.5" />
           <span className="text-secondary-800">Seller Dashboard</span>
         </nav>
 
@@ -211,7 +211,7 @@ export default function SellerDashboardPage() {
             : statCards.map((stat) => (
                 <div key={stat.label} className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.bg} text-white`}>
-                    <stat.icon className="h-6 w-6" />
+                    <stat.icon className="size-6" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-500">{stat.label}</p>
@@ -286,32 +286,32 @@ export default function SellerDashboardPage() {
                   {loading
                     ? Array.from({ length: 5 }).map((_, i) => (
                         <tr key={i} className="border-b border-muted-50">
-                          <td className="px-6 py-4"><SkeletonLine className="h-4 w-24" /></td>
-                          <td className="px-6 py-4"><SkeletonLine className="h-4 w-20" /></td>
-                          <td className="px-6 py-4"><SkeletonLine className="h-4 w-10" /></td>
-                          <td className="px-6 py-4"><SkeletonLine className="h-4 w-16" /></td>
-                          <td className="px-6 py-4"><SkeletonLine className="h-4 w-16" /></td>
-                          <td className="px-6 py-4"><SkeletonLine className="h-4 w-20" /></td>
+                          <td className="px-3 py-4 sm:px-6"><SkeletonLine className="h-4 w-24" /></td>
+                          <td className="px-3 py-4 sm:px-6"><SkeletonLine className="h-4 w-20" /></td>
+                          <td className="px-3 py-4 sm:px-6"><SkeletonLine className="h-4 w-10" /></td>
+                          <td className="px-3 py-4 sm:px-6"><SkeletonLine className="h-4 w-16" /></td>
+                          <td className="px-3 py-4 sm:px-6"><SkeletonLine className="h-4 w-16" /></td>
+                          <td className="px-3 py-4 sm:px-6"><SkeletonLine className="h-4 w-20" /></td>
                         </tr>
                       ))
                     : recentOrders.map((order: OrderRow) => (
                         <tr key={order.id} className="border-b border-muted-50 transition-colors hover:bg-muted-50/50">
-                          <td className="px-6 py-4 font-medium text-secondary-800">{order.order_number}</td>
-                          <td className="px-6 py-4 text-muted-600">
+                          <td className="px-3 py-4 sm:px-6 font-medium text-secondary-800">{order.order_number}</td>
+                          <td className="px-3 py-4 sm:px-6 text-muted-600">
                             {order.profiles?.first_name} {order.profiles?.last_name}
                           </td>
-                          <td className="px-6 py-4 text-muted-600">
+                          <td className="px-3 py-4 sm:px-6 text-muted-600">
                             {order.order_items?.length ?? 0} items
                           </td>
-                          <td className="px-6 py-4 font-semibold text-secondary-800">
+                          <td className="px-3 py-4 sm:px-6 font-semibold text-secondary-800">
                             {formatPrice(order.total)}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-4 sm:px-6">
                             <Badge variant={statusVariant[order.status] ?? 'default'}>
                               {order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
                             </Badge>
                           </td>
-                          <td className="px-6 py-4 text-muted-600">{formatDate(order.created_at)}</td>
+                          <td className="px-3 py-4 sm:px-6 text-muted-600">{formatDate(order.created_at)}</td>
                         </tr>
                       ))}
                   {!loading && sectionErrors.orders == null && recentOrders.length === 0 && (
@@ -341,7 +341,7 @@ export default function SellerDashboardPage() {
             <div className="divide-y divide-muted-50">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-4 px-6 py-4">
+                    <div key={i} className="flex items-center gap-4 px-3 py-4 sm:px-6">
                       <SkeletonLine className="h-8 w-8 rounded-full" />
                       <SkeletonLine className="h-12 w-12 rounded-lg shrink-0" />
                       <div className="flex-1 space-y-2">
@@ -352,7 +352,7 @@ export default function SellerDashboardPage() {
                     </div>
                   ))
                 : topProducts.map((product: ProductRow, index: number) => (
-                    <div key={product.id} className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-muted-50/50">
+                    <div key={product.id} className="flex items-center gap-4 px-3 py-4 sm:px-6 transition-colors hover:bg-muted-50/50">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
                         {index + 1}
                       </span>
@@ -361,7 +361,7 @@ export default function SellerDashboardPage() {
                           <ImageWithFallback src={product.images[0]} alt={product.name} width={60} height={60} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-muted-400">
-                            <Package className="h-5 w-5" />
+                            <Package className="size-5" />
                           </div>
                         )}
                       </div>

@@ -16,11 +16,11 @@ export default function BackToTop() {
     <button
       aria-label="Back to top"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className={`fixed bottom-20 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-opacity duration-300 lg:bottom-6 lg:right-6 ${
+      className={`fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-opacity duration-300 lg:bottom-6 lg:right-6 ${
         visible ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
-      <ChevronUp className="h-6 w-6" />
+      <ChevronUp className="size-6" />
     </button>
   );
 }

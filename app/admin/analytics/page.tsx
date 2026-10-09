@@ -113,7 +113,7 @@ export default function AdminAnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -144,7 +144,7 @@ export default function AdminAnalyticsPage() {
           iconClass="bg-primary-100 text-primary-600"
           sub={
             <span className={cn('inline-flex items-center gap-1 text-xs font-medium', growthPositive ? 'text-success' : 'text-danger')}>
-              {growthPositive ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+              {growthPositive ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
               {Math.abs(stats.revenueGrowth)}% vs last month
             </span>
           }
@@ -156,8 +156,8 @@ export default function AdminAnalyticsPage() {
           iconClass="bg-warning-100 text-warning-600"
           sub={
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-500">
-              <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 text-warning" /> {stats.pendingOrders} pending</span>
-              <span className="inline-flex items-center gap-1"><PackageCheck className="h-3 w-3 text-success" /> {stats.deliveredOrders} delivered</span>
+              <span className="inline-flex items-center gap-1"><Clock className="size-3 text-warning" /> {stats.pendingOrders} pending</span>
+              <span className="inline-flex items-center gap-1"><PackageCheck className="size-3 text-success" /> {stats.deliveredOrders} delivered</span>
             </div>
           }
         />

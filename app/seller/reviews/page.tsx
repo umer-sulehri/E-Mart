@@ -1,16 +1,44 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Star, MessageSquare, Send, ChevronLeft, ChevronRight, CheckCircle2, Ban, Trash2, Loader2 } from 'lucide-react';
+import { Star, MessageSquare, Send, CheckCircle2, Ban, Trash2, Loader2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import { cn } from '@/lib/utils';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { ReviewRow } from '@/types/supabase';
 
 const filterTabs = ['All', '5-star', '4-star', '3-star', '2-star', '1-star'];
+
+/**
+ * Rating summary over every review the seller has, returned by the endpoint.
+ * It is computed server-side because the rows in `reviews` are only the current
+ * page, so deriving an average or a star distribution from them would describe
+ * 10 reviews rather than the seller's whole history.
+ */
+interface RatingStats {
+  averageRating: number;
+  distribution: Record<string, number>;
+  totalRated: number;
+}
+
+const EMPTY_STATS: RatingStats = {
+  averageRating: 0,
+  distribution: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 },
+  totalRated: 0,
+};
+
+/** `'5-star'` -> `5`; `'All'` -> `null` (no server-side rating filter). */
+function parseStarTab(tab: string): number | null {
+  if (tab === 'All') return null;
+  const star = Number(tab.charAt(0));
+  return Number.isInteger(star) && star >= 1 && star <= 5 ? star : null;
+}
 
 function StatusBadge({ status }: { status: ReviewRow['status'] }) {
   const map: Record<
@@ -46,7 +74,16 @@ function SkeletonReview() {
 }
 
 export default function SellerReviewsPage() {
+  return (
+    <Suspense>
+      <SellerReviewsContent />
+    </Suspense>
+  );
+}
+
+function SellerReviewsContent() {
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
+  const [stats, setStats] = useState<RatingStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -54,10 +91,10 @@ export default function SellerReviewsPage() {
   const [submittingReply, setSubmittingReply] = useState(false);
   const [acting, setActing] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ReviewRow | null>(null);
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const ITEMS_PER_PAGE = 10;
+
+  const { page, setPage } = usePageParam({ resetOn: [activeFilter] });
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -65,11 +102,16 @@ export default function SellerReviewsPage() {
       const params = new URLSearchParams();
       params.set('page', String(page));
       params.set('limit', String(ITEMS_PER_PAGE));
+      // The star tab is applied by the endpoint, so each tab spans the seller's
+      // whole history instead of just the rows that happen to be on this page.
+      const star = parseStarTab(activeFilter);
+      if (star !== null) params.set('rating', String(star));
 
       const res = await fetch(`/api/v1/seller/reviews?${params}`);
       const data = await res.json();
       if (data.success) {
         setReviews(data.data);
+        setStats(data.stats || EMPTY_STATS);
         setTotalPages(data.meta?.totalPages || 1);
         setTotalItems(data.meta?.totalItems || 0);
       } else {
@@ -80,27 +122,22 @@ export default function SellerReviewsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, activeFilter]);
 
   useEffect(() => {
     fetchReviews();
   }, [fetchReviews]);
 
-  const filtered = reviews.filter((r) => {
-    if (activeFilter === 'All') return true;
-    const star = parseInt(activeFilter.charAt(0));
-    return r.rating === star;
+  const averageRating = stats.averageRating;
+
+  const ratingDistribution = [5, 4, 3, 2, 1].map((star) => {
+    const count = stats.distribution[String(star)] ?? 0;
+    return {
+      star,
+      count,
+      percentage: stats.totalRated > 0 ? (count / stats.totalRated) * 100 : 0,
+    };
   });
-
-  const averageRating = totalItems > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / Math.min(reviews.length, totalItems)
-    : 0;
-
-  const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
-    star,
-    count: reviews.filter((r) => r.rating === star).length,
-    percentage: reviews.length > 0 ? (reviews.filter((r) => r.rating === star).length / reviews.length) * 100 : 0,
-  }));
 
   const handleReply = async (reviewId: string) => {
     if (!replyText.trim()) return;
@@ -177,7 +214,7 @@ export default function SellerReviewsPage() {
             <>
               <div className="text-center">
                 <p className="text-5xl font-bold text-secondary-800">
-                  {totalItems > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '0.0'}
+                  {loading && stats.totalRated === 0 ? '—' : averageRating.toFixed(1)}
                 </p>
                 <div className="mt-2 flex items-center justify-center gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -187,7 +224,7 @@ export default function SellerReviewsPage() {
                     />
                   ))}
                 </div>
-                <p className="mt-1 text-sm text-muted-500">{totalItems} reviews</p>
+                <p className="mt-1 text-sm text-muted-500">{stats.totalRated} reviews</p>
               </div>
               <div className="flex-1 space-y-2">
                 {ratingDistribution.map((dist) => (
@@ -227,7 +264,7 @@ export default function SellerReviewsPage() {
       <div className="space-y-4">
         {loading
           ? Array.from({ length: 3 }).map((_, i) => <SkeletonReview key={i} />)
-          : filtered.map((review: ReviewRow) => (
+          : reviews.map((review: ReviewRow) => (
               <div key={review.id} className="rounded-xl bg-white p-6 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
@@ -267,11 +304,11 @@ export default function SellerReviewsPage() {
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
                             placeholder="Write your reply..."
-                            className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                           />
                           <div className="mt-2 flex gap-2">
                             <Button size="sm" onClick={() => handleReply(review.id)} disabled={submittingReply}>
-                              <Send className="h-3.5 w-3.5" />
+                              <Send className="size-3.5" />
                               {submittingReply ? 'Sending...' : 'Send Reply'}
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => { setReplyingTo(null); setReplyText(''); }}>
@@ -289,7 +326,7 @@ export default function SellerReviewsPage() {
                         onClick={() => setReplyingTo(review.id)}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-muted-200 px-3 py-1.5 text-xs font-medium text-muted-600 transition-colors hover:bg-muted-50"
                       >
-                        <MessageSquare className="h-3.5 w-3.5" />
+                        <MessageSquare className="size-3.5" />
                         Reply
                       </button>
                     )}
@@ -300,7 +337,7 @@ export default function SellerReviewsPage() {
                           disabled={acting === review.id}
                           className="inline-flex items-center gap-1 rounded-lg border border-success-200 px-2.5 py-1.5 text-xs font-medium text-success transition-colors hover:bg-success-50 disabled:opacity-50"
                         >
-                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <CheckCircle2 className="size-3.5" />
                           Approve
                         </button>
                       )}
@@ -310,7 +347,7 @@ export default function SellerReviewsPage() {
                           disabled={acting === review.id}
                           className="inline-flex items-center gap-1 rounded-lg border border-muted-200 px-2.5 py-1.5 text-xs font-medium text-secondary-700 transition-colors hover:bg-muted-50 disabled:opacity-50"
                         >
-                          <Ban className="h-3.5 w-3.5" />
+                          <Ban className="size-3.5" />
                           Reject
                         </button>
                       )}
@@ -320,9 +357,9 @@ export default function SellerReviewsPage() {
                         className="inline-flex items-center gap-1 rounded-lg border border-danger-200 px-2.5 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger-50 disabled:opacity-50"
                       >
                         {acting === review.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="size-3.5 animate-spin" />
                         ) : (
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="size-3.5" />
                         )}
                         Delete
                       </button>
@@ -332,48 +369,27 @@ export default function SellerReviewsPage() {
               </div>
             ))}
 
-        {!loading && filtered.length === 0 && (
+        {!loading && reviews.length === 0 && (
           <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-            <Star className="mx-auto mb-3 h-10 w-10 text-muted-300" />
-            <p className="text-sm text-muted-500">No reviews found for this filter</p>
+            <Star className="mx-auto mb-3 size-10 text-muted-300" />
+            <p className="text-sm text-muted-500">
+              {activeFilter === 'All'
+                ? 'No reviews yet'
+                : `No ${activeFilter} reviews found`}
+            </p>
           </div>
         )}
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-            const p = page <= 3 ? i + 1 : page + i - 2;
-            if (p < 1 || p > totalPages) return null;
-            return (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={cn(
-                  'h-8 w-8 rounded-lg text-sm font-medium transition-colors',
-                  p === page ? 'bg-primary text-white' : 'text-muted-600 hover:bg-muted-50'
-                )}
-              >
-                {p}
-              </button>
-            );
-          })}
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="rounded-lg border border-muted-200 p-2 text-muted-600 transition-colors hover:bg-muted-50 disabled:opacity-50"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+      <Pagination
+        variant="numbered"
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalItems={totalItems}
+        itemsPerPage={ITEMS_PER_PAGE}
+        itemLabel={activeFilter === 'All' ? 'reviews' : activeFilter}
+      />
 
       <ConfirmDialog
         open={deleteTarget !== null}

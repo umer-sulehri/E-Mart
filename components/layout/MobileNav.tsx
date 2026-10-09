@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
+import { PAGES_LINKS } from '@/lib/constants';
 import {
   X,
   Apple,
@@ -60,18 +62,16 @@ interface MobileNavProps {
 export default function MobileNav({ open, onClose }: MobileNavProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  // Reference-counted: the cart drawer can be opened from inside this menu, and
+  // a plain body.overflow reset on unmount would re-enable scrolling behind it.
+  useBodyScrollLock(open);
+  useEscapeKey(open, onClose);
+
+  // A new sheet should start collapsed rather than inheriting the last
+  // category the user drilled into.
   useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [open, onClose]);
+    if (open) setExpanded(null);
+  }, [open]);
 
   return (
     <>
@@ -89,18 +89,22 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
         aria-label="Mobile navigation"
         aria-hidden={!open}
         className={cn(
-          'fixed top-0 left-0 z-[121] h-full w-[300px] max-w-[85vw] bg-white shadow-xl transition-transform duration-300 ease-in-out overflow-y-auto',
+          // Not a flex container, so `overflow-y-auto` here is a reliable
+          // scroll container: the menu is far taller than any phone viewport
+          // and the sticky header stays pinned while the links scroll beneath
+          // it. Bottom padding clears the home indicator on the last category.
+          'fixed top-0 left-0 z-[121] h-[100dvh] w-[300px] max-w-[85vw] overflow-y-auto overscroll-contain bg-white pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-xl transition-transform duration-300 ease-in-out',
           open ? 'translate-x-0' : '-translate-x-full invisible'
         )}
       >
-        <div className="flex items-center justify-between p-4 border-b border-muted-200">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-muted-200 bg-white p-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
           <h2 className="text-lg font-bold text-secondary">E-Mart Menu</h2>
           <button
             onClick={onClose}
-            className="p-2 -mr-2 rounded-lg hover:bg-muted-100 hover:text-primary transition-colors"
+            className="-mr-2 rounded-lg p-2.5 text-muted transition-colors hover:bg-muted-100 hover:text-primary"
             aria-label="Close menu"
           >
-            <X className="h-6 w-6" />
+            <X className="size-6" />
           </button>
         </div>
 
@@ -116,6 +120,27 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
               ] as const
             ).map((link) => (
               <li key={link.label}>
+                <Link
+                  href={link.href}
+                  onClick={onClose}
+                  className="block py-2 text-sm font-medium text-secondary hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* The header nav is hidden below `md`, so without this section the
+            drawer - the mobile nav - was missing About, Blog, Contact,
+            Compare and Help entirely. Rendered from the shared list so the two
+            cannot drift apart again. */}
+        <div className="px-4 py-3 border-b border-muted-200">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted mb-2">Pages</p>
+          <ul className="grid grid-cols-2 gap-x-4">
+            {PAGES_LINKS.map((link) => (
+              <li key={link.href + link.label}>
                 <Link
                   href={link.href}
                   onClick={onClose}

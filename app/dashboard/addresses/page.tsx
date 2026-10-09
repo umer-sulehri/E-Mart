@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   MapPin,
@@ -19,6 +19,9 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
+import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE } from '@/lib/pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import { cn } from '@/lib/utils';
 
 interface Address {
@@ -65,9 +68,20 @@ const labelColors: Record<string, string> = {
 };
 
 export default function AddressesPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <AddressesContent />
+    </Suspense>
+  );
+}
+
+function AddressesContent() {
   const router = useRouter();
   const { isAuthenticated, user, setUser } = useAuthStore();
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -75,30 +89,42 @@ export default function AddressesPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAddresses = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch('/api/v1/auth/addresses');
-        if (res.status === 401) {
-          router.push('/login');
-          return;
-        }
-        const data = await res.json();
-        if (data.success) {
-          setAddresses(Array.isArray(data.data) ? data.data : []);
-        } else {
-          toast.error(data.error || 'Failed to load addresses');
-        }
-      } catch {
-        toast.error('Failed to load addresses');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam();
 
+  const fetchAddresses = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `/api/v1/auth/addresses?page=${currentPage}&limit=${PAGE_SIZE}`
+      );
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+      const data = await res.json();
+      if (data.success) {
+        setAddresses(Array.isArray(data.data) ? data.data : []);
+        const pages = data.meta?.totalPages || 1;
+        setTotalPages(pages);
+        setTotalItems(data.meta?.totalItems || 0);
+        // Deleting the last row on the last page strands the grid on a page
+        // that no longer exists.
+        if (currentPage > pages) {
+          setCurrentPage(pages);
+        }
+      } else {
+        toast.error(data.error || 'Failed to load addresses');
+      }
+    } catch {
+      toast.error('Failed to load addresses');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, router, setCurrentPage]);
+
+  useEffect(() => {
     fetchAddresses();
-  }, [router, setUser, isAuthenticated]);
+  }, [fetchAddresses, setUser, isAuthenticated]);
 
   const startAdd = () => {
     setEditingId(null);
@@ -172,11 +198,22 @@ export default function AddressesPage() {
   };
 
   const refreshAddresses = async () => {
+    // `setDefault` re-sorts the list (defaults float to the top), so a mutation
+    // can move a row off the current page. Refetching the same page rather than
+    // page 1 keeps the user where they were.
     try {
-      const res = await fetch('/api/v1/auth/addresses');
+      const res = await fetch(
+        `/api/v1/auth/addresses?page=${currentPage}&limit=${PAGE_SIZE}`
+      );
       const data = await res.json();
       if (data.success) {
         setAddresses(Array.isArray(data.data) ? data.data : []);
+        const pages = data.meta?.totalPages || 1;
+        setTotalPages(pages);
+        setTotalItems(data.meta?.totalItems || 0);
+        if (currentPage > pages) {
+          setCurrentPage(pages);
+        }
       }
     } catch {
       // silently ignore refresh failure
@@ -251,7 +288,7 @@ export default function AddressesPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-secondary-800">My Addresses</h2>
         <Button variant="primary" size="sm" onClick={startAdd}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Add New Address
         </Button>
       </div>
@@ -269,7 +306,7 @@ export default function AddressesPage() {
               }}
               className="rounded-lg p-1 hover:bg-muted-100"
             >
-              <X className="h-5 w-5 text-muted-500" />
+              <X className="size-5 text-muted-500" />
             </button>
           </div>
 
@@ -370,7 +407,7 @@ export default function AddressesPage() {
 
           <div className="mt-6 flex gap-3">
             <Button variant="primary" onClick={handleSave} loading={saving}>
-              <Check className="h-4 w-4" />
+              <Check className="size-4" />
               {editingId ? 'Update Address' : 'Save Address'}
             </Button>
             <Button
@@ -388,7 +425,7 @@ export default function AddressesPage() {
 
       {addresses.length === 0 ? (
         <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-          <MapPin className="mx-auto h-12 w-12 text-muted-300" />
+          <MapPin className="mx-auto size-12 text-muted-300" />
           <p className="mt-4 text-lg font-semibold text-secondary-800">
             No addresses saved
           </p>
@@ -396,7 +433,7 @@ export default function AddressesPage() {
             Add a delivery address to get started.
           </p>
           <Button variant="primary" className="mt-4" onClick={startAdd}>
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             Add Address
           </Button>
         </div>
@@ -455,7 +492,7 @@ export default function AddressesPage() {
                     onClick={() => startEdit(addr)}
                     className="inline-flex items-center gap-1 text-xs font-medium text-muted-600 hover:text-secondary-800"
                   >
-                    <Pencil className="h-3 w-3" />
+                    <Pencil className="size-3" />
                     Edit
                   </button>
                   <button
@@ -463,7 +500,7 @@ export default function AddressesPage() {
                     disabled={deletingId === addr.id}
                     className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:text-danger-600 disabled:opacity-50"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="size-3" />
                     {deletingId === addr.id ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
@@ -472,6 +509,15 @@ export default function AddressesPage() {
           })}
         </div>
       )}
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={PAGE_SIZE}
+        itemLabel="addresses"
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

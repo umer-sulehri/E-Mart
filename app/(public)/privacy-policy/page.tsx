@@ -1,17 +1,13 @@
-import { type Metadata } from 'next';
+import { type Metadata } from 'next'
+import { generatePageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy',
-  description:
-    'Read the E-Mart privacy policy to understand how we collect, use, and protect your personal information when you shop on our organic grocery platform.',
-  openGraph: {
-    title: 'Privacy Policy | E-Mart',
-    description:
-      'Read the E-Mart privacy policy to understand how we collect, use, and protect your personal information when you shop on our organic grocery platform.',
-  },
-};
+export const metadata: Metadata = generatePageMetadata(
+  'Privacy Policy',
+  'Read the E-Mart privacy policy to understand how we collect, use, and protect your personal information when you shop on our organic grocery platform.',
+  '/privacy-policy'
+);
 
 const tocSections = [
   { id: 'info-we-collect', label: 'Information We Collect' },
@@ -41,7 +37,7 @@ export default function PrivacyPolicyPage() {
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">Privacy Policy</span>
           </div>
         </div>
@@ -52,7 +48,7 @@ export default function PrivacyPolicyPage() {
           <div className="grid gap-10 lg:grid-cols-4">
             {/* TOC Sidebar */}
             <aside className="lg:col-span-1">
-              <div className="sticky top-24 rounded-2xl bg-muted-50 p-6">
+              <div className="sticky top-[var(--header-h)] lg:top-24 rounded-2xl bg-muted-50 p-6">
                 <h3 className="mb-4 font-heading text-sm font-bold text-secondary-800">
                   Table of Contents
                 </h3>
@@ -83,7 +79,7 @@ export default function PrivacyPolicyPage() {
                 safeguard your information when you visit our website and use our services.
               </p>
 
-              <div id="info-we-collect" className="scroll-mt-24">
+              <div id="info-we-collect" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   1. Information We Collect
                 </h2>
@@ -111,7 +107,7 @@ export default function PrivacyPolicyPage() {
                 </ul>
               </div>
 
-              <div id="legal-basis" className="scroll-mt-24">
+              <div id="legal-basis" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   2. Data Controller & Legal Basis
                 </h2>
@@ -145,7 +141,7 @@ export default function PrivacyPolicyPage() {
                 </ul>
               </div>
 
-              <div id="how-we-use" className="scroll-mt-24">
+              <div id="how-we-use" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   3. How We Use Your Information
                 </h2>
@@ -163,7 +159,7 @@ export default function PrivacyPolicyPage() {
                 </ul>
               </div>
 
-              <div id="sharing" className="scroll-mt-24">
+              <div id="sharing" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   4. Sharing Your Information
                 </h2>
@@ -190,7 +186,7 @@ export default function PrivacyPolicyPage() {
                 </ul>
               </div>
 
-              <div id="data-retention" className="scroll-mt-24">
+              <div id="data-retention" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   5. Data Retention
                 </h2>
@@ -218,7 +214,7 @@ export default function PrivacyPolicyPage() {
                 </ul>
               </div>
 
-              <div id="data-security" className="scroll-mt-24">
+              <div id="data-security" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   6. Data Security
                 </h2>
@@ -230,7 +226,7 @@ export default function PrivacyPolicyPage() {
                 </p>
               </div>
 
-              <div id="cookies" className="scroll-mt-24">
+              <div id="cookies" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   7. Cookies
                 </h2>
@@ -255,7 +251,7 @@ export default function PrivacyPolicyPage() {
                 </p>
               </div>
 
-              <div id="your-rights" className="scroll-mt-24">
+              <div id="your-rights" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   8. Your Rights
                 </h2>
@@ -296,7 +292,7 @@ export default function PrivacyPolicyPage() {
                 </p>
               </div>
 
-              <div id="jurisdiction" className="scroll-mt-24">
+              <div id="jurisdiction" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   9. Jurisdiction-Specific Notices
                 </h2>
@@ -334,7 +330,7 @@ export default function PrivacyPolicyPage() {
                 </p>
               </div>
 
-              <div id="children" className="scroll-mt-24">
+              <div id="children" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   10. Children&apos;s Privacy
                 </h2>
@@ -345,7 +341,7 @@ export default function PrivacyPolicyPage() {
                 </p>
               </div>
 
-              <div id="changes" className="scroll-mt-24">
+              <div id="changes" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   11. Changes to This Policy
                 </h2>
@@ -357,7 +353,7 @@ export default function PrivacyPolicyPage() {
                 </p>
               </div>
 
-              <div id="contact-us" className="scroll-mt-24">
+              <div id="contact-us" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   12. Contact Us
                 </h2>

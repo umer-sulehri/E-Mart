@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 import { normalizeOrder } from "@/lib/orders";
@@ -24,10 +25,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const { page, limit, offset } = parsePagination(searchParams);
     const status = searchParams.get("status");
-    const offset = (page - 1) * limit;
 
     let query = supabase
       .from("orders")
@@ -39,6 +38,9 @@ export async function GET(request: NextRequest) {
     }
 
     query = query.order("created_at", { ascending: false });
+    // id breaks ties: created_at alone is not unique, so without it an order can
+    // show up on two pages of the same listing, or on neither.
+    query = query.order("id", { ascending: false });
     query = query.range(offset, offset + limit - 1);
 
     const { data: orders, error, count } = await query;
@@ -71,14 +73,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: (orders || []).map(normalizeOrder),
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
       summary: {
         totalSpent,
         pendingCount,

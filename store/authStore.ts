@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/types';
+import { AUTH_STORAGE_KEY, purgeIdentityStorage } from '@/lib/storage-keys';
 
 interface AuthState {
   user: User | null;
@@ -29,8 +30,13 @@ export const useAuthStore = create<AuthState>()(
       login: (user) =>
         set({ user, isAuthenticated: true, isLoading: false }),
 
-      logout: () =>
-        set({ user: null, isAuthenticated: false, isLoading: false }),
+      logout: () => {
+        set({ user: null, isAuthenticated: false, isLoading: false });
+        // `set` makes the persist middleware write the cleared state, so the
+        // key has to be dropped afterwards — otherwise the (null) record and
+        // the previous user's review drafts survive sign-out.
+        purgeIdentityStorage();
+      },
 
       updateUser: (updates) =>
         set((state) => ({
@@ -38,9 +44,18 @@ export const useAuthStore = create<AuthState>()(
         })),
     }),
     {
-      name: 'emart-auth',
+      name: AUTH_STORAGE_KEY,
       partialize: (state) => ({
-        user: state.user,
+        // Persist only what the header, sidebars and dashboards render. Phone
+        // and date of birth are read from /api/v1/auth/me on demand, so there
+        // is no reason to leave extra PII sitting in local storage.
+        user: state.user
+          ? {
+              ...state.user,
+              phone: undefined,
+              dateOfBirth: undefined,
+            }
+          : null,
         isAuthenticated: state.isAuthenticated,
       }),
     }

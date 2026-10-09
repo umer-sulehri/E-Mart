@@ -116,7 +116,7 @@ export default function SellerProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -131,7 +131,7 @@ export default function SellerProfilePage() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
-            <Store className="h-5 w-5 text-primary" />
+            <Store className="size-5 text-primary" />
           </div>
           <h3 className="text-lg font-bold text-secondary-800">Store Information</h3>
         </div>
@@ -153,7 +153,7 @@ export default function SellerProfilePage() {
                 />
               ) : (
                 <div className="text-center">
-                  <Camera className="mx-auto mb-1 h-6 w-6 text-muted-400 group-hover:text-primary" />
+                  <Camera className="mx-auto mb-1 size-6 text-muted-400 group-hover:text-primary" />
                   <p className="text-[10px] text-muted-400">
                     {uploading ? 'Uploading...' : 'Upload Logo'}
                   </p>
@@ -185,7 +185,7 @@ export default function SellerProfilePage() {
               rows={4}
               value={form.description}
               onChange={(e) => updateField('description', e.target.value)}
-              className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -193,7 +193,7 @@ export default function SellerProfilePage() {
             <Input
               label="Contact Email"
               type="email"
-              icon={<Mail className="pointer-events-none h-4 w-4 text-muted-400" />}
+              icon={<Mail className="pointer-events-none size-4 text-muted-400" />}
               value={form.contactEmail}
               onChange={(e) => updateField('contactEmail', e.target.value)}
             />
@@ -202,7 +202,7 @@ export default function SellerProfilePage() {
           <div>
             <Input
               label="Contact Phone"
-              icon={<Phone className="pointer-events-none h-4 w-4 text-muted-400" />}
+              icon={<Phone className="pointer-events-none size-4 text-muted-400" />}
               value={form.contactPhone}
               onChange={(e) => updateField('contactPhone', e.target.value)}
             />
@@ -211,7 +211,7 @@ export default function SellerProfilePage() {
           <div className="md:col-span-2">
             <Input
               label="Store Address"
-              icon={<MapPin className="pointer-events-none h-4 w-4 text-muted-400" />}
+              icon={<MapPin className="pointer-events-none size-4 text-muted-400" />}
               value={form.address}
               onChange={(e) => updateField('address', e.target.value)}
             />

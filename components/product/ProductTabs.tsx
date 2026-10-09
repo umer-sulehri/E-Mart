@@ -57,14 +57,20 @@ export default function ProductTabs({ product }: ProductTabsProps) {
     <div className="space-y-6">
       {/* Tab Headers */}
       <div className="border-b border-muted-200">
-        <div className="flex gap-0" role="tablist">
+        {/* Horizontally scrollable: 4 tabs at px-6 overflow a 320px viewport,
+            and the active tab is scrolled into view on tap. */}
+        <div
+          className="flex gap-0 overflow-x-auto overscroll-x-contain"
+          role="tablist"
+        >
           {tabsWithCount.map((tab) => (
             <button
               key={tab.id}
               role="tab"
+              aria-selected={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'border-b-2 px-6 py-3 text-sm transition-colors',
+                'shrink-0 whitespace-nowrap border-b-2 px-4 py-3 text-sm transition-colors sm:px-6',
                 activeTab === tab.id
                   ? 'border-primary font-semibold text-primary'
                   : 'border-transparent font-medium text-muted-600 hover:text-secondary-800'

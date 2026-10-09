@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useCartStore } from '@/store/cartStore';
-import type { CartItem, Product } from '@/types';
+import type { CartItem } from '@/types';
 
 export interface LightProduct {
   id: string;
@@ -15,31 +15,17 @@ export interface LightProduct {
 
 export function buildCartItem(product: LightProduct, quantity: number): CartItem {
   const unitPrice = product.discountPrice ?? product.price;
-  const fullProduct = {
-    id: product.id,
-    name: product.name,
-    slug: product.slug,
-    description: '',
-    price: product.price,
-    discountPrice: product.discountPrice,
-    stockQuantity: product.stockQuantity ?? 99,
-    sku: '',
-    category: { id: '', name: '', slug: '' },
-    categoryId: '',
-    rating: 0,
-    reviewCount: 0,
-    isActive: true,
-    isFeatured: false,
-    isNew: false,
-    images: product.image ? [product.image] : [],
-    createdAt: '',
-    updatedAt: '',
-  } as Product;
 
   return {
     id: `cart-${product.id}-${Date.now()}`,
     productId: product.id,
-    product: fullProduct,
+    product: {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      image: product.image,
+      stockQuantity: product.stockQuantity ?? 99,
+    },
     quantity,
     unitPrice,
     totalPrice: unitPrice * quantity,

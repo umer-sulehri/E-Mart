@@ -1,4 +1,4 @@
-function getMicPermissionErrorCode(err: unknown): string {
+export function getMicPermissionErrorCode(err: unknown): string {
   const name = (err as DOMException)?.name ?? '';
   if (
     name === 'NotAllowedError' ||
@@ -8,6 +8,38 @@ function getMicPermissionErrorCode(err: unknown): string {
     return 'not-allowed';
   }
   return 'audio-capture';
+}
+
+/**
+ * Maps a voice failure code to the message shown to the user.
+ *
+ * Lives here rather than in the component so it is importable from the Node
+ * test environment: the copy is the whole point of the code mapping, and a
+ * generic message for every failure leaves the user with nothing to act on.
+ */
+export function getErrorText(code: string): string {
+  switch (code) {
+    case 'not-allowed':
+    case 'service-not-allowed':
+    case 'permission-denied':
+      return 'Microphone access is blocked. Allow the microphone for this site in your browser, then try again.';
+    case 'policy-blocked':
+      return 'Microphone is blocked by the site\'s security policy. Contact the site administrator — this is a configuration issue, not your device.';
+    case 'no-speech':
+      return 'No speech detected. Please try again.';
+    case 'network':
+      return 'Speech service unavailable. Check your connection.';
+    case 'audio-capture':
+    case 'no-mic':
+      return 'No microphone found. Connect a microphone and try again.';
+    case 'device-busy':
+      return 'Your microphone is in use by another app. Close it and try again.';
+    case 'language-not-supported':
+      return 'Voice search is not available in this language. Try English.';
+    case 'transient':
+    default:
+      return 'Voice recognition stopped unexpectedly. Please try again.';
+  }
 }
 
 // Locales the browser speech engines actually understand. The Web Speech API

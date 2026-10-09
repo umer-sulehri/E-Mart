@@ -1,4 +1,5 @@
 import { type Metadata } from 'next';
+import { generatePageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -16,16 +17,11 @@ import {
   Linkedin,
 } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'About Us',
-  description:
-    'Learn about E-Mart — your trusted online organic grocery store in Pakistan. Discover our mission to deliver fresh, organic produce straight from local farms to your doorstep.',
-  openGraph: {
-    title: 'About Us | E-Mart',
-    description:
-      'Learn about E-Mart — your trusted online organic grocery store in Pakistan. Discover our mission to deliver fresh, organic produce straight from local farms to your doorstep.',
-  },
-};
+export const metadata: Metadata = generatePageMetadata(
+  'About Us',
+  'Learn about E-Mart - your trusted online organic grocery store in Pakistan. Discover our mission to deliver fresh, organic produce straight from local farms to your doorstep.',
+  '/about'
+);
 
 const stats = [
   { value: '6+', label: 'Years of Service' },
@@ -100,7 +96,7 @@ export default function AboutPage() {
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">About Us</span>
           </div>
         </div>

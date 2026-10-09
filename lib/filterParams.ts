@@ -124,3 +124,25 @@ export function activeFilterCount(filters: FilterState): number {
   if (filters.featuredOnly) count++;
   return count;
 }
+
+/**
+ * A stable string identity for a FilterState.
+ *
+ * Filter state is compared by value, never by reference: the object is rebuilt
+ * from the URL on every navigation, so `Object.is` on the object itself would
+ * report a change even when nothing changed, and `String(filters)` collapses to
+ * `"[object Object]"` so a real change would be invisible. Serialising the
+ * fields gives one value that is equal exactly when the filters are equal,
+ * which is what a "reset to page 1 when filters change" effect needs.
+ */
+export function filterSignature(filters: FilterState): string {
+  return [
+    filters.categories.join(','),
+    filters.minPrice,
+    filters.maxPrice,
+    String(filters.minRating),
+    filters.brands.join(','),
+    filters.inStockOnly ? '1' : '0',
+    filters.featuredOnly ? '1' : '0',
+  ].join('|');
+}

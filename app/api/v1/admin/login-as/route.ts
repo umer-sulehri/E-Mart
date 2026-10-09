@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  AUTH_COOKIE_OPTIONS,
+  IMPERSONATION_COOKIE_OPTIONS,
+  USER_ROLE_COOKIE_MAX_AGE,
+} from "@/lib/supabase/cookie-options";
 import { writeAdminLog } from "@/lib/audit";
 
 const RESTORE_COOKIE = "emart_admin_restore";
 const IMPERSONATE_COOKIE = "emart_impersonating";
-
-const COOKIE_OPTIONS = {
-  path: "/",
-  sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
-  maxAge: 60 * 60,
-};
 
 function redirectForRole(role: string): string {
   if (role === "seller") return "/seller";
@@ -147,6 +145,11 @@ export async function POST(request: NextRequest) {
     const displayName =
       [target.first_name, target.last_name].filter(Boolean).join(" ").trim() ||
       target.email;
+    // The banner cookie is JS-readable, so it must never carry the email
+    // address fallback — only the display name.
+    const bannerName =
+      [target.first_name, target.last_name].filter(Boolean).join(" ").trim() ||
+      "this user";
 
     const response = NextResponse.json({
       success: true,
@@ -154,19 +157,21 @@ export async function POST(request: NextRequest) {
       message: `Now viewing as ${displayName}`,
     });
 
+    // Scoped to the impersonation endpoints so the admin's refresh token is not
+    // attached to every page request for the duration of the session.
     response.cookies.set(RESTORE_COOKIE, adminSession.refresh_token, {
-      ...COOKIE_OPTIONS,
+      ...IMPERSONATION_COOKIE_OPTIONS,
       httpOnly: true,
     });
     response.cookies.set("sb-user-role", target.role, {
-      ...COOKIE_OPTIONS,
-      httpOnly: true,
+      ...AUTH_COOKIE_OPTIONS,
+      maxAge: USER_ROLE_COOKIE_MAX_AGE,
     });
     // Readable flag so the UI can show an "exit impersonation" banner.
     response.cookies.set(
       IMPERSONATE_COOKIE,
-      JSON.stringify({ name: displayName, role: target.role }),
-      { ...COOKIE_OPTIONS, httpOnly: false }
+      JSON.stringify({ name: bannerName, role: target.role }),
+      { ...IMPERSONATION_COOKIE_OPTIONS, httpOnly: false }
     );
 
     return response;

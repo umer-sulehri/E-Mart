@@ -112,7 +112,7 @@ function ResetPasswordForm() {
     return (
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-50">
-          <CheckCircle className="h-8 w-8 text-success" />
+          <CheckCircle className="size-8 text-success" />
         </div>
         <h1 className="text-2xl font-bold font-heading text-secondary">Password Reset Successful!</h1>
         <p className="mt-2 text-sm text-muted-500">Redirecting to login...</p>
@@ -134,16 +134,16 @@ function ResetPasswordForm() {
               label="New Password"
               type={showPassword ? 'text' : 'password'}
               placeholder="Create a strong password"
-              icon={<Lock className="h-4 w-4" />}
+              icon={<Lock className="size-4" />}
               error={errors.password?.message}
               {...register('password')}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-[38px] text-muted-400 transition-colors hover:text-secondary"
+              aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-1 top-[34px] flex h-9 w-9 items-center justify-center rounded-md text-muted-400 transition-colors hover:bg-muted-100 hover:text-secondary"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
           </div>
           {passwordValue && (
@@ -170,16 +170,16 @@ function ResetPasswordForm() {
             label="Confirm New Password"
             type={showConfirmPassword ? 'text' : 'password'}
             placeholder="Confirm your new password"
-            icon={<Lock className="h-4 w-4" />}
+            icon={<Lock className="size-4" />}
             error={errors.confirmPassword?.message}
             {...register('confirmPassword')}
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-[38px] text-muted-400 transition-colors hover:text-secondary"
+            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} className="absolute right-1 top-[34px] flex h-9 w-9 items-center justify-center rounded-md text-muted-400 transition-colors hover:bg-muted-100 hover:text-secondary"
           >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         </div>
 
@@ -192,7 +192,7 @@ function ResetPasswordForm() {
         href="/login"
         className="mt-6 inline-flex items-center justify-center gap-2 text-sm font-medium text-primary hover:text-primary-500 w-full"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="size-4" />
         Back to Login
       </Link>
     </>

@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
     return (
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-50">
-          <CheckCircle className="h-8 w-8 text-success" />
+          <CheckCircle className="size-8 text-success" />
         </div>
         <h1 className="text-2xl font-bold font-heading text-secondary">Check Your Email</h1>
         <p className="mt-2 text-sm text-muted-500">
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
           </button>
         </p>
         <Link href="/login" className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-500">
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           Back to Login
         </Link>
       </div>
@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
           label="Email"
           type="email"
           placeholder="you@example.com"
-          icon={<Mail className="h-4 w-4" />}
+          icon={<Mail className="size-4" />}
           error={errors.email?.message}
           {...register('email')}
         />
@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
         href="/login"
         className="mt-6 inline-flex items-center justify-center gap-2 text-sm font-medium text-primary hover:text-primary-500 w-full"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="size-4" />
         Back to Login
       </Link>
     </>

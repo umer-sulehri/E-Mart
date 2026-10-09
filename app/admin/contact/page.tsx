@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Loader2,
   Mail,
@@ -11,6 +12,10 @@ import {
   MailOpen,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
+import Pagination from '@/components/ui/Pagination';
+import { usePageParam } from '@/hooks/usePageParam';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { PAGE_SIZE } from '@/lib/pagination';
 import { cn } from '@/lib/utils';
 
 interface Submission {
@@ -26,31 +31,84 @@ interface Submission {
 type Filter = 'all' | 'open' | 'resolved';
 
 export default function AdminContactPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <AdminContactContent />
+    </Suspense>
+  );
+}
+
+function AdminContactContent() {
+  const searchParams = useSearchParams();
+
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
+  // Typing "sales" must not fire a request per keystroke and flicker the list
+  // through empty result sets, and the term belongs in the URL so an inbox view
+  // can be shared or restored.
+  const { search, searchInput, setSearchInput, setFilters } = useUrlFilters();
+  const filter = (searchParams.get('status') ?? 'all') as Filter;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [counts, setCounts] = useState({ all: 0, open: 0, resolved: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
 
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [search, filter],
+  });
+
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/v1/admin/contact?status=${filter}`);
+      const params = new URLSearchParams({
+        status: filter,
+        page: String(currentPage),
+        limit: String(PAGE_SIZE),
+      });
+      if (search) params.set('search', search);
+
+      const res = await fetch(`/api/v1/admin/contact?${params}`);
       const json = await res.json();
-      if (json.success) setSubmissions(json.data || []);
-      else setError(json.error || 'Failed to load submissions');
+      if (json.success) {
+        setSubmissions(json.data || []);
+        setTotalItems(json.meta?.totalItems ?? 0);
+        setTotalPages(json.meta?.totalPages ?? 1);
+        if (json.counts) {
+          setCounts({
+            all: json.counts.all ?? 0,
+            open: json.counts.open ?? 0,
+            resolved: json.counts.resolved ?? 0,
+          });
+        }
+        // Marking a row resolved drops it out of the "open" filter, which can
+        // leave the last page empty. Fall back to the final page with rows.
+        if (currentPage > (json.meta?.totalPages ?? 1)) {
+          setCurrentPage(json.meta?.totalPages ?? 1);
+        }
+      } else {
+        setError(json.error || 'Failed to load submissions');
+        setSubmissions([]);
+        setTotalItems(0);
+        setTotalPages(1);
+      }
     } catch {
       setError('Failed to load submissions');
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, currentPage, search, setCurrentPage]);
 
   useEffect(() => {
     load();
-  }, [filter, load]);
+  }, [load]);
+
+  const setFilterParam = (next: Filter) => {
+    setFilters({ status: next === 'all' ? null : next });
+  };
 
   const toggleResolved = async (sub: Submission) => {
     setUpdating(sub.id);
@@ -77,15 +135,11 @@ export default function AdminContactPage() {
     }
   };
 
-  const filtered = submissions.filter((s) =>
-    (s.name + s.email + s.subject).toLowerCase().includes(search.toLowerCase())
-  );
-
-  const openCount = submissions.filter((s) => !s.is_resolved).length;
-  const resolvedCount = submissions.filter((s) => s.is_resolved).length;
+  const openCount = counts.open;
+  const resolvedCount = counts.resolved;
 
   const tabs: { id: Filter; label: string; count: number }[] = [
-    { id: 'all', label: 'All', count: submissions.length },
+    { id: 'all', label: 'All', count: counts.all },
     { id: 'open', label: 'Open', count: openCount },
     { id: 'resolved', label: 'Resolved', count: resolvedCount },
   ];
@@ -107,7 +161,7 @@ export default function AdminContactPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setFilter(tab.id)}
+                onClick={() => setFilterParam(tab.id)}
                 className={cn(
                   'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                   filter === tab.id
@@ -121,29 +175,29 @@ export default function AdminContactPage() {
             ))}
           </div>
           <div className="relative w-full sm:w-72">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-400" />
             <input
               type="text"
               placeholder="Search submissions..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : submissions.length === 0 ? (
           <div className="mt-6 rounded-lg bg-muted-50 py-12 text-center text-muted-500">
-            <MessageSquare className="mx-auto mb-2 h-8 w-8" />
+            <MessageSquare className="mx-auto mb-2 size-8" />
             No submissions found
           </div>
         ) : (
           <div className="mt-6 space-y-3">
-            {filtered.map((sub) => (
+            {submissions.map((sub) => (
               <div
                 key={sub.id}
                 className={cn(
@@ -153,7 +207,7 @@ export default function AdminContactPage() {
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-                    <Mail className="h-5 w-5" />
+                    <Mail className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -194,11 +248,11 @@ export default function AdminContactPage() {
                       )}
                     >
                       {updating === sub.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin" />
                       ) : sub.is_resolved ? (
-                        <RotateCcw className="h-4 w-4" />
+                        <RotateCcw className="size-4" />
                       ) : (
-                        <CheckCircle2 className="h-4 w-4" />
+                        <CheckCircle2 className="size-4" />
                       )}
                       {sub.is_resolved ? 'Mark as Open' : 'Mark as Resolved'}
                     </button>
@@ -208,28 +262,38 @@ export default function AdminContactPage() {
             ))}
           </div>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={totalItems}
+          itemsPerPage={PAGE_SIZE}
+          itemLabel="submissions"
+          variant="table"
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning-100 text-warning-600">
-              <Mail className="h-5 w-5" />
+              <Mail className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{openCount}</p>
-              <p className="text-xs text-muted-500">Open</p>
+              <p className="text-xs text-muted-500">Open (total)</p>
             </div>
           </div>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-100 text-success-600">
-              <MailOpen className="h-5 w-5" />
+              <MailOpen className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{resolvedCount}</p>
-              <p className="text-xs text-muted-500">Resolved</p>
+              <p className="text-xs text-muted-500">Resolved (total)</p>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { writeAdminLog } from "@/lib/audit";
 import { safeOrTerm } from "@/lib/search-safe";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
+    const { page, limit, offset } = parsePagination(searchParams);
 
     let query = supabase
       .from("brands")
@@ -41,14 +43,21 @@ export async function GET(request: NextRequest) {
         "*, products(count)",
         { count: "exact" }
       )
-      .order("name", { ascending: true });
+      .order("name", { ascending: true })
+      // `name` is not unique, so without `id` as a tiebreaker two brands sharing
+      // a name can straddle a page boundary and appear on both pages or
+      // neither. The same reason every other list here orders twice.
+      .order("id", { ascending: true });
 
     if (search) {
       const escaped = safeOrTerm(search);
       query = query.or(`name.ilike.%${escaped}%,description.ilike.%${escaped}%`);
     }
 
-    const { data: brands, error, count } = await query;
+    const { data: brands, error, count } = await query.range(
+      offset,
+      offset + limit - 1
+    );
 
     if (error) {
       return NextResponse.json(
@@ -66,7 +75,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: normalized,
-      meta: { totalItems: count || 0 },
+      // The full `buildPaginationMeta` block: this route used to emit a bare
+      // `{ totalItems }`, which is not what `<Pagination>` reads, so the admin
+      // brand table had no way to page.
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch {
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeOrTerm } from "@/lib/search-safe";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status"); // all | pending | approved | rejected | suspended
     const search = searchParams.get("search") || "";
+    const { page, limit, offset } = parsePagination(searchParams);
 
     let query = supabase
       .from("vendors")
@@ -41,7 +43,7 @@ export async function GET(request: NextRequest) {
         "*, profiles(first_name, last_name, email, created_at), products(count)",
         { count: "exact" }
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }).order("id", { ascending: false });
 
     if (status && status !== "all") {
       query = query.eq("status", status);
@@ -51,6 +53,10 @@ export async function GET(request: NextRequest) {
       const escaped = safeOrTerm(search);
       query = query.or(`name.ilike.%${escaped}%,contact_email.ilike.%${escaped}%`);
     }
+
+    // Ranged after every filter, so `count` describes the filtered set and the
+    // page window can never disagree with the total.
+    query = query.range(offset, offset + limit - 1);
 
     const { data: vendors, error, count } = await query;
 
@@ -84,10 +90,24 @@ export async function GET(request: NextRequest) {
       profiles: undefined,
     }));
 
+    // Dashboard counters must describe every seller, not the twenty on screen.
+    // Derived from a status-only projection so it stays correct once the table
+    // is paginated, and deliberately independent of `search` / `status` so the
+    // cards do not jump around as the admin types.
+    const { data: statusRows } = await supabase.from("vendors").select("status");
+    const stats = { total: 0, pending: 0, approved: 0, rejected: 0, suspended: 0 };
+    for (const row of statusRows || []) {
+      stats.total += 1;
+      if (row.status in stats) {
+        stats[row.status as keyof typeof stats] += 1;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: normalized,
-      meta: { totalItems: count || 0 },
+      stats,
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch {
     return NextResponse.json(

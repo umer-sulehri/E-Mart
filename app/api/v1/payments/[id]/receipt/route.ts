@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { SITE_URL } from '@/lib/seo';
 
 export async function GET(
   _request: NextRequest,
@@ -47,7 +48,7 @@ export async function GET(
       );
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = SITE_URL;
     const receiptToken = Buffer.from(
       `${order.id}:${order.order_number}`
     ).toString("base64url");

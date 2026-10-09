@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
 import {
   LayoutDashboard,
   Package,
@@ -40,12 +41,26 @@ export default function SellerSidebar() {
   const { user, logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+  useBodyScrollLock(mobileOpen);
+  useEscapeKey(mobileOpen, closeMobile);
+
+  // The menu is taller than a phone viewport, so the current section can sit
+  // below the fold when the drawer opens. Scroll it back into view, otherwise
+  // opening the menu on `/seller/payouts` shows only the top links with no sign
+  // of where you are. `block: 'nearest'` leaves the panel alone when the link is
+  // already visible.
+  const activeRef = useRef<HTMLAnchorElement | null>(null);
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [pathname, mobileOpen]);
+
   const initials = user
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase()
     : 'S';
 
   const sidebarContent = (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <div className="flex items-center gap-3 border-b border-muted-200 p-6">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
           {initials}
@@ -66,10 +81,11 @@ export default function SellerSidebar() {
             link.href === '/seller'
               ? pathname === '/seller'
               : pathname.startsWith(link.href);
-          return (
+return (
             <Link
               key={link.href}
               href={link.href}
+              ref={isActive ? activeRef : undefined}
               onClick={() => setMobileOpen(false)}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
@@ -78,7 +94,7 @@ export default function SellerSidebar() {
                   : 'text-muted-600 hover:bg-muted-50 hover:text-secondary-800'
               )}
             >
-              <link.icon className="h-5 w-5 shrink-0" />
+              <link.icon className="size-5 shrink-0" />
               {link.label}
             </Link>
           );
@@ -89,7 +105,7 @@ export default function SellerSidebar() {
             onClick={() => setMobileOpen(false)}
             className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-muted-500 transition-colors hover:bg-muted-50 hover:text-secondary-800"
           >
-            <Stethoscope className="h-5 w-5 shrink-0" />
+            <Stethoscope className="size-5 shrink-0" />
             Diagnostics
           </Link>
         )}
@@ -98,7 +114,7 @@ export default function SellerSidebar() {
       {/* Become a Seller banner */}
       <div className="mx-4 mb-4 rounded-lg border border-primary-200 bg-primary-50 p-4">
         <div className="flex items-start gap-3">
-          <Info className="h-5 w-5 shrink-0 text-primary" />
+          <Info className="size-5 shrink-0 text-primary" />
           <div>
             <p className="text-xs font-semibold text-primary-700">
               Seller Tips
@@ -123,7 +139,7 @@ export default function SellerSidebar() {
           }}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger-50"
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className="size-5" />
           Logout
         </button>
       </div>
@@ -135,9 +151,12 @@ export default function SellerSidebar() {
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-md lg:hidden"
+        aria-label="Open navigation menu"
+        aria-expanded={mobileOpen}
+        aria-controls="app-sidebar"
+        className="fixed left-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-lg bg-white shadow-md lg:hidden"
       >
-        <Menu className="h-5 w-5 text-secondary-800" />
+        <Menu className="size-5 text-secondary-800" />
       </button>
 
       {/* Mobile overlay */}
@@ -148,34 +167,51 @@ export default function SellerSidebar() {
         />
       )}
 
-      {/* Mobile sidebar */}
+{/* Mobile sidebar */}
       <aside
+        id="app-sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-lg transition-transform lg:hidden',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          // The nav is far taller than a phone viewport, so a scroll container
+          // is mandatory - otherwise the lower links and Logout are unreachable.
+          // The panel must NOT be that container: it is a column flexbox, and a
+          // flex item's default `min-height: auto` stops the child shrinking to
+          // the viewport, so the panel grows instead of scrolling and the page
+          // scrolls behind a locked body. Scrolling lives on an explicit
+          // `min-h-0 flex-1` region below instead.
+          'fixed left-0 top-0 z-50 flex h-[100dvh] w-72 max-w-[85vw] flex-col bg-white shadow-lg transition-transform lg:hidden',
+          mobileOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'
         )}
       >
-        <div className="flex items-center justify-between border-b border-muted-200 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-muted-200 bg-white px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <Leaf className="h-6 w-6 text-primary" />
+            <Leaf className="size-6 text-primary" />
             <span className="font-heading text-lg font-bold text-secondary-800">
               E-Mart
             </span>
           </Link>
           <button
             onClick={() => setMobileOpen(false)}
-            className="rounded-lg p-1 hover:bg-muted-100"
+            aria-label="Close navigation menu"
+            className="-mr-2 rounded-lg p-2 text-muted-600 transition-colors hover:bg-muted-100"
           >
-            <X className="h-5 w-5 text-muted-600" />
+            <X className="size-5" />
           </button>
         </div>
-        {sidebarContent}
+        <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+          {sidebarContent}
+        </div>
       </aside>
 
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 lg:block">
-        <div className="sticky top-4 rounded-xl bg-white shadow-sm">
-          {sidebarContent}
+        {/* Capped to the viewport so the menu scrolls inside a pinned panel.
+            `sticky` alone cannot do this: it offsets an element of its own
+            height, so a menu taller than the viewport still runs off the
+            bottom and those links are only reachable by scrolling the page. */}
+        <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-xl bg-white shadow-sm">
+          <div className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+            {sidebarContent}
+          </div>
         </div>
       </aside>
     </>

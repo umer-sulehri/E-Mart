@@ -7,13 +7,16 @@ import toast from 'react-hot-toast';
 import type { Product } from '@/components/product/ProductCard';
 import ProductFilters from '@/components/product/ProductFilters';
 import ProductGrid from '@/components/product/ProductGrid';
-import Pagination from '@/components/product/Pagination';
+import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
 import SortDropdown, { type SortValue } from '@/components/product/SortDropdown';
 import SectionHeader from '@/components/ui/SectionHeader';
+import { usePageParam } from '@/hooks/usePageParam';
 import { CATEGORIES } from '@/lib/constants';
 import {
   EMPTY_FILTERS,
   activeFilterCount,
+  filterSignature,
   filtersFromSearchParams,
   filtersToApiParams,
   filtersToSearchParams,
@@ -26,8 +29,6 @@ import {
   type ApiProduct,
   type ApiListResponse,
 } from '@/lib/api';
-
-const ITEMS_PER_PAGE = 15;
 
 const RATING_LABELS: Record<number, string> = {
   1: '1★ & up',
@@ -63,9 +64,6 @@ function ProductsContent() {
   const [sort, setSort] = useState<SortValue>(
     (searchParams.get('sort') as SortValue) || 'newest'
   );
-  const [currentPage, setCurrentPage] = useState(() =>
-    Number(searchParams.get('page') || 1)
-  );
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [brandNames, setBrandNames] = useState<Record<string, string>>({});
   const [categoryNames, setCategoryNames] = useState<Record<string, string>>({});
@@ -75,12 +73,21 @@ function ProductsContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
+  // The page number lives in `?page=` rather than in state, so a reload, a
+  // shared link and browser back/forward all land on the page the user was
+  // actually looking at. Narrowing the result set resets it to 1, because page
+  // 4 of the previous result set is meaningless against the new one.
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    // A value signature, not the object: `filters` is rebuilt from the URL on
+    // every navigation, so passing it directly would never register a change.
+    resetOn: [initialSearch, sort, filterSignature(filters)],
+  });
+
   // Keep state in sync when the user navigates via back/forward or a link
   // that carries new query params.
   useEffect(() => {
     setFilters(filtersFromSearchParams(searchParams));
     setSort((searchParams.get('sort') as SortValue) || 'newest');
-    setCurrentPage(Number(searchParams.get('page') || 1));
   }, [searchParams]);
 
   const applyFilters = useCallback(
@@ -155,10 +162,6 @@ function ProductsContent() {
       })
       .catch(() => {});
   }, []);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters, sort, initialSearch]);
 
   useEffect(() => {
     let cancelled = false;
@@ -366,7 +369,7 @@ function ProductsContent() {
           {/* Mobile filter toggle */}
           <button
             onClick={() => setMobileFiltersOpen(true)}
-            className="fixed bottom-20 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-secondary-800 px-5 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-secondary lg:hidden"
+            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-secondary-800 px-5 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-secondary lg:hidden"
           >
             <SlidersHorizontal size={16} />
             Filters
@@ -379,19 +382,20 @@ function ProductsContent() {
 
           {/* Mobile filter drawer */}
           {mobileFiltersOpen && (
-            <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="fixed inset-0 z-[65] lg:hidden">
               <div
                 className="absolute inset-0 bg-black/40"
                 onClick={() => setMobileFiltersOpen(false)}
               />
-              <div className="absolute inset-y-0 left-0 flex w-80 max-w-full flex-col bg-white shadow-xl">
+              <div className="absolute inset-y-0 left-0 flex w-80 max-w-full flex-col bg-white pb-[env(safe-area-inset-bottom)] shadow-xl">
                 <div className="mb-4 flex items-center justify-between border-b border-muted-100 p-5">
                   <h3 className="font-heading text-lg font-bold text-secondary-800">
                     Filters
                   </h3>
                   <button
                     onClick={() => setMobileFiltersOpen(false)}
-                    className="rounded-lg p-1 text-muted-500 hover:bg-muted-100"
+                    aria-label="Close filters"
+                    className="-mr-2 rounded-lg p-2.5 text-muted-500 transition-colors hover:bg-muted-100"
                   >
                     <X size={20} />
                   </button>
@@ -399,7 +403,7 @@ function ProductsContent() {
                 <div className="flex-1 overflow-y-auto p-5">{mobileFiltersPanel}</div>
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
-                  className="m-4 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600"
+                  className="m-4 inline-flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600"
                 >
                   <SlidersHorizontal size={16} />
                   Show Results ({totalItems})
@@ -429,6 +433,10 @@ function ProductsContent() {
                   currentPage={currentPage}
                   totalPages={totalPages}
                   onPageChange={setCurrentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={ITEMS_PER_PAGE}
+                  itemLabel="products"
+                  scrollToTop={false}
                 />
               </>
             )}

@@ -17,9 +17,12 @@ declare global {
 function deleteGACookies(gaId: string) {
   const exclusion = `ga-disable-${gaId}`;
   const names = ['_ga', '_gid', '_gat', '_gat_gtag_' + gaId.replace(/^G-/, '')];
+  // `Secure` is included so the expiry matches the cookie GA created and so the
+  // deletion is not dropped by browsers that treat Secure cookies specially.
+  const attributes = 'expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax; Secure';
   names.forEach((name) => {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname.replace(/^www\./, '')}; SameSite=Lax`;
+    document.cookie = `${name}=; ${attributes}`;
+    document.cookie = `${name}=; ${attributes}; domain=.${window.location.hostname.replace(/^www\./, '')}`;
   });
   (window as unknown as Record<string, unknown>)[exclusion] = true;
 }

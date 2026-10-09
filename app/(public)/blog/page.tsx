@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   ChevronRight,
   Home,
@@ -16,6 +17,10 @@ import {
 } from 'lucide-react';
 import SectionHeader from '@/components/ui/SectionHeader';
 import Button from '@/components/ui/Button';
+import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
+import { usePageParam } from '@/hooks/usePageParam';
+import { useDebounce } from '@/hooks/useDebounce';
 import { tryParseJson } from '@/lib/api';
 
 interface BlogPost {
@@ -124,38 +129,109 @@ const CATEGORIES_LIST = [
 
 const POPULAR_POSTS = MOCK_POSTS.slice(0, 3);
 
-const ITEMS_PER_PAGE = 4;
-
 export default function BlogPage() {
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <BlogContent />
+    </Suspense>
+  );
+}
+
+function BlogContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  // Category and search term live in the URL, so a filtered or paged blog can
+  // be bookmarked, shared and restored by the back button.
+  const activeCategory = searchParams.get('category') ?? 'All';
+  const search = searchParams.get('search') ?? '';
+  // The box stays controlled by local state so typing is not blocked by a
+  // navigation; the debounced value is what actually reaches the URL.
+  const [searchInput, setSearchInput] = useState(search);
+  const debouncedSearch = useDebounce(searchInput, 400).trim();
+
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam({
+    resetOn: [activeCategory, search],
+    totalPages,
+  });
+
+  useEffect(() => {
+    if (debouncedSearch === search) return;
+    const params = new URLSearchParams(searchParams.toString());
+    // A new search term invalidates the current page, so it is dropped here
+    // rather than left pointing into the previous result set.
+    params.delete('page');
+    if (debouncedSearch) params.set('search', debouncedSearch);
+    else params.delete('search');
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [debouncedSearch, search, searchParams, pathname, router]);
+
+  // Keep the box in step when the URL changes from elsewhere (back button,
+  // shared link, sidebar category click).
+  useEffect(() => {
+    setSearchInput(search);
+  }, [search]);
+
+  const setActiveCategory = (category: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('page');
+    if (category === 'All') params.delete('category');
+    else params.set('category', category);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   useEffect(() => {
     let cancelled = false;
 
+    // Placeholder rows are a stand-in for a failed or unavailable API, not for
+    // an empty result: falling back when `data` is an empty array would print
+    // sample posts for a category or search term that genuinely matches nothing.
+    const showPlaceholder = () => {
+      if (cancelled) return;
+      setPosts(MOCK_POSTS);
+      setTotalPages(Math.ceil(MOCK_POSTS.length / ITEMS_PER_PAGE));
+      setTotalItems(MOCK_POSTS.length);
+    };
+
     async function fetchPosts() {
       setLoading(true);
       try {
-        const res = await fetch('/api/v1/blog-posts');
-        const json = await tryParseJson<{ success: boolean; data?: BlogPost[] }>(res);
-        if (!cancelled && json?.success && json.data?.length) {
-          setPosts(json.data);
-          setTotalPages(Math.ceil(json.data.length / ITEMS_PER_PAGE));
+        // Filtering and paging happen in the API. Slicing the rows the API
+        // returned instead would only ever filter the posts that happened to be
+        // on the current page, and the endpoint's own default limit capped the
+        // list at 10 posts with no way to reach the rest.
+        const params = new URLSearchParams({
+          page: String(currentPage),
+          limit: String(ITEMS_PER_PAGE),
+        });
+        if (activeCategory !== 'All') params.set('category', activeCategory);
+        if (search) params.set('search', search);
+
+        const res = await fetch(`/api/v1/blog-posts?${params.toString()}`);
+        const json = await tryParseJson<{
+          success: boolean;
+          data?: BlogPost[];
+          meta?: { totalPages: number; totalItems: number };
+        }>(res);
+        if (cancelled) return;
+        if (json?.success) {
+          setPosts(json.data || []);
+          setTotalPages(json.meta?.totalPages || 1);
+          setTotalItems(json.meta?.totalItems || 0);
         } else {
-          if (!cancelled) {
-            setPosts(MOCK_POSTS);
-            setTotalPages(Math.ceil(MOCK_POSTS.length / ITEMS_PER_PAGE));
-          }
+          showPlaceholder();
         }
       } catch {
-        if (!cancelled) {
-          setPosts(MOCK_POSTS);
-          setTotalPages(Math.ceil(MOCK_POSTS.length / ITEMS_PER_PAGE));
-        }
+        showPlaceholder();
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -163,23 +239,7 @@ export default function BlogPage() {
 
     fetchPosts();
     return () => { cancelled = true; };
-  }, []);
-
-  const filteredPosts = posts.filter((post) => {
-    const matchesCategory = activeCategory === 'All' || post.category === activeCategory;
-    const matchesSearch =
-      !searchQuery ||
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  const paginatedPosts = filteredPosts.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const filteredTotalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
+  }, [activeCategory, search, currentPage]);
 
   return (
     <>
@@ -193,7 +253,7 @@ export default function BlogPage() {
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">Blog</span>
           </div>
         </div>
@@ -207,7 +267,7 @@ export default function BlogPage() {
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
-                onClick={() => { setActiveCategory(cat); setCurrentPage(1); }}
+                onClick={() => setActiveCategory(cat)}
                 className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
                   activeCategory === cat
                     ? 'bg-primary text-white'
@@ -239,7 +299,7 @@ export default function BlogPage() {
                     </div>
                   ))}
                 </div>
-              ) : paginatedPosts.length === 0 ? (
+              ) : posts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <div className="mb-4 text-6xl">📝</div>
                   <h3 className="font-heading text-xl font-bold text-secondary-800">
@@ -251,7 +311,7 @@ export default function BlogPage() {
                 </div>
               ) : (
                 <div className="grid gap-6 sm:grid-cols-2">
-                  {paginatedPosts.map((post) => (
+                  {posts.map((post) => (
                     <Link
                       key={post.id}
                       href={`/blog/${post.slug}`}
@@ -311,38 +371,16 @@ export default function BlogPage() {
               )}
 
               {/* Pagination */}
-              {filteredTotalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center gap-1">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-muted-200 text-secondary-800 transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:text-muted-300"
-                  >
-                    &lt;
-                  </button>
-                  {Array.from({ length: filteredTotalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
-                          currentPage === page
-                            ? 'border-primary bg-primary text-white'
-                            : 'border-muted-200 text-secondary-800 hover:border-primary hover:text-primary'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    )
-                  )}
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(filteredTotalPages, p + 1))}
-                    disabled={currentPage === filteredTotalPages}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-muted-200 text-secondary-800 transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:text-muted-300"
-                  >
-                    &gt;
-                  </button>
-                </div>
+              {totalPages > 1 && (
+                <Pagination
+                  className="mt-8"
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={ITEMS_PER_PAGE}
+                  itemLabel="posts"
+                />
               )}
             </div>
 
@@ -357,9 +395,9 @@ export default function BlogPage() {
                   <input
                     type="text"
                     placeholder="Search articles..."
-                    value={searchQuery}
-                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                    className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-10 pr-4 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400" />
                 </div>
@@ -374,7 +412,7 @@ export default function BlogPage() {
                   {CATEGORIES_LIST.map((cat) => (
                     <li key={cat.name}>
                       <button
-                        onClick={() => { setActiveCategory(cat.name === 'Health Tips' ? 'Health Tips' : cat.name); setCurrentPage(1); }}
+                        onClick={() => setActiveCategory(cat.name)}
                         className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm text-secondary-700 transition-colors hover:bg-muted-50"
                       >
                         <span>{cat.name}</span>
@@ -433,7 +471,7 @@ export default function BlogPage() {
                 <input
                   type="email"
                   placeholder="Your email"
-                  className="mb-3 w-full rounded-lg bg-white/20 px-4 py-2.5 text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/40"
+                  className="mb-3 w-full rounded-lg bg-white/20 px-4 py-2.5 text-base sm:text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/40"
                 />
                 <button className="w-full rounded-lg bg-white py-2.5 text-sm font-bold text-primary transition-colors hover:bg-muted-100">
                   Subscribe

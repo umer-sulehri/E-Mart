@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
   Tag,
@@ -16,19 +16,22 @@ import { cn, formatPrice, formatDate } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import type { CouponRow } from '@/types/supabase';
 
 function SkeletonRow() {
   return (
     <tr className="border-b border-muted-50">
-      <td className="px-6 py-4"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
-      <td className="hidden px-6 py-4 md:table-cell"><div className="h-4 w-32 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
-      <td className="hidden px-6 py-4 lg:table-cell"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
-      <td className="hidden px-6 py-4 xl:table-cell"><div className="h-4 w-24 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
+      <td className="hidden px-3 py-4 sm:px-6 md:table-cell"><div className="h-4 w-32 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
+      <td className="hidden px-3 py-4 sm:px-6 lg:table-cell"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
+      <td className="hidden px-3 py-4 sm:px-6 xl:table-cell"><div className="h-4 w-24 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-16 animate-pulse rounded bg-muted-200" /></td>
     </tr>
   );
 }
@@ -42,13 +45,22 @@ function creatorName(coupon: CouponRow): string {
 }
 
 export default function AdminCouponsPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <AdminCouponsContent />
+    </Suspense>
+  );
+}
+
+function AdminCouponsContent() {
   const [coupons, setCoupons] = useState<CouponRow[]>([]);
+  const [stats, setStats] = useState({ active: 0, inactive: 0 });
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CouponRow | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [form, setForm] = useState({
@@ -62,17 +74,20 @@ export default function AdminCouponsPage() {
     expiresAt: '',
   });
 
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam();
+
   const fetchCoupons = async (page = 1) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.set('page', String(page));
-      params.set('limit', '20');
+      params.set('limit', String(ITEMS_PER_PAGE));
 
       const res = await fetch(`/api/v1/admin/coupons?${params}`);
       const data = await res.json();
       if (data.success) {
         setCoupons(data.data);
+        setStats(data.stats || { active: 0, inactive: 0 });
         setTotalPages(data.meta?.totalPages || 1);
         setTotalItems(data.meta?.totalItems || 0);
       } else {
@@ -204,7 +219,7 @@ export default function AdminCouponsPage() {
           <p className="text-sm text-muted-500">Create and manage discount coupons</p>
         </div>
         <Button onClick={() => { setShowForm(!showForm); resetForm(); }}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Create Coupon
         </Button>
       </div>
@@ -213,7 +228,7 @@ export default function AdminCouponsPage() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-              <Tag className="h-5 w-5" />
+              <Tag className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">{loading ? '...' : totalItems}</p>
@@ -224,11 +239,11 @@ export default function AdminCouponsPage() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-100 text-success-600">
-              <Percent className="h-5 w-5" />
+              <Percent className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">
-                {loading ? '...' : coupons.filter((c) => c.is_active).length}
+                {loading ? '...' : stats.active}
               </p>
               <p className="text-xs text-muted-500">Active</p>
             </div>
@@ -237,11 +252,11 @@ export default function AdminCouponsPage() {
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-danger-100 text-danger-600">
-              <DollarSign className="h-5 w-5" />
+              <DollarSign className="size-5" />
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-800">
-                {loading ? '...' : coupons.filter((c) => !c.is_active).length}
+                {loading ? '...' : stats.inactive}
               </p>
               <p className="text-xs text-muted-500">Expired/Inactive</p>
             </div>
@@ -254,7 +269,7 @@ export default function AdminCouponsPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-secondary-800">{editingId ? 'Edit Coupon' : 'Create New Coupon'}</h2>
             <button onClick={() => { setShowForm(false); resetForm(); }} className="rounded-lg p-1 text-muted-500 hover:bg-muted-100">
-              <X className="h-5 w-5" />
+              <X className="size-5" />
             </button>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -265,7 +280,7 @@ export default function AdminCouponsPage() {
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
                 placeholder="e.g. SUMMER20"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm uppercase text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm uppercase text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div>
@@ -275,7 +290,7 @@ export default function AdminCouponsPage() {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="Short description"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div>
@@ -296,7 +311,7 @@ export default function AdminCouponsPage() {
                 value={form.value}
                 onChange={(e) => setForm({ ...form, value: e.target.value })}
                 placeholder={form.type === 'percentage' ? 'e.g. 20' : 'e.g. 500'}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div>
@@ -306,7 +321,7 @@ export default function AdminCouponsPage() {
                 value={form.minimumOrderAmount}
                 onChange={(e) => setForm({ ...form, minimumOrderAmount: e.target.value })}
                 placeholder="Optional"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div>
@@ -316,7 +331,7 @@ export default function AdminCouponsPage() {
                 value={form.usageLimit}
                 onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
                 placeholder="Unlimited"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div>
@@ -325,7 +340,7 @@ export default function AdminCouponsPage() {
                 type="date"
                 value={form.startsAt}
                 onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-700 focus:border-primary focus:outline-none"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-700 focus:border-primary focus:outline-none"
               />
             </div>
             <div>
@@ -334,7 +349,7 @@ export default function AdminCouponsPage() {
                 type="date"
                 value={form.expiresAt}
                 onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-700 focus:border-primary focus:outline-none"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-700 focus:border-primary focus:outline-none"
               />
             </div>
           </div>
@@ -369,7 +384,7 @@ export default function AdminCouponsPage() {
                   ? (
                       <tr>
                         <td colSpan={8} className="px-6 py-12 text-center">
-                          <Tag className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Tag className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No coupons yet</p>
                         </td>
                       </tr>
@@ -378,22 +393,22 @@ export default function AdminCouponsPage() {
                       const isExpired = coupon.expires_at && new Date(coupon.expires_at) < new Date();
                       return (
                         <tr key={coupon.id} className="hover:bg-muted-50/50">
-                          <td className="px-6 py-4 font-mono font-bold text-secondary-800">{coupon.code}</td>
-                          <td className="hidden px-6 py-4 text-muted-600 md:table-cell">{coupon.description || '-'}</td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-4 sm:px-6 font-mono font-bold text-secondary-800">{coupon.code}</td>
+                          <td className="hidden px-3 py-4 sm:px-6 text-muted-600 md:table-cell">{coupon.description || '-'}</td>
+                          <td className="px-3 py-4 sm:px-6">
                             <Badge variant={coupon.discount_type === 'percentage' ? 'primary' : 'success'} size="sm">
                               {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatPrice(coupon.discount_value)}
                             </Badge>
                           </td>
-                          <td className="px-6 py-4 font-medium text-secondary-800">
+                          <td className="px-3 py-4 sm:px-6 font-medium text-secondary-800">
                             {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% off` : `${formatPrice(coupon.discount_value)} off`}
                           </td>
-                          <td className="hidden px-6 py-4 lg:table-cell">
+                          <td className="hidden px-3 py-4 sm:px-6 lg:table-cell">
                             <Badge variant={isExpired ? 'danger' : coupon.is_active ? 'success' : 'default'} size="sm">
                               {isExpired ? 'Expired' : coupon.is_active ? 'Active' : 'Inactive'}
                             </Badge>
                           </td>
-                          <td className="hidden px-6 py-4 xl:table-cell">
+                          <td className="hidden px-3 py-4 sm:px-6 xl:table-cell">
                             <span className="flex items-center gap-1.5 text-muted-600">
                               {coupon.profiles?.role === 'admin' ? (
                                 <Badge variant="primary" size="sm">Admin</Badge>
@@ -405,22 +420,22 @@ export default function AdminCouponsPage() {
                               </span>
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-muted-600">
+                          <td className="px-3 py-4 sm:px-6 text-muted-600">
                             {coupon.expires_at ? formatDate(coupon.expires_at) : '-'}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-4 sm:px-6">
                             <div className="flex items-center gap-1">
                               <button
                                 onClick={() => startEdit(coupon)}
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-primary-50 hover:text-primary"
                               >
-                                <Edit3 className="h-4 w-4" />
+                                <Edit3 className="size-4" />
                               </button>
                               <button
                                 onClick={() => setDeleteTarget(coupon)}
                                 className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="size-4" />
                               </button>
                             </div>
                           </td>
@@ -432,21 +447,17 @@ export default function AdminCouponsPage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 border-t border-muted-100 px-6 py-4">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                onClick={() => setCurrentPage(p)}
-                className={cn(
-                  'h-8 w-8 rounded-lg text-sm font-medium transition-colors',
-                  currentPage === p
-                    ? 'bg-primary text-white'
-                    : 'text-muted-600 hover:bg-muted-50'
-                )}
-              >
-                {p}
-              </button>
-            ))}
+          <div className="border-t border-muted-100 px-3 py-4 sm:px-6">
+            <Pagination
+              variant="table"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              itemLabel="coupons"
+              className="mt-0"
+            />
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ import { X, Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { useHydrated } from '@/hooks/useHydrated';
+import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
 import { formatPrice } from '@/lib/utils';
 import { resolveImage } from '@/lib/imageLoader';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
@@ -47,25 +48,10 @@ export default function CartSidebar() {
     return () => window.removeEventListener('toggle-cart', handler);
   }, [handleToggle]);
 
-  useEffect(() => {
-    if (isCartOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isCartOpen]);
-
-  useEffect(() => {
-    if (!isCartOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') toggleCart();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isCartOpen, toggleCart]);
+  // Reference-counted: QuickView opens from inside this drawer, and a plain
+  // body.overflow reset on unmount would re-enable scrolling behind the cart.
+  useBodyScrollLock(isCartOpen);
+  useEscapeKey(isCartOpen, toggleCart);
 
   const currentSubtotal = subtotal();
   const currentShipping = shippingCost();
@@ -96,12 +82,15 @@ export default function CartSidebar() {
         aria-modal="true"
         aria-label="Shopping cart"
         aria-hidden={!isCartOpen}
-        className={`fixed right-0 top-0 z-[70] flex h-full w-full max-w-md flex-col bg-white shadow-xl transition-transform duration-300 ease-in-out ${
+        // `h-[100dvh]` rather than `h-full`: on a fixed element the percentage
+        // resolves against the layout viewport, which on a phone extends behind
+        // the browser chrome, so the footer sat under the URL bar.
+        className={`fixed right-0 top-0 z-[70] flex h-[100dvh] w-full max-w-md flex-col bg-white shadow-xl transition-transform duration-300 ease-in-out ${
           isCartOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-muted-200 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-muted-200 px-6 py-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
           <div className="flex items-center gap-2">
             <h2 className="font-heading text-lg font-bold text-secondary-800">
               Shopping Cart
@@ -145,14 +134,18 @@ export default function CartSidebar() {
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-y-auto px-6 py-4" style={{ maxHeight: '60vh' }}>
+            {/* The list takes the space between header and footer rather than a hard
+                `60vh`: that magic number left a dead band on tall screens and, on
+                a short one, pushed the totals below the fold. `min-h-0` is what
+                actually lets a flex child shrink far enough to scroll. */}
+            <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-6 py-4">
               <ul className="divide-y divide-muted-100">
                 {shownItems.map((item) => (
                   <li key={item.id} className="flex gap-4 py-4">
                     {/* Thumbnail */}
                     <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-muted-50">
                       <ImageWithFallback
-                        src={resolveImage(item.product.images?.[0])}
+                        src={resolveImage(item.product.image)}
                         alt={item.product.name}
                         fill
                         className="object-contain p-1"
@@ -201,8 +194,10 @@ export default function CartSidebar() {
               </ul>
             </div>
 
-            {/* Footer */}
-            <div className="border-t border-muted-200 px-6 py-4">
+            {/* Footer. `shrink-0` keeps the totals and the checkout button from being
+                squeezed as the list grows, and the drawer covers the bottom
+                nav, so it owns the home-indicator inset itself. */}
+            <div className="shrink-0 border-t border-muted-200 px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between text-secondary-700">
                   <span>Subtotal</span>

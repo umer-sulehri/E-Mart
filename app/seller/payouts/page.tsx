@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Wallet, Clock, CheckCircle, XCircle, CreditCard, Plus } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import { formatPrice, formatDate } from '@/lib/utils';
 import type { PayoutMethod } from '@/components/seller/PayoutMethodModal';
 
@@ -31,8 +34,18 @@ function SkeletonBlock({ className = 'h-4 w-full' }: { className?: string }) {
 }
 
 export default function SellerPayoutsPage() {
+  return (
+    <Suspense>
+      <SellerPayoutsContent />
+    </Suspense>
+  );
+}
+
+function SellerPayoutsContent() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [summary, setSummary] = useState<PayoutSummary | null>(null);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
   const [amount, setAmount] = useState('');
@@ -41,6 +54,8 @@ export default function SellerPayoutsPage() {
   const [requesting, setRequesting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [savedMethod, setSavedMethod] = useState<PayoutMethod | null>(null);
+
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam();
 
   const openRequestModal = useCallback(() => {
     const pref = savedMethod?.preferred_method || 'bank';
@@ -59,7 +74,13 @@ export default function SellerPayoutsPage() {
   const fetchPayouts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/seller/payout');
+      // The endpoint returns one page. Without `page`/`limit` the table stopped
+      // at the default page size and older requests were unreachable.
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(ITEMS_PER_PAGE),
+      });
+      const res = await fetch(`/api/v1/seller/payout?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
         const payoutArray = Array.isArray(data.data?.payouts)
@@ -69,6 +90,8 @@ export default function SellerPayoutsPage() {
             : [];
         setPayouts(payoutArray);
         if (data.data?.summary) setSummary(data.data.summary);
+        setTotalPages(data.meta?.totalPages || 1);
+        setTotalItems(data.meta?.totalItems || 0);
       } else {
         toast.error(data.error || 'Failed to load payouts');
       }
@@ -77,7 +100,7 @@ export default function SellerPayoutsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage]);
 
   const fetchSavedMethod = useCallback(async () => {
     try {
@@ -154,9 +177,9 @@ export default function SellerPayoutsPage() {
   };
 
   const statusIcon = (status: string) => {
-    if (status === 'completed') return <CheckCircle className="h-4 w-4" />;
-    if (status === 'failed') return <XCircle className="h-4 w-4" />;
-    return <Clock className="h-4 w-4" />;
+    if (status === 'completed') return <CheckCircle className="size-4" />;
+    if (status === 'failed') return <XCircle className="size-4" />;
+    return <Clock className="size-4" />;
   };
 
   return (
@@ -167,7 +190,7 @@ export default function SellerPayoutsPage() {
           <p className="text-sm text-muted-500">Request and track your earnings payouts</p>
         </div>
         <Button size="sm" onClick={openRequestModal}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Request Payout
         </Button>
       </div>
@@ -212,18 +235,18 @@ export default function SellerPayoutsPage() {
               {loading
                 ? Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="border-b border-muted-50">
-                      <td className="px-6 py-4"><SkeletonBlock className="h-5 w-24" /></td>
-                      <td className="px-6 py-4"><SkeletonBlock className="h-5 w-20" /></td>
-                      <td className="px-6 py-4"><SkeletonBlock className="h-5 w-24" /></td>
-                      <td className="px-6 py-4"><SkeletonBlock className="h-5 w-28" /></td>
-                      <td className="px-6 py-4"><SkeletonBlock className="h-5 w-28" /></td>
+                      <td className="px-3 py-4 sm:px-6"><SkeletonBlock className="h-5 w-24" /></td>
+                      <td className="px-3 py-4 sm:px-6"><SkeletonBlock className="h-5 w-20" /></td>
+                      <td className="px-3 py-4 sm:px-6"><SkeletonBlock className="h-5 w-24" /></td>
+                      <td className="px-3 py-4 sm:px-6"><SkeletonBlock className="h-5 w-28" /></td>
+                      <td className="px-3 py-4 sm:px-6"><SkeletonBlock className="h-5 w-28" /></td>
                     </tr>
                   ))
                 : payouts.length === 0
                   ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center">
-                          <Wallet className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Wallet className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No payouts yet</p>
                           <p className="mt-1 text-xs text-muted-400">Request your first payout to start</p>
                         </td>
@@ -231,10 +254,10 @@ export default function SellerPayoutsPage() {
                     )
                   : payouts.map((payout) => (
                       <tr key={payout.id} className="border-b border-muted-50 transition-colors hover:bg-muted-50/50">
-                        <td className="px-6 py-4 font-semibold text-secondary-800">
+                        <td className="px-3 py-4 sm:px-6 font-semibold text-secondary-800">
                           {formatPrice(payout.amount)}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 py-4 sm:px-6">
                           <Badge variant={statusVariant[payout.status] ?? 'default'}>
                             <span className="flex items-center gap-1">
                               {statusIcon(payout.status)}
@@ -242,14 +265,14 @@ export default function SellerPayoutsPage() {
                             </span>
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 text-muted-600 capitalize">
+                        <td className="px-3 py-4 sm:px-6 text-muted-600 capitalize">
                           <span className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4 text-muted-400" />
+                            <CreditCard className="size-4 text-muted-400" />
                             {payout.method || 'Bank'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-muted-600">{formatDate(payout.requested_at)}</td>
-                        <td className="px-6 py-4 text-muted-600">
+                        <td className="px-3 py-4 sm:px-6 text-muted-600">{formatDate(payout.requested_at)}</td>
+                        <td className="px-3 py-4 sm:px-6 text-muted-600">
                           {payout.processed_at ? formatDate(payout.processed_at) : '—'}
                         </td>
                       </tr>
@@ -257,13 +280,28 @@ export default function SellerPayoutsPage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="border-t border-muted-100 px-3 py-4 sm:px-6">
+            <Pagination
+              variant="table"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              itemLabel="payout requests"
+              className="mt-0"
+            />
+          </div>
+        )}
       </div>
 
       {/* Request payout modal */}
       {requestOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
           <div className="fixed inset-0 bg-black/50" onClick={() => setRequestOpen(false)} />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-xl sm:rounded-2xl sm:pb-6">
             <h3 className="mb-1 text-lg font-bold text-secondary-800">Request Payout</h3>
             <p className="mb-4 text-sm text-muted-500">
               Withdraw your available earnings to your bank account.
@@ -278,7 +316,7 @@ export default function SellerPayoutsPage() {
               }}
               placeholder={`Min Rs. ${MIN_PAYOUT_AMOUNT.toLocaleString()}`}
               min={MIN_PAYOUT_AMOUNT}
-              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+              className={`w-full rounded-lg border px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
                 fieldErrors.amount
                   ? 'border-danger focus:border-danger focus:ring-danger/20'
                   : 'border-muted-200 focus:border-primary focus:ring-primary/20'
@@ -316,7 +354,7 @@ export default function SellerPayoutsPage() {
                   ? 'Account name / IBAN'
                   : 'Mobile number (03xx-xxxxxxx)'
               }
-              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+              className={`w-full rounded-lg border px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
                 fieldErrors.accountDetails
                   ? 'border-danger focus:border-danger focus:ring-danger/20'
                   : 'border-muted-200 focus:border-primary focus:ring-primary/20'

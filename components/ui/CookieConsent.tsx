@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { X } from 'lucide-react';
 import { hasConsent, setConsent } from '@/lib/consent';
+import { CONSENT_STORAGE_KEY } from '@/lib/storage-keys';
 import { useConsentUI } from '@/store/consentStore';
 
 type ConsentConfig = {
@@ -45,7 +46,7 @@ export default function CookieConsent() {
       }
     };
 
-    const storedAnalytics = fromStorage(window.localStorage.getItem('emart-consent') || 'null');
+    const storedAnalytics = fromStorage(window.localStorage.getItem(CONSENT_STORAGE_KEY) || 'null');
 
     setAnalytics(storedAnalytics ?? false);
 
@@ -54,7 +55,7 @@ export default function CookieConsent() {
       if (bannerVersion) {
         try {
           const raw = JSON.parse(
-            window.localStorage.getItem('emart-consent') || '{}'
+            window.localStorage.getItem(CONSENT_STORAGE_KEY) || '{}'
           ) as { version?: string };
           if ((raw?.version || '0') !== bannerVersion) return true;
         } catch {
@@ -88,7 +89,7 @@ export default function CookieConsent() {
   // Sync the toggle with the stored choice whenever the settings open.
   useEffect(() => {
     if (settingsOpen) {
-      const raw = window.localStorage.getItem('emart-consent');
+      const raw = window.localStorage.getItem(CONSENT_STORAGE_KEY);
       if (raw) {
         try {
           const parsed = JSON.parse(raw) as { analytics?: boolean };
@@ -133,9 +134,11 @@ export default function CookieConsent() {
   return (
     <>
       {showBanner && !hasConsent() && (
-        <div className="fixed bottom-0 left-0 z-40 w-full bg-secondary text-white">
+        // Sits above the mobile bottom nav (z-50) and reserves its height, so
+        // the accept/reject row is never covered and cannot be dismissed.
+        <div className="fixed inset-x-0 bottom-0 z-[60] w-full bg-secondary pb-[calc(56px+env(safe-area-inset-bottom))] text-white lg:pb-[env(safe-area-inset-bottom)]">
           <div className="container mx-auto flex flex-col gap-4 px-4 py-4 sm:px-6 lg:px-12">
-            <p className="text-sm text-white/80">{bannerCopy()}</p>
+            <p className="text-sm leading-relaxed text-white/80">{bannerCopy()}</p>
             {isUsRegion(region) && (
               <Link
                 href="/privacy-policy#do-not-sell"
@@ -147,19 +150,19 @@ export default function CookieConsent() {
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={acceptAll}
-                className="rounded bg-primary-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                className="rounded bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 active:brightness-95"
               >
                 Accept all
               </button>
               <button
                 onClick={rejectAll}
-                className="rounded bg-white/10 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20"
+                className="rounded bg-white/10 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/20 active:brightness-110"
               >
                 Reject all
               </button>
               <button
                 onClick={openSettings}
-                className="rounded border border-white/30 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                className="rounded border border-white/30 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
               >
                 Customize
               </button>
@@ -206,7 +209,7 @@ export default function CookieConsent() {
                 className="ml-4 text-muted transition-colors hover:text-secondary"
                 aria-label="Close cookie settings"
               >
-                <X className="h-5 w-5" />
+                <X className="size-5" />
               </button>
             </div>
 
@@ -245,19 +248,25 @@ export default function CookieConsent() {
                     aria-checked={analytics}
                     aria-label="Toggle analytics cookies"
                     onClick={() => setAnalytics((v) => !v)}
-                    className={
-                      analytics
-                        ? 'relative h-6 w-11 rounded-full bg-primary-600 transition-colors'
-                        : 'relative h-6 w-11 rounded-full bg-muted-300 transition-colors'
-                    }
+                    // 44px hit area (p-1 + 24px track) so the switch is tappable
+                    // on a phone without the visible track growing.
+                    className="flex h-11 w-[52px] shrink-0 cursor-pointer items-center p-1"
                   >
                     <span
                       className={
                         analytics
-                          ? 'absolute left-6 top-0.5 h-5 w-5 rounded-full bg-white transition-all'
-                          : 'absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-all'
+                          ? 'relative h-6 w-11 rounded-full bg-primary-600 transition-colors'
+                          : 'relative h-6 w-11 rounded-full bg-muted-300 transition-colors'
                       }
-                    />
+                    >
+                      <span
+                        className={
+                          analytics
+                            ? 'absolute left-6 top-0.5 h-5 w-5 rounded-full bg-white transition-all'
+                            : 'absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-all'
+                        }
+                      />
+                    </span>
                   </button>
                 </div>
               </div>

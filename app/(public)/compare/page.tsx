@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import ComparePageClient from './ComparePageClient';
+import { generatePageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Compare Products',
-  description: 'Compare prices, features, and ratings side by side to find the best deals at E-Mart.',
-  openGraph: {
-    title: 'Compare Products | E-Mart',
-    description: 'Compare products side by side to find the best deals.',
-  },
-};
+// Generated through the shared helper so the canonical, Open Graph and Twitter
+// cards stay consistent with the rest of the site. The canonical is the bare
+// `/compare` path: the `?products=` deep link is one of many permutations of the
+// same page and should not compete with it in search results.
+export const metadata: Metadata = generatePageMetadata(
+  'Compare Products',
+  'Compare prices, features, and ratings side by side to find the best deals at E-Mart. Products must belong to the same category for a meaningful comparison.',
+  '/compare'
+);
 
 export default function ComparePage({
   searchParams,

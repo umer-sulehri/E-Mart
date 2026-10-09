@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeOrTerm } from "@/lib/search-safe";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(
   request: NextRequest,
@@ -10,10 +12,9 @@ export async function GET(
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "12", 10);
+    const { page, limit, offset } = parsePagination(searchParams);
     const sort = searchParams.get("sort") || "newest";
-    const offset = (page - 1) * limit;
+    const search = searchParams.get("search") || "";
 
     const { data: seller, error: sellerError } = await supabase
       .from("vendors")
@@ -36,19 +37,26 @@ export async function GET(
 
     switch (sort) {
       case "price_asc":
-        productQuery = productQuery.order("price", { ascending: true });
+        productQuery = productQuery.order("price", { ascending: true }).order("id", { ascending: true });
         break;
       case "price_desc":
-        productQuery = productQuery.order("price", { ascending: false });
+        productQuery = productQuery.order("price", { ascending: false }).order("id", { ascending: false });
         break;
       case "rating":
-        productQuery = productQuery.order("rating", { ascending: false });
+        productQuery = productQuery.order("rating", { ascending: false }).order("id", { ascending: false });
         break;
       case "popular":
-        productQuery = productQuery.order("review_count", { ascending: false });
+        productQuery = productQuery.order("review_count", { ascending: false }).order("id", { ascending: false });
         break;
       default:
-        productQuery = productQuery.order("created_at", { ascending: false });
+        productQuery = productQuery.order("created_at", { ascending: false }).order("id", { ascending: false });
+    }
+
+    if (search) {
+      // Escaped: PostgREST `.or()` treats commas and parentheses as syntax, so
+      // an unescaped search term could rewrite the filter.
+      const escaped = safeOrTerm(search);
+      productQuery = productQuery.ilike("name", `%${escaped}%`);
     }
 
     productQuery = productQuery.range(offset, offset + limit - 1);
@@ -62,22 +70,13 @@ export async function GET(
       );
     }
 
-    const totalPages = Math.ceil((count || 0) / limit);
-
     return NextResponse.json({
       success: true,
       data: {
         seller,
         products: products || [],
       },
-      meta: {
-        currentPage: page,
-        totalPages,
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { reviewSchema } from "@/lib/validators";
 import { sanitizeHtml } from "@/lib/sanitize-html";
@@ -11,10 +12,8 @@ export async function GET(
   try {
     const { slug } = await params;
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const { page, limit, offset } = parsePagination(searchParams);
     const sort = searchParams.get("sort") || "newest";
-    const offset = (page - 1) * limit;
 
     const supabase = await createClient();
 
@@ -42,13 +41,23 @@ export async function GET(
       .in("status", ["approved", "pending"]);
 
     if (sort === "oldest") {
-      query = query.order("created_at", { ascending: true });
+      query = query.order("created_at", { ascending: true }).order("id", { ascending: true });
     } else if (sort === "highest") {
-      query = query.order("rating", { ascending: false });
+      query = query.order("rating", { ascending: false }).order("id", { ascending: false });
     } else if (sort === "lowest") {
-      query = query.order("rating", { ascending: true });
-    } else {
+      query = query.order("rating", { ascending: true }).order("id", { ascending: true });
+    } else if (sort === "helpful") {
+      // Ordered in SQL, not re-sorted in the browser: ranking only the rows that
+      // happen to be on the current page makes "Most Helpful" mean "most helpful
+      // of the newest N", and hides a highly-voted review on a later page.
+      // `created_at` then `id` break ties so the order is stable across
+      // requests. The tiebreaker has to come last, after the real sort keys —
+      // putting `id` between them would make "Most Helpful" order by id.
+      query = query.order("helpful_count", { ascending: false });
       query = query.order("created_at", { ascending: false });
+      query = query.order("id", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
     }
 
     query = query.range(offset, offset + limit - 1);
@@ -79,14 +88,7 @@ export async function GET(
         reviews: reviews || [],
         breakdown,
       },
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     console.error("[products/slug/reviews] GET error:", error);

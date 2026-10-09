@@ -3,6 +3,7 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartSidebar from '@/components/cart/CartSidebar';
+import WishlistDrawer from '@/components/wishlist/WishlistDrawer';
 import BackToTop from '@/components/ui/BackToTop';
 import Preloader from '@/components/layout/Preloader';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
@@ -18,11 +19,12 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className="flex-1 scroll-mt-24 pb-16 lg:pb-0">
+      <main id="main-content" className="flex-1 scroll-mt-[var(--header-h)] pb-16 lg:pb-0">
         <div className="mx-auto max-w-organic">{children}</div>
       </main>
       <Footer />
       <CartSidebar />
+      <WishlistDrawer />
       <BackToTop />
       <MobileBottomNav />
     </div>

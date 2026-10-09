@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
 
@@ -17,12 +18,20 @@ export async function GET() {
       );
     }
 
-    const { data: addresses, error } = await supabase
+    const { searchParams } = new URL(request.url);
+    const { page, limit, offset } = parsePagination(searchParams);
+
+    const { data: addresses, error, count } = await supabase
       .from("addresses")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("user_id", user.id)
       .order("is_default", { ascending: false })
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      // `created_at` collides constantly - several addresses saved in the same
+      // second by the address book - so without `id` as a tiebreaker a row can
+      // be served twice or dropped entirely between pages.
+      .order("id", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json(
@@ -31,7 +40,11 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ success: true, data: addresses || [] });
+    return NextResponse.json({
+      success: true,
+      data: addresses || [],
+      meta: buildPaginationMeta(page, limit, count || 0),
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },

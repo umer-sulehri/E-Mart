@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { SITE_URL } from '@/lib/seo';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       `${user.id}:${Date.now()}:${(items || []).map((i) => i.product_id).join(",")}`
     ).toString("base64url");
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = SITE_URL;
 
     return NextResponse.json({
       success: true,

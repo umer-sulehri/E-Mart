@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,9 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePagination(searchParams);
 
     // Payouts are stored in the seller_payouts table keyed by the seller's
     // profile id (user.id), which matches the RLS policy (auth.uid() = seller_id).
@@ -55,6 +54,7 @@ export async function GET(request: NextRequest) {
       .select("*", { count: "exact" })
       .eq("seller_id", user.id)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -122,14 +122,7 @@ export async function GET(request: NextRequest) {
           total_payouts: allPayouts.length,
         },
       },
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil(allPayouts.length / limit),
-        totalItems: allPayouts.length,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < allPayouts.length,
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     console.error("[v1/seller/payout/route] error:", error);

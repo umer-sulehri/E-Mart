@@ -24,6 +24,7 @@ import { z } from 'zod';
 import { useCartStore } from '@/store/cartStore';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatPrice } from '@/lib/utils';
+import { resolveImage } from '@/lib/imageLoader';
 import { PAYMENT_METHOD_LABELS } from '@/lib/payments';
 import { tryParseJson } from '@/lib/api';
 import Button from '@/components/ui/Button';
@@ -599,7 +600,7 @@ function ReviewStep({
             <li key={item.id} className="flex items-center gap-3 py-3">
               <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-muted-50">
                 <ImageWithFallback
-                  src={item.product.images?.[0]}
+                  src={resolveImage(item.product.image)}
                   alt={item.product.name}
                   fill
                   className="object-contain p-0.5"
@@ -1117,7 +1118,7 @@ export default function CheckoutPage() {
 
             {/* Right: Order Summary */}
             <div className="lg:col-span-4">
-              <div className="sticky top-24">
+              <div className="sticky top-[var(--header-h)] lg:top-24">
                 <CartSummary
                   isCheckout={currentStep === 2}
                   paymentMethodLabel={currentStep >= 1 ? paymentLabel : null}

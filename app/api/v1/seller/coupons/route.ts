@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,11 +32,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePagination(searchParams);
 
-const baseQuery = supabase
+    const baseQuery = supabase
       .from("coupons")
       .select(
         "*, profiles:profiles!coupons_created_by_fkey(first_name, last_name, email, role)",
@@ -45,6 +44,7 @@ const baseQuery = supabase
 
     const { data: coupons, error, count } = await baseQuery
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -57,12 +57,7 @@ const baseQuery = supabase
     return NextResponse.json({
       success: true,
       data: coupons || [],
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     console.error("[v1/seller/coupons/route] error:", error);

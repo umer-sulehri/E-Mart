@@ -175,7 +175,11 @@ export const SITE_CONFIG = {
   title: "E-Mart - Online Grocery Store",
   description:
     "Fresh groceries delivered to your doorstep. Shop from a wide selection of organic produce, dairy, meat, and everyday essentials.",
-  url: "https://emart.pk",
+  // No `url` field: it held the `https://emart.pk` placeholder while every real
+  // consumer used `SITE_URL` from `@/lib/seo`, so it was dead config that would
+  // have shipped the wrong domain to the first person who reached for it. It
+  // cannot be derived from SITE_URL here either — seo.ts imports this object, so
+  // that would be a cycle.
   ogImage: "/images/og-image.jpg",
   creator: "E-Mart",
   keywords: [
@@ -200,3 +204,26 @@ export const SHIPPING_METHODS = [
   { id: "express", name: "Express Delivery", days: "1-2 days", price: 150 },
   { id: "same_day", name: "Same Day Delivery", days: "Within 24 hours", price: 250 },
 ] as const;
+
+// The secondary navigation, shown as the "Pages" dropdown in the header and as a
+// section in the mobile drawer. Declared once so the two cannot drift apart -
+// they previously did, and the mobile menu was missing every page that was not
+// already a quick link.
+export const PAGES_LINKS = [
+  { label: "About Us", href: "/about" },
+  { label: "Shop", href: "/products" },
+  { label: "Cart", href: "/cart" },
+  { label: "Checkout", href: "/checkout" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
+  { label: "Compare Products", href: "/compare" },
+  { label: "Help Center", href: "/help" },
+] as const;
+
+// How many saved products the header drawer previews. The drawer is a peek, not
+// the list: it stays inside one thumb-reach on a phone, and anything past this
+// is reachable through the drawer's "See more" link to the full wishlist page.
+// Declared here rather than inside the drawer so the store can trim its item
+// list to the same number without importing a component.
+export const WISHLIST_DRAWER_LIMIT = 5;
+

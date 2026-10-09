@@ -1,17 +1,16 @@
-import { type Metadata } from 'next';
+import { type Metadata } from 'next'
+import { generatePageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Terms & Conditions',
-  description:
-    'Review the E-Mart terms and conditions governing your use of our online grocery store, including orders, payments, shipping, returns, and account policies.',
-  openGraph: {
-    title: 'Terms & Conditions | E-Mart',
-    description:
-      'Review the E-Mart terms and conditions governing your use of our online grocery store, including orders, payments, shipping, returns, and account policies.',
-  },
-};
+export const metadata: Metadata = generatePageMetadata(
+  'Terms & Conditions',
+  'Review the E-Mart terms and conditions governing your use of our online grocery store, including orders, payments, shipping, returns, and account policies.',
+  // The page really does live at `/terms`. A `vercel.json` redirect used to
+  // send `/terms` to a `/terms-and-conditions` route that does not exist, so
+  // this page was unreachable from the footer, register and checkout.
+  '/terms'
+);
 
 const sections = [
   { id: 'acceptance', label: 'Acceptance of Terms' },
@@ -39,7 +38,7 @@ export default function TermsPage() {
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">Terms &amp; Conditions</span>
           </div>
         </div>
@@ -50,7 +49,7 @@ export default function TermsPage() {
           <div className="grid gap-10 lg:grid-cols-4">
             {/* TOC Sidebar */}
             <aside className="lg:col-span-1">
-              <div className="sticky top-24 rounded-2xl bg-muted-50 p-6">
+              <div className="sticky top-[var(--header-h)] lg:top-24 rounded-2xl bg-muted-50 p-6">
                 <h3 className="mb-4 font-heading text-sm font-bold text-secondary-800">
                   Table of Contents
                 </h3>
@@ -81,7 +80,7 @@ export default function TermsPage() {
                 bound by these Terms.
               </p>
 
-              <div id="acceptance" className="scroll-mt-24">
+              <div id="acceptance" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   1. Acceptance of Terms
                 </h2>
@@ -92,7 +91,7 @@ export default function TermsPage() {
                 </p>
               </div>
 
-              <div id="account" className="scroll-mt-24">
+              <div id="account" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   2. Account Registration
                 </h2>
@@ -104,7 +103,7 @@ export default function TermsPage() {
                 </ul>
               </div>
 
-              <div id="products" className="scroll-mt-24">
+              <div id="products" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   3. Products &amp; Pricing
                 </h2>
@@ -117,7 +116,7 @@ export default function TermsPage() {
                 </ul>
               </div>
 
-              <div id="orders" className="scroll-mt-24">
+              <div id="orders" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   4. Orders &amp; Payment
                 </h2>
@@ -130,7 +129,7 @@ export default function TermsPage() {
                 </ul>
               </div>
 
-              <div id="shipping" className="scroll-mt-24">
+              <div id="shipping" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   5. Shipping &amp; Delivery
                 </h2>
@@ -143,7 +142,7 @@ export default function TermsPage() {
                 </ul>
               </div>
 
-              <div id="returns" className="scroll-mt-24">
+              <div id="returns" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   6. Returns &amp; Refunds
                 </h2>
@@ -156,7 +155,7 @@ export default function TermsPage() {
                 </ul>
               </div>
 
-              <div id="privacy" className="scroll-mt-24">
+              <div id="privacy" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   7. Privacy
                 </h2>
@@ -170,7 +169,7 @@ export default function TermsPage() {
                 </p>
               </div>
 
-              <div id="liability" className="scroll-mt-24">
+              <div id="liability" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   8. Limitation of Liability
                 </h2>
@@ -182,7 +181,7 @@ export default function TermsPage() {
                 </p>
               </div>
 
-              <div id="governing-law" className="scroll-mt-24">
+              <div id="governing-law" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   9. Governing Law
                 </h2>
@@ -193,7 +192,7 @@ export default function TermsPage() {
                 </p>
               </div>
 
-              <div id="contact-info" className="scroll-mt-24">
+              <div id="contact-info" className="scroll-mt-[var(--header-h)] lg:scroll-mt-24">
                 <h2 className="mb-3 font-heading text-lg font-bold text-secondary-800">
                   10. Contact Information
                 </h2>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { useRouter } from 'next/navigation';
 import { X, ShoppingCart, Heart } from 'lucide-react';
@@ -8,8 +8,12 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
+import Pagination from '@/components/ui/Pagination';
 import ShareWishlist from '@/components/wishlist/ShareWishlist';
-import { formatPrice, calculateDiscount } from '@/lib/utils';
+import { useWishlistStore } from '@/store/wishlistStore';
+import { PAGE_SIZE } from '@/lib/pagination';
+import { usePageParam } from '@/hooks/usePageParam';
+import { formatPrice, resolvePriceDisplay } from '@/lib/utils';
 import type { Product } from '@/types';
 
 interface WishlistEntry {
@@ -19,80 +23,108 @@ interface WishlistEntry {
   createdAt: string;
 }
 
+interface WishlistMeta {
+  totalItems: number;
+  totalPages: number;
+}
+
 export default function WishlistPage() {
+  // `usePageParam` reads `useSearchParams`, which must sit behind Suspense.
+  return (
+    <Suspense>
+      <WishlistContent />
+    </Suspense>
+  );
+}
+
+function WishlistContent() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [items, setItems] = useState<WishlistEntry[]>([]);
+  const [meta, setMeta] = useState<WishlistMeta>({ totalItems: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [addingCartId, setAddingCartId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchWishlist = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch('/api/v1/wishlist');
-        if (res.status === 401) {
-          router.push('/login');
-          return;
-        }
-        const data = await res.json();
-        if (data.success) {
-          // The API returns rows shaped `{ id, product_id, created_at,
-          // products: { id, name, slug, price, discount_price, images, ... } }`.
-          // Map them into the camelCase `WishlistEntry`/`Product` shape the rest
-          // of the dashboard consumes so the grid renders instead of dropping
-          // every item (entry.product was undefined before).
-          setItems(
-            (Array.isArray(data.data) ? data.data : []).map((row: any) => {
-              const p = row?.products;
-              if (!p) return null;
-              return {
-                id: row.id,
-                productId: row.product_id ?? row.productId,
-                createdAt: row.created_at ?? row.createdAt,
-                product: {
-                  id: p.id ?? p.product_id,
-                  name: p.name,
-                  slug: p.slug,
-                  description: p.description ?? '',
-                  price: Number(p.price ?? 0),
-                  discountPrice: p.discount_price ?? p.discountPrice ?? undefined,
-                  stockQuantity: Number(p.stock_quantity ?? p.stockQuantity ?? 0),
-                  sku: p.sku ?? '',
-                  categoryId: p.category_id ?? '',
-                  rating: Number(p.rating ?? p.rating_value ?? 0),
-                  reviewCount: Number(p.review_count ?? p.reviewCount ?? 0),
-                  isActive: !!p.is_active,
-                  isFeatured: !!p.is_featured,
-                  isNew: false,
-                  images: Array.isArray(p.images) ? p.images : [],
-                  createdAt: p.created_at ?? '',
-                  updatedAt: p.updated_at ?? '',
-                } as Product,
-              } as WishlistEntry;
-            }).filter(Boolean) as WishlistEntry[]
-          );
-        } else {
-          toast.error(data.error || 'Failed to load wishlist');
-        }
-      } catch {
-        toast.error('Failed to load wishlist');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { page, setPage } = usePageParam();
+  // Kept in step with the header badge, the drawer and the public wishlist page
+  // by watching the store's revision rather than owning a private count.
+  const revision = useWishlistStore((state) => state.revision);
 
+  const fetchWishlist = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/v1/wishlist?page=${page}&limit=${PAGE_SIZE}`);
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+      const data = await res.json();
+      if (data.success) {
+        // The API returns rows shaped `{ id, product_id, created_at,
+        // products: { id, name, slug, price, discount_price, images, ... } }`.
+        // Map them into the camelCase `WishlistEntry`/`Product` shape the rest
+        // of the dashboard consumes so the grid renders instead of dropping
+        // every item (entry.product was undefined before).
+        setItems(
+          (Array.isArray(data.data) ? data.data : []).map((row: any) => {
+            const p = row?.products;
+            if (!p) return null;
+            return {
+              id: row.id,
+              productId: row.product_id ?? row.productId,
+              createdAt: row.created_at ?? row.createdAt,
+              product: {
+                id: p.id ?? p.product_id,
+                name: p.name,
+                slug: p.slug,
+                description: p.description ?? '',
+                price: Number(p.price ?? 0),
+                discountPrice: p.discount_price ?? p.discountPrice ?? undefined,
+                stockQuantity: Number(p.stock_quantity ?? p.stockQuantity ?? 0),
+                sku: p.sku ?? '',
+                categoryId: p.category_id ?? '',
+                rating: Number(p.rating ?? p.rating_value ?? 0),
+                reviewCount: Number(p.review_count ?? p.reviewCount ?? 0),
+                isActive: !!p.is_active,
+                isFeatured: !!p.is_featured,
+                isNew: false,
+                images: Array.isArray(p.images) ? p.images : [],
+                createdAt: p.created_at ?? '',
+                updatedAt: p.updated_at ?? '',
+              } as Product,
+            } as WishlistEntry;
+          }).filter(Boolean) as WishlistEntry[]
+        );
+
+        const pages = data.meta?.totalPages ?? 1;
+        setMeta({ totalPages: pages, totalItems: data.meta?.totalItems ?? 0 });
+        if (page > pages) {
+          setPage(pages);
+        }
+      } else {
+        toast.error(data.error || 'Failed to load wishlist');
+      }
+    } catch {
+      toast.error('Failed to load wishlist');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, router, setPage]);
+
+  useEffect(() => {
     fetchWishlist();
-  }, [router, isAuthenticated]);
+  }, [fetchWishlist, isAuthenticated, revision]);
 
   const removeItem = async (productId: string) => {
     try {
       setRemovingId(productId);
+      // Bumps the shared store, which the effect above watches — so the header
+      // badge, the drawer and this page all move together.
+      useWishlistStore.getState().removeItem(productId);
       const res = await fetch(`/api/v1/wishlist/${productId}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        setItems((prev) => prev.filter((item) => item.productId !== productId));
         toast.success('Removed from wishlist');
       } else {
         toast.error(data.error || 'Failed to remove item');
@@ -152,14 +184,15 @@ export default function WishlistPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-bold text-secondary-800">My Wishlist</h2>
         <div className="flex items-center gap-3">
-          <p className="text-sm text-muted-500">{items.length} items</p>
-          {items.length > 0 && <ShareWishlist />}
+          {/* Server total, not the page length. */}
+          <p className="text-sm text-muted-500">{meta.totalItems} items</p>
+          {meta.totalItems > 0 && <ShareWishlist />}
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {meta.totalItems === 0 ? (
         <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-          <Heart className="mx-auto h-12 w-12 text-muted-300" />
+          <Heart className="mx-auto size-12 text-muted-300" aria-hidden="true" />
           <p className="mt-4 text-lg font-semibold text-secondary-800">
             Your wishlist is empty
           </p>
@@ -171,14 +204,14 @@ export default function WishlistPage() {
           </Button>
         </div>
       ) : (
+        <>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((entry) => {
             const product = entry.product;
             if (!product) return null;
             const price = product.discountPrice ?? product.price;
-            const discount = product.discountPrice
-              ? calculateDiscount(product.price, product.discountPrice)
-              : 0;
+            const { current, original, discountPercent: discount } =
+              resolvePriceDisplay(product.price, product.discountPrice);
             const inStock = product.stockQuantity > 0 && product.isActive;
             const imageUrl = product.images?.[0] || '/images/placeholder.webp';
             const isRemoving = removingId === entry.productId;
@@ -194,7 +227,7 @@ export default function WishlistPage() {
                   disabled={isRemoving}
                   className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-muted-400 shadow-sm transition-colors hover:bg-danger hover:text-white disabled:opacity-50"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="size-4" />
                 </button>
 
                 <div className="image-container mx-auto mb-4 h-40 w-full overflow-hidden rounded-lg">
@@ -212,13 +245,13 @@ export default function WishlistPage() {
                 </h3>
 
                 <div className="mt-2 flex items-center gap-2">
-                  {product.discountPrice ? (
+                  {original !== null ? (
                     <>
                       <del className="text-xs text-muted-500">
-                        {formatPrice(product.price)}
+                        {formatPrice(original)}
                       </del>
                       <span className="text-sm font-bold text-primary">
-                        {formatPrice(product.discountPrice)}
+                        {formatPrice(current)}
                       </span>
                       <span className="rounded border border-muted-200 bg-white px-1 py-0.5 text-[10px] text-muted-600">
                         {discount}% OFF
@@ -240,7 +273,7 @@ export default function WishlistPage() {
                     loading={isAdding}
                     onClick={() => moveToCart(entry.productId)}
                   >
-                    <ShoppingCart className="h-4 w-4" />
+                    <ShoppingCart className="size-4" aria-hidden="true" />
                     {inStock ? 'Move to Cart' : 'Out of Stock'}
                   </Button>
                 </div>
@@ -248,6 +281,17 @@ export default function WishlistPage() {
             );
           })}
         </div>
+
+        <Pagination
+          currentPage={page}
+          totalPages={meta.totalPages}
+          totalItems={meta.totalItems}
+          itemsPerPage={PAGE_SIZE}
+          itemLabel="wishlist items"
+          onPageChange={setPage}
+          className="mt-6"
+        />
+        </>
       )}
     </div>
   );

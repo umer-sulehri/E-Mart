@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,15 +19,39 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
-    const offset = (page - 1) * limit;
+
+    // Membership probe for the wishlist heart on a product card. The alternative
+    // — pulling the whole wishlist to test one id — costs one full request per
+    // card on a grid, and is silently wrong once the page is clamped.
+    const productId = searchParams.get("productId");
+    if (productId) {
+      const { data, error } = await supabase
+        .from("wishlist_items")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("product_id", productId)
+        .maybeSingle();
+
+      if (error) {
+        return NextResponse.json(
+          { success: false, error: error.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ success: true, data: { saved: Boolean(data) } });
+    }
+
+    const { page, limit, offset } = parsePagination(searchParams);
 
     const { data: items, error, count } = await supabase
       .from("wishlist_items")
       .select("*, products(id, name, slug, price, discount_price, images, rating, review_count, is_active, stock_quantity)", { count: "exact" })
       .eq("user_id", user.id)
+      // id is the tiebreaker: created_at alone is not unique, so two items saved
+      // in the same instant can otherwise straddle a page boundary.
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -39,14 +64,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: items || [],
-      meta: {
-        currentPage: page,
-        totalPages: Math.ceil((count || 0) / limit),
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page * limit < (count || 0),
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(
@@ -110,9 +128,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { error: insertError } = await supabase
+    const { data: created, error: insertError } = await supabase
       .from("wishlist_items")
-      .insert({ user_id: user.id, product_id: productId });
+      .insert({ user_id: user.id, product_id: productId })
+      .select(
+        "id, product_id, created_at, products(name, slug, price, discount_price, images, stock_quantity, is_active)"
+      )
+      .single();
 
     if (insertError) {
       return NextResponse.json(
@@ -121,8 +143,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // The row comes back joined so the client can prepend it to the drawer
+    // without the round trip a "re-fetch the list to see one new item" costs.
     return NextResponse.json(
-      { success: true, message: "Added to wishlist" },
+      { success: true, message: "Added to wishlist", data: created },
       { status: 201 }
     );
   } catch (error) {

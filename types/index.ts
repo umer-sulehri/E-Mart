@@ -219,10 +219,26 @@ export type ProductUpdateInput = Partial<ProductCreateInput> & { id: string };
 // Cart Types
 // ========================
 
+/**
+ * Minimal product snapshot the cart actually reads (name, thumbnail, stock).
+ *
+ * The cart is persisted to localStorage, so it deliberately does NOT embed a
+ * full `Product` (description, specifications, vendor entity, timestamps, and
+ * the whole image array are several KB per line item and are never rendered).
+ * Prices live on the line item itself as `unitPrice`/`totalPrice`.
+ */
+export interface CartProduct {
+  id: string;
+  name: string;
+  slug: string;
+  image?: string;
+  stockQuantity: number;
+}
+
 export interface CartItem {
   id: string;
   productId: string;
-  product: Product;
+  product: CartProduct;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -381,6 +397,30 @@ export interface Wishlist {
   totalItems: number;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * A wishlist row already joined to its product and flattened for display.
+ *
+ * Distinct from {@link WishlistItem}, which mirrors the `wishlist_items` table
+ * and nests the product. The storefront needs the flattened shape in three
+ * places — the header drawer, the public wishlist page and the dashboard one —
+ * and they drifted apart into three near-identical local interfaces. This is the
+ * one they now share, so a row built for the drawer cannot disagree with a row
+ * built for the page.
+ */
+export interface WishlistPreviewItem {
+  /** `wishlist_items.id` — the row key, not the product id. */
+  id: string;
+  productId: string;
+  name: string;
+  slug: string;
+  price: number;
+  discountPrice: number | null;
+  image: string;
+  /** In stock and still listed. Drives the disabled state of Move to Cart. */
+  inStock: boolean;
+  addedAt: string;
 }
 
 // ========================

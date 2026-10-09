@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { tryParseJson } from '@/lib/api';
+import { REVIEW_DRAFT_TTL_MS, reviewDraftKey } from '@/lib/storage-keys';
 import { useAuthStore } from '@/store/authStore';
 
 export interface ReviewFormProps {
@@ -17,7 +18,7 @@ export interface ReviewFormProps {
 
 const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
   ({ productSlug, productName, onSuccess, className }, ref) => {
-    const draftKey = productSlug ? `emart-review-draft-${productSlug}` : '';
+    const draftKey = productSlug ? reviewDraftKey(productSlug) : '';
 
     const loadDraft = React.useCallback((): {
       rating: number;
@@ -30,6 +31,12 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object') {
+          // Drafts can hold free text that includes PII, so anything older than
+          // the TTL is dropped instead of lingering on a shared device.
+          if (typeof parsed.savedAt === 'number' && Date.now() - parsed.savedAt > REVIEW_DRAFT_TTL_MS) {
+            window.localStorage.removeItem(draftKey);
+            return null;
+          }
           return {
             rating: Number(parsed.rating) || 0,
             title: typeof parsed.title === 'string' ? parsed.title : '',
@@ -57,7 +64,10 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
       (next: { rating: number; title: string; comment: string }) => {
         if (!draftKey) return;
         try {
-          window.localStorage.setItem(draftKey, JSON.stringify(next));
+          window.localStorage.setItem(
+            draftKey,
+            JSON.stringify({ ...next, savedAt: Date.now() })
+          );
           window.dispatchEvent(new CustomEvent('emart:review-draft-saved', { detail: draftKey }));
         } catch {
           // Storage may be unavailable (private mode); ignore.
@@ -238,7 +248,7 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
             }}
             placeholder="Summarize your experience"
             className={cn(
-              'w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+              'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
               'placeholder:text-muted-400',
               'transition-colors',
               'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
@@ -270,7 +280,7 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
             placeholder="Tell others about your experience with this product..."
             rows={4}
             className={cn(
-              'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+              'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
               'placeholder:text-muted-400',
               'transition-colors',
               'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',

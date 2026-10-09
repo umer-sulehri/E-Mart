@@ -5,8 +5,8 @@ import ProductCarousel from '@/components/product/ProductCarousel';
 import ProductTabs from '@/components/product/ProductTabs';
 import ProductDetailClient from './ProductDetailClient';
 import Breadcrumb from '@/components/ui/Breadcrumb';
-import { calculateDiscount } from '@/lib/utils';
-import { generateProductMetadata } from '@/lib/seo';
+import { resolvePriceDisplay } from '@/lib/utils';
+import { generateProductMetadata, SITE_URL } from '@/lib/seo';
 import { apiProductToCardProduct, tryParseJson, type ApiProduct } from '@/lib/api';
 import { getSiteUrl } from '@/lib/absolute-url';
 import logger from '@/lib/logger';
@@ -215,11 +215,12 @@ export default async function ProductDetailPage({
 
   const relatedProducts = await fetchRelatedProducts(slug);
 
-  const hasDiscount =
-    product.discountPrice != null && product.discountPrice < product.price;
-  const discount = hasDiscount
-    ? calculateDiscount(product.price, product.discountPrice!)
-    : 0;
+  const {
+    current: salePrice,
+    original: originalPrice,
+    discountPercent: discount,
+  } = resolvePriceDisplay(product.price, product.discountPrice);
+  const hasDiscount = originalPrice !== null;
 
   return (
     <>
@@ -234,7 +235,7 @@ export default async function ProductDetailPage({
             description:
               product.shortDescription || product.description?.slice(0, 500),
             image: product.images?.[0]
-              ? `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}${product.images[0]}`
+              ? `${SITE_URL}${product.images[0]}`
               : undefined,
             sku: product.sku || undefined,
             brand: product.brand
@@ -243,12 +244,12 @@ export default async function ProductDetailPage({
             offers: {
               '@type': 'Offer',
               priceCurrency: 'PKR',
-              price: product.discountPrice ?? product.price,
+              price: salePrice,
               availability:
                 product.stockQuantity > 0
                   ? 'https://schema.org/InStock'
                   : 'https://schema.org/OutOfStock',
-              url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}/products/${product.slug}`,
+              url: `${SITE_URL}/products/${product.slug}`,
             },
             aggregateRating:
               product.rating > 0
@@ -263,7 +264,7 @@ export default async function ProductDetailPage({
                   seller: {
                     '@type': 'Organization',
                     name: product.vendor.name,
-                    url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}/sellers/${product.vendor.slug}`,
+                    url: `${SITE_URL}/sellers/${product.vendor.slug}`,
                   },
                 }
               : {}),
@@ -279,12 +280,12 @@ export default async function ProductDetailPage({
             '@context': 'https://schema.org',
             '@type': 'BreadcrumbList',
             itemListElement: [
-              { '@type': 'ListItem', position: 1, name: 'Home', item: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}/` },
+              { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
               {
                 '@type': 'ListItem',
                 position: 2,
                 name: product.category.name,
-                item: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://emart.pk'}/products?category=${product.category.slug}`,
+                item: `${SITE_URL}/products?category=${product.category.slug}`,
               },
               { '@type': 'ListItem', position: 3, name: product.name },
             ],

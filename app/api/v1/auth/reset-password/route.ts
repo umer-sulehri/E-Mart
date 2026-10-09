@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { rateLimitByIp } from '@/lib/rate-limit';
+import { SITE_URL } from '@/lib/seo';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,10 +29,12 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // See forgot-password: this URL is emailed, so the fallback is the live
+      // host rather than localhost.
       redirectTo: `${
         process.env.NEXT_PUBLIC_SITE_URL ||
         process.env.NEXT_PUBLIC_APP_URL ||
-        "http://localhost:3000"
+        SITE_URL
       }/reset-password`,
     });
 

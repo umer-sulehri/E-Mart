@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -8,6 +8,9 @@ import { Plus, Pencil, Trash2, Newspaper, Eye } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Pagination from '@/components/ui/Pagination';
+import { PAGE_SIZE as ITEMS_PER_PAGE } from '@/lib/pagination';
+import { usePageParam } from '@/hooks/usePageParam';
 import { formatDate } from '@/lib/utils';
 
 interface BlogPost {
@@ -23,29 +26,49 @@ interface BlogPost {
 function SkeletonRow() {
   return (
     <tr className="border-b border-muted-50">
-      <td className="px-6 py-4"><div className="h-16 w-24 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-48 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-24 animate-pulse rounded bg-muted-200" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-24 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-16 w-24 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-48 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-20 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-24 animate-pulse rounded bg-muted-200" /></td>
+      <td className="px-3 py-4 sm:px-6"><div className="h-4 w-24 animate-pulse rounded bg-muted-200" /></td>
     </tr>
   );
 }
 
 export default function AdminBlogPage() {
+  return (
+    <Suspense>
+      <AdminBlogContent />
+    </Suspense>
+  );
+}
+
+function AdminBlogContent() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const { page: currentPage, setPage: setCurrentPage } = usePageParam();
+
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/blog-posts');
+      // The endpoint returns one page, not every post. Fetching without
+      // `page`/`limit` silently capped the table at 20 rows.
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(ITEMS_PER_PAGE),
+      });
+      const res = await fetch(`/api/v1/admin/blog-posts?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
         setPosts(data.data || []);
+        setTotalPages(data.meta?.totalPages || 1);
+        setTotalItems(data.meta?.totalItems || 0);
       } else {
         toast.error(data.error || 'Failed to load posts');
       }
@@ -54,7 +77,7 @@ export default function AdminBlogPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     fetchPosts();
@@ -97,7 +120,7 @@ export default function AdminBlogPage() {
         </div>
         <Link href="/admin/blog/new">
           <Button size="sm">
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             New Post
           </Button>
         </Link>
@@ -122,7 +145,7 @@ export default function AdminBlogPage() {
                   ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center">
-                          <Newspaper className="mx-auto mb-3 h-10 w-10 text-muted-300" />
+                          <Newspaper className="mx-auto mb-3 size-10 text-muted-300" />
                           <p className="text-sm text-muted-500">No blog posts found</p>
                         </td>
                       </tr>
@@ -159,19 +182,19 @@ export default function AdminBlogPage() {
                               target="_blank"
                               className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="size-4" />
                             </Link>
                             <Link
                               href={`/admin/blog/${post.id}`}
                               className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
                             >
-                              <Pencil className="h-4 w-4" />
+                              <Pencil className="size-4" />
                             </Link>
                             <button
                               onClick={() => confirmDelete(post)}
                               className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="size-4" />
                             </button>
                           </div>
                         </td>
@@ -180,6 +203,21 @@ export default function AdminBlogPage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="border-t border-muted-100 px-3 py-4 sm:px-6">
+            <Pagination
+              variant="table"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              itemLabel="posts"
+              className="mt-0"
+            />
+          </div>
+        )}
       </div>
 
       <ConfirmDialog

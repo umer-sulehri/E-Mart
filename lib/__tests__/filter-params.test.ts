@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   EMPTY_FILTERS,
   activeFilterCount,
+  filterSignature,
   filtersFromSearchParams,
   filtersToApiParams,
   filtersToSearchParams,
@@ -249,5 +250,45 @@ describe("empty filter edge cases", () => {
     const filters = filtersFromSearchParams(p("category=fruits-vegetables"));
     expect(filters.categories).toEqual(["fruits-vegetables"]);
     expect(filters.brands).toEqual([]);
+  });
+});
+
+describe("filterSignature", () => {
+  it("is equal for two states that describe the same filters", () => {
+    const fromUrl = filtersFromSearchParams(p("categories=fruits&minRating=4"));
+    const fromControls: typeof fromUrl = {
+      ...EMPTY_FILTERS,
+      categories: ["fruits"],
+      minRating: 4,
+    };
+    expect(filterSignature(fromUrl)).toBe(filterSignature(fromControls));
+  });
+
+  it("changes when any field changes", () => {
+    const base = filterSignature(EMPTY_FILTERS);
+    const variants = [
+      { ...EMPTY_FILTERS, categories: ["fruits"] },
+      { ...EMPTY_FILTERS, minPrice: "10" },
+      { ...EMPTY_FILTERS, maxPrice: "90" },
+      { ...EMPTY_FILTERS, minRating: 3 },
+      { ...EMPTY_FILTERS, brands: ["acme"] },
+      { ...EMPTY_FILTERS, inStockOnly: true },
+      { ...EMPTY_FILTERS, featuredOnly: true },
+    ];
+    for (const variant of variants) {
+      expect(filterSignature(variant)).not.toBe(base);
+    }
+  });
+
+  it("distinguishes field boundaries rather than concatenating them", () => {
+    // Without a separator, categories "a,b" + minPrice "c" and categories "a"
+    // + minPrice "b,c" would serialise identically.
+    const left = filterSignature({ ...EMPTY_FILTERS, categories: ["a", "b"], minPrice: "c" });
+    const right = filterSignature({ ...EMPTY_FILTERS, categories: ["a"], minPrice: "b,c" });
+    expect(left).not.toBe(right);
+  });
+
+  it("is a primitive, not the object identity", () => {
+    expect(typeof filterSignature(EMPTY_FILTERS)).toBe("string");
   });
 });

@@ -109,7 +109,42 @@ REST API under `/api/v1/` — see `docs/API_REFERENCE.md` for the complete endpo
 Key resources: `auth`, `products`, `categories`, `cart`, `orders`, `payments`,
 `reviews`, `wishlist`, `search`, `seller/*`, `admin/*`.
 
-All list endpoints support `page` + `limit` pagination (default 20, max 100).
+All list endpoints support `page` + `limit` pagination (default 20, max 100) and
+return the same camelCase `meta` block:
+
+```json
+{
+  "success": true,
+  "data": [],
+  "meta": {
+    "currentPage": 1,
+    "totalPages": 1,
+    "totalItems": 0,
+    "itemsPerPage": 20,
+    "hasNextPage": false,
+    "hasPreviousPage": false
+  }
+}
+```
+
+Both sides of this contract are centralised so they cannot drift apart:
+
+- `lib/pagination.ts` — `parsePagination` (clamps `page`/`limit` before they reach
+  `.range()`) and `buildPaginationMeta` (the `meta` shape above). Use them in any
+  new list route rather than re-deriving `Math.ceil(count / limit)`.
+- `components/ui/Pagination.tsx` + `hooks/usePageParam.ts` — the shared paginator
+  and the `?page=` URL-backed page state used by every list view.
+
+Two rules keep a paginated view honest, and both have been applied throughout:
+
+1. **Filter and sort on the server.** Filtering or sorting the rows the API
+   already returned only ever matches the items that happen to be on the current
+   page, so results on later pages become unreachable. Pass filters (`search`,
+   `status`, `rating`, `sort`, …) to the endpoint and let it return the page.
+2. **Stat cards cover every row, not the current page.** Counters derived from
+   the fetched page change as the user pages, which reads as data changing when
+   only the window did. Where a view shows totals alongside a paginated table,
+   the API returns a separate `stats` object from an unfiltered projection.
 
 ## Scripts
 
@@ -121,7 +156,7 @@ All list endpoints support `page` + `limit` pagination (default 20, max 100).
 | `npm run lint` | ESLint |
 | `npm run lint:fix` | ESLint + autofix |
 | `npm run typecheck` | `tsc --noEmit` strict check |
-| `npm run test` | Run Vitest suite (143 tests) |
+| `npm run test` | Run Vitest suite (279 tests) |
 
 ## Deployment (Vercel)
 

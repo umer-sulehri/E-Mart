@@ -78,7 +78,7 @@ export default function ChangePasswordPage() {
         href="/dashboard/profile"
         className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="size-4" />
         Back to Profile
       </Link>
 
@@ -99,7 +99,7 @@ export default function ChangePasswordPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="Enter current password"
-                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <button
                 type="button"
@@ -107,9 +107,9 @@ export default function ChangePasswordPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-muted-600"
               >
                 {showCurrent ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="size-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="size-4" />
                 )}
               </button>
             </div>
@@ -125,7 +125,7 @@ export default function ChangePasswordPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <button
                 type="button"
@@ -133,9 +133,9 @@ export default function ChangePasswordPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-muted-600"
               >
                 {showNew ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="size-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="size-4" />
                 )}
               </button>
             </div>
@@ -177,7 +177,7 @@ export default function ChangePasswordPage() {
                         met ? 'bg-success text-white' : 'bg-muted-200'
                       )}
                     >
-                      {met && <Check className="h-2.5 w-2.5" />}
+                      {met && <Check className="size-2.5" />}
                     </div>
                     <span
                       className={cn(
@@ -204,7 +204,7 @@ export default function ChangePasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"
                 className={cn(
-                  'w-full rounded-lg border bg-white py-2.5 pl-3.5 pr-11 text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2',
+                  'w-full rounded-lg border bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2',
                   confirmPassword.length > 0
                     ? passwordsMatch
                       ? 'border-success focus:border-success focus:ring-success/20'
@@ -218,9 +218,9 @@ export default function ChangePasswordPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-muted-600"
               >
                 {showConfirm ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="size-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="size-4" />
                 )}
               </button>
             </div>

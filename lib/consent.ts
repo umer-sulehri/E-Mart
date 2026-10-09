@@ -7,9 +7,11 @@
  * security cookies such as the impersonation guard, and cart persistence —
  * are required for the store to work and can never be disabled.
  *
- * Preferences are kept for 13 months and re-prompted when the banner version
- * configured in the store is bumped.
+ * Preferences are kept for 13 months (390 days) and re-prompted when the banner
+ * version configured in the store is bumped.
  */
+
+import { CONSENT_ANON_STORAGE_KEY, CONSENT_STORAGE_KEY } from '@/lib/storage-keys';
 
 export type ConsentCategory = "essential" | "analytics" | "marketing" | "social";
 
@@ -29,10 +31,11 @@ export type ConsentPreferences = {
 export type ConsentMethod = "accept_all" | "reject_all" | "customize" | "withdraw";
 export type ConsentSource = "banner" | "settings" | "footer";
 
-const STORAGE_KEY = 'emart-consent';
-const ANON_KEY_STORAGE = 'emart-consent-anon-id';
+const STORAGE_KEY = CONSENT_STORAGE_KEY;
+const ANON_KEY_STORAGE = CONSENT_ANON_STORAGE_KEY;
 export const CONSENT_CHANGE_EVENT = 'emart-consent-change';
 
+/** 13 × 30-day months = 390 days, the maximum consent lifetime we set. */
 export const CONSENT_TTL_MS = 13 * 30 * 24 * 60 * 60 * 1000;
 export const CURRENT_BANNER_VERSION = '1';
 

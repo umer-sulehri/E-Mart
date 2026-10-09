@@ -7,6 +7,7 @@ import { ChevronRight, Home, Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatPrice } from '@/lib/utils';
+import { resolveImage } from '@/lib/imageLoader';
 import QuantitySelector from '@/components/ui/QuantitySelector';
 import Button from '@/components/ui/Button';
 import CartSummary from '@/components/cart/CartSummary';
@@ -128,9 +129,7 @@ export default function CartPage() {
                       <div className="flex items-center gap-4 md:col-span-5">
                         <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-muted-50">
                           <ImageWithFallback
-                            src={
-                              item.product.images?.[0]
-                            }
+                            src={resolveImage(item.product.image)}
                             alt={item.product.name}
                             fill
                             className="object-contain p-1"
@@ -215,7 +214,7 @@ export default function CartPage() {
 
               {/* Right: Order Summary */}
               <div className="lg:col-span-4">
-                <div className="sticky top-24">
+                <div className="sticky top-[var(--header-h)] lg:top-24">
                   <CartSummary />
                 </div>
               </div>

@@ -123,6 +123,7 @@ E-Mart/
 - SEO — per-page metadata, sitemap, robots.txt, OG images
 - **PWA manifest**, back-to-top, cookie consent, preloader
 - Custom reusable UI kit (Button, Input, Badge, Modal, Skeleton, Toast, etc.)
+- **Shared pagination layer** — one paginator, one `?page=` hook, one `meta` contract
 - 55 well-organized components, 6 custom hooks, 4 Zustand stores
 
 ---
@@ -137,6 +138,11 @@ E-Mart/
 6. **Performance & theme** — pixel-perfect "Organic" template compliance, standardized containers, removed Bootstrap remnants, custom fonts (Nunito/Open Sans), consistent Tailwind theming.
 7. **Bug fixing & hardening** — aligned app code to DB schema, repaired broken flows (Add-to-Cart, Wishlist), fixed dead links/buttons, removed 49 stray files.
 8. **Content conversion** — hardcoded template copy replaced with real content and DB-driven data everywhere.
+9. **List-view consistency pass** — every list and table view now pages through one shared, URL-driven paginator:
+   - Centralised the API contract in `lib/pagination.ts` (`parsePagination` clamps `page`/`limit` before they reach `.range()`; `buildPaginationMeta` emits one camelCase `meta` shape), replacing ~20 hand-rolled copies that had drifted between routes.
+   - Page state lives in the URL (`hooks/usePageParam.ts`) rather than component state, so every paginated view is shareable, survives refresh, and works with browser back/forward.
+   - Removed the last unreachable rows: views that fetched a page but never sent a page size, and views that filtered or sorted the rows in the browser (which could only ever match the current page) now send `page`, `limit` and their filter/sort params to the API.
+   - Fixed stat cards that counted only the visible page, so dashboard totals no longer shift as the user pages.
 
 ---
 

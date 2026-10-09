@@ -16,6 +16,10 @@ import { useCartStore } from '@/store/cartStore';
 import { useCompareStore } from '@/store/compareStore';
 import { useAuthStore } from '@/store/authStore';
 import { useAddToWishlist } from '@/hooks/useAddToWishlist';
+import {
+  useCompareToggle,
+  type ComparableProduct,
+} from '@/hooks/useCompareToggle';
 import type { Product } from '@/types';
 
 export interface ProductDetailClientProps {
@@ -33,9 +37,8 @@ export default function ProductDetailClient({
   const [addingToCart, setAddingToCart] = React.useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const addToServer = useCartStore((s) => s.addToServer);
-  const compareItems = useCompareStore((s) => s.items);
-  const addCompare = useCompareStore((s) => s.addItem);
-  const removeCompare = useCompareStore((s) => s.removeItem);
+  const { isCompared, toggle: compareToggle, eligibilityFor } =
+    useCompareToggle();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const pathname = usePathname();
@@ -45,50 +48,49 @@ export default function ProductDetailClient({
     { isAuthenticated }
   );
 
-  const isCompared = compareItems.some((i) => i.id === product.id);
+  const isInCompare = isCompared(product.id);
 
   // Keep the /compare deep link (?products=slug1,slug2) shareable by syncing
-  // the URL whenever the persisted compare list changes.
-  const syncCompareUrl = (items: { slug: string }[]) => {
-    if (items.length === 0) {
+  // the URL whenever the tray changes.
+  const syncCompareUrl = (slugs: string[]) => {
+    if (slugs.length === 0) {
       router.replace('/compare', { scroll: false });
     } else {
-      const slugs = items
-        .map((i) => i.slug)
-        .filter(Boolean)
-        .join(',');
-      router.replace(`/compare?products=${slugs}`, { scroll: false });
+      router.replace(`/compare?products=${slugs.join(',')}`, { scroll: false });
     }
   };
 
+  const compareProduct: ComparableProduct = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    price: product.price,
+    discountPrice: product.discountPrice,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+    image: product.images?.[0] || '/images/product-thumb-1.webp',
+    category: product.category?.name || '',
+    categoryId: product.categoryId,
+    brand: product.brand?.name || '',
+    inStock: product.stockQuantity > 0,
+  };
+  const compareEligibility = eligibilityFor(compareProduct);
+  const compareBlocked =
+    compareEligibility.state === 'blocked' ? compareEligibility : null;
+
   const handleAddToCompare = () => {
-    if (isCompared) {
-      const remaining = compareItems.filter((i) => i.id !== product.id);
-      removeCompare(product.id);
-      syncCompareUrl(remaining);
-      toast.success('Removed from compare');
-      return;
-    }
-    if (compareItems.length >= 4) {
-      toast.error('You can compare up to 4 products');
-      return;
-    }
-    addCompare({
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: product.price,
-      discountPrice: product.discountPrice,
-      rating: product.rating,
-      reviewCount: product.reviewCount,
-      image: product.images?.[0] || '/images/product-thumb-1.webp',
-      category: product.category?.name || '',
-      brand: product.brand?.name || '',
-      inStock: product.stockQuantity > 0,
-    });
-    syncCompareUrl([...compareItems, { slug: product.slug }]);
-    trackEvent({ action: 'compare_add', category: 'product', label: product.slug });
-    toast.success('Added to compare');
+    compareToggle(compareProduct);
+    // The store has already been mutated by the toggle, but this component has
+    // not re-rendered yet, so its own binding of the tray is still the
+    // pre-toggle value. Reading `getState()` is the only way to see the list the
+    // user will actually land on; comparing against the stale local binding is
+    // why this sync used to silently never fire.
+    syncCompareUrl(
+      useCompareStore
+        .getState()
+        .items.map((i) => i.slug)
+        .filter(Boolean)
+    );
   };
 
   const handleAddToCart = async () => {
@@ -183,12 +185,16 @@ export default function ProductDetailClient({
     });
   };
 
+  // Derived from the server's `resolvePriceDisplay`, so the figure shown here
+  // and the one in the JSON-LD offer can never disagree.
   const priceDisplay = formatPrice(
     hasDiscount ? product.discountPrice! : product.price
   );
 
   return (
-    <div className="flex flex-col gap-5">
+    // pb-24 clears the fixed sticky Add-to-Cart bar (py-3 + 44px button), so
+    // the last review/spec block is never trapped underneath it on a phone.
+    <div className="flex flex-col gap-5 pb-24 lg:pb-0">
       {/* Category + Brand / Store (clickable meta shown above the title) */}
       {(product.category?.name || product.brand?.name || (product.vendor?.name && product.vendor.slug)) && (
         <nav
@@ -207,7 +213,7 @@ export default function ProductDetailClient({
           {product.brand?.name && (
             <>
               <span className="text-muted-300" aria-hidden="true">
-                •
+                â€¢
               </span>
               <Link
                 href={`/products?brands=${encodeURIComponent(product.brand.name)}`}
@@ -220,7 +226,7 @@ export default function ProductDetailClient({
           {product.vendor?.name && product.vendor.slug && (
             <>
               <span className="text-muted-300" aria-hidden="true">
-                •
+                â€¢
               </span>
               <Link
                 href={`/sellers/${product.vendor.slug}`}
@@ -251,7 +257,7 @@ export default function ProductDetailClient({
         </a>
       </div>
 
-      {/* Sold by — shown above price so buyers see the store context early */}
+      {/* Sold by â€” shown above price so buyers see the store context early */}
       {product.vendor?.id && (
         <SellerInformationCard
           seller={{
@@ -330,16 +336,30 @@ export default function ProductDetailClient({
           <Heart size={18} className={cn(isWishlisted && 'fill-current')} />
         </Button>
         <Button
-          variant={isCompared ? 'outline' : 'ghost'}
+          variant={isInCompare ? 'outline' : 'ghost'}
           size="lg"
           onClick={handleAddToCompare}
-          aria-label={isCompared ? 'Remove from compare' : 'Add to compare'}
-          title={isCompared ? 'Remove from compare' : 'Add to compare'}
+          aria-label={
+            isInCompare
+              ? 'Remove from compare'
+              : compareBlocked
+                ? compareBlocked.message
+                : 'Add to compare'
+          }
+          // Marked, not disabled, so the refusal still explains itself and
+          // offers to replace the tray.
+          title={
+            isInCompare
+              ? 'Remove from compare'
+              : compareBlocked
+                ? compareBlocked.message
+                : 'Add to compare'
+          }
           className="col-span-1 lg:col-span-1"
         >
           <GitCompareArrows
             size={18}
-            className={cn(isCompared && 'text-primary')}
+            className={cn(isInCompare && 'text-primary')}
           />
         </Button>
         <Button
@@ -408,10 +428,16 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      {/* Sticky Add to Cart (mobile) */}
+      {/* Sticky Add to Cart (mobile).
+
+          Sits directly above MobileBottomNav rather than at the viewport edge:
+          both are `fixed bottom-0` and both render on this page, so a bar at
+          bottom-0 put the primary purchase action underneath the nav. The nav
+          is min-h-[56px] per item plus the home-indicator inset. */}
       <div
         className={cn(
-          'fixed inset-x-0 bottom-0 z-40 border-t border-muted-100 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm transition-transform duration-300 lg:hidden',
+          'fixed inset-x-0 z-40 border-t border-muted-100 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm transition-transform duration-300 lg:hidden',
+          'bottom-[calc(56px+env(safe-area-inset-bottom))]',
           stickyVisible ? 'translate-y-0' : 'translate-y-full'
         )}
         aria-hidden={!stickyVisible}

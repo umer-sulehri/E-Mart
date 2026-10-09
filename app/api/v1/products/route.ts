@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeOrTerm } from "@/lib/search-safe";
+import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    const rawPage = parseInt(searchParams.get("page") || "1", 10);
-    const rawLimit = parseInt(searchParams.get("limit") || "12", 10);
-    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
-    const limit =
-      Number.isFinite(rawLimit) && rawLimit > 0
-        ? Math.min(rawLimit, 100)
-        : 12;
+    const { page, limit, offset } = parsePagination(searchParams);
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
+    // The compare tray is locked to one category and identifies it by uuid, not
+    // slug, so a slug-only filter cannot express "only the category already in
+    // the table". Also matches sub-categories, mirroring the slug filter below.
+    const categoryId = searchParams.get("categoryId") || "";
     const brand = searchParams.get("brand") || "";
     const categories =
       searchParams
@@ -38,7 +37,6 @@ export async function GET(request: NextRequest) {
     const minRating = Number.isFinite(rawMinRating) ? rawMinRating : undefined;
     const sort = searchParams.get("sort") || "newest";
     const status = searchParams.get("status") || "active";
-    const offset = (page - 1) * limit;
 
     let query = supabase
       .from("products")
@@ -87,6 +85,21 @@ export async function GET(request: NextRequest) {
         const ids = Array.from(categoryIds);
         query = query.or(
           `category_id.in.(${ids.join(",")}),subcategory_id.in.(${ids.join(",")})`
+        );
+      }
+    }
+
+    if (categoryId) {
+      // A uuid is supplied directly, so there is no slug lookup to widen with
+      // sub-categories here; the compare tray's lock is on the exact category.
+      // A malformed value matches nothing rather than being ignored, so a bad
+      // id can never widen the picker back to the whole catalogue.
+      const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuid.test(categoryId)) {
+        query = query.eq("id", "00000000-0000-0000-0000-000000000000");
+      } else {
+        query = query.or(
+          `category_id.eq.${categoryId},subcategory_id.eq.${categoryId}`
         );
       }
     }
@@ -149,6 +162,13 @@ export async function GET(request: NextRequest) {
         query = query.order("created_at", { ascending: false });
     }
 
+    // Every sort key above is non-unique — two products can share a price, a
+    // rating, a review count or a name. Without a unique tiebreaker Postgres may
+    // return them in either order across two requests, so a product can appear
+    // on page 1 and page 2 of the same listing, or on neither. id is unique, so
+    // appending it makes every ordering total and every page stable.
+    query = query.order("id", { ascending: false });
+
     query = query.range(offset, offset + limit - 1);
 
     const { data, error, count } = await query;
@@ -161,7 +181,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Safety net: a product related to multiple matching categories/brands can
-    // surface more than once; keep the first occurrence per product id.
+    // surface more than once; keep the first occurrence per product id. The
+    // category and brand filters both use `!inner` against many-to-one FKs, so
+    // this should never actually fire — but if it did, `count` (which counts
+    // join output rows) would overstate totalItems.
     const seen = new Set<string>();
     const deduped = (data || []).filter((product) => {
       const id = (product as { id?: string }).id;
@@ -170,19 +193,10 @@ export async function GET(request: NextRequest) {
       return true;
     });
 
-    const totalPages = Math.ceil((count || 0) / limit);
-
     return NextResponse.json({
       success: true,
       data: deduped,
-      meta: {
-        currentPage: page,
-        totalPages,
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(page, limit, count || 0),
     });
   } catch (error) {
     return NextResponse.json(

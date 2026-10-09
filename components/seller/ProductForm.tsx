@@ -10,6 +10,7 @@ import Badge from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { uploadImageFile } from '@/lib/image-upload';
+import { formatQuotaResetClock } from '@/lib/product-limit';
 
 interface ImageEntry {
   file?: File;
@@ -36,6 +37,17 @@ interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
   mode: 'add' | 'edit';
   onSubmit: (data: ProductFormData) => void;
+  /**
+   * When true the seller has exhausted the daily upload allowance. The submit
+   * controls are disabled so the doomed request is never made; the surrounding
+   * page explains why. Only meaningful for `mode === 'add'`.
+   */
+  quotaBlocked?: boolean;
+  /**
+   * ISO timestamp of the next Asia/Karachi midnight, so the disabled state can
+   * say when the allowance refills rather than only "tomorrow".
+   */
+  quotaResetAt?: string | null;
 }
 
 interface CategoryOption {
@@ -60,7 +72,13 @@ const defaultData: ProductFormData = {
   status: 'active',
 };
 
-export default function ProductForm({ initialData, mode, onSubmit }: ProductFormProps) {
+export default function ProductForm({
+  initialData,
+  mode,
+  onSubmit,
+  quotaBlocked = false,
+  quotaResetAt = null,
+}: ProductFormProps) {
   const [form, setForm] = useState<ProductFormData>({
     ...defaultData,
     ...initialData,
@@ -70,6 +88,16 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
   const [categories, setCategories] = useState<CategoryOption[]>(CATEGORIES as unknown as CategoryOption[]);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // The reset clock is only rendered after mount: the server has no idea when
+  // the browser's clock ticks over, so formatting Date.now() during SSR would
+  // hydrate-mismatch.
+  const [quotaClockReady, setQuotaClockReady] = useState(false);
+  useEffect(() => setQuotaClockReady(true), []);
+
+  // Editing an existing product does not consume an upload slot, so the quota
+  // must never lock a seller out of their own catalogue.
+  const submitDisabled = submitting || (mode === 'add' && quotaBlocked);
 
   useEffect(() => {
     fetch('/api/v1/categories')
@@ -188,6 +216,7 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitDisabled) return;
     if (!validate()) return;
     setSubmitting(true);
     try {
@@ -234,7 +263,7 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
               value={form.description}
               onChange={(e) => updateField('description', e.target.value)}
               className={cn(
-                'w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
+                'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
                 'placeholder:text-muted-400 transition-colors',
                 'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
                 errors.description ? 'border-danger' : 'border-muted-200'
@@ -400,7 +429,7 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
                 height={120}
                 className="h-40 w-full object-cover"
               />
-              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                 <button
                   type="button"
                   onClick={() => setPrimaryImage(index)}
@@ -409,15 +438,22 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
                     index === 0 ? 'bg-primary' : 'bg-white/20 hover:bg-white/40'
                   )}
                   title="Set as primary"
+                  aria-label={
+                    index === 0
+                      ? `Image ${index + 1} is the primary image`
+                      : `Set image ${index + 1} as primary`
+                  }
                 >
-                  <Star className="h-4 w-4" fill={index === 0 ? 'currentColor' : 'none'} />
+                  <Star className="size-4" fill={index === 0 ? 'currentColor' : 'none'} />
                 </button>
                 <button
                   type="button"
                   onClick={() => removeImage(index)}
                   className="rounded-lg bg-white/20 p-2 text-white transition-colors hover:bg-danger"
+                  title="Remove image"
+                  aria-label={`Remove image ${index + 1} of ${form.images.length}`}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="size-4" />
                 </button>
               </div>
               {index === 0 && (
@@ -442,7 +478,7 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
                   : 'border-muted-200 hover:border-primary hover:bg-muted-50'
               )}
             >
-              <Upload className="mb-2 h-8 w-8 text-muted-400" />
+              <Upload className="mb-2 size-8 text-muted-400" aria-hidden="true" />
               <p className="text-sm font-medium text-muted-600">Drag & drop or click</p>
               <p className="text-xs text-muted-400">PNG, JPG up to 5MB</p>
             </div>
@@ -463,24 +499,24 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
 
         {errors.images && (
           <div className="mt-4 flex items-center gap-2 rounded-lg bg-danger-50 p-3 text-sm text-danger">
-            <ImageIcon className="h-4 w-4 shrink-0" />
+            <ImageIcon className="size-4 shrink-0" aria-hidden="true" />
             {errors.images}
           </div>
         )}
         {!errors.images && form.images.length === 0 && (
           <div className="mt-4 flex items-center gap-2 rounded-lg bg-warning-50 p-3 text-sm text-warning-700">
-            <ImageIcon className="h-4 w-4 shrink-0" />
+            <ImageIcon className="size-4 shrink-0" aria-hidden="true" />
             No images uploaded yet. Add at least one product image.
           </div>
         )}
       </div>
 
       {/* Submit */}
-      <div className="flex items-center gap-4">
-        <Button type="submit" size="lg" disabled={submitting}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <Button type="submit" size="lg" disabled={submitDisabled}>
           {submitting ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               Saving...
             </>
           ) : mode === 'add' ? (
@@ -492,6 +528,17 @@ export default function ProductForm({ initialData, mode, onSubmit }: ProductForm
         <Button type="button" variant="ghost" size="lg" disabled={submitting}>
           Cancel
         </Button>
+        {mode === 'add' && quotaBlocked && (
+          <p className="text-sm text-danger" role="status">
+            {/* Reset time comes from the server (next Asia/Karachi midnight), so
+                it states when *this seller's* allowance refills, not a guess. */}
+            Daily limit reached. Try again tomorrow
+            {quotaResetAt
+              ? ` at ${formatQuotaResetClock(quotaResetAt, quotaClockReady)} PKT`
+              : ''}
+            .
+          </p>
+        )}
       </div>
     </form>
   );

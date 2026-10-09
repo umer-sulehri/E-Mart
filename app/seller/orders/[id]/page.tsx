@@ -88,7 +88,7 @@ export default function SellerOrderDetailPage() {
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => router.push('/seller/orders')}>
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="size-4" />
             Back
           </Button>
           <SkeletonBlock className="h-8 w-48" />
@@ -107,7 +107,7 @@ export default function SellerOrderDetailPage() {
   if (!order) {
     return (
       <div className="py-12 text-center">
-        <Package className="mx-auto mb-3 h-12 w-12 text-muted-300" />
+        <Package className="mx-auto mb-3 size-12 text-muted-300" />
         <p className="text-sm text-muted-500">Order not found</p>
         <Link href="/seller/orders" className="mt-3 inline-block text-sm font-medium text-primary hover:text-primary-500">
           Back to Orders
@@ -123,7 +123,7 @@ export default function SellerOrderDetailPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => router.push('/seller/orders')}>
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="size-4" />
             Back
           </Button>
           <div>
@@ -186,7 +186,7 @@ export default function SellerOrderDetailPage() {
               </div>
             ))}
           </div>
-          <div className="border-t border-muted-100 px-6 py-4">
+          <div className="border-t border-muted-100 px-3 py-4 sm:px-6">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-500">Total</span>
               <span className="text-lg font-bold text-secondary-800">{formatPrice(order.total)}</span>

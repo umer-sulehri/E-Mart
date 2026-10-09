@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { ChevronRight, Home } from 'lucide-react';
 import { CATEGORIES } from '@/lib/constants';
 import { tryParseJson } from '@/lib/api';
+import { getSiteUrl } from '@/lib/absolute-url';
 
 export const metadata: Metadata = {
   title: 'Categories',
@@ -21,10 +22,12 @@ interface ApiCategory {
 
 async function fetchCategories(): Promise<ApiCategory[]> {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/v1/categories`,
-      { cache: 'no-store' }
-    );
+    // `getSiteUrl` reads the request Host, not NEXT_PUBLIC_SITE_URL: an unset
+    // env var made this self-fetch target localhost on Vercel, silently dropping
+    // the site to the random-count fallback below.
+    const res = await fetch(`${await getSiteUrl()}/api/v1/categories`, {
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error();
     const json = await tryParseJson<{ success: boolean; data?: ApiCategory[] }>(res);
     if (json?.success && json.data?.length) return json.data;
@@ -55,7 +58,7 @@ export default async function CategoriesPage() {
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="size-4" />
             <span className="text-primary">Categories</span>
           </div>
         </div>
