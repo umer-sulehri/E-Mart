@@ -207,8 +207,8 @@ const PRODUCTS = [
   // Baby Food & Formula (4) — Wellness World
   { s: 'baby-oat-cereal-300g', n: 'Baby Oat Cereal (300 g)', c: BF, st: 'wellness-world', b: 'tiny-tots-brand', sku: 'BF-101', p: 850, d: null, q: 90, r: 4.6, rc: 48, f: false, nw: false, tags: ['baby', 'cereal'], img: 'baby cereal', desc: 'Iron-fortified oat cereal that is gentle on little tummies.' },
   { s: 'stage-2-fruit-puree-120g', n: 'Stage 2 Fruit Puree (120 g)', c: BF, st: 'wellness-world', b: 'tiny-tots-brand', sku: 'BF-102', p: 260, d: null, q: 160, r: 4.5, rc: 62, f: false, nw: true, tags: ['baby', 'puree'], img: 'baby food puree', desc: 'Smooth fruit puree with no added sugar or preservatives.' },
-  { s: 'toddler-milk-formula-800g', n: 'Toddler Milk Formula (800 g)', c: BF, st: 'wellness-world', b: 'tiny-tots-brand', sku: 'BF-103', p: 4200, d: 3800, q: 60, r: 4.7, rc: 96, f: true, nw: false, tags: ['baby', 'formula', 'nutrition'], img: 'infant formula milk powder', desc: 'Complete growing-up milk with DHA and iron for toddlers.' },
-  { s: 'baby-rusk-300g', n: 'Baby Rusk (300 g)', c: BF, st: 'wellness-world', b: 'tiny-tots-brand', sku: 'BF-104', p: 620, d: null, q: 110, r: 4.4, rc: 37, f: false, nw: false, tags: ['baby', 'snack'], img: 'baby biscuits rusk', desc: 'Gentle, easy-to-hold rusks for teething babies.' },
+  { s: 'toddler-milk-formula-800g', n: 'Toddler Milk Formula (800 g)', c: BF, st: 'wellness-world', b: 'tiny-tots-brand', sku: 'BF-103', p: 4200, d: 3800, q: 60, r: 4.7, rc: 96, f: true, nw: false, tags: ['baby', 'formula', 'nutrition'], img: 'infant formula', desc: 'Complete growing-up milk with DHA and iron for toddlers.' },
+  { s: 'baby-rusk-300g', n: 'Baby Rusk (300 g)', c: BF, st: 'wellness-world', b: 'tiny-tots-brand', sku: 'BF-104', p: 620, d: null, q: 110, r: 4.4, rc: 37, f: false, nw: false, tags: ['baby', 'snack'], img: 'baby food jar', desc: 'Gentle, easy-to-hold rusks for teething babies.' },
 
   // Health & Wellness (5) — Wellness World
   { s: 'vitamin-d3-tablets-60', n: 'Vitamin D3 Tablets (60 pack)', c: HW, st: 'wellness-world', b: 'vital-life', sku: 'HW-101', p: 1250, d: null, q: 120, r: 4.5, rc: 84, f: false, nw: false, tags: ['health', 'vitamins'], img: 'vitamin d tablets', desc: 'Daily vitamin D3 to support bones and immunity.' },
@@ -219,13 +219,13 @@ const PRODUCTS = [
 
   // Household Supplies (5) — CleanHome & Glow
   { s: 'floor-cleaner-1l', n: 'Floor Cleaner (1 L)', c: HH, st: 'cleanhome-glow', b: 'cleanhome-brand', sku: 'HS-101', p: 550, d: null, q: 220, r: 4.3, rc: 58, f: false, nw: false, tags: ['household', 'cleaning'], img: 'floor cleaner bottle', desc: 'Disinfecting floor cleaner that leaves a fresh, long-lasting scent.' },
-  { s: 'glass-cleaner-500ml', n: 'Glass Cleaner (500 ml)', c: HH, st: 'cleanhome-glow', b: 'cleanhome-brand', sku: 'HS-102', p: 480, d: null, q: 200, r: 4.2, rc: 44, f: false, nw: false, tags: ['household', 'cleaning'], img: 'glass cleaner spray', desc: 'Streak-free spray for windows, mirrors and glass.' },
+  { s: 'glass-cleaner-500ml', n: 'Glass Cleaner (500 ml)', c: HH, st: 'cleanhome-glow', b: 'cleanhome-brand', sku: 'HS-102', p: 480, d: null, q: 200, r: 4.2, rc: 44, f: false, nw: false, tags: ['household', 'cleaning'], img: 'spray bottle', desc: 'Streak-free spray for windows, mirrors and glass.' },
   { s: 'toilet-cleaner-750ml', n: 'Toilet Cleaner (750 ml)', c: HH, st: 'cleanhome-glow', b: 'cleanhome-brand', sku: 'HS-103', p: 520, d: null, q: 210, r: 4.3, rc: 51, f: false, nw: false, tags: ['household', 'cleaning'], img: 'toilet cleaner', desc: 'Thick toilet gel that clings and kills 99.9% of germs.' },
   { s: 'paper-towels-4-rolls', n: 'Paper Towels (4 rolls)', c: HH, st: 'cleanhome-glow', b: 'cleanhome-brand', sku: 'HS-104', p: 620, d: null, q: 180, r: 4.4, rc: 66, f: false, nw: true, tags: ['household', 'paper'], img: 'paper towel rolls', desc: 'Absorbent, 2-ply kitchen towels for everyday spills.' },
   { s: 'garbage-bags-30-pack', n: 'Garbage Bags (30 pack)', c: HH, st: 'cleanhome-glow', b: 'cleanhome-brand', sku: 'HS-105', p: 450, d: null, q: 260, r: 4.2, rc: 39, f: false, nw: false, tags: ['household', 'waste'], img: 'garbage bags', desc: 'Tear-resistant drawstring bin liners, medium size.' },
 
   // Personal Care (6) — CleanHome & Glow
-  { s: 'body-lotion-400ml', n: 'Body Lotion (400 ml)', c: PC, st: 'cleanhome-glow', b: 'glow-care', sku: 'PC-101', p: 950, d: null, q: 170, r: 4.4, rc: 72, f: false, nw: false, tags: ['personal-care', 'skincare'], img: 'body lotion bottle', desc: 'Rich, fast-absorbing lotion for soft, hydrated skin.' },
+  { s: 'body-lotion-400ml', n: 'Body Lotion (400 ml)', c: PC, st: 'cleanhome-glow', b: 'glow-care', sku: 'PC-101', p: 950, d: null, q: 170, r: 4.4, rc: 72, f: false, nw: false, tags: ['personal-care', 'skincare'], img: 'body lotion', desc: 'Rich, fast-absorbing lotion for soft, hydrated skin.' },
   { s: 'face-wash-150ml', n: 'Face Wash (150 ml)', c: PC, st: 'cleanhome-glow', b: 'glow-care', sku: 'PC-102', p: 720, d: null, q: 200, r: 4.5, rc: 88, f: true, nw: false, tags: ['personal-care', 'skincare'], img: 'face wash', desc: 'Gentle foaming face wash that refreshes without drying.' },
   { s: 'deodorant-spray-150ml', n: 'Deodorant Spray (150 ml)', c: PC, st: 'cleanhome-glow', b: 'glow-care', sku: 'PC-103', p: 620, d: null, q: 240, r: 4.3, rc: 61, f: false, nw: false, tags: ['personal-care', 'hygiene'], img: 'deodorant spray', desc: 'Long-lasting freshness with a clean, subtle scent.' },
   { s: 'bath-soap-4-pack', n: 'Bath Soap (4 pack)', c: PC, st: 'cleanhome-glow', b: 'glow-care', sku: 'PC-104', p: 480, d: 420, q: 300, r: 4.4, rc: 77, f: false, nw: false, tags: ['personal-care', 'bath'], img: 'bar soap', desc: 'Nourishing bathing bars enriched with glycerine.' },
@@ -257,10 +257,10 @@ const FALLBACK_IMG = {
   'snacks': 'https://images.unsplash.com/photo-1566478989037-eec170784d0b',
   'beverages': 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d',
   'spices-seasonings': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d',
-  'baby-food-formula': 'https://images.unsplash.com/photo-1525253019412-b886ef778fc7',
+  'baby-food-formula': 'https://upload.wikimedia.org/wikipedia/commons/2/29/Infant_formula.jpg',
   'health-wellness': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae',
-  'household-supplies': 'https://images.unsplash.com/photo-1583947581927-78b40d7b60c1',
-  'personal-care': 'https://images.unsplash.com/photo-1607006345348-407e454ba19f',
+  'household-supplies': 'https://upload.wikimedia.org/wikipedia/commons/f/f1/Spray_bottle.jpg',
+  'personal-care': 'https://upload.wikimedia.org/wikipedia/commons/4/4f/Cocoa_butter_lotion.jpg',
   'pet-food-supplies': 'https://images.unsplash.com/photo-1568640347023-a616a30bc3bd',
 };
 
@@ -347,6 +347,31 @@ async function ensureSeller(store, usersByEmail) {
   return userId;
 }
 
+// The products table has a BEFORE INSERT trigger enforcing a per-seller daily
+// allowance (default 10, see supabase/2027-product-daily-limit.sql). The limit
+// is a runtime-tunable app_settings row precisely so it can be raised without a
+// redeploy, which is what a bulk seed needs. We snapshot it, raise it, seed, and
+// always restore the original value.
+async function readDailyLimit() {
+  const rows = await rest('/rest/v1/app_settings?select=value&key=eq.max_products_per_day');
+  return rows.length ? rows[0].value : null;
+}
+
+async function writeDailyLimit(value) {
+  const rows = await rest('/rest/v1/app_settings?select=value&key=eq.max_products_per_day', {
+    method: 'PATCH',
+    prefer: 'return=representation',
+    body: { value: String(value) },
+  });
+  if (!rows.length) {
+    await rest('/rest/v1/app_settings', {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates,return=minimal',
+      body: [{ key: 'max_products_per_day', value: String(value) }],
+    });
+  }
+}
+
 async function main() {
   if (!SUPABASE_URL || !SERVICE_KEY) throw new Error('Missing Supabase env vars in .env.local');
 
@@ -425,16 +450,29 @@ async function main() {
     console.warn('  ! some rows missing vendor/category/brand:', missing.map((m) => m.slug).join(', '));
   }
 
-  const result = await rest('/rest/v1/products?on_conflict=slug', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates,return=representation',
-    body: rows,
-  });
-  console.log(`  upserted ${result.length} products`);
+  const dailyLimit = await readDailyLimit();
+  const raisedLimit = Math.max(PRODUCTS.length + 10, 100);
+  if (dailyLimit !== null && Number(dailyLimit) < raisedLimit) {
+    console.log(`  raising daily product limit ${dailyLimit} -> ${raisedLimit} for the seed`);
+  }
+  await writeDailyLimit(raisedLimit);
 
-  const active = await rest('/rest/v1/products?select=id&status=eq.active&is_active=eq.true&moderation_status=eq.approved', {
-    // count only
-  });
+  let result;
+  try {
+    result = await rest('/rest/v1/products?on_conflict=slug', {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates,return=representation',
+      body: rows,
+    });
+    console.log(`  upserted ${result.length} products`);
+  } finally {
+    if (dailyLimit !== null) {
+      await writeDailyLimit(dailyLimit);
+      console.log(`  restored daily product limit to ${dailyLimit}`);
+    }
+  }
+
+  const active = await rest('/rest/v1/products?select=id&status=eq.active&is_active=eq.true&moderation_status=eq.approved');
   console.log(`\nDone. Active, approved products now: ${active.length}`);
 }
 
