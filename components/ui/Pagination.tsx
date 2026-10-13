@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { pageRangeEnd, pageRangeStart } from '@/lib/pagination';
@@ -78,7 +78,16 @@ export default function Pagination({
     setAnnouncement(`Page ${safeCurrent} of ${safeTotal}`);
   }, [safeCurrent, safeTotal]);
 
+  // Scroll back to the top when the page *changes* — but never on mount. A
+  // filter/sort change swaps the whole grid for a skeleton, which remounts
+  // this component; scrolling on mount would yank the user to the top even
+  // though the caller asked to stay put (`scroll: false` on the URL update).
+  const hasMounted = useRef(false);
   useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
     if (!scrollToTop) return;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [safeCurrent, scrollToTop]);
