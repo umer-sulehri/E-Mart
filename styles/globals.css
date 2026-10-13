@@ -542,6 +542,15 @@ label,
     min-width: 44px;
   }
 
+  /* ...but the shared <Breadcrumb> is an inline flow, so a forced 44px
+     min-height on its `inline-flex` "Home" link makes that crumb taller than
+     the plain inline text crumbs and knocks it out of line (and inflates the
+     whole trail). Reset it inside the trail only; the crumbs sit adjacent so
+     the tap target stays usable. Higher specificity than the `a[href]` rule. */
+  nav[aria-label='Breadcrumb'] a[href] {
+    min-height: 0;
+  }
+
   /* Checkboxes/radios are toggled by tapping the label in most forms; keep the
      input itself small but make the whole control row comfortably tappable. */
   input[type='checkbox'],
