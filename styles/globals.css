@@ -90,9 +90,11 @@
     @apply text-center;
   }
 
-  .product-item figure img {
-    @apply max-h-[210px] w-auto;
-  }
+  /* Card imagery is sized by ProductCard itself: a square `.image-container`
+     with an `object-contain` image that fills it. A legacy `w-auto` +
+     `max-h-[210px]` override here beat those utilities (`.product-item figure
+     img` is more specific than `.w-full`), so photos shrank to their intrinsic
+     size and the grid looked uneven. Let the component own the sizing. */
 
   /* Category Carousel Item */
   .category-item {

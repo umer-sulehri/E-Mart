@@ -85,7 +85,11 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
         className={cn("product-item flex h-full max-w-full flex-col", className)}
       >
         <figure className="image-container relative mx-auto mb-3 aspect-square w-full max-w-full overflow-hidden rounded-xl bg-white">
-          <Link href={`/products/${product.slug}`} title={product.name}>
+          <Link
+            href={`/products/${product.slug}`}
+            title={product.name}
+            className="absolute inset-0"
+          >
             <ImageWithFallback
               src={product.image}
               alt={product.name}
