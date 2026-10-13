@@ -21,6 +21,12 @@ interface VoiceSearchProps {
 // cause so the user gets an accurate, actionable message instead of a generic
 // "permission denied" that is wrong when the policy or OS is at fault.
 async function diagnoseMicError(code: string): Promise<string> {
+  // Inside the Capacitor app the failure comes from the native plugin, whose
+  // error codes are already accurate. The browser probes below would misread
+  // the bare WebView (no usable Permissions/MediaDevices) and overwrite the
+  // real error with a bogus "allow the microphone in your browser" message.
+  if (nativeSpeechRecognitionSupported()) return code;
+
   if (code !== 'not-allowed' && code !== 'audio-capture' && code !== 'service-not-allowed') {
     return code;
   }
@@ -124,7 +130,15 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
         void (async () => {
           const resolved = await diagnoseMicError(code);
           // Component may have unmounted (navigation) while diagnosing.
-          if (managerRef.current) setError(getErrorText(resolved));
+          if (!managerRef.current) return;
+          const nativePermissionDenied =
+            nativeSpeechRecognitionSupported() &&
+            (resolved === 'not-allowed' || resolved === 'permission-denied');
+          setError(
+            nativePermissionDenied
+              ? 'Microphone access is blocked. Allow the microphone for E-Mart in your device settings, then try again.'
+              : getErrorText(resolved)
+          );
         })();
       };
       managerRef.current.onStateChange = (listening, t) => {

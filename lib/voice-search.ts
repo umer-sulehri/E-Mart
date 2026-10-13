@@ -193,10 +193,17 @@ export class VoiceSearchManager {
   private bestPartial = '';
 
   constructor() {
-    const Ctor = getSpeechRecognition();
-    if (Ctor) {
-      this.recognition = new Ctor();
-      this.setupRecognition();
+    // Android System WebView exposes a `SpeechRecognition`/`webkitSpeechRecognition`
+    // *stub* that is present but non-functional: it reports itself as supported,
+    // then errors without ever opening the microphone. So inside the Capacitor
+    // app we deliberately skip the Web Speech API and use the native plugin;
+    // only the real browser gets the web recognizer.
+    if (!nativeSpeechRecognitionSupported()) {
+      const Ctor = getSpeechRecognition();
+      if (Ctor) {
+        this.recognition = new Ctor();
+        this.setupRecognition();
+      }
     }
   }
 
