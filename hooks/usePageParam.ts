@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { filterHref } from '@/lib/urlFilters';
+import { filterHref, pageHref } from '@/lib/urlFilters';
 
 /**
  * Page number held in the URL rather than in React state.
@@ -60,9 +60,9 @@ export function usePageParam({
   const replacePage = useCallback(
     (next: number) => {
       const target = clampPage(next, totalPages);
-      const href = filterHref(pathname, searchParams.toString(), {
-        page: target <= 1 ? null : String(target),
-      });
+      // `pageHref`, not `filterHref`: a page change must keep the `page` param
+      // it is setting (see `pageHref`).
+      const href = pageHref(pathname, searchParams.toString(), target);
       router.replace(href, { scroll: false });
     },
     [searchParams, pathname, router, totalPages]
@@ -85,9 +85,7 @@ export function usePageParam({
   const withPage = useCallback(
     (next: number) => {
       const target = clampPage(next, totalPages);
-      return filterHref(pathname, searchParams.toString(), {
-        page: target <= 1 ? null : String(target),
-      });
+      return pageHref(pathname, searchParams.toString(), target);
     },
     [searchParams, pathname, totalPages]
   );

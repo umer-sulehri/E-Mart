@@ -58,6 +58,26 @@ export function filterHref(
   return hrefWithQuery(pathname, withInvalidatedPage(applyFilterPatch(currentQuery, patch)));
 }
 
+/**
+ * Href for a page-number change.
+ *
+ * Unlike {@link filterHref}, the page is the thing being *set*, so it must be
+ * preserved. `filterHref` deliberately runs the query through
+ * {@link withInvalidatedPage} (a filter change resets to page 1), which would
+ * strip the `page` we just added — so pagination must not use it. `page <= 1`
+ * removes the param entirely, keeping page 1 as the bare URL.
+ */
+export function pageHref(
+  pathname: string,
+  currentQuery: string,
+  page: number,
+): string {
+  return hrefWithQuery(
+    pathname,
+    applyFilterPatch(currentQuery, { page: page <= 1 ? null : String(page) }),
+  );
+}
+
 /** Every key that currently carries a value, i.e. the active filters. */
 export function activeFilterKeys(
   currentQuery: string,

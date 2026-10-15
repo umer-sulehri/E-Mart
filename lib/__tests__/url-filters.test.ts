@@ -4,6 +4,7 @@ import {
   withInvalidatedPage,
   hrefWithQuery,
   filterHref,
+  pageHref,
   activeFilterKeys,
 } from "../urlFilters";
 
@@ -103,6 +104,35 @@ describe("filterHref", () => {
       sellers: null,
     });
     expect(href).toBe("/admin/offers");
+  });
+});
+
+describe("pageHref", () => {
+  it("sets the page on an empty query", () => {
+    expect(pageHref("/products", "", 2)).toBe("/products?page=2");
+  });
+
+  it("preserves the existing filters while changing the page", () => {
+    expect(pageHref("/products", "categories=milk&sort=price", 3)).toBe(
+      "/products?categories=milk&sort=price&page=3"
+    );
+  });
+
+  it("replaces an existing page rather than appending", () => {
+    expect(pageHref("/products", "page=2&q=milk", 5)).toBe(
+      "/products?page=5&q=milk"
+    );
+  });
+
+  it("removes the param for page 1", () => {
+    expect(pageHref("/products", "page=4&q=milk", 1)).toBe("/products?q=milk");
+  });
+
+  it("keeps the page it is setting (the pagination regression)", () => {
+    // `filterHref` runs the query through `withInvalidatedPage`, which deleted
+    // the `page` just set — so every page button bounced back to page 1.
+    const href = pageHref("/products", "", 2);
+    expect(new URLSearchParams(href.split("?")[1]).get("page")).toBe("2");
   });
 });
 
