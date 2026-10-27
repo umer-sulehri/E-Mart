@@ -103,9 +103,9 @@ export default function ProductQuotaBar({
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           {exhausted ? (
-            <AlertTriangle className="size-5 shrink-0 text-danger" aria-hidden="true" />
+            <AlertTriangle className="size-5 shrink-0 text-danger-600" aria-hidden="true" />
           ) : (
-            <Upload className="size-5 shrink-0 text-primary" aria-hidden="true" />
+            <Upload className="size-5 shrink-0 text-primary-600" aria-hidden="true" />
           )}
           <p className="truncate text-sm font-medium text-secondary-800">
             <span className="font-semibold">
@@ -134,10 +134,10 @@ export default function ProductQuotaBar({
           className={cn(
             'h-full rounded-full transition-all duration-500',
             exhausted
-              ? 'bg-danger'
+              ? 'bg-danger-600'
               : percent >= 80
-                ? 'bg-warning'
-                : 'bg-primary'
+                ? 'bg-warning-700'
+                : 'bg-primary-600'
           )}
           style={{ width: `${Math.max(percent, used > 0 ? 4 : 0)}%` }}
         />

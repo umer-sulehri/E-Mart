@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Preloader from '@/components/layout/Preloader';
 import HeroBanner from '@/components/home/HeroBanner';
 import CategoryCarousel, {
   type CategoryItem,
@@ -132,7 +131,6 @@ export default function HomePage() {
 
   return (
     <>
-      <Preloader />
       <HeroBanner />
       <CategoryCarousel
         categories={categories.length > 0 ? categories : undefined}
@@ -147,7 +145,7 @@ export default function HomePage() {
             </h2>
             <Link
               href="/products?sort=popular"
-              className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-500"
+              className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-500"
             >
               View All
             </Link>

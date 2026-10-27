@@ -247,7 +247,7 @@ function AdminReviewsContent() {
       {flaggedCount > 0 && (
         <div className="rounded-xl border border-danger-200 bg-danger-50 p-4">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="size-5 text-danger" />
+            <AlertTriangle className="size-5 text-danger-600" />
             <div>
               <p className="font-medium text-secondary-800">{flaggedCount} flagged reviews need attention</p>
               <p className="text-sm text-muted-600">Reviews flagged by users or for policy violations</p>
@@ -267,14 +267,14 @@ function AdminReviewsContent() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               aria-label="Search reviews"
-              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             aria-label="Filter by status"
-            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
+            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary-600 focus:outline-none"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -286,16 +286,16 @@ function AdminReviewsContent() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="size-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary-600" />
           </div>
         ) : error ? (
           <div className="py-16 text-center">
-            <AlertTriangle className="mx-auto mb-3 size-10 text-danger" />
+            <AlertTriangle className="mx-auto mb-3 size-10 text-danger-600" />
             <p className="font-medium text-secondary-800">Failed to load reviews</p>
             <p className="mt-1 text-sm text-muted-500">{error}</p>
             <button
               onClick={load}
-              className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-600"
+              className="mt-4 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-600"
             >
               Try Again
             </button>
@@ -344,7 +344,7 @@ function AdminReviewsContent() {
                       className={cn(
                         'h-4 w-4',
                         i < review.rating
-                          ? 'fill-warning text-warning'
+                          ? 'fill-warning text-warning-700'
                           : 'text-muted-200'
                       )}
                     />
@@ -366,7 +366,7 @@ function AdminReviewsContent() {
                       <button
                         onClick={() => act(review.id, 'approve')}
                         disabled={acting === review.id}
-                        className="rounded px-2.5 py-1 text-xs font-medium text-success transition-colors hover:bg-success-50 disabled:opacity-50"
+                        className="rounded px-2.5 py-1 text-xs font-medium text-success-700 transition-colors hover:bg-success-50 disabled:opacity-50"
                       >
                         <CheckCircle2 className="mr-1 inline size-3.5" />
                         Approve
@@ -395,7 +395,7 @@ function AdminReviewsContent() {
                     <button
                       onClick={() => setDeleteTarget(review)}
                       disabled={acting === review.id}
-                      className="rounded px-2.5 py-1 text-xs font-medium text-danger transition-colors hover:bg-danger-50 disabled:opacity-50"
+                      className="rounded px-2.5 py-1 text-xs font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50"
                     >
                       {acting === review.id ? (
                         <Loader2 className="mr-1 inline size-3.5 animate-spin" />

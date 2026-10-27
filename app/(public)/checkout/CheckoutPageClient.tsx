@@ -53,9 +53,6 @@ const paymentSchema = z.object({
   method: z.enum(['easypaisa', 'jazzcash', 'card', 'cod']),
   easypaisaAccount: z.string().optional(),
   jazzcashMobile: z.string().optional(),
-  cardNumber: z.string().optional(),
-  cardExpiry: z.string().optional(),
-  cardCvc: z.string().optional(),
 });
 
 const reviewSchema = z.object({
@@ -149,9 +146,9 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-colors ${
                   isCompleted
-                    ? 'border-primary bg-primary text-white'
+                    ? 'border-primary-600 bg-primary-600 text-white'
                     : isActive
-                      ? 'border-primary bg-primary-50 text-primary'
+                      ? 'border-primary-600 bg-primary-50 text-primary-600'
                       : 'border-muted-200 bg-white text-muted-400'
                 }`}
               >
@@ -160,9 +157,9 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               <span
                 className={`mt-1.5 text-xs font-semibold ${
                   isActive
-                    ? 'text-primary'
+                    ? 'text-primary-600'
                     : isCompleted
-                      ? 'text-primary'
+                      ? 'text-primary-600'
                       : 'text-muted-400'
                 }`}
               >
@@ -172,7 +169,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
             {idx < steps.length - 1 && (
               <div
                 className={`mx-2 mb-5 h-0.5 w-12 sm:w-20 ${
-                  idx < currentStep ? 'bg-primary' : 'bg-muted-200'
+                  idx < currentStep ? 'bg-primary-600' : 'bg-muted-200'
                 }`}
               />
             )}
@@ -287,7 +284,7 @@ function ShippingStep({
           <select
             value={data.country}
             onChange={(e) => onChange('country', e.target.value)}
-            className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
           >
             <option value="Pakistan">Pakistan</option>
             <option value="India">India</option>
@@ -296,7 +293,7 @@ function ShippingStep({
             <option value="Saudi Arabia">Saudi Arabia</option>
           </select>
           {errors.country && (
-            <p className="mt-1.5 text-xs text-danger">{errors.country}</p>
+            <p className="mt-1.5 text-xs text-danger-600">{errors.country}</p>
           )}
         </div>
       </div>
@@ -306,7 +303,7 @@ function ShippingStep({
           type="checkbox"
           checked={data.saveDefault || false}
           onChange={(e) => onChange('saveDefault', e.target.checked)}
-          className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/40"
+          className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
         />
         Save as default address
       </label>
@@ -359,7 +356,7 @@ function PaymentStep({
                 onClick={() => onSelect(m.id)}
                 className={`flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-all ${
                   isSelected
-                    ? 'border-primary bg-primary-50/50'
+                    ? 'border-primary-600 bg-primary-50/50'
                     : 'border-muted-200 hover:border-muted-300 bg-white'
                 }`}
               >
@@ -375,12 +372,12 @@ function PaymentStep({
                 </div>
                 <div
                   className={`h-5 w-5 flex-shrink-0 rounded-full border-2 ${
-                    isSelected ? 'border-primary' : 'border-muted-300'
+                    isSelected ? 'border-primary-600' : 'border-muted-300'
                   }`}
                 >
                   {isSelected && (
                     <div className="flex h-full items-center justify-center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                      <div className="h-2.5 w-2.5 rounded-full bg-primary-600" />
                     </div>
                   )}
                 </div>
@@ -414,28 +411,15 @@ function PaymentStep({
 
               {/* Card details */}
               {m.id === 'card' && isSelected && (
-                <div className="mt-3 ml-14 space-y-4">
-                  <Input
-                    label="Card Number"
-                    placeholder="4242 4242 4242 4242"
-                    value={data.cardNumber || ''}
-                    onChange={(e) => onChange('cardNumber', e.target.value)}
-                    icon={<CreditCard size={16} />}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="Expiry"
-                      placeholder="MM/YY"
-                      value={data.cardExpiry || ''}
-                      onChange={(e) => onChange('cardExpiry', e.target.value)}
-                    />
-                    <Input
-                      label="CVC"
-                      placeholder="123"
-                      value={data.cardCvc || ''}
-                      onChange={(e) => onChange('cardCvc', e.target.value)}
-                    />
-                  </div>
+                <div className="mt-3 ml-14 rounded-lg border border-primary-200 bg-primary-50 p-3 text-xs text-primary-700">
+                  <p className="flex items-center gap-1.5 font-medium">
+                    <CreditCard size={14} />
+                    Secure checkout with Stripe
+                  </p>
+                  <p className="mt-1">
+                    You will be redirected to Stripe to enter your card details.
+                    E-Mart never sees or stores your card number or CVC.
+                  </p>
                 </div>
               )}
 
@@ -459,7 +443,7 @@ function PaymentStep({
       )}
 
       {errors.method && (
-        <p className="text-xs text-danger">{errors.method}</p>
+        <p className="text-xs text-danger-600">{errors.method}</p>
       )}
 
       <div className="flex justify-between pt-2">
@@ -545,13 +529,13 @@ function ReviewStep({
       <div className="rounded-xl border border-muted-200 p-4">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-secondary-800">
-            <MapPin size={16} className="text-primary" />
+            <MapPin size={16} className="text-primary-600" />
             Shipping Address
           </h3>
           <button
             type="button"
             onClick={goToShipping}
-            className="text-xs font-medium text-primary transition-colors hover:text-primary-500"
+            className="text-xs font-medium text-primary-600 transition-colors hover:text-primary-500"
           >
             Edit
           </button>
@@ -576,13 +560,13 @@ function ReviewStep({
       <div className="rounded-xl border border-muted-200 p-4">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-secondary-800">
-            <CreditCard size={16} className="text-primary" />
+            <CreditCard size={16} className="text-primary-600" />
             Payment Method
           </h3>
           <button
             type="button"
             onClick={goToPayment}
-            className="text-xs font-medium text-primary transition-colors hover:text-primary-500"
+            className="text-xs font-medium text-primary-600 transition-colors hover:text-primary-500"
           >
             Edit
           </button>
@@ -630,7 +614,7 @@ function ReviewStep({
             <span>Shipping</span>
             <span className="font-medium">
               {shownShipping === 0 ? (
-                <span className="text-success">Free</span>
+                <span className="text-success-700">Free</span>
               ) : (
                 formatPrice(shownShipping)
               )}
@@ -638,7 +622,7 @@ function ReviewStep({
           </div>
           <div className="flex justify-between border-t border-muted-100 pt-2">
             <span className="font-bold text-secondary-800">Total</span>
-            <span className="font-bold text-primary">
+            <span className="font-bold text-primary-600">
               {formatPrice(shownTotal)}
             </span>
           </div>
@@ -650,22 +634,22 @@ function ReviewStep({
         <input
           type="checkbox"
           onChange={(e) => onChange(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/40"
+          className="mt-0.5 h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
         />
         <span className="text-sm text-secondary-700">
           I agree to the{' '}
-          <Link href="/terms" className="font-medium text-primary hover:text-primary-500">
+          <Link href="/terms" className="font-medium text-primary-600 hover:text-primary-500">
             Terms &amp; Conditions
           </Link>{' '}
           and{' '}
-          <Link href="/privacy-policy" className="font-medium text-primary hover:text-primary-500">
+          <Link href="/privacy-policy" className="font-medium text-primary-600 hover:text-primary-500">
             Privacy Policy
           </Link>
           .
         </span>
       </label>
       {errors.acceptTerms && (
-        <p className="text-xs text-danger">{errors.acceptTerms}</p>
+        <p className="text-xs text-danger-600">{errors.acceptTerms}</p>
       )}
 
       {orderError && (
@@ -981,7 +965,7 @@ export default function CheckoutPage() {
             <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-600">
               <Link
                 href="/"
-                className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary"
+                className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary-600"
               >
                 <Home size={14} />
                 Home
@@ -1019,7 +1003,7 @@ export default function CheckoutPage() {
           <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-600">
             <Link
               href="/"
-              className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary"
+              className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary-600"
             >
               <Home size={14} />
               Home
@@ -1027,7 +1011,7 @@ export default function CheckoutPage() {
             <ChevronRight size={12} className="text-muted-400" />
             <Link
               href="/cart"
-              className="text-muted-600 transition-colors hover:text-primary"
+              className="text-muted-600 transition-colors hover:text-primary-600"
             >
               Cart
             </Link>
@@ -1160,7 +1144,7 @@ function MobileOrderSummary({ paymentMethodLabel }: { paymentMethodLabel?: strin
         aria-controls="mobile-order-summary"
       >
         <span className="flex items-center gap-2 text-sm font-semibold text-secondary-800">
-          <ShoppingBag size={18} className="text-primary" />
+          <ShoppingBag size={18} className="text-primary-600" />
           Order Summary
           {count > 0 && (
             <span className="rounded-full bg-muted-100 px-2 py-0.5 text-xs font-medium text-muted-600">
@@ -1192,7 +1176,7 @@ function MobileOrderSummary({ paymentMethodLabel }: { paymentMethodLabel?: strin
             {shownDiscount > 0 && (
               <div className="flex items-center justify-between">
                 <dt className="text-muted-500">Discount</dt>
-                <dd className="font-medium text-success">-{formatPrice(shownDiscount)}</dd>
+                <dd className="font-medium text-success-700">-{formatPrice(shownDiscount)}</dd>
               </div>
             )}
             {paymentMethodLabel && (
@@ -1203,7 +1187,7 @@ function MobileOrderSummary({ paymentMethodLabel }: { paymentMethodLabel?: strin
             )}
             <div className="flex items-center justify-between border-t border-muted-100 pt-2">
               <dt className="font-semibold text-secondary-800">Total</dt>
-              <dd className="font-bold text-primary">{formatPrice(shownTotal)}</dd>
+              <dd className="font-bold text-primary-600">{formatPrice(shownTotal)}</dd>
             </div>
           </dl>
         </div>

@@ -187,7 +187,7 @@ function SearchBar({ className }: { className?: string }) {
                 <p className="text-xs text-muted-500 capitalize">{s.type}</p>
               </div>
               {s.price != null && (
-                <span className="text-xs font-semibold text-primary whitespace-nowrap">
+                <span className="text-xs font-semibold text-primary-600 whitespace-nowrap">
                   Rs. {s.price.toLocaleString()}
                 </span>
               )}
@@ -195,7 +195,7 @@ function SearchBar({ className }: { className?: string }) {
           ))}
           <button
             onClick={() => navigateTo(query.trim())}
-            className="w-full px-4 py-2.5 text-center text-xs font-medium text-primary hover:bg-muted-50 transition-colors"
+            className="w-full px-4 py-2.5 text-center text-xs font-medium text-primary-600 hover:bg-muted-50 transition-colors"
           >
             View all results for &quot;{query}&quot;
           </button>
@@ -244,7 +244,7 @@ function PagesDropdown() {
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 py-2 hover:text-primary transition-colors"
+        className="inline-flex items-center gap-1 py-2 hover:text-primary-600 transition-colors"
         aria-expanded={open}
         aria-controls="pages-menu"
       >
@@ -267,7 +267,7 @@ function PagesDropdown() {
               key={item.href + item.label}
               href={item.href}
               onClick={() => handleItemClick(item.href)}
-              className="block rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
+              className="block rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary-600 transition-colors"
             >
               {item.label}
             </Link>
@@ -319,7 +319,7 @@ function UserMenu({
     return (
       <Link
         href="/login"
-        className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 hover:text-primary-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
         aria-label="Login / Account"
       >
         <User className="size-5 shrink-0" />
@@ -333,7 +333,7 @@ function UserMenu({
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-10 items-center gap-1 rounded-full p-1.5 hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="flex min-h-10 items-center gap-1 rounded-full p-1.5 hover:text-primary-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
         aria-label="Account menu"
         aria-expanded={open}
         aria-haspopup="menu"
@@ -349,7 +349,7 @@ function UserMenu({
             href={user.role === 'admin' ? '/admin' : user.role === 'seller' ? '/seller' : '/dashboard'}
             onClick={() => setOpen(false)}
             aria-label="My Account"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary transition-colors"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary-600 transition-colors"
           >
             <User className="size-4" /> My Account
           </Link>
@@ -360,7 +360,7 @@ function UserMenu({
               onLogout();
             }}
             aria-label="Logout"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger hover:bg-danger/5 transition-colors"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger-600 hover:bg-danger/5 transition-colors"
           >
             <LogOut className="size-4" /> Logout
           </button>
@@ -437,7 +437,7 @@ export default function Header() {
             <div className="col-start-1 flex items-center">
               <button
                 ref={navButtonRef}
-                className="-ml-2 rounded-lg p-2.5 text-secondary transition-colors hover:bg-muted-100 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary md:p-2"
+                className="-ml-2 rounded-lg p-2.5 text-secondary transition-colors hover:bg-muted-100 hover:text-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 md:p-2"
                 onClick={() => setMobileNavOpen(true)}
                 aria-label="Open navigation menu"
                 aria-expanded={mobileNavOpen}
@@ -469,7 +469,7 @@ export default function Header() {
             </Link>
 
             <div className="hidden lg:block flex-1 max-w-xl mx-auto">
-              <div className="flex items-center bg-muted-50 rounded-2xl p-2 border border-muted-200 focus-within:border-primary">
+              <div className="flex items-center bg-muted-50 rounded-2xl p-2 border border-muted-200 focus-within:border-primary-600">
                 <div className="hidden md:block border-r border-muted-300 pr-2">
                   <select
                     className="bg-transparent border-0 text-base sm:text-sm text-secondary focus:outline-none cursor-pointer py-1 px-2"
@@ -511,7 +511,7 @@ export default function Header() {
               </li>
               <li>
                 <button
-                  className="relative flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="relative flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 hover:text-primary-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
                   aria-label={
                     mounted && wishlistCount > 0
                       ? `Wishlist, ${wishlistCount} items`
@@ -529,7 +529,7 @@ export default function Header() {
               </li>
               <li>
                 <button
-                  className="relative flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2.5 text-secondary transition-colors hover:text-primary md:p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="relative flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2.5 text-secondary transition-colors hover:text-primary-600 md:p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
                   aria-label={`Shopping bag, ${itemCount} items`}
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('toggle-cart'));
@@ -546,7 +546,7 @@ export default function Header() {
             </ul>
 
             <div className="col-span-3 col-start-1 row-start-2 md:hidden">
-              <div className="flex items-center bg-muted-50 rounded-2xl p-2 border border-muted-200 focus-within:border-primary">
+              <div className="flex items-center bg-muted-50 rounded-2xl p-2 border border-muted-200 focus-within:border-primary-600">
                 <SearchBar className="flex-1" />
               </div>
             </div>

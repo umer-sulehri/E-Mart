@@ -19,7 +19,7 @@ export default function NotFoundSearch() {
     <form
       onSubmit={handleSubmit}
       role="search"
-      className="mx-auto mt-8 flex w-full max-w-md items-center rounded-full border border-muted-200 bg-white p-1.5 shadow-sm focus-within:border-primary"
+      className="mx-auto mt-8 flex w-full max-w-md items-center rounded-full border border-muted-200 bg-white p-1.5 shadow-sm focus-within:border-primary-600"
     >
       <input
         type="text"
@@ -31,7 +31,7 @@ export default function NotFoundSearch() {
       />
       <button
         type="submit"
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary-500"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-600 text-white transition-colors hover:bg-primary-500"
         aria-label="Search"
       >
         <Search className="size-4" />

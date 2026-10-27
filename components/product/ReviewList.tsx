@@ -298,7 +298,7 @@ function ReviewListContent({
                           onClick={() => selectSort(option)}
                           className={cn(
                             'flex w-full items-center px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted-50',
-                            sortBy === option && 'font-medium text-primary'
+                            sortBy === option && 'font-medium text-primary-600'
                           )}
                         >
                           {sortLabel(option)}
@@ -329,7 +329,7 @@ function ReviewListContent({
         {/* Error */}
         {!loading && error && (
           <div className="rounded-xl border border-danger/20 bg-danger/5 p-6 text-center">
-            <p className="text-sm text-danger">{error}</p>
+            <p className="text-sm text-danger-600">{error}</p>
             <Button variant="outline" size="sm" className="mt-3" onClick={fetchReviews}>
               Try Again
             </Button>
@@ -408,7 +408,7 @@ function ReviewListContent({
                     className={cn(
                       'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
                       helpfulClicked.has(review.id)
-                        ? 'bg-primary-100 text-primary'
+                        ? 'bg-primary-100 text-primary-600'
                         : 'bg-muted-50 text-muted-600 hover:bg-muted-100'
                     )}
                   >
@@ -417,7 +417,7 @@ function ReviewListContent({
                   </button>
                   <button
                     onClick={() => handleReport(review.id)}
-                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted-400 transition-colors hover:bg-danger-50 hover:text-danger"
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
                   >
                     <Flag size={12} />
                     Report

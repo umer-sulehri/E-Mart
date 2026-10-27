@@ -114,10 +114,10 @@ export default function Pagination({
     cn(
       'flex h-11 w-11 items-center justify-center rounded-lg border transition-colors sm:h-9 sm:w-9',
       // WCAG 2.4.7: a keyboard user has to be able to see which control has focus.
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-1',
       disabled
         ? 'cursor-not-allowed border-muted-200 text-muted-300'
-        : 'border-muted-200 text-secondary-800 hover:border-primary hover:text-primary'
+        : 'border-muted-200 text-secondary-800 hover:border-primary-600 hover:text-primary-600'
     );
 
   return (
@@ -175,10 +175,10 @@ export default function Pagination({
                     aria-current={page === safeCurrent ? 'page' : undefined}
                     className={cn(
                       'flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium transition-colors',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-1',
                       page === safeCurrent
                         ? 'border-primary-600 bg-primary-600 text-white'
-                        : 'border-muted-200 text-secondary-800 hover:border-primary hover:text-primary'
+                        : 'border-muted-200 text-secondary-800 hover:border-primary-600 hover:text-primary-600'
                     )}
                   >
                     {page}

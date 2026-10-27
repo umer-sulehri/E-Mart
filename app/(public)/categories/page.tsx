@@ -59,7 +59,7 @@ export default async function CategoriesPage() {
               Home
             </Link>
             <ChevronRight className="size-4" />
-            <span className="text-primary">Categories</span>
+            <span className="text-primary-600">Categories</span>
           </div>
         </div>
       </section>
@@ -84,7 +84,7 @@ export default async function CategoriesPage() {
                   />
                 </div>
                 <div className="p-5 text-center">
-                  <h2 className="font-heading text-lg font-bold text-secondary-800 group-hover:text-primary transition-colors">
+                  <h2 className="font-heading text-lg font-bold text-secondary-800 group-hover:text-primary-600 transition-colors">
                     {category.name}
                   </h2>
                   {category.productCount != null && (

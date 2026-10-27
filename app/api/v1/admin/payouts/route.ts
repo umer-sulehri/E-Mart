@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { parsePagination, buildPaginationMeta } from "@/lib/pagination";
 
 const VALID_STATUSES = ["pending", "processing", "completed", "failed"];
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     const sellerNames: Record<string, string> = {};
     if (sellerIds.length > 0) {
-      const { data: profiles } = await supabase
+      const { data: profiles } = await createAdminClient()
         .from("profiles")
         .select("id, first_name, last_name, email")
         .in("id", sellerIds);

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand green used by the native action bar, status bar and accent.
+         Mirrors tailwind.config.ts: DEFAULT/400 #6BB252, 600 #3D7A2B,
+         hover/700 #315E24. -->
+    <color name="colorPrimary">#3D7A2B</color>
+    <color name="colorPrimaryDark">#315E24</color>
+    <color name="colorAccent">#6BB252</color>
+</resources>

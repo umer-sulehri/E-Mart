@@ -123,7 +123,7 @@ function OrdersContent() {
             className={cn(
               'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
               activeTab === tab.value
-                ? 'bg-primary text-white'
+                ? 'bg-primary-600 text-white'
                 : 'text-muted-600 hover:bg-muted-50'
             )}
           >

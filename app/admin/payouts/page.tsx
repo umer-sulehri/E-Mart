@@ -204,14 +204,14 @@ function AdminPayoutsContent() {
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <p className="text-xs text-muted-500">Total Paid Out</p>
-          <p className="mt-1 text-2xl font-bold text-success">
+          <p className="mt-1 text-2xl font-bold text-success-700">
             {formatCurrency(summary?.total_paid ?? 0)}
           </p>
           <p className="mt-1 text-xs text-muted-400">Completed payouts</p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <p className="text-xs text-muted-500">Pending Balance</p>
-          <p className="mt-1 text-2xl font-bold text-warning">
+          <p className="mt-1 text-2xl font-bold text-warning-700">
             {formatCurrency(summary?.pending_balance ?? 0)}
           </p>
           <p className="mt-1 text-xs text-muted-400">Pending + processing</p>

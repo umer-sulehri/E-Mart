@@ -37,7 +37,7 @@ const ProductCarousel = React.forwardRef<HTMLDivElement, ProductCarouselProps>(
             <div className="flex items-center gap-2">
               <Link
                 href={viewAllLink}
-                className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-500"
+                className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-500"
               >
                 View All
               </Link>
@@ -45,7 +45,7 @@ const ProductCarousel = React.forwardRef<HTMLDivElement, ProductCarouselProps>(
                 <button
                   ref={prevRef}
                   aria-label={`Previous ${title}`}
-                  className="swiper-prev flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-muted-100 text-dark transition-colors hover:bg-primary hover:text-white"
+                  className="swiper-prev flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-muted-100 text-dark transition-colors hover:bg-primary-600 hover:text-white"
                   onClick={() => swiperRef.current?.slidePrev()}
                 >
                   <ChevronLeft size={18} />
@@ -53,7 +53,7 @@ const ProductCarousel = React.forwardRef<HTMLDivElement, ProductCarouselProps>(
                 <button
                   ref={nextRef}
                   aria-label={`Next ${title}`}
-                  className="swiper-next flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-muted-100 text-dark transition-colors hover:bg-primary hover:text-white"
+                  className="swiper-next flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-muted-100 text-dark transition-colors hover:bg-primary-600 hover:text-white"
                   onClick={() => swiperRef.current?.slideNext()}
                 >
                   <ChevronRight size={18} />

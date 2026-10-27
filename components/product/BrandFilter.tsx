@@ -73,7 +73,7 @@ export default function BrandFilter({
                 type="checkbox"
                 checked={selectedBrands.includes(brand.slug)}
                 onChange={() => toggleBrand(brand.slug)}
-                className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
+                className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
               />
               <span className="text-sm text-muted-600 transition-colors hover:text-secondary-800">
                 {brand.name}

@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("id, order_number, total, payment_status")
+      .select("id, order_number, total, payment_status, payment_method")
       .eq("id", orderId)
       .eq("user_id", user.id)
       .single();
@@ -63,6 +63,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (order.payment_method && order.payment_method !== "jazzcash") {
+      return NextResponse.json(
+        { success: false, error: "This order is not payable with JazzCash" },
+        { status: 400 }
+      );
+    }
+
     if (order.payment_status === "completed") {
       return NextResponse.json(
         { success: false, error: "Order already paid" },
@@ -70,13 +77,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Charge the server-side total, never the client-supplied amount.
+    const orderTotal = Number(order.total);
+    if (!Number.isFinite(orderTotal) || Math.abs(orderTotal - Number(amount)) > 0.01) {
+      return NextResponse.json(
+        { success: false, error: "Order total mismatch" },
+        { status: 400 }
+      );
+    }
+    const chargeAmount = orderTotal;
+
     const jazzcashConfig = {
       merchantId: process.env.JAZZCASH_MERCHANT_ID || "mock_merchant_id",
       password: process.env.JAZZCASH_PASSWORD || "",
       returnUrls: process.env.JAZZCASH_RETURN_URLS || "",
     };
 
-    logger.info("JazzCashInitiate", "Initiating payment for order:", order.order_number, "Amount: PKR", amount);
+    const gatewayConfigured = Boolean(
+      process.env.JAZZCASH_MERCHANT_ID && process.env.JAZZCASH_PASSWORD
+    );
+
+    if (!gatewayConfigured && process.env.NODE_ENV === "production") {
+      logger.error("JazzCashInitiate", "Gateway not configured in production");
+      return NextResponse.json(
+        { success: false, error: "JazzCash payments are temporarily unavailable" },
+        { status: 503 }
+      );
+    }
+
+    logger.info("JazzCashInitiate", "Initiating payment for order:", order.order_number, "Amount: PKR", chargeAmount);
 
     // Real JazzCash integration:
     // const dateNow = new Date();
@@ -132,7 +161,7 @@ export async function POST(request: NextRequest) {
       data: {
         transactionId: mockTransactionId,
         redirectUrl: "",
-        amount,
+        amount: chargeAmount,
         mobileNumber,
         orderNumber: order.order_number,
       },

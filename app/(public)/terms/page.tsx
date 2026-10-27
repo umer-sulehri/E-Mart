@@ -39,7 +39,7 @@ export default function TermsPage() {
               Home
             </Link>
             <ChevronRight className="size-4" />
-            <span className="text-primary">Terms &amp; Conditions</span>
+            <span className="text-primary-600">Terms &amp; Conditions</span>
           </div>
         </div>
       </section>
@@ -59,7 +59,7 @@ export default function TermsPage() {
                       <li key={s.id}>
                         <a
                           href={`#${s.id}`}
-                          className="block text-sm text-secondary-600 transition-colors hover:text-primary"
+                          className="block text-sm text-secondary-600 transition-colors hover:text-primary-600"
                         >
                           {s.label}
                         </a>
@@ -161,7 +161,7 @@ export default function TermsPage() {
                 </h2>
                 <p className="mb-4 leading-relaxed">
                   Your use of our platform is also governed by our{' '}
-                  <Link href="/privacy-policy" className="text-primary hover:underline">
+                  <Link href="/privacy-policy" className="text-primary-600 hover:underline">
                     Privacy Policy
                   </Link>
                   , which describes how we collect, use, and protect your personal information. By

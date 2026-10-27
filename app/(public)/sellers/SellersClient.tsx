@@ -143,7 +143,7 @@ function SellersContent() {
 
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 size={32} className="animate-spin text-primary" />
+              <Loader2 size={32} className="animate-spin text-primary-600" />
             </div>
           ) : sellers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -175,16 +175,16 @@ function SellersContent() {
                             className="object-contain"
                           />
                         ) : (
-                          <Store size={28} className="text-primary" />
+                          <Store size={28} className="text-primary-600" />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h2 className="truncate font-heading text-base font-bold text-secondary-800 group-hover:text-primary">
+                        <h2 className="truncate font-heading text-base font-bold text-secondary-800 group-hover:text-primary-600">
                           {seller.name}
                         </h2>
                         <div className="mt-1 flex items-center gap-3 text-xs text-muted-500">
                           <span className="flex items-center gap-1">
-                            <Star size={12} className="fill-warning text-warning" />
+                            <Star size={12} className="fill-warning text-warning-700" />
                             {seller.rating.toFixed(1)}
                           </span>
                           <span className="flex items-center gap-1">
@@ -193,7 +193,7 @@ function SellersContent() {
                           </span>
                         </div>
                       </div>
-                      <ChevronRight size={18} className="text-muted-300 group-hover:text-primary" />
+                      <ChevronRight size={18} className="text-muted-300 group-hover:text-primary-600" />
                     </div>
                     {seller.description && (
                       <p className="mt-3 line-clamp-2 text-sm text-muted-500">

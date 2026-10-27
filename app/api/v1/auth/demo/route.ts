@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { loadSeedAccounts, type SeedAccount } from "@/lib/seed-accounts";
+import {
+  loadSeedAccounts,
+  demoLoginEnabled,
+  demoPrivilegedEnabled,
+  type SeedAccount,
+} from "@/lib/seed-accounts";
 
 // Demo / tour-mode login. Supports two modes:
 //
@@ -113,11 +118,7 @@ async function signIn(supabase: Awaited<ReturnType<typeof createClient>>, acct: 
 }
 
 export async function POST(request: NextRequest) {
-  const demoEnabled =
-    process.env.NODE_ENV !== "production" ||
-    process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true";
-
-  if (!demoEnabled) {
+  if (!demoLoginEnabled()) {
     return NextResponse.json(
       { success: false, error: "Demo login is not enabled on this environment." },
       { status: 403 }
@@ -135,6 +136,12 @@ export async function POST(request: NextRequest) {
 
   // ── Mode 3: Bulk seed all accounts ──────────────────────────────────────
   if (body.seedAll === true) {
+    if (!demoPrivilegedEnabled()) {
+      return NextResponse.json(
+        { success: false, error: "Bulk seeding is disabled on this environment." },
+        { status: 403 }
+      );
+    }
     if (accounts.length === 0) {
       return NextResponse.json(
         { success: false, error: "Seed accounts are not configured on this environment (data/seed-accounts.json missing)." },
@@ -190,6 +197,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Privileged demo accounts (admin/seller) must not be mintable in
+    // production unless the operator explicitly opts in.
+    if (acct.role !== "customer" && !demoPrivilegedEnabled()) {
+      return NextResponse.json(
+        { success: false, error: "Privileged demo sign-in is disabled on this environment." },
+        { status: 403 }
+      );
+    }
+
     await ensureAuthUser(admin, acct);
 
     const supabase = await createClient();

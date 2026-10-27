@@ -31,7 +31,7 @@ export default function Breadcrumb({ items, className, activeItemClassName }: Br
     >
       <Link
         href="/"
-        className="inline-flex items-center gap-1 align-middle transition-colors hover:text-primary"
+        className="inline-flex items-center gap-1 align-middle transition-colors hover:text-primary-600"
       >
         <Home size={14} className="shrink-0 align-middle" aria-hidden="true" />
         Home
@@ -49,7 +49,7 @@ export default function Breadcrumb({ items, className, activeItemClassName }: Br
             {item.href && !isLast ? (
               <Link
                 href={item.href}
-                className="transition-colors hover:text-primary"
+                className="transition-colors hover:text-primary-600"
               >
                 {item.label}
               </Link>

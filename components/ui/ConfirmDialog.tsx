@@ -28,13 +28,13 @@ const variantConfig: Record<
     btnVariant: 'danger' | 'warning' | 'primary';
   }
 > = {
-  danger: { icon: Trash2, iconClass: 'text-danger', btnVariant: 'danger' },
+  danger: { icon: Trash2, iconClass: 'text-danger-600', btnVariant: 'danger' },
   warning: {
     icon: AlertTriangle,
-    iconClass: 'text-warning',
+    iconClass: 'text-warning-700',
     btnVariant: 'warning',
   },
-  info: { icon: Info, iconClass: 'text-primary', btnVariant: 'primary' },
+  info: { icon: Info, iconClass: 'text-primary-600', btnVariant: 'primary' },
 };
 
 export default function ConfirmDialog({

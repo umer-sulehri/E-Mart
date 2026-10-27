@@ -55,7 +55,7 @@ export default function ReviewCard({ review, onEdit, onDelete }: ReviewCardProps
             {product?.slug ? (
               <Link
                 href={`/products/${encodeURIComponent(product.slug)}`}
-                className="max-w-full truncate font-semibold text-secondary-800 transition-colors hover:text-primary"
+                className="max-w-full truncate font-semibold text-secondary-800 transition-colors hover:text-primary-600"
               >
                 {product?.name ?? 'Product'}
               </Link>
@@ -78,7 +78,7 @@ export default function ReviewCard({ review, onEdit, onDelete }: ReviewCardProps
             <span className="inline-flex items-center gap-1.5">
               <Star
                 className={cn(
-                  'h-4 w-4 fill-warning text-warning'
+                  'h-4 w-4 fill-warning text-warning-700'
                 )}
               />
               <span className="font-medium text-secondary-700">{review.rating}.0</span>

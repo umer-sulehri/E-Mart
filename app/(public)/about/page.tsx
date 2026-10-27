@@ -97,7 +97,7 @@ export default function AboutPage() {
               Home
             </Link>
             <ChevronRight className="size-4" />
-            <span className="text-primary">About Us</span>
+            <span className="text-primary-600">About Us</span>
           </div>
         </div>
       </section>
@@ -119,7 +119,7 @@ export default function AboutPage() {
               <h2 className="font-heading text-2xl font-bold text-secondary-800 md:text-3xl">
                 Our Story
               </h2>
-              <div className="mt-2 mb-6 h-1 w-16 rounded bg-primary" />
+              <div className="mt-2 mb-6 h-1 w-16 rounded bg-primary-600" />
               <p className="mb-4 leading-relaxed text-secondary-700">
                 Founded in 2019, E-Mart started with a simple idea: everyone deserves access to fresh,
                 high-quality groceries without leaving the comfort of their home. What began as a small
@@ -148,7 +148,7 @@ export default function AboutPage() {
             <h2 className="font-heading text-2xl font-bold text-secondary-800 md:text-3xl">
               What Drives Us
             </h2>
-            <div className="mx-auto mt-2 mb-4 h-1 w-16 rounded bg-primary" />
+            <div className="mx-auto mt-2 mb-4 h-1 w-16 rounded bg-primary-600" />
           </div>
           <div className="grid gap-8 md:grid-cols-3">
             {values.map((item) => {
@@ -158,7 +158,7 @@ export default function AboutPage() {
                   key={item.title}
                   className="rounded-2xl bg-white p-8 text-center shadow-sm transition-shadow hover:shadow-md"
                 >
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary-600">
                     <Icon className="h-8 w-8" />
                   </div>
                   <h3 className="mb-3 font-heading text-lg font-bold text-secondary-800">
@@ -181,7 +181,7 @@ export default function AboutPage() {
             <h2 className="font-heading text-2xl font-bold text-secondary-800 md:text-3xl">
               Meet Our Team
             </h2>
-            <div className="mx-auto mt-2 mb-4 h-1 w-16 rounded bg-primary" />
+            <div className="mx-auto mt-2 mb-4 h-1 w-16 rounded bg-primary-600" />
             <p className="mx-auto max-w-xl text-secondary-600">
               The passionate people behind E-Mart who work tirelessly to bring you the best grocery
               shopping experience.
@@ -193,19 +193,19 @@ export default function AboutPage() {
                 key={member.name}
                 className="group rounded-2xl bg-white p-6 text-center shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary text-2xl font-bold text-white">
+                <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary-600 text-2xl font-bold text-white">
                   {member.initials}
                 </div>
                 <h3 className="font-heading text-lg font-bold text-secondary-800">
                   {member.name}
                 </h3>
-                <p className="mt-1 text-sm text-primary">{member.role}</p>
+                <p className="mt-1 text-sm text-primary-600">{member.role}</p>
                 <div className="mt-4 flex justify-center gap-3">
                   {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
                     <a
                       key={i}
                       href="#"
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-muted-200 text-muted-500 transition-colors hover:border-primary hover:bg-primary hover:text-white"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-muted-200 text-muted-500 transition-colors hover:border-primary-600 hover:bg-primary-600 hover:text-white"
                       aria-label="Social link"
                     >
                       <Icon className="h-3.5 w-3.5" />
@@ -224,7 +224,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-3xl font-bold text-primary md:text-4xl">{stat.value}</p>
+                <p className="text-3xl font-bold text-primary-600 md:text-4xl">{stat.value}</p>
                 <p className="mt-1 text-sm text-white/70">{stat.label}</p>
               </div>
             ))}
@@ -239,14 +239,14 @@ export default function AboutPage() {
             <h2 className="font-heading text-2xl font-bold text-secondary-800 md:text-3xl">
               Why Choose Us
             </h2>
-            <div className="mx-auto mt-2 mb-4 h-1 w-16 rounded bg-primary" />
+            <div className="mx-auto mt-2 mb-4 h-1 w-16 rounded bg-primary-600" />
           </div>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {whyChooseUs.map((item) => {
               const Icon = item.icon;
               return (
                 <div key={item.title} className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary-600">
                     <Icon className="h-8 w-8" />
                   </div>
                   <h3 className="mb-2 font-heading text-lg font-bold text-secondary-800">
@@ -263,7 +263,7 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-primary py-16">
+      <section className="bg-primary-600 py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-12 text-center">
           <h2 className="font-heading text-2xl font-bold text-white md:text-3xl">
             Join Our Growing Community

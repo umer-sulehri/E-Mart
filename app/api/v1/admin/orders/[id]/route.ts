@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAdminLog } from "@/lib/audit";
 
 export async function GET(
@@ -36,7 +37,9 @@ export async function GET(
 
     const { id } = await params;
 
-    const { data: order, error } = await supabase
+    // Customer embed includes email + phone (outside the authenticated column
+    // grant); the admin role was verified above.
+    const { data: order, error } = await createAdminClient()
       .from("orders")
       .select(
         `

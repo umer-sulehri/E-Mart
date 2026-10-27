@@ -41,7 +41,7 @@ export default function ReviewsPage() {
             className={cn(
               'inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
               tab === key
-                ? 'bg-white text-primary shadow-sm'
+                ? 'bg-white text-primary-600 shadow-sm'
                 : 'text-muted-600 hover:text-secondary-800'
             )}
           >

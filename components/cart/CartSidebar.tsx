@@ -96,7 +96,7 @@ export default function CartSidebar() {
               Shopping Cart
             </h2>
             {hydrated && currentItemCount > 0 && (
-              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">
+              <span className="rounded-full bg-primary-600 px-2 py-0.5 text-xs font-bold text-white">
                 {currentItemCount}
               </span>
             )}
@@ -159,7 +159,7 @@ export default function CartSidebar() {
                         <h3 className="line-clamp-2 text-sm font-medium text-secondary-800">
                           {item.product.name}
                         </h3>
-                        <p className="mt-0.5 text-sm font-semibold text-primary">
+                        <p className="mt-0.5 text-sm font-semibold text-primary-600">
                           {formatPrice(item.unitPrice)}
                         </p>
                       </div>
@@ -175,7 +175,7 @@ export default function CartSidebar() {
                         />
                         <button
                           onClick={() => removeItem(item.productId)}
-                          className="rounded p-1.5 text-muted-400 transition-colors hover:bg-danger-50 hover:text-danger"
+                          className="rounded p-1.5 text-muted-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
                           aria-label={`Remove ${item.product.name}`}
                         >
                           <Trash2 size={16} />
@@ -207,7 +207,7 @@ export default function CartSidebar() {
                   <span>Shipping</span>
                   <span className="font-semibold">
                     {currentShipping === 0 ? (
-                      <span className="text-success">Free</span>
+                      <span className="text-success-700">Free</span>
                     ) : (
                       formatPrice(currentShipping)
                     )}
@@ -236,7 +236,7 @@ export default function CartSidebar() {
 
               <button
                 onClick={handleToggle}
-                className="mt-3 w-full text-center text-sm font-medium text-secondary-700 transition-colors hover:text-primary"
+                className="mt-3 w-full text-center text-sm font-medium text-secondary-700 transition-colors hover:text-primary-600"
               >
                 Continue Shopping
               </button>

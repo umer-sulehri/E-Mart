@@ -201,7 +201,7 @@ export default function QuickViewModal({
                     size={13}
                     className={
                       i < Math.round(product.rating)
-                        ? 'fill-warning text-warning'
+                        ? 'fill-warning text-warning-700'
                         : 'text-muted-300'
                     }
                   />
@@ -284,7 +284,7 @@ export default function QuickViewModal({
                   aria-pressed={isWishlisted}
                 >
                   {isWishlisted ? (
-                    <Check size={16} className="shrink-0 text-primary" />
+                    <Check size={16} className="shrink-0 text-primary-600" />
                   ) : (
                     <Heart size={16} className="shrink-0" />
                   )}

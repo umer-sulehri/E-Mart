@@ -97,10 +97,10 @@ export default function SellerEarningsPage() {
         : payoutMethod?.jazzcash_phone || 'Not set yet';
 
   const earningsStats = [
-    { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: DollarSign, bg: 'bg-primary' },
-    { label: 'Net Earnings', value: formatPrice(stats.netEarnings), icon: TrendingUp, bg: 'bg-success' },
-    { label: 'Commission Paid', value: formatPrice(commissionPaid), icon: Clock, bg: 'bg-danger' },
-    { label: 'This Month', value: formatPrice(stats.monthlyRevenue), icon: Calendar, bg: 'bg-warning' },
+    { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: DollarSign, bg: 'bg-primary-600' },
+    { label: 'Net Earnings', value: formatPrice(stats.netEarnings), icon: TrendingUp, bg: 'bg-success-700' },
+    { label: 'Commission Paid', value: formatPrice(commissionPaid), icon: Clock, bg: 'bg-danger-600' },
+    { label: 'This Month', value: formatPrice(stats.monthlyRevenue), icon: Calendar, bg: 'bg-warning-700' },
   ];
 
   return (
@@ -173,9 +173,9 @@ export default function SellerEarningsPage() {
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
                   {payoutMethod?.preferred_method === 'bank' ? (
-                    <CreditCard className="size-5 text-primary" />
+                    <CreditCard className="size-5 text-primary-600" />
                   ) : (
-                    <Smartphone className="size-5 text-primary" />
+                    <Smartphone className="size-5 text-primary-600" />
                   )}
                 </div>
                 <div className="min-w-0">

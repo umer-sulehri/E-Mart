@@ -38,7 +38,7 @@ export default function PrivacyPolicyPage() {
               Home
             </Link>
             <ChevronRight className="size-4" />
-            <span className="text-primary">Privacy Policy</span>
+            <span className="text-primary-600">Privacy Policy</span>
           </div>
         </div>
       </section>
@@ -58,7 +58,7 @@ export default function PrivacyPolicyPage() {
                       <li key={s.id}>
                         <a
                           href={`#${s.id}`}
-                          className="block text-sm text-secondary-600 transition-colors hover:text-primary"
+                          className="block text-sm text-secondary-600 transition-colors hover:text-primary-600"
                         >
                           {s.label}
                         </a>
@@ -115,7 +115,7 @@ export default function PrivacyPolicyPage() {
                   E-Mart (operating as an organic grocery e-commerce platform) is the data
                   controller for the personal information described in this policy. For
                   practical questions, contact our privacy team at{' '}
-                  <a href="mailto:privacy@emart.pk" className="text-primary hover:underline">
+                  <a href="mailto:privacy@emart.pk" className="text-primary-600 hover:underline">
                     privacy@emart.pk
                   </a>
                   .
@@ -244,7 +244,7 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <p className="mb-4 leading-relaxed">
                   See our{' '}
-                  <Link href="/cookie-policy" className="text-primary hover:underline">
+                  <Link href="/cookie-policy" className="text-primary-600 hover:underline">
                     Cookie Policy
                   </Link>{' '}
                   for a full breakdown of the cookies and local storage we use.

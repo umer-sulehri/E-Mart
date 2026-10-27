@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, is_blocked")
       .eq("id", user.id)
       .single();
 
@@ -50,9 +50,20 @@ export async function updateSession(request: NextRequest) {
         ...AUTH_COOKIE_OPTIONS,
         maxAge: USER_ROLE_COOKIE_MAX_AGE,
       });
+      // Cached so middleware.ts can enforce suspension without a second DB
+      // round-trip. Cleared/refreshed on every request by this function.
+      if (profile.is_blocked) {
+        supabaseResponse.cookies.set("sb-user-blocked", "1", {
+          ...AUTH_COOKIE_OPTIONS,
+          maxAge: USER_ROLE_COOKIE_MAX_AGE,
+        });
+      } else {
+        supabaseResponse.cookies.delete("sb-user-blocked");
+      }
     }
   } else {
     supabaseResponse.cookies.delete("sb-user-role");
+    supabaseResponse.cookies.delete("sb-user-blocked");
   }
 
   return supabaseResponse;

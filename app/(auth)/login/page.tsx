@@ -82,7 +82,7 @@ function RoleSelector({
       <div>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary-500"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-500"
         >
           <ArrowLeft className="size-4" /> Back to home
         </Link>
@@ -110,14 +110,14 @@ function RoleSelector({
                 'group flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all disabled:pointer-events-none disabled:opacity-60',
                 meta.accent
                   ? 'border-muted-200 hover:border-danger hover:bg-danger/5'
-                  : 'border-muted-200 hover:border-primary hover:bg-primary-50'
+                  : 'border-muted-200 hover:border-primary-600 hover:bg-primary-50'
               )}
               aria-label={`Open ${meta.label} dashboard`}
             >
               <span
                 className={cn(
                   'flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors',
-                  meta.accent ? 'bg-danger/10 text-danger group-hover:bg-danger group-hover:text-white' : 'bg-primary-50 text-primary group-hover:bg-primary group-hover:text-white'
+                  meta.accent ? 'bg-danger/10 text-danger-600 group-hover:bg-danger-600 group-hover:text-white' : 'bg-primary-50 text-primary-600 group-hover:bg-primary-600 group-hover:text-white'
                 )}
               >
                 {loading ? <Loader2 className="size-6 animate-spin" /> : <Icon className="h-6 w-6" />}
@@ -129,7 +129,7 @@ function RoleSelector({
               <span
                 className={cn(
                   'text-sm font-semibold',
-                  meta.accent ? 'text-danger group-hover:text-danger' : 'text-primary'
+                  meta.accent ? 'text-danger-600 group-hover:text-danger-600' : 'text-primary-600'
                 )}
               >
                 {loading ? 'Signing in…' : 'Enter →'}
@@ -141,7 +141,7 @@ function RoleSelector({
 
       <p className="text-center text-xs text-muted-400">
         Demo accounts are created automatically &mdash; sign in instantly, no password needed.
-        Real account sign-in is still available <Link href="/login" className="font-medium text-primary hover:text-primary-500">here</Link>.
+        Real account sign-in is still available <Link href="/login" className="font-medium text-primary-600 hover:text-primary-500">here</Link>.
       </p>
     </div>
   );
@@ -269,7 +269,7 @@ function RoleLoginForm() {
       <div className="space-y-4">
         <RoleSelector onStart={handleDemoLogin} loadingRole={demoLoading} />
         {demoError && (
-          <p className="rounded-lg bg-danger/5 px-3 py-2 text-center text-xs font-medium text-danger">
+          <p className="rounded-lg bg-danger/5 px-3 py-2 text-center text-xs font-medium text-danger-600">
             {demoError}. Showing the sign-in form instead.
           </p>
         )}
@@ -277,7 +277,7 @@ function RoleLoginForm() {
           <button
             type="button"
             onClick={() => setRole('buyer')}
-            className="text-sm font-medium text-primary hover:text-primary-500"
+            className="text-sm font-medium text-primary-600 hover:text-primary-500"
           >
             Sign in with email &amp; password
           </button>
@@ -297,7 +297,7 @@ function RoleLoginForm() {
         <button
           type="button"
           onClick={() => setRole(null)}
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-500"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 transition-colors hover:text-primary-500"
         >
           <ArrowLeft className="size-3.5" /> Change role
         </button>
@@ -336,12 +336,12 @@ function RoleLoginForm() {
           <label className="flex items-center gap-2 text-sm text-muted-600">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary"
+              className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
               {...register('rememberMe')}
             />
             Remember me
           </label>
-          <Link href="/forgot-password" className="text-sm font-medium text-primary hover:text-primary-500">
+          <Link href="/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-500">
             Forgot Password?
           </Link>
         </div>
@@ -349,7 +349,7 @@ function RoleLoginForm() {
         <Button
           type="submit"
           loading={isLoading}
-          className={cn('w-full', meta.accent && '!bg-danger hover:!bg-danger/90')}
+          className={cn('w-full', meta.accent && '!bg-danger-600 hover:!bg-danger/90')}
           size="lg"
         >
           Login as {meta.label}
@@ -372,7 +372,7 @@ function RoleLoginForm() {
           'flex w-full items-center justify-center gap-2 rounded-xl border-2 py-2.5 text-sm font-semibold transition-colors',
           meta.accent
             ? 'border-muted-200 text-secondary hover:border-danger'
-            : 'border-muted-200 text-secondary hover:border-primary'
+            : 'border-muted-200 text-secondary hover:border-primary-600'
         )}
       >
         <GoogleIcon className="h-5 w-5" />
@@ -382,7 +382,7 @@ function RoleLoginForm() {
       <p
         className={cn(
           'flex items-center justify-center gap-1.5 text-center text-[11px]',
-          meta.accent ? 'text-danger' : 'text-muted-400'
+          meta.accent ? 'text-danger-600' : 'text-muted-400'
         )}
       >
         {meta.accent ? (
@@ -399,7 +399,7 @@ function RoleLoginForm() {
         Don&apos;t have an account?{' '}
         <Link
           href={role === 'buyer' ? '/register' : `/register?role=${role}`}
-          className={cn('font-medium hover:text-primary-500', meta.accent ? 'text-danger' : 'text-primary')}
+          className={cn('font-medium hover:text-primary-500', meta.accent ? 'text-danger-600' : 'text-primary-600')}
         >
           Register as {meta.label}
         </Link>

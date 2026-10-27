@@ -179,7 +179,7 @@ function AdminSellersContent() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger">{error}</div>
+        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger-600">{error}</div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -201,7 +201,7 @@ function AdminSellersContent() {
       {pendingCount > 0 && (
         <div className="rounded-xl border border-warning-200 bg-warning-50 p-4">
           <div className="flex items-center gap-3">
-            <Clock className="size-5 text-warning" />
+            <Clock className="size-5 text-warning-700" />
             <div>
               <p className="font-medium text-secondary-800">{pendingCount} sellers pending approval</p>
               <p className="text-sm text-muted-600">Review and approve new seller registrations</p>
@@ -220,7 +220,7 @@ function AdminSellersContent() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               aria-label="Search sellers"
-              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
             />
           </div>
           <select
@@ -233,7 +233,7 @@ function AdminSellersContent() {
               router.push(`${pathname}?${params.toString()}`);
             }}
             aria-label="Filter by status"
-            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
+            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary-600 focus:outline-none"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -245,7 +245,7 @@ function AdminSellersContent() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="size-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary-600" />
           </div>
         ) : sellers.length === 0 ? (
           <div className="py-16 text-center text-muted-500">No sellers found</div>
@@ -270,7 +270,7 @@ function AdminSellersContent() {
                     <tr key={seller.id} className="hover:bg-muted-50/50">
                       <td className="py-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
                             {getInitials(seller.name)}
                           </div>
                           <div className="min-w-0">
@@ -293,7 +293,7 @@ function AdminSellersContent() {
                       <td className="hidden py-3 xl:table-cell">
                         {seller.rating > 0 ? (
                           <div className="flex items-center gap-1">
-                            <Star className="size-3.5 fill-warning text-warning" />
+                            <Star className="size-3.5 fill-warning text-warning-700" />
                             <span className="text-secondary-800">{seller.rating}</span>
                           </div>
                         ) : (
@@ -304,7 +304,7 @@ function AdminSellersContent() {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => setExpanded(expanded === seller.id ? null : seller.id)}
-                            className="rounded p-1.5 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
+                            className="rounded p-1.5 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary-600"
                             aria-label="View seller"
                           >
                             <Eye className="size-4" />
@@ -314,7 +314,7 @@ function AdminSellersContent() {
                               <button
                                 onClick={() => act(seller.id, 'verify')}
                                 disabled={acting === seller.id}
-                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
+                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success-700 disabled:opacity-50"
                                 aria-label="Approve"
                               >
                                 {acting === seller.id ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
@@ -322,7 +322,7 @@ function AdminSellersContent() {
                               <button
                                 onClick={() => act(seller.id, 'reject')}
                                 disabled={acting === seller.id}
-                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
+                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
                                 aria-label="Reject"
                               >
                                 <XCircle className="size-4" />
@@ -333,7 +333,7 @@ function AdminSellersContent() {
                             <button
                               onClick={() => act(seller.id, 'suspend')}
                               disabled={acting === seller.id}
-                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
+                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
                               aria-label="Suspend"
                             >
                               {acting === seller.id ? <Loader2 className="size-4 animate-spin" /> : <UserX className="size-4" />}
@@ -343,7 +343,7 @@ function AdminSellersContent() {
                             <button
                               onClick={() => act(seller.id, 'verify')}
                               disabled={acting === seller.id}
-                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
+                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success-700 disabled:opacity-50"
                               aria-label="Restore"
                             >
                               {acting === seller.id ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}

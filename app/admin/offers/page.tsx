@@ -256,7 +256,7 @@ function AdminOffersContent() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger">{error}</div>
+        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger-600">{error}</div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -305,7 +305,7 @@ function AdminOffersContent() {
               placeholder="Search products..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
             />
           </div>
 
@@ -339,7 +339,7 @@ function AdminOffersContent() {
                         onChange={() => {
                           toggleSeller(seller.slug);
                         }}
-                        className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
+                        className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
                       />
                       <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-muted-100">
                         <ImageWithFallback
@@ -377,7 +377,7 @@ function AdminOffersContent() {
                 className={cn(
                   'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
                   typeFilter[key]
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-muted-100 text-muted-600 hover:bg-muted-200'
                 )}
               >
@@ -393,7 +393,7 @@ function AdminOffersContent() {
             onChange={(e) =>
               setFilters({ status: e.target.value === 'all' ? null : e.target.value })
             }
-            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-800 focus:border-primary focus:outline-none"
+            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-800 focus:border-primary-600 focus:outline-none"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
@@ -402,12 +402,12 @@ function AdminOffersContent() {
 
           {activeFilterCount > 0 && (
             <>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary-600">
                 Filters Applied: {activeFilterCount}
               </span>
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-danger hover:text-danger-600"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-danger-600 hover:text-danger-600"
               >
                 <RotateCcw size={14} />
                 Reset All
@@ -463,7 +463,7 @@ function AdminOffersContent() {
                   <td className="hidden py-3 lg:table-cell">
                     <p className="font-medium text-secondary-800">{formatPrice(product.price)}</p>
                     {product.discount_price != null && (
-                      <p className="text-xs text-success">{formatPrice(product.discount_price)}</p>
+                      <p className="text-xs text-success-700">{formatPrice(product.discount_price)}</p>
                     )}
                   </td>
                   <td className="py-3">
@@ -482,7 +482,7 @@ function AdminOffersContent() {
                   </td>
                   <td className="py-3">
                     {justSaved === product.id ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-success-700">
                         <Check className="size-4" /> Saved
                       </span>
                     ) : (
@@ -500,12 +500,12 @@ function AdminOffersContent() {
                                 saveField(product.id, 'discount_price', val);
                               }
                             }}
-                            className="w-28 rounded-lg border border-muted-200 px-2 py-1.5 text-base sm:text-sm focus:border-primary focus:outline-none"
+                            className="w-28 rounded-lg border border-muted-200 px-2 py-1.5 text-base sm:text-sm focus:border-primary-600 focus:outline-none"
                             aria-label={`Discount price for ${product.name}`}
                           />
                         </div>
                         {saving?.id === product.id && saving?.field === 'discount_price' && (
-                          <Save className="size-4 animate-pulse text-primary" />
+                          <Save className="size-4 animate-pulse text-primary-600" />
                         )}
                       </div>
                     )}
@@ -515,7 +515,7 @@ function AdminOffersContent() {
               {loading && (
                 <tr>
                   <td colSpan={6} className="py-10 text-center text-muted-500">
-                    <Loader2 className="mx-auto mb-2 size-6 animate-spin text-primary" />
+                    <Loader2 className="mx-auto mb-2 size-6 animate-spin text-primary-600" />
                     Loading products
                   </td>
                 </tr>
@@ -571,7 +571,7 @@ function Toggle({
       <span
         className={cn(
           'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-          checked ? 'bg-primary' : 'bg-muted-300'
+          checked ? 'bg-primary-600' : 'bg-muted-300'
         )}
       >
         <span

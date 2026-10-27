@@ -129,7 +129,7 @@ export default function PriceRangeSlider({
       >
         {/* Active range */}
         <div
-          className="absolute h-full rounded-full bg-primary"
+          className="absolute h-full rounded-full bg-primary-600"
           style={{
             left: `${leftPercent}%`,
             width: `${rightPercent - leftPercent}%`,
@@ -138,7 +138,7 @@ export default function PriceRangeSlider({
 
         {/* Min thumb */}
         <div
-          className="absolute top-1/2 z-10 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-white shadow-sm transition-shadow hover:shadow-md"
+          className="absolute top-1/2 z-10 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary-600 bg-white shadow-sm transition-shadow hover:shadow-md"
           style={{ left: `${leftPercent}%` }}
           onMouseDown={(e) => {
             e.stopPropagation();
@@ -165,7 +165,7 @@ export default function PriceRangeSlider({
 
         {/* Max thumb */}
         <div
-          className="absolute top-1/2 z-10 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-white shadow-sm transition-shadow hover:shadow-md"
+          className="absolute top-1/2 z-10 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary-600 bg-white shadow-sm transition-shadow hover:shadow-md"
           style={{ left: `${rightPercent}%` }}
           onMouseDown={(e) => {
             e.stopPropagation();

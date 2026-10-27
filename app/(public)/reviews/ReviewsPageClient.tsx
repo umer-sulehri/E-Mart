@@ -154,7 +154,7 @@ function ReviewsContent() {
           <div className="mt-3 flex items-center gap-2 text-sm text-white/70">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight className="size-4" />
-            <span className="text-primary">Reviews</span>
+            <span className="text-primary-600">Reviews</span>
           </div>
         </div>
       </section>
@@ -172,7 +172,7 @@ function ReviewsContent() {
                     size={20}
                     className={
                       i < Math.round(overallRating)
-                        ? 'fill-warning text-warning'
+                        ? 'fill-warning text-warning-700'
                         : 'text-muted-300'
                     }
                   />
@@ -189,7 +189,7 @@ function ReviewsContent() {
                 onClick={() => setRatingFilter(0)}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                   ratingFilter === 0
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-muted-100 text-secondary-700 hover:bg-muted-200'
                 }`}
               >
@@ -201,7 +201,7 @@ function ReviewsContent() {
                   onClick={() => setRatingFilter(rating)}
                   className={`flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                     ratingFilter === rating
-                      ? 'bg-primary text-white'
+                      ? 'bg-primary-600 text-white'
                       : 'bg-muted-100 text-secondary-700 hover:bg-muted-200'
                   }`}
                 >
@@ -227,7 +227,7 @@ function ReviewsContent() {
               <button
                 type="button"
                 onClick={reloadReviews}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-600"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-600"
               >
                 <RotateCcw size={16} />
                 Try again
@@ -291,7 +291,7 @@ function ReviewsContent() {
                               size={14}
                               className={
                                 i < review.rating
-                                  ? 'fill-warning text-warning'
+                                  ? 'fill-warning text-warning-700'
                                   : 'text-muted-300'
                               }
                             />
@@ -328,7 +328,7 @@ function ReviewsContent() {
                     </div>
                     <Link
                       href={`/products/${review.productSlug}`}
-                      className="text-sm font-medium text-primary hover:text-primary-500 transition-colors"
+                      className="text-sm font-medium text-primary-600 hover:text-primary-500 transition-colors"
                     >
                       {review.productName}
                     </Link>
@@ -340,7 +340,7 @@ function ReviewsContent() {
                       onClick={() => handleHelpful(review.id)}
                       className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
                         review.helpfulByUser
-                          ? 'bg-primary/10 text-primary'
+                          ? 'bg-primary/10 text-primary-600'
                           : 'text-muted-500 hover:bg-muted-100'
                       }`}
                     >

@@ -312,7 +312,7 @@ export default function ComparePage({
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-          <BarChart3 size={40} className="text-primary" aria-hidden="true" />
+          <BarChart3 size={40} className="text-primary-600" aria-hidden="true" />
         </div>
         <h1 className="font-heading text-2xl font-bold text-secondary-800">
           Compare Products
@@ -323,7 +323,7 @@ export default function ComparePage({
         <div className="mt-8 flex flex-col items-center gap-4">
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
           >
             <Plus size={16} aria-hidden="true" />
             Browse Products
@@ -353,7 +353,7 @@ export default function ComparePage({
                 shopper why a product they can see elsewhere on the site cannot
                 be added here. */}
             {trayLabel && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-600">
                 <Tag size={12} aria-hidden="true" />
                 Comparing in: {trayLabel}
               </span>
@@ -367,7 +367,7 @@ export default function ComparePage({
               onClick={() => setShowSearch(!showSearch)}
               aria-expanded={showSearch}
               aria-controls="compare-search-panel"
-              className="inline-flex items-center gap-2 rounded-xl border border-muted-200 bg-white px-4 py-2 text-sm font-semibold text-secondary-700 shadow-sm transition-colors hover:bg-muted-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="inline-flex items-center gap-2 rounded-xl border border-muted-200 bg-white px-4 py-2 text-sm font-semibold text-secondary-700 shadow-sm transition-colors hover:bg-muted-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
             >
               <Plus size={16} aria-hidden="true" />
               Add Product
@@ -376,7 +376,7 @@ export default function ComparePage({
           <button
             type="button"
             onClick={clearAll}
-            className="inline-flex items-center gap-2 rounded-xl border border-danger/20 bg-white px-4 py-2 text-sm font-semibold text-danger shadow-sm transition-colors hover:bg-danger/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
+            className="inline-flex items-center gap-2 rounded-xl border border-danger/20 bg-white px-4 py-2 text-sm font-semibold text-danger-600 shadow-sm transition-colors hover:bg-danger/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
           >
             <Trash2 size={16} aria-hidden="true" />
             Clear All
@@ -410,13 +410,13 @@ export default function ComparePage({
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Search by product name..."
-              className="flex-1 rounded-xl border border-muted-200 px-4 py-2.5 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="flex-1 rounded-xl border border-muted-200 px-4 py-2.5 text-base sm:text-sm focus:border-primary-600 focus:outline-none focus:ring-1 focus:ring-primary-600"
             />
             <button
               type="button"
               onClick={handleSearch}
               disabled={isSearching}
-              className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
             >
               {isSearching ? 'Searching...' : 'Search'}
             </button>
@@ -448,7 +448,7 @@ export default function ComparePage({
                     <p className="mt-2 line-clamp-2 text-xs font-medium text-secondary-700">
                       {product.name}
                     </p>
-                    <p className="mt-1 text-xs font-bold text-primary">
+                    <p className="mt-1 text-xs font-bold text-primary-600">
                       Rs. {resultPrice(product).toLocaleString()}
                     </p>
                     {/* Positive styling is reserved for a result that can
@@ -457,7 +457,7 @@ export default function ComparePage({
                     <p
                       className={
                         matchesTray && trayCategoryId !== null
-                          ? 'mt-1.5 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary'
+                          ? 'mt-1.5 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary-600'
                           : 'mt-1.5 inline-flex rounded-full bg-muted-200 px-2 py-0.5 text-[10px] font-semibold text-muted-600'
                       }
                     >
@@ -480,7 +480,7 @@ export default function ComparePage({
                               ? `Your compare list is full, remove a product to add ${product.name}`
                               : `Add ${product.name} to compare`
                       }
-                      className="mt-2 w-full rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:bg-muted-100 disabled:text-muted-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="mt-2 w-full rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:bg-muted-100 disabled:text-muted-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
                     >
                       {alreadySaved
                         ? 'Saved'
@@ -533,7 +533,7 @@ export default function ComparePage({
                       type="button"
                       onClick={() => handleRemove(item.id)}
                       aria-label={`Remove ${item.name} from compare`}
-                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-muted-100 text-muted-500 transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-muted-100 text-muted-500 transition-colors hover:bg-danger/10 hover:text-danger-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
                     >
                       <X size={12} aria-hidden="true" />
                     </button>
@@ -557,7 +557,7 @@ export default function ComparePage({
               {(item) => (
                 <Link
                   href={`/products/${item.slug}`}
-                  className="text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="text-sm font-medium text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
                 >
                   {item.name}
                 </Link>
@@ -575,7 +575,7 @@ export default function ComparePage({
                     <span
                       className={
                         original !== null
-                          ? 'text-sm font-bold text-danger'
+                          ? 'text-sm font-bold text-danger-600'
                           : 'text-sm font-bold text-secondary-800'
                       }
                     >
@@ -598,7 +598,7 @@ export default function ComparePage({
                     <>
                       <Star
                         size={14}
-                        className="fill-warning text-warning"
+                        className="fill-warning text-warning-700"
                         aria-hidden="true"
                       />
                       <span className="text-sm font-medium text-secondary-700">
@@ -643,8 +643,8 @@ export default function ComparePage({
                 <span
                   className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                     item.inStock
-                      ? 'bg-success/10 text-success'
-                      : 'bg-danger/10 text-danger'
+                      ? 'bg-success/10 text-success-700'
+                      : 'bg-danger/10 text-danger-600'
                   }`}
                 >
                   {item.inStock ? 'In Stock' : 'Out of Stock'}
@@ -665,7 +665,7 @@ export default function ComparePage({
                     type="button"
                     onClick={() => handleAddToCart(item)}
                     disabled={!item.inStock}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
                   >
                     <ShoppingCart size={14} aria-hidden="true" />
                     Add to Cart
@@ -717,7 +717,7 @@ export default function ComparePage({
                   setNotice(null);
                   toast.success('Compare list cleared — now showing this product');
                 }}
-                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 Clear &amp; add this instead
               </button>

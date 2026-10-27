@@ -229,7 +229,7 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-secondary-800">{item.name}</p>
-                    <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-success">
+                    <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-success-700">
                       <CheckCircle2 className="size-4" />
                       Review submitted · pending approval
                     </p>
@@ -302,7 +302,7 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
                         className={cn(
                           'transition-colors',
                           star <= displayRating
-                            ? 'fill-warning text-warning'
+                            ? 'fill-warning text-warning-700'
                             : 'fill-none text-muted-300'
                         )}
                       />
@@ -314,7 +314,7 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
                     </span>
                   )}
                 </div>
-                {area.rating && <p className="mt-1.5 text-xs text-danger">{area.rating}</p>}
+                {area.rating && <p className="mt-1.5 text-xs text-danger-600">{area.rating}</p>}
               </div>
 
               {/* Title */}
@@ -342,11 +342,11 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
                   placeholder="Summarize your experience"
                   className={cn(
                     'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
-                    'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+                    'placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
                     area.title ? 'border-danger' : 'border-muted-200'
                   )}
                 />
-                {area.title && <p className="mt-1.5 text-xs text-danger">{area.title}</p>}
+                {area.title && <p className="mt-1.5 text-xs text-danger-600">{area.title}</p>}
               </div>
 
               {/* Comment */}
@@ -374,11 +374,11 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
                   rows={4}
                   className={cn(
                     'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
-                    'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+                    'placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
                     area.comment ? 'border-danger' : 'border-muted-200'
                   )}
                 />
-                {area.comment && <p className="mt-1.5 text-xs text-danger">{area.comment}</p>}
+                {area.comment && <p className="mt-1.5 text-xs text-danger-600">{area.comment}</p>}
               </div>
 
               <div className="mt-5 flex justify-end">
@@ -403,7 +403,7 @@ export default function OrderedProducts({ onCreated }: OrderedProductsProps) {
 
       {reviewableCount === 0 && (
         <div className="rounded-xl bg-success-50 p-6 text-center">
-          <CheckCircle2 className="mx-auto size-10 text-success" />
+          <CheckCircle2 className="mx-auto size-10 text-success-700" />
           <p className="mt-3 font-semibold text-secondary-800">
             All reviews submitted. Thank you!
           </p>

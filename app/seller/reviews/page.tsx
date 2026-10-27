@@ -220,7 +220,7 @@ function SellerReviewsContent() {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={cn('h-5 w-5', star <= Math.round(averageRating) ? 'fill-warning text-warning' : 'text-muted-300')}
+                      className={cn('h-5 w-5', star <= Math.round(averageRating) ? 'fill-warning text-warning-700' : 'text-muted-300')}
                     />
                   ))}
                 </div>
@@ -231,7 +231,7 @@ function SellerReviewsContent() {
                   <div key={dist.star} className="flex items-center gap-3">
                     <span className="w-12 text-sm text-muted-600">{dist.star} star</span>
                     <div className="flex-1 overflow-hidden rounded-full bg-muted-100">
-                      <div className="h-2.5 rounded-full bg-warning" style={{ width: `${dist.percentage}%` }} />
+                      <div className="h-2.5 rounded-full bg-warning-700" style={{ width: `${dist.percentage}%` }} />
                     </div>
                     <span className="w-8 text-right text-sm text-muted-600">{dist.count}</span>
                   </div>
@@ -250,7 +250,7 @@ function SellerReviewsContent() {
                 className={cn(
                   'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                   activeFilter === tab
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-muted-100 text-muted-600 hover:bg-muted-200'
                 )}
               >
@@ -280,14 +280,14 @@ function SellerReviewsContent() {
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star
                               key={star}
-                              className={cn('h-3.5 w-3.5', star <= review.rating ? 'fill-warning text-warning' : 'text-muted-300')}
+                              className={cn('h-3.5 w-3.5', star <= review.rating ? 'fill-warning text-warning-700' : 'text-muted-300')}
                             />
                           ))}
                         </div>
                         <span className="text-xs text-muted-500">{formatDate(review.created_at)}</span>
                         <StatusBadge status={review.status} />
                       </div>
-                      <p className="mt-0.5 text-xs text-primary">{review.products?.name ?? ''}</p>
+                      <p className="mt-0.5 text-xs text-primary-600">{review.products?.name ?? ''}</p>
                       <p className="mt-2 text-sm text-muted-700">{review.comment}</p>
 
                       {review.seller_reply && (
@@ -304,7 +304,7 @@ function SellerReviewsContent() {
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
                             placeholder="Write your reply..."
-                            className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
                           />
                           <div className="mt-2 flex gap-2">
                             <Button size="sm" onClick={() => handleReply(review.id)} disabled={submittingReply}>
@@ -335,7 +335,7 @@ function SellerReviewsContent() {
                         <button
                           onClick={() => handleModerate(review.id, 'approve')}
                           disabled={acting === review.id}
-                          className="inline-flex items-center gap-1 rounded-lg border border-success-200 px-2.5 py-1.5 text-xs font-medium text-success transition-colors hover:bg-success-50 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-lg border border-success-200 px-2.5 py-1.5 text-xs font-medium text-success-700 transition-colors hover:bg-success-50 disabled:opacity-50"
                         >
                           <CheckCircle2 className="size-3.5" />
                           Approve
@@ -354,7 +354,7 @@ function SellerReviewsContent() {
                       <button
                         onClick={() => setDeleteTarget(review)}
                         disabled={acting === review.id}
-                        className="inline-flex items-center gap-1 rounded-lg border border-danger-200 px-2.5 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger-50 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-danger-200 px-2.5 py-1.5 text-xs font-medium text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50"
                       >
                         {acting === review.id ? (
                           <Loader2 className="size-3.5 animate-spin" />

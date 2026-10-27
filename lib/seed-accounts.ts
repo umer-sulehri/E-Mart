@@ -30,3 +30,29 @@ export function loadSeedAccounts(): SeedAccount[] {
     return [];
   }
 }
+
+/**
+ * Demo login is a development/tour convenience. It is on outside production,
+ * or in production only when explicitly opted into. The gating flag is read
+ * server-side (a NEXT_PUBLIC_* var is inlined into the client bundle and must
+ * not be the sole control for a privileged endpoint).
+ */
+export function demoLoginEnabled(): boolean {
+  return (
+    process.env.NODE_ENV !== "production" ||
+    process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true"
+  );
+}
+
+/**
+ * Creating or signing into privileged (admin/seller) demo accounts, and bulk
+ * seeding, additionally requires a server-only opt-in. Even when demo login is
+ * enabled, a production deployment must not be able to mint an admin account
+ * unless an operator deliberately sets this - and the seed file is shipped.
+ */
+export function demoPrivilegedEnabled(): boolean {
+  return (
+    process.env.NODE_ENV !== "production" ||
+    process.env.DEMO_ALLOW_PRIVILEGED === "true"
+  );
+}

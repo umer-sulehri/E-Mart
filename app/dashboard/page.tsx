@@ -127,7 +127,7 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="rounded-xl bg-white p-12 text-center shadow-sm">
-        <p className="text-lg font-semibold text-danger">{error}</p>
+        <p className="text-lg font-semibold text-danger-600">{error}</p>
         <Button variant="primary" className="mt-4" onClick={() => window.location.reload()}>
           Retry
         </Button>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 text-white">
             <Package className="size-6" />
           </div>
           <div>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success-700 text-white">
             <DollarSign className="size-6" />
           </div>
           <div>
@@ -166,7 +166,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-danger text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-danger-600 text-white">
             <Heart className="size-6" />
           </div>
           <div>
@@ -175,7 +175,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning-700 text-white">
             <Clock className="size-6" />
           </div>
           <div>
@@ -190,7 +190,7 @@ export default function DashboardPage() {
           <h3 className="text-lg font-bold text-secondary-800">Recent Orders</h3>
           <Link
             href="/dashboard/orders"
-            className="text-sm font-medium text-primary hover:text-primary-500"
+            className="text-sm font-medium text-primary-600 hover:text-primary-500"
           >
             View All Orders
           </Link>

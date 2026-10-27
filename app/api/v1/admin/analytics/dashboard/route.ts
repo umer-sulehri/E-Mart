@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
   try {
@@ -35,6 +36,10 @@ export async function GET() {
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString();
 
+    // recentOrders / recentUsers include email, which is outside the
+    // authenticated column grant, so those two reads use the service role.
+    const admin = createAdminClient();
+
     const [
       totalUsers,
       totalSellers,
@@ -59,11 +64,13 @@ export async function GET() {
       supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
       supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "delivered"),
-      supabase.from("orders")
+      admin
+        .from("orders")
         .select("id, order_number, status, total, created_at, profiles(first_name, last_name, email)")
         .order("created_at", { ascending: false })
         .limit(6),
-      supabase.from("profiles")
+      admin
+        .from("profiles")
         .select("id, first_name, last_name, email, role, created_at")
         .order("created_at", { ascending: false })
         .limit(6),

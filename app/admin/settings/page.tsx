@@ -107,7 +107,7 @@ const ToggleSwitch = ({
     <span
       className={cn(
         'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-        checked ? 'bg-primary' : 'bg-muted-300'
+        checked ? 'bg-primary-600' : 'bg-muted-300'
       )}
     >
       <span
@@ -133,8 +133,8 @@ const Toast = ({
     className={cn(
       'fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg',
       type === 'success'
-        ? 'bg-success text-white'
-        : 'bg-danger text-white'
+        ? 'bg-success-700 text-white'
+        : 'bg-danger-600 text-white'
     )}
   >
     {type === 'success' ? (
@@ -362,9 +362,9 @@ export default function AdminSettingsPage() {
   // `text-base sm:text-sm`: iOS Safari zooms on focus for any control under
   // 16px, so the mobile floor is a platform constraint, not a type choice.
   const inputClass =
-    'w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
+    'w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600';
   const selectClass =
-    'w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-700 focus:border-primary focus:outline-none';
+    'w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-700 focus:border-primary-600 focus:outline-none';
 
   return (
     <div className="space-y-6">
@@ -386,7 +386,7 @@ export default function AdminSettingsPage() {
               className={cn(
                 'flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
                 activeTab === tab.id
-                  ? 'bg-primary text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'text-muted-600 hover:bg-muted-50'
               )}
             >
@@ -786,7 +786,7 @@ export default function AdminSettingsPage() {
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-primary hover:underline"
+                        className="flex items-center gap-1 text-sm text-primary-600 hover:underline"
                       >
                         {link.url}
                         <ExternalLink className="size-3" />
@@ -800,7 +800,7 @@ export default function AdminSettingsPage() {
                     />
                     <button
                       onClick={() => deleteSocialLink(link.id)}
-                      className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-danger/10 hover:text-danger"
+                      className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-danger/10 hover:text-danger-600"
                     >
                       <Trash2 className="size-4" />
                     </button>

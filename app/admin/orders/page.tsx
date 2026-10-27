@@ -135,13 +135,13 @@ function AdminOrdersContent() {
               placeholder="Search by order ID..."
               defaultValue={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
             />
           </div>
           <select
             value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
+            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary-600 focus:outline-none"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -175,7 +175,7 @@ function AdminOrdersContent() {
                     const cfg = statusConfig[status] || { variant: 'default' as const };
                     return (
                       <tr key={order.id} className="hover:bg-muted-50/50">
-                        <td className="py-3 font-medium text-primary">{order.order_number}</td>
+                        <td className="py-3 font-medium text-primary-600">{order.order_number}</td>
                         <td className="hidden py-3 text-secondary-800 md:table-cell">
                           {order.profiles?.first_name} {order.profiles?.last_name}
                         </td>
@@ -199,7 +199,7 @@ function AdminOrdersContent() {
                             onChange={(e) =>
                               handleStatusChange(order.id, e.target.value as OrderStatusType)
                             }
-                            className="rounded-lg border border-muted-200 bg-white px-2 py-1.5 text-xs font-medium text-secondary-700 focus:border-primary focus:outline-none"
+                            className="rounded-lg border border-muted-200 bg-white px-2 py-1.5 text-xs font-medium text-secondary-700 focus:border-primary-600 focus:outline-none"
                           >
                             <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>

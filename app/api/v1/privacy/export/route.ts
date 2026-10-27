@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     const [profileRes, addressesRes, ordersRes, reviewsRes, searchRes, consentRes] =
       await Promise.all([
-        supabase
+        admin
           .from("profiles")
           .select("id, email, first_name, last_name, phone, profile_image_url, date_of_birth, created_at")
           .eq("id", user.id)

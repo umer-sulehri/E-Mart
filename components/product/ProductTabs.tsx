@@ -72,7 +72,7 @@ export default function ProductTabs({ product }: ProductTabsProps) {
               className={cn(
                 'shrink-0 whitespace-nowrap border-b-2 px-4 py-3 text-sm transition-colors sm:px-6',
                 activeTab === tab.id
-                  ? 'border-primary font-semibold text-primary'
+                  ? 'border-primary-600 font-semibold text-primary-600'
                   : 'border-transparent font-medium text-muted-600 hover:text-secondary-800'
               )}
             >

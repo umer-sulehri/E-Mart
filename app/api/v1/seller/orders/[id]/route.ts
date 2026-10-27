@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(
   request: NextRequest,
@@ -47,7 +48,10 @@ export async function GET(
       );
     }
 
-    const { data: order, error } = await supabase
+    // The buyer embed includes email + phone (outside the authenticated column
+    // grant), so this read uses the service role. Vendor ownership is still
+    // enforced in code below via the hasSellerProduct check.
+    const { data: order, error } = await createAdminClient()
       .from("orders")
       .select(
         "*, order_items(*, products(id, name, slug, images, vendor_id)), profiles!inner(first_name, last_name, email, phone)"

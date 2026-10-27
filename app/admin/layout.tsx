@@ -44,7 +44,9 @@ export default async function AdminLayout({
         <div className="min-w-0 flex-1 pt-[calc(3.5rem+var(--safe-area-inset-top,env(safe-area-inset-top)))] pb-[calc(64px+env(safe-area-inset-bottom))] lg:pt-0 lg:pb-0">
           <DashboardHeader />
 
-          <main className="mt-4">{children}</main>
+          <main id="main-content" className="mt-4">
+            {children}
+          </main>
         </div>
       </div>
     </div>

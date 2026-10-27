@@ -17,6 +17,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Role is part of the authenticated column grant, so it is readable here.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const role = profile?.role ?? "customer";
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const bucket = (formData.get("bucket") as string) || "uploads";
@@ -39,6 +47,22 @@ export async function POST(request: NextRequest) {
           error: `Bucket "${bucket}" not allowed. Allowed buckets: ${allowedBuckets.join(", ")}`,
         },
         { status: 400 }
+      );
+    }
+
+    // Knowing the bucket name is not authorisation: a customer must not be
+    // able to write product or blog assets just by naming those buckets.
+    const bucketRoles: Record<string, string[]> = {
+      avatars: ["customer", "seller", "admin"],
+      uploads: ["customer", "seller", "admin"],
+      products: ["seller", "admin"],
+      "vendor-assets": ["seller", "admin"],
+      blog: ["admin"],
+    };
+    if (!(bucketRoles[bucket] ?? []).includes(role)) {
+      return NextResponse.json(
+        { success: false, error: "Your role is not permitted to upload to this bucket." },
+        { status: 403 }
       );
     }
 

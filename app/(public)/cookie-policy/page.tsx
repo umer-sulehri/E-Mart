@@ -34,7 +34,7 @@ export default function CookiePolicyPage() {
               Home
             </Link>
             <ChevronRight className="size-4" />
-            <span className="text-primary">Cookie Policy</span>
+            <span className="text-primary-600">Cookie Policy</span>
           </div>
         </div>
       </section>
@@ -53,7 +53,7 @@ export default function CookiePolicyPage() {
                       <li key={s.id}>
                         <a
                           href={`#${s.id}`}
-                          className="block text-sm text-secondary-600 transition-colors hover:text-primary"
+                          className="block text-sm text-secondary-600 transition-colors hover:text-primary-600"
                         >
                           {s.label}
                         </a>
@@ -71,7 +71,7 @@ export default function CookiePolicyPage() {
                 This Cookie Policy explains what cookies and similar technologies E-Mart uses,
                 why we use them, and how you can control your preferences. It works together
                 with our{' '}
-                <Link href="/privacy-policy" className="text-primary hover:underline">
+                <Link href="/privacy-policy" className="text-primary-600 hover:underline">
                   Privacy Policy
                 </Link>
                 .
@@ -381,7 +381,7 @@ export default function CookiePolicyPage() {
                 <p className="mb-4 leading-relaxed">
                   Questions about cookies or this policy? Contact us at email@emart.pk or view
                   our{' '}
-                  <Link href="/privacy-policy" className="text-primary hover:underline">
+                  <Link href="/privacy-policy" className="text-primary-600 hover:underline">
                     Privacy Policy
                   </Link>
                   .

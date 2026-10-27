@@ -78,7 +78,7 @@ const ProductGallery = React.forwardRef<HTMLDivElement, ProductGalleryProps>(
               className={cn(
                 'relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all lg:h-[72px] lg:w-[72px]',
                 selectedIndex === index
-                  ? 'border-primary'
+                  ? 'border-primary-600'
                   : 'border-muted-200 hover:border-muted-400'
               )}
               aria-pressed={selectedIndex === index}

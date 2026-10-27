@@ -24,7 +24,7 @@ export async function POST(
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("id, status, user_id, order_items(product_id, quantity)")
+      .select("id, status, payment_status, user_id, total, order_items(product_id, quantity)")
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
@@ -46,18 +46,29 @@ export async function POST(
       );
     }
 
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("orders")
       .update({
         status: "cancelled",
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      .in("status", ["pending", "confirmed", "processing"])
+      .select("id");
 
     if (updateError) {
       return NextResponse.json(
         { success: false, error: updateError.message },
         { status: 500 }
+      );
+    }
+
+    // A concurrent request already cancelled it, so the caller must not restock
+    // a second time.
+    if (!updated || updated.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Order is no longer cancellable" },
+        { status: 409 }
       );
     }
 
@@ -77,6 +88,18 @@ export async function POST(
           .update({ stock_quantity: product.stock_quantity + item.quantity })
           .eq("id", item.product_id);
       }
+    }
+
+    // A paid order must be refunded, not silently cancelled with the money kept.
+    // The refunds table is admin-only under RLS, so use the service-role client
+    // (ownership was verified above).
+    if (order.payment_status === "completed") {
+      await admin.from("refunds").insert({
+        order_id: id,
+        amount: order.total,
+        reason: "Order cancelled by customer",
+        status: "pending",
+      });
     }
 
     return NextResponse.json({

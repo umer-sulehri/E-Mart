@@ -45,7 +45,7 @@ export default function SellerInformationCard({
 
           <div className="mt-2 flex items-center gap-3 text-xs text-muted-500">
             <span className="flex items-center gap-1">
-              <Star size={12} className="fill-warning text-warning" />
+              <Star size={12} className="fill-warning text-warning-700" />
               {seller.rating.toFixed(1)} rating
             </span>
             <span>{seller.totalSales.toLocaleString()} sales</span>
@@ -69,7 +69,7 @@ export default function SellerInformationCard({
       {seller.slug && (
         <Link
           href={`/sellers/${seller.slug}`}
-          className="mt-4 flex items-center justify-center gap-1.5 rounded-lg border border-muted-200 py-2 text-sm font-medium text-secondary-700 transition-colors hover:border-primary hover:text-primary"
+          className="mt-4 flex items-center justify-center gap-1.5 rounded-lg border border-muted-200 py-2 text-sm font-medium text-secondary-700 transition-colors hover:border-primary-600 hover:text-primary-600"
         >
           Visit Store
           <ExternalLink size={12} />

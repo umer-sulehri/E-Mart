@@ -156,7 +156,7 @@ export default function CartSummary({
           <span>Shipping</span>
           <span className="font-medium">
             {shownShipping === 0 ? (
-              <span className="text-success">Free</span>
+              <span className="text-success-700">Free</span>
             ) : (
               formatPrice(shownShipping)
             )}
@@ -171,7 +171,7 @@ export default function CartSummary({
 
         {/* Discount */}
         {shownDiscount > 0 && (
-          <div className="flex items-center justify-between text-success">
+          <div className="flex items-center justify-between text-success-700">
             <span>
               Discount{shownCouponCode ? ` (${shownCouponCode})` : ''}
             </span>
@@ -193,7 +193,7 @@ export default function CartSummary({
             <span className="text-base font-bold text-secondary-800">
               Total
             </span>
-            <span className="text-base font-bold text-primary">
+            <span className="text-base font-bold text-primary-600">
               {formatPrice(shownTotal)}
             </span>
           </div>
@@ -204,7 +204,7 @@ export default function CartSummary({
       {!isCheckout &&
         (promoApplied && couponCode ? (
           <div className="mt-4 flex items-center justify-between rounded-lg bg-primary-50 px-3 py-2 text-sm">
-            <span className="flex items-center gap-2 font-medium text-primary">
+            <span className="flex items-center gap-2 font-medium text-primary-600">
               <Tag size={14} />
               {couponCode}
             </span>

@@ -101,7 +101,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
           <h2 className="text-lg font-bold text-secondary">E-Mart Menu</h2>
           <button
             onClick={onClose}
-            className="-mr-2 rounded-lg p-2.5 text-muted transition-colors hover:bg-muted-100 hover:text-primary"
+            className="-mr-2 rounded-lg p-2.5 text-muted transition-colors hover:bg-muted-100 hover:text-primary-600"
             aria-label="Close menu"
           >
             <X className="size-6" />
@@ -123,7 +123,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 <Link
                   href={link.href}
                   onClick={onClose}
-                  className="block py-2 text-sm font-medium text-secondary hover:text-primary transition-colors"
+                  className="block py-2 text-sm font-medium text-secondary hover:text-primary-600 transition-colors"
                 >
                   {link.label}
                 </Link>
@@ -144,7 +144,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 <Link
                   href={link.href}
                   onClick={onClose}
-                  className="block py-2 text-sm font-medium text-secondary hover:text-primary transition-colors"
+                  className="block py-2 text-sm font-medium text-secondary hover:text-primary-600 transition-colors"
                 >
                   {link.label}
                 </Link>
@@ -169,7 +169,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                   {hasChildren ? (
                     <button
                       onClick={() => setExpanded(isExpanded ? null : cat.label)}
-                      className="flex flex-1 items-center gap-3 py-3 text-left text-sm font-medium text-secondary hover:text-primary transition-colors"
+                      className="flex flex-1 items-center gap-3 py-3 text-left text-sm font-medium text-secondary hover:text-primary-600 transition-colors"
                       aria-expanded={isExpanded}
                     >
                       <Icon className="h-5 w-5 text-muted" />
@@ -185,7 +185,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                     <Link
                       href={cat.href!}
                       onClick={onClose}
-                      className="flex flex-1 items-center gap-3 py-3 text-sm font-medium text-secondary hover:text-primary transition-colors"
+                      className="flex flex-1 items-center gap-3 py-3 text-sm font-medium text-secondary hover:text-primary-600 transition-colors"
                     >
                       <Icon className="h-5 w-5 text-muted" />
                       <span>{cat.label}</span>
@@ -205,7 +205,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                         <Link
                           href={child.href}
                           onClick={onClose}
-                          className="flex items-center gap-3 py-2 pl-12 pr-3 text-sm text-muted hover:text-primary transition-colors"
+                          className="flex items-center gap-3 py-2 pl-12 pr-3 text-sm text-muted hover:text-primary-600 transition-colors"
                         >
                           {child.label}
                         </Link>

@@ -201,7 +201,7 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
         className={cn(
           'rounded-lg p-2.5 transition-colors md:p-2',
           isListening
-            ? 'bg-danger text-white'
+            ? 'bg-danger-600 text-white'
             : 'text-muted transition-colors hover:text-secondary hover:bg-muted-100'
         )}
         title={isListening ? 'Stop voice search' : 'Search by voice'}
@@ -220,12 +220,12 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
       {error && (
       <div className="absolute right-0 top-full z-50 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-lg border border-danger-200 bg-white p-3 shadow-lg">
         <div className="flex items-start justify-between">
-          <p role="alert" className="text-xs text-danger">
+          <p role="alert" className="text-xs text-danger-600">
               {error}
             </p>
             <button
               onClick={handleClear}
-              className="-mr-1 ml-2 rounded p-1.5 text-danger transition-colors hover:bg-danger-50 hover:text-danger-600"
+              className="-mr-1 ml-2 rounded p-1.5 text-danger-600 transition-colors hover:bg-danger-50 hover:text-danger-600"
               aria-label="Dismiss voice search error"
             >
               <X className="size-4" />
@@ -241,7 +241,7 @@ export default function VoiceSearch({ onSearch, className }: VoiceSearchProps) {
             {[0, 1, 2].map((i) => (
               <span
                 key={i}
-                className="h-1.5 flex-1 animate-pulse rounded-full bg-danger"
+                className="h-1.5 flex-1 animate-pulse rounded-full bg-danger-600"
                 style={{ animationDelay: `${i * 150}ms` }}
               />
             ))}

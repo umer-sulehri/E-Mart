@@ -25,9 +25,9 @@ export default function AvailabilityToggle({
           type="checkbox"
           checked={inStockOnly}
           onChange={() => onChange(!inStockOnly)}
-          className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
+          className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
         />
-        <Package size={16} className="text-success" />
+        <Package size={16} className="text-success-700" />
         <span className="text-sm text-muted-600">In Stock Only</span>
       </label>
     </div>

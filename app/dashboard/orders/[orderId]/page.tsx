@@ -215,7 +215,7 @@ export default function OrderDetailPage() {
       <div className="space-y-6">
         <Link
           href="/dashboard/orders"
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary-600"
         >
           <ArrowLeft className="size-4" />
           Back to Orders
@@ -240,7 +240,7 @@ export default function OrderDetailPage() {
     <div className="space-y-6">
       <Link
         href="/dashboard/orders"
-        className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary-600"
       >
         <ArrowLeft className="size-4" />
         Back to Orders
@@ -265,7 +265,7 @@ export default function OrderDetailPage() {
         <div className="relative flex items-start justify-between">
           <div className="absolute left-0 top-3 h-0.5 w-full bg-muted-200" />
           <div
-            className="absolute left-0 top-3 h-0.5 bg-primary transition-all"
+            className="absolute left-0 top-3 h-0.5 bg-primary-600 transition-all"
             style={{
               width: `${
                 timelineSteps.length > 1
@@ -280,9 +280,9 @@ export default function OrderDetailPage() {
                 className={cn(
                   'flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold',
                   step.completed
-                    ? 'border-primary bg-primary text-white'
+                    ? 'border-primary-600 bg-primary-600 text-white'
                     : step.current
-                    ? 'border-primary bg-white text-primary'
+                    ? 'border-primary-600 bg-white text-primary-600'
                     : 'border-muted-300 bg-white text-muted-400'
                 )}
               >
@@ -352,12 +352,12 @@ export default function OrderDetailPage() {
               {order.discount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-500">Discount</span>
-                  <span className="text-success">-{formatPrice(order.discount)}</span>
+                  <span className="text-success-700">-{formatPrice(order.discount)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t border-muted-100 pt-3 font-bold">
                 <span className="text-secondary-800">Total</span>
-                <span className="text-primary">{formatPrice(order.total)}</span>
+                <span className="text-primary-600">{formatPrice(order.total)}</span>
               </div>
             </div>
           </div>
@@ -365,7 +365,7 @@ export default function OrderDetailPage() {
           {shippingAddr && (
             <div className="rounded-xl bg-white p-6 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
-                <MapPin className="size-4 text-primary" />
+                <MapPin className="size-4 text-primary-600" />
                 <h3 className="font-bold text-secondary-800">Shipping Address</h3>
               </div>
               <div className="text-sm text-muted-600 leading-relaxed">
@@ -384,7 +384,7 @@ export default function OrderDetailPage() {
 
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <div className="mb-3 flex items-center gap-2">
-              <CreditCard className="size-4 text-primary" />
+              <CreditCard className="size-4 text-primary-600" />
               <h3 className="font-bold text-secondary-800">Payment</h3>
             </div>
             <p className="text-sm text-muted-600">

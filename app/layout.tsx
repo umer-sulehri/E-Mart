@@ -6,6 +6,8 @@ import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 import CookieConsent from '@/components/ui/CookieConsent';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
+import OfflineBanner from '@/components/layout/OfflineBanner';
+import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister';
 import { SITE_URL } from '@/lib/seo';
 
 const nunito = Nunito({
@@ -91,6 +93,14 @@ export const metadata: Metadata = {
     apple: '/icons/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
+  // iOS ignores most of the web manifest. These are what make "Add to Home
+  // Screen" open standalone with the brand title instead of a Safari tab.
+  appleWebApp: {
+    capable: true,
+    title: 'E-Mart',
+    statusBarStyle: 'default',
+  },
+  formatDetection: { telephone: false },
   robots: {
     index: true,
     follow: true,
@@ -144,12 +154,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
         >
           Skip to main content
         </a>
         <Providers>
-          <div id="main-content">{children}</div>
+          <OfflineBanner />
+          {children}
           <ImpersonationBanner />
           <CookieConsent />
           {/* Fixed bottom nav for phones. Rendered at the root so it exists on
@@ -157,6 +168,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               public storefront. Each layout below leaves bottom padding so
               content is not hidden behind it. */}
           <MobileBottomNav />
+          <ServiceWorkerRegister />
         </Providers>
         <GoogleAnalytics />
       </body>

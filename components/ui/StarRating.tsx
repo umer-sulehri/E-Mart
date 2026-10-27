@@ -39,7 +39,7 @@ const StarSvg = ({
       <svg width={size} height={size} viewBox="0 0 24 24" strokeWidth="1.5">
         <defs>
           <linearGradient id={halfId}>
-            <stop offset="50%" stopColor="currentColor" className="text-warning" />
+            <stop offset="50%" stopColor="currentColor" className="text-warning-700" />
             <stop offset="50%" stopColor="transparent" />
           </linearGradient>
         </defs>
@@ -47,7 +47,7 @@ const StarSvg = ({
           d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"
           fill={`url(#${halfId})`}
           stroke="currentColor"
-          className="text-warning"
+          className="text-warning-700"
         />
       </svg>
     );
@@ -59,7 +59,7 @@ const StarSvg = ({
       height={size}
       viewBox="0 0 24 24"
       fill="currentColor"
-      className="text-warning"
+      className="text-warning-700"
       strokeWidth="1.5"
     >
       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />

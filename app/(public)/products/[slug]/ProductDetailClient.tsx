@@ -204,7 +204,7 @@ export default function ProductDetailClient({
           {product.category?.name && product.category.slug && (
             <Link
               href={`/products?category=${encodeURIComponent(product.category.slug)}`}
-              className="inline-flex w-fit items-center gap-1 rounded-full bg-primary-50 px-3 py-1 font-bold text-primary transition-colors hover:bg-primary-100 hover:text-primary-700"
+              className="inline-flex w-fit items-center gap-1 rounded-full bg-primary-50 px-3 py-1 font-bold text-primary-600 transition-colors hover:bg-primary-100 hover:text-primary-700"
             >
               <Tag size={13} />
               {product.category.name}
@@ -217,7 +217,7 @@ export default function ProductDetailClient({
               </span>
               <Link
                 href={`/products?brands=${encodeURIComponent(product.brand.name)}`}
-                className="inline-flex w-fit items-center font-bold text-primary transition-colors hover:text-primary-500"
+                className="inline-flex w-fit items-center font-bold text-primary-600 transition-colors hover:text-primary-500"
               >
                 {product.brand.name}
               </Link>
@@ -230,7 +230,7 @@ export default function ProductDetailClient({
               </span>
               <Link
                 href={`/sellers/${product.vendor.slug}`}
-                className="inline-flex w-fit items-center font-bold text-primary transition-colors hover:text-primary-500"
+                className="inline-flex w-fit items-center font-bold text-primary-600 transition-colors hover:text-primary-500"
               >
                 {product.vendor.name}
               </Link>
@@ -251,7 +251,7 @@ export default function ProductDetailClient({
         <a
           href={isAuthenticated ? '#reviews' : `/login?redirect=${encodeURIComponent(pathname)}`}
           onClick={handleWriteReviewClick}
-          className="text-sm font-medium text-primary transition-colors hover:text-primary-500"
+          className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-500"
         >
           {isAuthenticated ? 'Write a Review' : 'Sign in to Review'}
         </a>
@@ -359,7 +359,7 @@ export default function ProductDetailClient({
         >
           <GitCompareArrows
             size={18}
-            className={cn(isInCompare && 'text-primary')}
+            className={cn(isInCompare && 'text-primary-600')}
           />
         </Button>
         <Button
@@ -409,19 +409,19 @@ export default function ProductDetailClient({
       {/* Trust Badges */}
       <div className="grid grid-cols-3 gap-4">
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary-600">
             <Truck size={20} />
           </div>
           <span className="text-xs font-medium text-secondary-700">Free Delivery</span>
         </div>
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary-600">
             <ShieldCheck size={20} />
           </div>
           <span className="text-xs font-medium text-secondary-700">Secure Payment</span>
         </div>
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary-600">
             <RotateCcw size={20} />
           </div>
           <span className="text-xs font-medium text-secondary-700">Easy Returns</span>

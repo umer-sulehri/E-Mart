@@ -166,7 +166,7 @@ export default function AdminSocialLinksPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger">{error}</div>
+        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger-600">{error}</div>
       )}
 
       <div className="flex items-center justify-between">
@@ -200,7 +200,7 @@ export default function AdminSocialLinksPage() {
                 value={form.platform}
                 onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value }))}
                 placeholder="facebook, instagram, twitter, youtube..."
-                className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -209,7 +209,7 @@ export default function AdminSocialLinksPage() {
                 value={form.url}
                 onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                 placeholder="https://..."
-                className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div className="flex items-end">
@@ -218,7 +218,7 @@ export default function AdminSocialLinksPage() {
                   type="checkbox"
                   checked={form.is_active}
                   onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-                  className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary"
+                  className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
                 />
                 Active
               </label>
@@ -244,7 +244,7 @@ export default function AdminSocialLinksPage() {
       <div className="rounded-xl bg-white shadow-sm">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="size-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary-600" />
           </div>
         ) : links.length === 0 ? (
           <div className="py-12 text-center text-muted-500">
@@ -290,7 +290,7 @@ export default function AdminSocialLinksPage() {
                   <button
                     onClick={() => handleDelete(link.id)}
                     disabled={busyId === link.id}
-                    className="rounded-lg p-1.5 text-danger hover:bg-danger-50 disabled:opacity-60"
+                    className="rounded-lg p-1.5 text-danger-600 hover:bg-danger-50 disabled:opacity-60"
                   >
                     <Trash2 className="size-4" />
                   </button>

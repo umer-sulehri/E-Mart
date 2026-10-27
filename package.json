@@ -31,6 +31,7 @@
     "react-hot-toast": "^2.4.1",
     "recharts": "^3.10.1",
     "sanitize-html": "^2.13.0",
+    "stripe": "^23.0.1",
     "swiper": "^11.1.12",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",

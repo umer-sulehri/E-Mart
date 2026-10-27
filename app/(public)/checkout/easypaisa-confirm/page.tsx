@@ -51,13 +51,13 @@ function EasypaisaConfirmContent() {
         <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
           {loading ? (
             <div className="flex flex-col items-center py-12">
-              <Loader2 size={48} className="animate-spin text-primary" />
+              <Loader2 size={48} className="animate-spin text-primary-600" />
               <p className="mt-4 text-sm text-muted-500">Verifying payment...</p>
             </div>
           ) : isSuccess ? (
             <>
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
-                <CheckCircle size={48} className="text-success" />
+                <CheckCircle size={48} className="text-success-700" />
               </div>
               <h1 className="font-heading text-2xl font-bold text-secondary-800">
                 Payment Successful!
@@ -120,7 +120,7 @@ function EasypaisaConfirmContent() {
           ) : isFailed ? (
             <>
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-danger/10">
-                <XCircle size={48} className="text-danger" />
+                <XCircle size={48} className="text-danger-600" />
               </div>
               <h1 className="font-heading text-2xl font-bold text-secondary-800">
                 Payment Failed
@@ -154,7 +154,7 @@ function EasypaisaConfirmContent() {
           ) : (
             <>
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-warning/10">
-                <Loader2 size={48} className="text-warning" />
+                <Loader2 size={48} className="text-warning-700" />
               </div>
               <h1 className="font-heading text-2xl font-bold text-secondary-800">
                 Payment Pending

@@ -175,7 +175,7 @@ export default function FaqPageClient() {
               Home
             </Link>
             <ChevronRight className="size-4" />
-            <span className="text-primary">FAQ</span>
+            <span className="text-primary-600">FAQ</span>
           </div>
         </div>
       </section>
@@ -194,7 +194,7 @@ export default function FaqPageClient() {
                   setOpenIndex(null);
                 }}
                 placeholder="Search questions..."
-                className="w-full rounded-full border border-muted-200 bg-white py-3 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-full border border-muted-200 bg-white py-3 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function FaqPageClient() {
                   }}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                     activeCategory === cat
-                      ? 'bg-primary text-white'
+                      ? 'bg-primary-600 text-white'
                       : 'bg-muted-100 text-secondary-700 hover:bg-muted-200'
                   }`}
                 >
@@ -239,6 +239,8 @@ export default function FaqPageClient() {
                   >
                     <button
                       onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                      aria-expanded={openIndex === i}
+                      aria-controls={`faq-answer-${i}`}
                       className="flex w-full items-center justify-between px-6 py-4 text-left text-sm font-medium text-secondary-800 hover:bg-muted-50 transition-colors"
                     >
                       <span className="pr-4">{faq.question}</span>
@@ -249,7 +251,7 @@ export default function FaqPageClient() {
                       />
                     </button>
                     {openIndex === i && (
-                      <div className="border-t border-muted-100 px-6 py-4 text-sm text-secondary-600 leading-relaxed">
+                      <div id={`faq-answer-${i}`} className="border-t border-muted-100 px-6 py-4 text-sm text-secondary-600 leading-relaxed">
                         {faq.answer}
                       </div>
                     )}
@@ -272,7 +274,7 @@ export default function FaqPageClient() {
           </p>
           <Link
             href="/contact"
-            className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-500"
+            className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-500"
           >
             Contact Us
           </Link>

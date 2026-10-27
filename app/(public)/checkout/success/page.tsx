@@ -18,7 +18,7 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
       <section className="border-b border-muted-100 bg-white py-4">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
           <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-600">
-            <Link href="/" className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary">
+            <Link href="/" className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary-600">
               <Home size={14} />
               Home
             </Link>
@@ -56,19 +56,19 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
             <h2 className="mb-4 text-sm font-semibold text-secondary-800">What happens next?</h2>
             <ul className="space-y-3 text-sm text-secondary-700">
               <li className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary">
+                <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
                   <span className="text-xs font-bold">1</span>
                 </div>
                 <span>We&apos;ll send you an order confirmation email shortly.</span>
               </li>
               <li className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary">
+                <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
                   <span className="text-xs font-bold">2</span>
                 </div>
                 <span>Our team will process your order within 24 hours.</span>
               </li>
               <li className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary">
+                <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
                   <span className="text-xs font-bold">3</span>
                 </div>
                 <span>You&apos;ll receive tracking details once your order ships.</span>
@@ -78,7 +78,7 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link href="/products">
-              <span className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-500">
+              <span className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-500">
                 <ShoppingBag size={16} />
                 Continue Shopping
               </span>

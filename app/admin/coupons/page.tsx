@@ -268,7 +268,7 @@ function AdminCouponsContent() {
         <div className="rounded-xl bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-secondary-800">{editingId ? 'Edit Coupon' : 'Create New Coupon'}</h2>
-            <button onClick={() => { setShowForm(false); resetForm(); }} className="rounded-lg p-1 text-muted-500 hover:bg-muted-100">
+            <button onClick={() => { setShowForm(false); resetForm(); }} aria-label="Close form" className="rounded-lg p-1 text-muted-500 hover:bg-muted-100">
               <X className="size-5" />
             </button>
           </div>
@@ -280,7 +280,7 @@ function AdminCouponsContent() {
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
                 placeholder="e.g. SUMMER20"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm uppercase text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm uppercase text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -290,7 +290,7 @@ function AdminCouponsContent() {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="Short description"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -298,7 +298,7 @@ function AdminCouponsContent() {
               <select
                 value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value as 'percentage' | 'fixed' })}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-700 focus:border-primary focus:outline-none"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-700 focus:border-primary-600 focus:outline-none"
               >
                 <option value="percentage">Percentage (%)</option>
                 <option value="fixed">Fixed Amount (₨)</option>
@@ -311,7 +311,7 @@ function AdminCouponsContent() {
                 value={form.value}
                 onChange={(e) => setForm({ ...form, value: e.target.value })}
                 placeholder={form.type === 'percentage' ? 'e.g. 20' : 'e.g. 500'}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -321,7 +321,7 @@ function AdminCouponsContent() {
                 value={form.minimumOrderAmount}
                 onChange={(e) => setForm({ ...form, minimumOrderAmount: e.target.value })}
                 placeholder="Optional"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -331,7 +331,7 @@ function AdminCouponsContent() {
                 value={form.usageLimit}
                 onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
                 placeholder="Unlimited"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -340,7 +340,7 @@ function AdminCouponsContent() {
                 type="date"
                 value={form.startsAt}
                 onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-700 focus:border-primary focus:outline-none"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-700 focus:border-primary-600 focus:outline-none"
               />
             </div>
             <div>
@@ -349,7 +349,7 @@ function AdminCouponsContent() {
                 type="date"
                 value={form.expiresAt}
                 onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-700 focus:border-primary focus:outline-none"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-700 focus:border-primary-600 focus:outline-none"
               />
             </div>
           </div>
@@ -427,13 +427,13 @@ function AdminCouponsContent() {
                             <div className="flex items-center gap-1">
                               <button
                                 onClick={() => startEdit(coupon)}
-                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-primary-50 hover:text-primary"
+                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-primary-50 hover:text-primary-600"
                               >
                                 <Edit3 className="size-4" />
                               </button>
                               <button
                                 onClick={() => setDeleteTarget(coupon)}
-                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger"
+                                className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger-600"
                               >
                                 <Trash2 className="size-4" />
                               </button>

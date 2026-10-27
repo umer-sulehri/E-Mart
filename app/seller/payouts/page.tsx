@@ -198,7 +198,7 @@ function SellerPayoutsContent() {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <p className="text-xs text-muted-500">Available Balance</p>
-          <p className="mt-1 text-2xl font-bold text-success">
+          <p className="mt-1 text-2xl font-bold text-success-700">
             {formatPrice(availableBalance)}
           </p>
           <p className="mt-1 text-xs text-muted-400">Earnings available to withdraw</p>
@@ -318,22 +318,22 @@ function SellerPayoutsContent() {
               min={MIN_PAYOUT_AMOUNT}
               className={`w-full rounded-lg border px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
                 fieldErrors.amount
-                  ? 'border-danger focus:border-danger focus:ring-danger/20'
-                  : 'border-muted-200 focus:border-primary focus:ring-primary/20'
+                  ? 'border-danger focus:border-danger focus:ring-danger-600'
+                  : 'border-muted-200 focus:border-primary-600 focus:ring-primary-600'
               }`}
             />
             {fieldErrors.amount && (
-              <p className="mt-1 text-xs text-danger">{fieldErrors.amount}</p>
+              <p className="mt-1 text-xs text-danger-600">{fieldErrors.amount}</p>
             )}
             <p className="mt-1 text-xs text-muted-400">
               Minimum withdraw amount is Rs. {MIN_PAYOUT_AMOUNT.toLocaleString()}. Available
-              balance: <span className="font-medium text-success">{formatPrice(availableBalance)}</span>.
+              balance: <span className="font-medium text-success-700">{formatPrice(availableBalance)}</span>.
             </p>
             <label className="mb-1 mt-4 block text-sm font-medium text-secondary-700">Payout Method</label>
             <select
               value={method}
               onChange={(e) => setMethod(e.target.value)}
-              className="w-full rounded-lg border border-muted-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 px-3 py-2 text-sm focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
             >
               <option value="bank">Bank Transfer</option>
               <option value="easypaisa">Easypaisa</option>
@@ -356,12 +356,12 @@ function SellerPayoutsContent() {
               }
               className={`w-full rounded-lg border px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
                 fieldErrors.accountDetails
-                  ? 'border-danger focus:border-danger focus:ring-danger/20'
-                  : 'border-muted-200 focus:border-primary focus:ring-primary/20'
+                  ? 'border-danger focus:border-danger focus:ring-danger-600'
+                  : 'border-muted-200 focus:border-primary-600 focus:ring-primary-600'
               }`}
             />
             {fieldErrors.accountDetails && (
-              <p className="mt-1 text-xs text-danger">{fieldErrors.accountDetails}</p>
+              <p className="mt-1 text-xs text-danger-600">{fieldErrors.accountDetails}</p>
             )}
             <p className="mt-1 text-xs text-muted-400">Enter the account details for receiving the payout.</p>
             <div className="mt-6 flex gap-3">

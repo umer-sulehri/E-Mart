@@ -29,7 +29,7 @@ export function showCompareMismatchToast(options: {
           <button
             type="button"
             onClick={options.onClearAndAdd}
-            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             Clear &amp; add this instead
           </button>

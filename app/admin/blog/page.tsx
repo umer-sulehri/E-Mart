@@ -180,19 +180,19 @@ function AdminBlogContent() {
                             <Link
                               href={`/blog/${post.slug}`}
                               target="_blank"
-                              className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
+                              className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary-600"
                             >
                               <Eye className="size-4" />
                             </Link>
                             <Link
                               href={`/admin/blog/${post.id}`}
-                              className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary"
+                              className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary-600"
                             >
                               <Pencil className="size-4" />
                             </Link>
                             <button
                               onClick={() => confirmDelete(post)}
-                              className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger"
+                              className="rounded-lg p-2 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger-600"
                             >
                               <Trash2 className="size-4" />
                             </button>

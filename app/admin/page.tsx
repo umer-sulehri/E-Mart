@@ -187,7 +187,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-500">
-        <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary">
+        <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary-600">
           <Home className="size-3.5" />
           Home
         </Link>
@@ -218,7 +218,7 @@ export default function AdminDashboardPage() {
                 <stat.icon className="size-5" />
               </div>
               {stat.change && (
-                <span className={cn('inline-flex items-center gap-1 text-xs font-medium', stat.up ? 'text-success' : 'text-danger')}>
+                <span className={cn('inline-flex items-center gap-1 text-xs font-medium', stat.up ? 'text-success-700' : 'text-danger-600')}>
                   {stat.up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
                   {stat.change}
                 </span>
@@ -234,7 +234,7 @@ export default function AdminDashboardPage() {
         <div className="rounded-xl bg-white p-6 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-secondary-800">Revenue Overview</h2>
-            <Link href="/admin/analytics" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-500">
+            <Link href="/admin/analytics" className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-500">
               View analytics <ArrowRight className="size-3.5" />
             </Link>
           </div>
@@ -293,7 +293,7 @@ export default function AdminDashboardPage() {
         <div className="rounded-xl bg-white p-6 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-secondary-800">Recent Orders</h2>
-            <Link href="/admin/orders" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-500">
+            <Link href="/admin/orders" className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-500">
               View all <ArrowRight className="size-3.5" />
             </Link>
           </div>
@@ -315,7 +315,7 @@ export default function AdminDashboardPage() {
                   {stats.recentOrders.map((o) => (
                     <tr key={o.id} className="border-b border-muted-100 last:border-0">
                       <td className="py-2.5 pr-4 font-medium text-secondary-800">
-                        <Link href={`/admin/orders?id=${o.id}`} className="hover:text-primary">
+                        <Link href={`/admin/orders?id=${o.id}`} className="hover:text-primary-600">
                           {o.order_number}
                         </Link>
                       </td>
@@ -343,7 +343,7 @@ export default function AdminDashboardPage() {
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-secondary-800">
-                <UserPlus className="size-4 text-primary" />
+                <UserPlus className="size-4 text-primary-600" />
                 Recent Registrations
               </h2>
             </div>
@@ -373,10 +373,10 @@ export default function AdminDashboardPage() {
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-secondary-800">
-                <Clock className="size-4 text-warning" />
+                <Clock className="size-4 text-warning-700" />
                 Pending Sellers
               </h2>
-              <Link href="/admin/sellers" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-500">
+              <Link href="/admin/sellers" className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-500">
                 Manage <ArrowRight className="size-3.5" />
               </Link>
             </div>

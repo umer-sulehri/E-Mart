@@ -55,7 +55,7 @@ export default function OrderTimeline({
               <div
                 className={cn(
                   'absolute left-[15px] top-[32px] h-[calc(100%-16px)] w-0.5',
-                  isCompleted ? 'bg-primary' : 'bg-muted-200'
+                  isCompleted ? 'bg-primary-600' : 'bg-muted-200'
                 )}
               />
             )}
@@ -64,8 +64,8 @@ export default function OrderTimeline({
             <div
               className={cn(
                 'relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-                isCurrent && 'bg-primary text-white ring-4 ring-primary/20',
-                isCompleted && !isCurrent && 'bg-primary text-white',
+                isCurrent && 'bg-primary-600 text-white ring-4 ring-primary-600/30',
+                isCompleted && !isCurrent && 'bg-primary-600 text-white',
                 !isCompleted && 'bg-muted-100 text-muted-400'
               )}
             >

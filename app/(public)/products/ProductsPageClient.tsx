@@ -286,7 +286,7 @@ function ProductsContent() {
                   });
                   toast.success('Filter removed');
                 }}
-                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary-600 transition-colors hover:bg-primary/20"
               >
                 {categoryName(slug, categoryNames)}
                 <X size={13} />
@@ -295,7 +295,7 @@ function ProductsContent() {
             {filters.minPrice !== '' && (
               <button
                 onClick={() => applyFilters({ ...filters, minPrice: '' })}
-                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary-600 transition-colors hover:bg-primary/20"
               >
                 From {filters.minPrice}
                 <X size={13} />
@@ -304,7 +304,7 @@ function ProductsContent() {
             {filters.maxPrice !== '' && (
               <button
                 onClick={() => applyFilters({ ...filters, maxPrice: '' })}
-                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary-600 transition-colors hover:bg-primary/20"
               >
                 Up to {filters.maxPrice}
                 <X size={13} />
@@ -313,7 +313,7 @@ function ProductsContent() {
             {filters.minRating > 0 && (
               <button
                 onClick={() => applyFilters({ ...filters, minRating: 0 })}
-                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary-600 transition-colors hover:bg-primary/20"
               >
                 {RATING_LABELS[filters.minRating] || `${filters.minRating}★ & up`}
                 <X size={13} />
@@ -329,7 +329,7 @@ function ProductsContent() {
                   });
                   toast.success('Filter removed');
                 }}
-                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary-600 transition-colors hover:bg-primary/20"
               >
                 {brandNames[brand] || brand}
                 <X size={13} />
@@ -338,7 +338,7 @@ function ProductsContent() {
             {filters.inStockOnly && (
               <button
                 onClick={() => applyFilters({ ...filters, inStockOnly: false })}
-                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary-600 transition-colors hover:bg-primary/20"
               >
                 In stock
                 <X size={13} />
@@ -347,7 +347,7 @@ function ProductsContent() {
             {filters.featuredOnly && (
               <button
                 onClick={() => applyFilters({ ...filters, featuredOnly: false })}
-                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary-600 transition-colors hover:bg-primary/20"
               >
                 Featured
                 <X size={13} />
@@ -355,7 +355,7 @@ function ProductsContent() {
             )}
             <button
               onClick={clearAllFilters}
-              className="text-xs font-semibold text-danger underline underline-offset-2 hover:text-danger-600"
+              className="text-xs font-semibold text-danger-600 underline underline-offset-2 hover:text-danger-600"
             >
               Clear all
             </button>
@@ -374,7 +374,7 @@ function ProductsContent() {
             <SlidersHorizontal size={16} />
             Filters
             {activeFilterCount(filters) > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[11px] font-bold text-white">
                 {activeFilterCount(filters)}
               </span>
             )}
@@ -403,7 +403,7 @@ function ProductsContent() {
                 <div className="flex-1 overflow-y-auto p-5">{mobileFiltersPanel}</div>
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
-                  className="m-4 inline-flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600"
+                  className="m-4 inline-flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600"
                 >
                   <SlidersHorizontal size={16} />
                   Show Results ({totalItems})

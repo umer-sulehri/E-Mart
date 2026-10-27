@@ -64,6 +64,7 @@ function FilterSection({
     <div className="border-b border-muted-100 py-4 last:border-b-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
         className="flex w-full items-center justify-between text-sm font-semibold text-secondary-800"
       >
         {title}
@@ -194,7 +195,7 @@ export default function ProductFilters({
         {hasActiveFilters && (
           <button
             onClick={clearAll}
-            className="flex items-center gap-1 text-xs font-medium text-danger transition-colors hover:text-danger-600"
+            className="flex items-center gap-1 text-xs font-medium text-danger-600 transition-colors hover:text-danger-600"
           >
             <X size={14} />
             Clear All
@@ -203,7 +204,7 @@ export default function ProductFilters({
       </div>
 
       {hasActiveFilters && (
-        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary-600">
           <Sparkles size={13} />
           Filters Applied: {appliedCount}
         </div>
@@ -221,7 +222,7 @@ export default function ProductFilters({
                 type="checkbox"
                 checked={filters.categories.includes(category.slug)}
                 onChange={() => handleCategoryToggle(category.slug)}
-                className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
+                className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
               />
               <span className="text-sm text-muted-600 transition-colors hover:text-secondary-800">
                 {category.name}
@@ -249,7 +250,7 @@ export default function ProductFilters({
               className={cn(
                 'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors',
                 filters.minRating === rating
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-primary/10 text-primary-600'
                   : 'text-muted-600 hover:bg-muted-50'
               )}
             >
@@ -259,7 +260,7 @@ export default function ProductFilters({
                     key={i}
                     size={14}
                     className={
-                      i < rating ? 'fill-warning text-warning' : 'text-muted-300'
+                      i < rating ? 'fill-warning text-warning-700' : 'text-muted-300'
                     }
                   />
                 ))}
@@ -287,9 +288,9 @@ export default function ProductFilters({
             type="checkbox"
             checked={filters.featuredOnly}
             onChange={() => handleFeaturedChange(!filters.featuredOnly)}
-            className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
+            className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
           />
-          <Sparkles size={16} className="text-warning" />
+          <Sparkles size={16} className="text-warning-700" />
           <span className="text-sm text-muted-600">Featured Only</span>
         </label>
       </div>

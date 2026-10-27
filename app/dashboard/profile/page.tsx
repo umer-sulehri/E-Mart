@@ -194,7 +194,7 @@ export default function ProfilePage() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="flex items-center gap-6">
           <div className="relative">
-            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-primary text-3xl font-bold text-white">
+            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-primary-600 text-3xl font-bold text-white">
               {profileImageUrl ? (
                 <Image
                   src={resolveImage(profileImageUrl)}
@@ -284,7 +284,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={handleResendVerification}
                 disabled={resending}
-                className="mt-2 text-sm font-medium text-primary hover:underline disabled:opacity-50"
+                className="mt-2 text-sm font-medium text-primary-600 hover:underline disabled:opacity-50"
               >
                 {resending ? 'Sending...' : 'Resend verification email'}
               </button>

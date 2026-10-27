@@ -1,8 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import {
   createUnsubscribeToken,
   verifyUnsubscribeToken,
 } from "../unsubscribe-token";
+
+beforeAll(() => {
+  // The module fails closed when no signing secret is configured, so the suite
+  // must supply one (it is read lazily at call time, not at import time).
+  process.env.NEWSLETTER_SIGNING_SECRET = "test-secret";
+});
 
 describe("unsubscribe-token", () => {
   it("creates a token that verifies for the same email", () => {

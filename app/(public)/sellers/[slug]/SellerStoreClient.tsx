@@ -152,7 +152,7 @@ function SellerStoreContent() {
                           className="object-contain"
                         />
                       ) : (
-                        <Store size={36} className="text-primary" />
+                        <Store size={36} className="text-primary-600" />
                       )}
                     </div>
                     <div>
@@ -161,7 +161,7 @@ function SellerStoreContent() {
                           {seller.name}
                         </h1>
                         <span className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-white">
-                          <Star size={12} className="fill-warning text-warning" />
+                          <Star size={12} className="fill-warning text-warning-700" />
                           {seller.rating.toFixed(1)}
                         </span>
                       </div>

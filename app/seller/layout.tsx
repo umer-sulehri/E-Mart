@@ -45,7 +45,9 @@ export default async function SellerLayout({
           <DashboardHeader />
 
           {/* Content */}
-          <main className="mt-4">{children}</main>
+          <main id="main-content" className="mt-4">
+            {children}
+          </main>
         </div>
       </div>
     </div>

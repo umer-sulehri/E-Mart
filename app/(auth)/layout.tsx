@@ -3,10 +3,13 @@ import { Leaf } from 'lucide-react';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted-50 px-4 pt-12 pb-[calc(3rem+80px+env(safe-area-inset-bottom))]">
+    <main
+      id="main-content"
+      className="flex min-h-screen items-center justify-center bg-muted-50 px-4 pt-12 pb-[calc(3rem+80px+env(safe-area-inset-bottom))]"
+    >
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2 text-primary transition-colors hover:text-primary-500">
+          <Link href="/" className="inline-flex items-center gap-2 text-primary-600 transition-colors hover:text-primary-500">
             <Leaf className="size-8" />
             <span className="text-2xl font-bold font-heading text-secondary">E-Mart</span>
           </Link>
@@ -15,6 +18,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           {children}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

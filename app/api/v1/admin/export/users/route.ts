@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { toCsv, downloadCsvResponse } from "@/lib/csv";
 import { rateLimitByIp } from "@/lib/rate-limit";
 
@@ -40,7 +41,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: users, error } = await supabase
+    // Export includes PII (email/phone), which is outside the authenticated
+    // column grant; the admin role was verified above.
+    const { data: users, error } = await createAdminClient()
       .from("profiles")
       .select("email, first_name, last_name, phone, role, is_blocked, created_at")
       .order("created_at", { ascending: false });

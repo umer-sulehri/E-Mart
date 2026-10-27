@@ -16,12 +16,12 @@ export default function GlobalError({
         <div className="flex min-h-screen items-center justify-center px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-danger/10">
-              <AlertTriangle size={32} className="text-danger" />
+              <AlertTriangle size={32} className="text-danger-600" />
             </div>
             <h1 className="font-heading text-2xl font-bold text-secondary-800">
               Something went wrong
             </h1>
-            <p className="mt-2 text-sm font-medium text-danger">
+            <p className="mt-2 text-sm font-medium text-danger-600">
               E-Mart
             </p>
             <p className="mt-3 text-sm text-muted-500">
@@ -40,14 +40,14 @@ export default function GlobalError({
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <button
                 onClick={reset}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
               >
                 <RefreshCw size={16} />
                 Try Again
               </button>
               <Link
                 href="/"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-muted-200 bg-white px-6 py-3 text-sm font-semibold text-secondary-700 shadow-sm transition-colors hover:bg-muted-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-muted-200 bg-white px-6 py-3 text-sm font-semibold text-secondary-700 shadow-sm transition-colors hover:bg-muted-50 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
               >
                 <Home size={16} />
                 Go to Homepage

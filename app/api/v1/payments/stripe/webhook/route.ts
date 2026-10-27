@@ -18,6 +18,11 @@ function verifyStripeSignature(
   const signature = parts.get("v1");
   if (!timestamp || !signature) return false;
 
+  // Reject replays: Stripe's own SDK uses a 5 minute tolerance window.
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isFinite(timestampSeconds)) return false;
+  if (Math.abs(Date.now() / 1000 - timestampSeconds) > 300) return false;
+
   const signedPayload = `${timestamp}.${payload}`;
   const expected = crypto
     .createHmac("sha256", secret)
@@ -86,6 +91,17 @@ export async function POST(request: NextRequest) {
           break;
         }
 
+        // Checkout can emit `completed` for delayed payment methods before the
+        // funds settle. Only a genuinely paid session may mark the order paid.
+        if (session.payment_status !== "paid") {
+          logger.warn(
+            "StripeWebhook",
+            "checkout.session.completed not paid yet:",
+            session.payment_status
+          );
+          break;
+        }
+
         const { error } = await supabase
           .from("orders")
           .update({
@@ -93,6 +109,15 @@ export async function POST(request: NextRequest) {
             updated_at: new Date().toISOString(),
           })
           .eq("id", orderId);
+
+        if (error) {
+          logger.error("StripeWebhook", "Failed to update order:", error.message);
+          // Return a 5xx so Stripe retries the delivery.
+          return NextResponse.json(
+            { success: false, error: "Failed to update order" },
+            { status: 500 }
+          );
+        }
 
         // Advance a fresh order into fulfillment, but never regress one that
         // a seller has already moved past processing (late webhook retry).
@@ -105,11 +130,7 @@ export async function POST(request: NextRequest) {
           .eq("id", orderId)
           .in("status", ["pending", "confirmed", "processing"]);
 
-        if (error) {
-          logger.error("StripeWebhook", "Failed to update order:", error.message);
-        } else {
-          logger.info("StripeWebhook", "Order", orderId, "marked as paid");
-        }
+        logger.info("StripeWebhook", "Order", orderId, "marked as paid");
         break;
       }
 
@@ -126,6 +147,18 @@ export async function POST(request: NextRequest) {
             })
             .eq("id", orderId);
 
+          if (error) {
+            logger.error(
+              "StripeWebhook",
+              "Failed to update order on payment_intent.succeeded:",
+              error.message
+            );
+            return NextResponse.json(
+              { success: false, error: "Failed to update order" },
+              { status: 500 }
+            );
+          }
+
           // Same non-regressive advance as checkout.session.completed.
           await supabase
             .from("orders")
@@ -136,11 +169,7 @@ export async function POST(request: NextRequest) {
             .eq("id", orderId)
             .in("status", ["pending", "confirmed", "processing"]);
 
-          if (error) {
-            logger.error("StripeWebhook", "Failed to update order on payment_intent.succeeded:", error.message);
-          } else {
-            logger.info("StripeWebhook", "Order", orderId, "payment confirmed via payment_intent");
-          }
+          logger.info("StripeWebhook", "Order", orderId, "payment confirmed via payment_intent");
         }
         break;
       }

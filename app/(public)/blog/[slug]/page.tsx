@@ -316,7 +316,7 @@ export default async function BlogDetailPage({
                         />
                       </div>
                       <div>
-                        <h4 className="text-sm font-semibold text-secondary-800 line-clamp-2 group-hover:text-primary transition-colors">
+                        <h4 className="text-sm font-semibold text-secondary-800 line-clamp-2 group-hover:text-primary-600 transition-colors">
                           {p.title}
                         </h4>
                         <p className="mt-1 text-xs text-muted-500">
@@ -356,7 +356,7 @@ export default async function BlogDetailPage({
                   />
                 </div>
                 <div className="p-5">
-                  <h3 className="font-heading text-lg font-bold text-secondary-800 group-hover:text-primary transition-colors">
+                  <h3 className="font-heading text-lg font-bold text-secondary-800 group-hover:text-primary-600 transition-colors">
                     {rp.title}
                   </h3>
                   <p className="mt-2 text-xs text-muted-500">

@@ -139,7 +139,7 @@ function MyReviewsPanelContent({
               id="review-sort"
               value={sort}
               onChange={(e) => changeSort(e.target.value)}
-              className="rounded-lg border border-muted-200 bg-white px-3 py-1.5 text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="rounded-lg border border-muted-200 bg-white px-3 py-1.5 text-sm text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
             >
               <option value="recent">Most recent</option>
               <option value="highest">Highest rating</option>

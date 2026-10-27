@@ -154,14 +154,14 @@ export default function WishlistDrawer() {
               Wishlist
             </h2>
             {hydrated && count > 0 && (
-              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">
+              <span className="rounded-full bg-primary-600 px-2 py-0.5 text-xs font-bold text-white">
                 {count}
               </span>
             )}
           </div>
           <button
             onClick={handleClose}
-            className="-mr-2 shrink-0 rounded-lg p-2.5 text-muted-500 transition-colors hover:bg-muted-50 hover:text-secondary-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="-mr-2 shrink-0 rounded-lg p-2.5 text-muted-500 transition-colors hover:bg-muted-50 hover:text-secondary-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
             aria-label="Close wishlist"
           >
             <X size={20} className="shrink-0" />
@@ -185,7 +185,7 @@ export default function WishlistDrawer() {
           </div>
         ) : loading && !hasItems ? (
           <div className="flex flex-1 items-center justify-center py-16">
-            <Loader2 size={28} className="animate-spin text-primary" />
+            <Loader2 size={28} className="animate-spin text-primary-600" />
           </div>
         ) : !hasItems ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
@@ -233,12 +233,12 @@ export default function WishlistDrawer() {
                         <Link
                           href={`/products/${item.slug}`}
                           onClick={handleClose}
-                          className="line-clamp-2 text-sm font-medium text-secondary-800 transition-colors hover:text-primary"
+                          className="line-clamp-2 text-sm font-medium text-secondary-800 transition-colors hover:text-primary-600"
                         >
                           {item.name}
                         </Link>
                         <div className="mt-1 flex items-baseline gap-2">
-                          <span className="text-sm font-semibold text-primary">
+                          <span className="text-sm font-semibold text-primary-600">
                             {formatPrice(current)}
                           </span>
                           {original !== null && (
@@ -251,7 +251,7 @@ export default function WishlistDrawer() {
 
                       <button
                         onClick={() => handleRemove(item.productId)}
-                        className="flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-lg text-muted-400 transition-colors hover:bg-danger-50 hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-lg text-muted-400 transition-colors hover:bg-danger-50 hover:text-danger-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
                         aria-label={`Remove ${item.name} from wishlist`}
                       >
                         <Trash2 size={16} className="shrink-0" />
@@ -276,7 +276,7 @@ export default function WishlistDrawer() {
               </Link>
               <button
                 onClick={handleClose}
-                className="mt-3 w-full text-center text-sm font-medium text-secondary-700 transition-colors hover:text-primary"
+                className="mt-3 w-full text-center text-sm font-medium text-secondary-700 transition-colors hover:text-primary-600"
               >
                 Continue Shopping
               </button>

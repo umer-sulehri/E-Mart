@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { toCsv, downloadCsvResponse } from "@/lib/csv";
 import { rateLimitByIp } from "@/lib/rate-limit";
 
@@ -40,7 +41,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: orders, error } = await supabase
+    // The customer embed includes email (outside the authenticated column
+    // grant); the admin role was verified above.
+    const { data: orders, error } = await createAdminClient()
       .from("orders")
       .select(
         "order_number, status, payment_status, payment_method, subtotal, shipping_cost, tax, discount, total, created_at, profiles!inner(first_name, last_name, email)"

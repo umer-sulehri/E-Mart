@@ -60,13 +60,13 @@ const MobileBottomNav = () => {
             aria-current={link.active ? 'page' : undefined}
             className={cn(
               'relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 py-1.5 transition-colors active:bg-muted-50',
-              link.active ? 'text-primary' : 'text-muted-500 hover:text-secondary-700'
+              link.active ? 'text-primary-600' : 'text-muted-500 hover:text-secondary-700'
             )}
           >
             <span className="relative">
               <link.icon size={22} strokeWidth={link.active ? 2.2 : 1.8} />
               {typeof link.badge === 'number' && link.badge > 0 && (
-                <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white">
+                <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger-600 px-1 text-[10px] font-bold leading-none text-white">
                   {link.badge > 99 ? '99+' : link.badge}
                 </span>
               )}
@@ -74,7 +74,7 @@ const MobileBottomNav = () => {
             <span
               className={cn(
                 'text-[11px] font-medium',
-                link.active ? 'text-primary' : 'text-muted-500'
+                link.active ? 'text-primary-600' : 'text-muted-500'
               )}
             >
               {link.label}

@@ -266,8 +266,6 @@ export async function POST(request: NextRequest) {
     // Validate the coupon server-side. The client-supplied discountAmount is
     // never trusted — the discount is computed from the validated coupon row.
     let discount = 0;
-    let couponId: string | null = null;
-    let couponUsedCount = 0;
     if (couponCode) {
       const { data: coupon } = await supabase
         .from("coupons")
@@ -282,9 +280,6 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-
-      couponId = coupon.id;
-      couponUsedCount = Number(coupon.used_count) || 0;
 
       const now = new Date().toISOString();
       if (coupon.starts_at && now < coupon.starts_at) {
@@ -397,8 +392,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buyers hold no UPDATE rights on products/coupons, so these internal
-    // inventory/usage mutations run with the admin client.
+    // Buyers hold no UPDATE rights on products, so these internal inventory
+    // mutations run with the admin client.
     const admin = createAdminClient();
 
     // Decrement stock; if any decrement fails, restore stock from this order
@@ -451,16 +446,9 @@ export async function POST(request: NextRequest) {
       logger.error("orders", "Failed to clear cart:", cartError.message);
     }
 
-    // Redeem the coupon so its usage count reflects this order.
-    if (couponId) {
-      const { error: couponError } = await admin
-        .from("coupons")
-        .update({ used_count: couponUsedCount + 1 })
-        .eq("id", couponId);
-      if (couponError) {
-        logger.error("orders", "Failed to increment coupon used_count:", couponError.message);
-      }
-    }
+    // The coupon's used_count is incremented (and revalidated/rolled back)
+    // atomically by the orders_guard_insert/orders_guard_delete DB triggers,
+    // so the route must not touch it here.
 
     return NextResponse.json(
       { success: true, data: order, message: "Order created successfully" },

@@ -113,7 +113,7 @@ export default function AdminAnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <Loader2 className="size-8 animate-spin text-primary-600" />
       </div>
     );
   }
@@ -121,7 +121,7 @@ export default function AdminAnalyticsPage() {
   if (error || !stats) {
     return (
       <div className="rounded-xl bg-white p-8 text-center shadow-sm">
-        <p className="text-danger">{error || 'Analytics unavailable'}</p>
+        <p className="text-danger-600">{error || 'Analytics unavailable'}</p>
       </div>
     );
   }
@@ -143,7 +143,7 @@ export default function AdminAnalyticsPage() {
           icon={IndianRupee}
           iconClass="bg-primary-100 text-primary-600"
           sub={
-            <span className={cn('inline-flex items-center gap-1 text-xs font-medium', growthPositive ? 'text-success' : 'text-danger')}>
+            <span className={cn('inline-flex items-center gap-1 text-xs font-medium', growthPositive ? 'text-success-700' : 'text-danger-600')}>
               {growthPositive ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
               {Math.abs(stats.revenueGrowth)}% vs last month
             </span>
@@ -156,8 +156,8 @@ export default function AdminAnalyticsPage() {
           iconClass="bg-warning-100 text-warning-600"
           sub={
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-500">
-              <span className="inline-flex items-center gap-1"><Clock className="size-3 text-warning" /> {stats.pendingOrders} pending</span>
-              <span className="inline-flex items-center gap-1"><PackageCheck className="size-3 text-success" /> {stats.deliveredOrders} delivered</span>
+              <span className="inline-flex items-center gap-1"><Clock className="size-3 text-warning-700" /> {stats.pendingOrders} pending</span>
+              <span className="inline-flex items-center gap-1"><PackageCheck className="size-3 text-success-700" /> {stats.deliveredOrders} delivered</span>
             </div>
           }
         />

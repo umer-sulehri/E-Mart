@@ -19,7 +19,7 @@ const baseClasses =
   'bg-gradient-to-b from-primary-50 to-primary-100 border border-primary-200 ' +
   'text-primary-700 hover:from-primary-100 hover:to-primary-200 hover:shadow-md hover:border-primary-300 ' +
   'active:scale-95 disabled:pointer-events-none disabled:opacity-50 ' +
-  'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2';
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2';
 
 const iconClasses = 'w-6 h-6 sm:w-8 sm:h-8 text-primary-600';
 const labelClasses =

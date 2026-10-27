@@ -13,6 +13,7 @@ const PUBLIC_ROUTES = [
   "/forgot-password",
   "/reset-password",
   "/auth/callback",
+  "/offline",
 ];
 
 const PUBLIC_PREFIXES = [
@@ -79,14 +80,52 @@ function redirectWithCookies(
   return res;
 }
 
+// Endpoints a suspended account may still call: enough to sign out or to
+// recover the account (password reset / verification). Everything else under
+// /api is refused with 403 while the account is blocked.
+const BLOCKED_API_ALLOWLIST = [
+  "/api/v1/auth/login",
+  "/api/v1/auth/logout",
+  "/api/v1/auth/register",
+  "/api/v1/auth/verify-email",
+  "/api/v1/auth/resend-verification",
+  "/api/v1/auth/forgot-password",
+  "/api/v1/auth/reset-password",
+];
+
+function isBlockedAllowedApi(pathname: string): boolean {
+  return BLOCKED_API_ALLOWLIST.some(
+    (p) => pathname === p || pathname.startsWith(p + "/")
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (isPublicRoute(pathname)) {
-    return await updateSession(request);
+  const supabaseResponse = await updateSession(request);
+
+  // Suspended accounts are enforced centrally here, so every page and API
+  // route inherits the check instead of each route re-querying is_blocked.
+  // (is_blocked is cached in the sb-user-blocked cookie by updateSession.)
+  if (supabaseResponse.cookies.get("sb-user-blocked")?.value === "1") {
+    if (pathname.startsWith("/api")) {
+      if (!isBlockedAllowedApi(pathname)) {
+        return NextResponse.json(
+          { success: false, error: "This account has been suspended." },
+          { status: 403 }
+        );
+      }
+    } else if (!isPublicRoute(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.search = "?error=blocked";
+      return redirectWithCookies(url, supabaseResponse);
+    }
   }
 
-  const supabaseResponse = await updateSession(request);
+  if (isPublicRoute(pathname)) {
+    return supabaseResponse;
+  }
 
   const userRole = supabaseResponse.cookies.get("sb-user-role")?.value;
 

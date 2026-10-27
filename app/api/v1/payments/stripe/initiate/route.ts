@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import Stripe from "stripe";
 
 interface StripeInitiateRequest {
   orderId: string;
@@ -78,22 +79,83 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // The real Stripe integration (stripe package + checkout session create) is
-    // not wired up yet. Do NOT fabricate an external payment URL — instead return
-    // a clearly-labelled demo session so the checkout falls through to the app's
-    // own success flow rather than sending users to a dead gateway page.
-    logger.info("StripeInitiate", "Stripe integration not configured — returning demo session");
+    if (order.payment_method === "cod") {
+      return NextResponse.json(
+        { success: false, error: "This order is not payable by card" },
+        { status: 400 }
+      );
+    }
 
-    const mockSessionId = `cs_demo_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    // Only redirect back to this app: an attacker-controlled success/cancel URL
+    // would otherwise turn the endpoint into an open redirect.
+    const requestOrigin = request.nextUrl.origin;
+    const isSameOrigin = (value: string) => {
+      try {
+        const url = new URL(value);
+        return url.origin === requestOrigin;
+      } catch {
+        return false;
+      }
+    };
+
+    if (!isSameOrigin(successUrl) || !isSameOrigin(cancelUrl)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid return URL" },
+        { status: 400 }
+      );
+    }
+
+    // Charge exactly the server-computed total. Itemising shipping/tax/discount
+    // here would let the client-visible figures drift from the order and Stripe
+    // rejects negative line-item amounts for discounts.
+    const amount = Math.round(Number(order.total) * 100);
+
+    if (!Number.isFinite(amount) || amount < 50) {
+      return NextResponse.json(
+        { success: false, error: "Order total is not payable online" },
+        { status: 400 }
+      );
+    }
+
+    const currency = (process.env.STRIPE_CURRENCY || "pkr").toLowerCase();
+
+    // Real Stripe Checkout session
+    const stripe = new Stripe(stripeSecretKey);
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency,
+            product_data: {
+              name: `Order ${order.order_number || orderId}`,
+              description: `${order.order_items?.length ?? 0} item(s) from E-Mart`,
+            },
+            unit_amount: amount,
+          },
+        },
+      ],
+      success_url: appendQuery(successUrl, `session_id={CHECKOUT_SESSION_ID}`),
+      cancel_url: cancelUrl,
+      customer_email: user.email ?? undefined,
+      metadata: {
+        orderId: orderId,
+      },
+      payment_intent_data: {
+        metadata: { orderId },
+      },
+      client_reference_id: orderId,
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        sessionId: mockSessionId,
-        url: appendQuery(successUrl, `session_id=${mockSessionId}&order_id=${orderId}`),
-        mode: "demo",
+        sessionId: session.id,
+        url: session.url,
+        mode: "live",
       },
-      message: "Stripe checkout is running in demo mode (no gateway configured)",
     });
   } catch (error) {
     logger.error("StripeInitiate", "Error:", error);

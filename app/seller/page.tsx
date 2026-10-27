@@ -67,14 +67,14 @@ function SectionError({
   onRetry: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg bg-danger-50 p-3 text-sm text-danger">
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-danger-50 p-3 text-sm text-danger-600">
       <span className="inline-flex items-center gap-2">
         <AlertTriangle className="size-4" />
         {message}
       </span>
       <button
         onClick={onRetry}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-danger px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-danger-600"
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-danger-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-danger-600"
       >
         <RefreshCw className="size-3.5" />
         Retry
@@ -161,17 +161,17 @@ export default function SellerDashboardPage() {
   }, [fetchAll]);
 
   const statCards = [
-    { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: DollarSign, bg: 'bg-primary' },
-    { label: 'Total Orders', value: String(stats.totalOrders), icon: Package, bg: 'bg-success' },
-    { label: 'Active Products', value: String(stats.activeProducts), icon: ShoppingBag, bg: 'bg-warning' },
-    { label: 'Net Earnings', value: formatPrice(stats.netEarnings), icon: TrendingUp, bg: 'bg-danger' },
+    { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: DollarSign, bg: 'bg-primary-600' },
+    { label: 'Total Orders', value: String(stats.totalOrders), icon: Package, bg: 'bg-success-700' },
+    { label: 'Active Products', value: String(stats.activeProducts), icon: ShoppingBag, bg: 'bg-warning-700' },
+    { label: 'Net Earnings', value: formatPrice(stats.netEarnings), icon: TrendingUp, bg: 'bg-danger-600' },
   ];
 
   return (
     <ErrorBoundary>
       <div className="space-y-6">
         <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-500">
-          <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary">
+          <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary-600">
             <Home className="size-3.5" />
             Home
           </Link>
@@ -261,7 +261,7 @@ export default function SellerDashboardPage() {
           <div className="rounded-xl bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-muted-100 p-6">
               <h3 className="text-lg font-bold text-secondary-800">Recent Orders</h3>
-              <Link href="/seller/orders" className="text-sm font-medium text-primary hover:text-primary-500">
+              <Link href="/seller/orders" className="text-sm font-medium text-primary-600 hover:text-primary-500">
                 View All
               </Link>
             </div>
@@ -329,7 +329,7 @@ export default function SellerDashboardPage() {
           <div className="rounded-xl bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-muted-100 p-6">
               <h3 className="text-lg font-bold text-secondary-800">Top Products</h3>
-              <Link href="/seller/products" className="text-sm font-medium text-primary hover:text-primary-500">
+              <Link href="/seller/products" className="text-sm font-medium text-primary-600 hover:text-primary-500">
                 View All
               </Link>
             </div>

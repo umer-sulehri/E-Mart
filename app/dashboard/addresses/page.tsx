@@ -323,7 +323,7 @@ function AddressesContent() {
                     className={cn(
                       'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
                       form.label === label
-                        ? 'border-primary bg-primary-50 text-primary-600'
+                        ? 'border-primary-600 bg-primary-50 text-primary-600'
                         : 'border-muted-200 text-muted-600 hover:bg-muted-50'
                     )}
                   >
@@ -398,7 +398,7 @@ function AddressesContent() {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, is_default: e.target.checked }))
                   }
-                  className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary"
+                  className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
                 />
                 Set as default
               </label>
@@ -446,12 +446,12 @@ function AddressesContent() {
                 key={addr.id}
                 className={cn(
                   'rounded-xl bg-white p-5 shadow-sm transition-shadow hover:shadow-md',
-                  addr.is_default && 'ring-2 ring-primary'
+                  addr.is_default && 'ring-2 ring-primary-600'
                 )}
               >
                 <div className="mb-3 flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-primary" />
+                    <Icon className="h-4 w-4 text-primary-600" />
                     <span
                       className={cn(
                         'rounded-full px-2.5 py-0.5 text-xs font-medium',
@@ -483,7 +483,7 @@ function AddressesContent() {
                   {!addr.is_default && (
                     <button
                       onClick={() => setDefault(addr.id)}
-                      className="text-xs font-medium text-primary hover:text-primary-500"
+                      className="text-xs font-medium text-primary-600 hover:text-primary-500"
                     >
                       Set as Default
                     </button>
@@ -498,7 +498,7 @@ function AddressesContent() {
                   <button
                     onClick={() => handleDelete(addr.id)}
                     disabled={deletingId === addr.id}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:text-danger-600 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-danger-600 hover:text-danger-600 disabled:opacity-50"
                   >
                     <Trash2 className="size-3" />
                     {deletingId === addr.id ? 'Deleting...' : 'Delete'}

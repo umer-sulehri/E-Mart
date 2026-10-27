@@ -15,7 +15,7 @@ export default function PublicError({
     <section className="flex min-h-[60vh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-sm">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-danger/10">
-          <AlertTriangle size={32} className="text-danger" />
+          <AlertTriangle size={32} className="text-danger-600" />
         </div>
         <h1 className="font-heading text-2xl font-bold text-secondary-800">
           Something went wrong

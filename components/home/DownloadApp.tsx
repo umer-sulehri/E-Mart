@@ -9,7 +9,7 @@ const DownloadApp = React.forwardRef<HTMLDivElement, { className?: string }>(
     return (
       <section ref={ref} className={cn('py-4', className)}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-[3rem] bg-warning pt-5">
+          <div className="overflow-hidden rounded-[3rem] bg-warning-700 pt-5">
             <div className="flex flex-col items-center gap-8 px-8 py-12 md:flex-row md:justify-center md:gap-12 md:py-16 lg:gap-20">
               <div className="flex flex-col items-center text-center md:items-start md:text-left">
                 <h2 className="mb-3 text-3xl font-bold text-secondary-800 md:text-4xl">

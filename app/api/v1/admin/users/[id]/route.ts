@@ -36,7 +36,7 @@ export async function GET(
     const auth = await verifyAdmin(supabase);
     if ("error" in auth) return auth.error;
 
-    const { data: user, error } = await supabase
+    const { data: user, error } = await createAdminClient()
       .from("profiles")
       .select("*")
       .eq("id", id)
@@ -174,7 +174,7 @@ export async function DELETE(
       );
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await createAdminClient()
       .from("profiles")
       .select("id, role, email, first_name, last_name")
       .eq("id", id)

@@ -42,9 +42,9 @@ function getPasswordStrength(password: string) {
 }
 
 function getStrengthLabel(score: number) {
-  if (score <= 2) return { label: 'Weak', color: 'bg-danger' };
-  if (score <= 3) return { label: 'Medium', color: 'bg-warning' };
-  return { label: 'Strong', color: 'bg-success' };
+  if (score <= 2) return { label: 'Weak', color: 'bg-danger-600' };
+  if (score <= 3) return { label: 'Medium', color: 'bg-warning-700' };
+  return { label: 'Strong', color: 'bg-success-700' };
 }
 
 function ResetPasswordForm() {
@@ -112,7 +112,7 @@ function ResetPasswordForm() {
     return (
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-50">
-          <CheckCircle className="size-8 text-success" />
+          <CheckCircle className="size-8 text-success-700" />
         </div>
         <h1 className="text-2xl font-bold font-heading text-secondary">Password Reset Successful!</h1>
         <p className="mt-2 text-sm text-muted-500">Redirecting to login...</p>
@@ -190,7 +190,7 @@ function ResetPasswordForm() {
 
       <Link
         href="/login"
-        className="mt-6 inline-flex items-center justify-center gap-2 text-sm font-medium text-primary hover:text-primary-500 w-full"
+        className="mt-6 inline-flex items-center justify-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-500 w-full"
       >
         <ArrowLeft className="size-4" />
         Back to Login

@@ -8,7 +8,16 @@ import { createHmac, timingSafeEqual } from "crypto";
  */
 
 function secret(): string {
-  return process.env.NEWSLETTER_SIGNING_SECRET || process.env.SUPABASE_SECRET_KEY || "emart-unsub";
+  const value =
+    process.env.NEWSLETTER_SIGNING_SECRET || process.env.SUPABASE_SECRET_KEY;
+  if (!value) {
+    // Fail closed: a hardcoded fallback would let anyone forge unsubscribe
+    // tokens for any address. Refuse to sign/verify until configured.
+    throw new Error(
+      "NEWSLETTER_SIGNING_SECRET is not configured; refusing to use unsubscribe tokens."
+    );
+  }
+  return value;
 }
 
 function sign(email: string): string {

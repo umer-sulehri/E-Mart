@@ -62,6 +62,8 @@ npm run build
 | `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_SITE_URL` | ✅ | Canonical public URL |
 | `NEXT_PUBLIC_ADMIN_EMAILS` | Optional | Comma-separated admin allow-list for OAuth escalation |
 | `NEXT_PUBLIC_ENABLE_DEMO_LOGIN` | Optional | `true` to enable demo-account login |
+| `DEMO_ALLOW_PRIVILEGED` | Optional | `true` to allow privileged (admin/seller) demo accounts + bulk seed in production |
+| `NEWSLETTER_SIGNING_SECRET` | Optional | HMAC secret for unsubscribe links; unsubscribe tokens fail closed without it |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Optional | Enables real Stripe payments |
 | `JAZZCASH_MERCHANT_ID` / `EASYPAISA_MERCHANT_ID` | Optional | Enables local gateway demo |
 | `NEXT_PUBLIC_GA_ID` | Optional | Google Analytics 4 measurement ID |
@@ -101,6 +103,20 @@ supabase/2026-performance-indexes.sql
 ```
 
 Backup every RLS policy via `supabase/schema.sql` (version-controlled).
+
+### Migrations for an existing project
+
+Fresh installs get everything from `supabase/schema.sql`. An existing project
+must apply the incremental migrations in order, in the Supabase SQL editor:
+
+1. `supabase/2026-fix-migrations.sql`
+2. `supabase/2027-*.sql`
+3. `supabase/2028-security-hardening.sql` — column-level PII grants
+   (`profiles.email/phone/date_of_birth` are no longer readable by the
+   `authenticated` role), privilege-escalation guard triggers, coupon and
+   settings policy hardening. **Apply this before deploying the matching code**:
+   the API routes that read PII now use the service-role client after their own
+   auth/role checks, so the DB and app must ship together.
 
 ## API
 

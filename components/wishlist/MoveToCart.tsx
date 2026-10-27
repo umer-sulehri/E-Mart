@@ -47,7 +47,7 @@ export default function MoveToCart({
       size="sm"
       onClick={handleMove}
       disabled={moved}
-      className="text-xs text-muted-500 hover:text-primary"
+      className="text-xs text-muted-500 hover:text-primary-600"
     >
       {moved ? <Check size={14} /> : <ShoppingCart size={14} />}
       {moved ? 'Added' : 'Move to Cart'}

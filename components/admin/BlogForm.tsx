@@ -146,11 +146,11 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
               value={form.excerpt}
               onChange={(e) => updateField('excerpt', e.target.value)}
               className={cn(
-                'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+                'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
                 errors.excerpt ? 'border-danger' : 'border-muted-200'
               )}
             />
-            {errors.excerpt && <p className="mt-1.5 text-xs text-danger">{errors.excerpt}</p>}
+            {errors.excerpt && <p className="mt-1.5 text-xs text-danger-600">{errors.excerpt}</p>}
           </div>
           <div className="md:col-span-2">
             <label className="mb-1.5 block text-sm font-medium text-secondary-800">
@@ -162,11 +162,11 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
               value={form.content}
               onChange={(e) => updateField('content', e.target.value)}
               className={cn(
-                'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+                'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
                 errors.content ? 'border-danger' : 'border-muted-200'
               )}
             />
-            {errors.content && <p className="mt-1.5 text-xs text-danger">{errors.content}</p>}
+            {errors.content && <p className="mt-1.5 text-xs text-danger-600">{errors.content}</p>}
           </div>
         </div>
       </div>
@@ -195,7 +195,7 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
                 setForm((prev) => ({ ...prev, cover_image: '' }));
                 setCoverFile(null);
               }}
-              className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-danger"
+              className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-danger-600"
               aria-label="Remove cover image"
             >
               <X className="size-4" />
@@ -205,7 +205,7 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex h-40 w-full max-w-sm flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-200 transition-colors hover:border-primary hover:bg-muted-50"
+            className="flex h-40 w-full max-w-sm flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-200 transition-colors hover:border-primary-600 hover:bg-muted-50"
           >
             <Upload className="mb-2 size-8 text-muted-400" />
             <p className="text-sm font-medium text-muted-600">Upload cover image</p>
@@ -229,7 +229,7 @@ export default function BlogForm({ mode, initialData, onSubmit }: BlogFormProps)
             type="checkbox"
             checked={form.is_published}
             onChange={(e) => updateField('is_published', e.target.checked)}
-            className="h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary/20"
+            className="h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
           />
           <span className="text-sm font-medium text-secondary-800">
             Publish immediately

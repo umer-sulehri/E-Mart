@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
   try {
@@ -17,7 +18,9 @@ export async function GET() {
       );
     }
 
-    const { data: profile, error: profileError } = await supabase
+    // Own profile including PII (phone, date of birth): session is proven
+    // above, and the query is keyed to that same user id.
+    const { data: profile, error: profileError } = await createAdminClient()
       .from("profiles")
       .select("*")
       .eq("id", user.id)

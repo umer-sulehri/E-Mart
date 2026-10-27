@@ -224,7 +224,7 @@ function CategoryDetailContent() {
               <SlidersHorizontal size={16} />
               Filters
               {activeFilterCount(filters) > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[11px] font-bold text-white">
                   {activeFilterCount(filters)}
                 </span>
               )}
@@ -244,7 +244,7 @@ function CategoryDetailContent() {
                   <div className="flex-1 overflow-y-auto p-5">{filtersSidebar}</div>
                   <button
                     onClick={() => setMobileFiltersOpen(false)}
-                    className="m-4 mt-0 w-[calc(100%-2rem)] shrink-0 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-500"
+                    className="m-4 mt-0 w-[calc(100%-2rem)] shrink-0 rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-500"
                   >
                     Show Results
                   </button>

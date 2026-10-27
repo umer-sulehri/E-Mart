@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
@@ -35,7 +36,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: logs, error, count } = await supabase
+    // The admin embed includes email (outside the authenticated column grant);
+    // the admin role was verified above.
+    const { data: logs, error, count } = await createAdminClient()
       .from("admin_logs")
       .select(
         "*, profiles(first_name, last_name, email)",

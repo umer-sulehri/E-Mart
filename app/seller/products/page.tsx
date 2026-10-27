@@ -181,7 +181,7 @@ function SellerProductsContent() {
               <select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               >
                 <option value="">All Status</option>
                 <option value="active">Active</option>
@@ -250,7 +250,7 @@ function SellerProductsContent() {
                           </div>
                         </td>
                         <td className="px-3 py-4 sm:px-6">
-                          <span className={cn('font-medium', product.stock_quantity === 0 ? 'text-danger' : 'text-secondary-800')}>
+                          <span className={cn('font-medium', product.stock_quantity === 0 ? 'text-danger-600' : 'text-secondary-800')}>
                             {product.stock_quantity}
                           </span>
                         </td>
@@ -263,14 +263,14 @@ function SellerProductsContent() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => router.push(`/seller/products/${product.id}/edit`)}
-                              className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-primary-50 hover:text-primary"
+                              className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-primary-50 hover:text-primary-600"
                             >
                               <Edit className="size-4" />
                             </button>
                             <button
                               onClick={() => setDeleteTarget(product)}
                               disabled={deleting === product.id}
-                              className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
+                              className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
                             >
                               <Trash2 className="size-4" />
                             </button>

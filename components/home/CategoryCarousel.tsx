@@ -45,7 +45,7 @@ const CategoryCarousel = ({ categories: propCategories }: CategoryCarouselProps 
           <div className="flex items-center">
             <Link
               href="/categories"
-              className="me-2 rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-500"
+              className="me-2 rounded bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500"
             >
               View All
             </Link>
@@ -53,14 +53,14 @@ const CategoryCarousel = ({ categories: propCategories }: CategoryCarouselProps 
               <button
                 ref={swiperPrevRef}
                 aria-label="Previous categories"
-                className="swiper-prev category-carousel-prev flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-muted-100 text-dark hover:bg-primary hover:text-white"
+                className="swiper-prev category-carousel-prev flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-muted-100 text-dark hover:bg-primary-600 hover:text-white"
               >
                 &#10094;
               </button>
               <button
                 ref={swiperNextRef}
                 aria-label="Next categories"
-                className="swiper-next category-carousel-next flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-muted-100 text-dark hover:bg-primary hover:text-white"
+                className="swiper-next category-carousel-next flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-muted-100 text-dark hover:bg-primary-600 hover:text-white"
               >
                 &#10095;
               </button>

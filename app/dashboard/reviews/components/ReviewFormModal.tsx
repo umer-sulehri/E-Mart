@@ -136,7 +136,7 @@ export default function ReviewFormModal({
         <p className="mt-1 truncate text-sm text-muted-500">
           {isEdit ? `For ${review!.products?.name ?? 'this product'}` : `For ${product?.name ?? 'this product'}`}
         </p>
-        <p className="mt-0.5 text-xs text-warning">
+        <p className="mt-0.5 text-xs text-warning-700">
           {isEdit ? 'Submitting an edit re-queues your review for approval.' : 'Your review will be visible after an admin approves it.'}
         </p>
 
@@ -163,7 +163,7 @@ export default function ReviewFormModal({
                   className={cn(
                     'transition-colors',
                     star <= displayRating
-                      ? 'fill-warning text-warning'
+                      ? 'fill-warning text-warning-700'
                       : 'fill-none text-muted-300'
                   )}
                 />
@@ -175,7 +175,7 @@ export default function ReviewFormModal({
               </span>
             )}
           </div>
-          {errors.rating && <p className="mt-1.5 text-xs text-danger">{errors.rating}</p>}
+          {errors.rating && <p className="mt-1.5 text-xs text-danger-600">{errors.rating}</p>}
         </div>
 
         <div className="mt-4">
@@ -195,11 +195,11 @@ export default function ReviewFormModal({
             placeholder="Summarize your experience"
             className={cn(
               'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
-              'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+              'placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
               errors.title ? 'border-danger' : 'border-muted-200'
             )}
           />
-          {errors.title && <p className="mt-1.5 text-xs text-danger">{errors.title}</p>}
+          {errors.title && <p className="mt-1.5 text-xs text-danger-600">{errors.title}</p>}
         </div>
 
         <div className="mt-4">
@@ -219,11 +219,11 @@ export default function ReviewFormModal({
             rows={4}
             className={cn(
               'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
-              'placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+              'placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
               errors.comment ? 'border-danger' : 'border-muted-200'
             )}
           />
-          {errors.comment && <p className="mt-1.5 text-xs text-danger">{errors.comment}</p>}
+          {errors.comment && <p className="mt-1.5 text-xs text-danger-600">{errors.comment}</p>}
         </div>
 
         <div className="mt-6 flex justify-end gap-3">

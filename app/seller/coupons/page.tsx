@@ -236,7 +236,7 @@ function SellerCouponsContent() {
             <h3 className="text-lg font-bold text-secondary-800">
               {editingId ? 'Edit Coupon' : 'Create New Coupon'}
             </h3>
-            <button onClick={() => setShowForm(false)} className="rounded-lg p-1 hover:bg-muted-100">
+            <button onClick={() => setShowForm(false)} aria-label="Close form" className="rounded-lg p-1 hover:bg-muted-100">
               <X className="size-5 text-muted-600" />
             </button>
           </div>
@@ -250,7 +250,7 @@ function SellerCouponsContent() {
                   value={form.code}
                   onChange={(e) => setForm((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
                   placeholder="e.g. SAVE20"
-                  className="flex-1 rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="flex-1 rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
                 />
                 <button
                   type="button"
@@ -267,7 +267,7 @@ function SellerCouponsContent() {
               <select
                 value={form.discountType}
                 onChange={(e) => setForm((prev) => ({ ...prev, discountType: e.target.value as typeof form.discountType }))}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-sm text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               >
                 <option value="percentage">Percentage (%)</option>
                 <option value="fixed">Fixed Amount (PKR)</option>
@@ -285,7 +285,7 @@ function SellerCouponsContent() {
                 disabled={form.discountType === 'free_shipping'}
                 onChange={(e) => setForm((prev) => ({ ...prev, discountValue: e.target.value }))}
                 placeholder={form.discountType === 'free_shipping' ? 'Waived' : '0'}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-muted-50"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600 disabled:bg-muted-50"
               />
             </div>
             <div>
@@ -296,7 +296,7 @@ function SellerCouponsContent() {
                 value={form.minOrder}
                 onChange={(e) => setForm((prev) => ({ ...prev, minOrder: e.target.value }))}
                 placeholder="0"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -307,7 +307,7 @@ function SellerCouponsContent() {
                 value={form.usageLimit}
                 onChange={(e) => setForm((prev) => ({ ...prev, usageLimit: e.target.value }))}
                 placeholder="100"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div className="flex items-end">
@@ -323,7 +323,7 @@ function SellerCouponsContent() {
                   className="flex h-11 w-[52px] shrink-0 cursor-pointer items-center p-1"
                 >
                   <span
-                    className={`relative h-6 w-11 rounded-full transition-colors ${form.isActive ? 'bg-success' : 'bg-muted-300'}`}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${form.isActive ? 'bg-success-700' : 'bg-muted-300'}`}
                   >
                     <span
                       className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${form.isActive ? 'translate-x-5' : ''}`}
@@ -341,7 +341,7 @@ function SellerCouponsContent() {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => setForm((prev) => ({ ...prev, startDate: e.target.value }))}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -350,7 +350,7 @@ function SellerCouponsContent() {
                 type="date"
                 value={form.endDate}
                 onChange={(e) => setForm((prev) => ({ ...prev, endDate: e.target.value }))}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
           </div>
@@ -385,7 +385,7 @@ function SellerCouponsContent() {
               {loading ? (
                 <tr>
                   <td colSpan={8} className="py-10 text-center">
-                    <Loader2 className="mx-auto size-6 animate-spin text-primary" />
+                    <Loader2 className="mx-auto size-6 animate-spin text-primary-600" />
                   </td>
                 </tr>
               ) : coupons.length === 0 ? (
@@ -399,7 +399,7 @@ function SellerCouponsContent() {
                   <tr key={coupon.id} className="border-b border-muted-50 transition-colors hover:bg-muted-50/50">
                     <td className="px-3 py-4 sm:px-6">
                       <div className="flex items-center gap-2">
-                        <Tag className="size-4 text-primary" />
+                        <Tag className="size-4 text-primary-600" />
                         <span className="font-mono font-semibold text-secondary-800">{coupon.code}</span>
                       </div>
                     </td>
@@ -414,7 +414,7 @@ function SellerCouponsContent() {
                       {coupon.minimum_order_amount > 0 ? formatPrice(coupon.minimum_order_amount) : '-'}
                     </td>
                     <td className="px-3 py-4 sm:px-6">
-                      <span className={coupon.usage_limit && coupon.used_count >= coupon.usage_limit ? 'font-semibold text-danger' : 'text-secondary-800'}>
+                      <span className={coupon.usage_limit && coupon.used_count >= coupon.usage_limit ? 'font-semibold text-danger-600' : 'text-secondary-800'}>
                         {coupon.used_count}
                         {coupon.usage_limit ? `/${coupon.usage_limit}` : '+'}
                       </span>
@@ -434,7 +434,7 @@ function SellerCouponsContent() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => openEdit(coupon)}
-                          className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-primary-50 hover:text-primary"
+                          className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-primary-50 hover:text-primary-600"
                           title="Edit"
                         >
                           <Edit className="size-4" />
@@ -448,7 +448,7 @@ function SellerCouponsContent() {
                         </button>
                         <button
                           onClick={() => setDeleteTarget(coupon)}
-                          className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-danger-50 hover:text-danger"
+                          className="rounded-lg p-2 text-muted-600 transition-colors hover:bg-danger-50 hover:text-danger-600"
                           title="Delete"
                         >
                           <Trash2 className="size-4" />

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
@@ -95,7 +96,10 @@ const { data: itemRows, error: itemIdsError } = await supabase
       });
     }
 
-    let query = supabase
+    // The buyer embed includes email (outside the authenticated column grant),
+    // so this read uses the service role. Seller scoping is preserved in code:
+    // the query is restricted to order ids resolved from this vendor's products.
+    let query = createAdminClient()
       .from("orders")
       .select("*, order_items(product_id, product_name, quantity, price, total), profiles!inner(first_name, last_name, email)", { count: "exact" })
       .in("id", orderIds);

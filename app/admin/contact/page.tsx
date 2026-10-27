@@ -152,7 +152,7 @@ function AdminContactContent() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger">{error}</div>
+        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger-600">{error}</div>
       )}
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
@@ -165,7 +165,7 @@ function AdminContactContent() {
                 className={cn(
                   'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                   filter === tab.id
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-muted-100 text-muted-600 hover:bg-muted-200'
                 )}
               >
@@ -181,14 +181,14 @@ function AdminContactContent() {
               placeholder="Search submissions..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
             />
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="size-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary-600" />
           </div>
         ) : submissions.length === 0 ? (
           <div className="mt-6 rounded-lg bg-muted-50 py-12 text-center text-muted-500">
@@ -244,7 +244,7 @@ function AdminContactContent() {
                         'mt-4 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60',
                         sub.is_resolved
                           ? 'bg-muted-400 hover:bg-muted-500'
-                          : 'bg-primary hover:bg-primary-500'
+                          : 'bg-primary-600 hover:bg-primary-500'
                       )}
                     >
                       {updating === sub.id ? (

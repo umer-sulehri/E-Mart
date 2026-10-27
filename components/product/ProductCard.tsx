@@ -112,9 +112,9 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
             onClick={() => compareToggle(compareProduct)}
             title={compareBlocked ? compareBlocked.message : undefined}
             className={cn(
-              "absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-white/90 shadow-sm ring-1 backdrop-blur transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+              "absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-white/90 shadow-sm ring-1 backdrop-blur transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600",
               isInCompare
-                ? "text-primary ring-primary"
+                ? "text-primary-600 ring-primary-600"
                 : compareBlocked
                   ? "text-muted-400 ring-muted-200"
                   : "text-dark ring-muted-200"
@@ -173,7 +173,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
             </div>
 
             {product.stockQuantity != null && product.stockQuantity <= 0 && (
-              <p className="mt-1.5 text-[11px] font-medium text-danger">
+              <p className="mt-1.5 text-[11px] font-medium text-danger-600">
                 Out of stock
               </p>
             )}
@@ -197,7 +197,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 />
                 <button
                   onClick={() => addToCart(product, quantity)}
-                  className="flex h-11 min-w-0 flex-1 items-center justify-center gap-1 rounded-full bg-primary px-2 md:h-9 text-xs font-medium text-white transition-all duration-200 hover:bg-primary-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className="flex h-11 min-w-0 flex-1 items-center justify-center gap-1 rounded-full bg-primary-600 px-2 md:h-9 text-xs font-medium text-white transition-all duration-200 hover:bg-primary-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
                   aria-label={`Add ${product.name} to cart`}
                   disabled={product.stockQuantity != null && product.stockQuantity <= 0}
                 >
@@ -205,14 +205,14 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                   <span className="truncate">Add to Cart</span>
                 </button>
                 <button
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-dark text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:h-9 md:w-9"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-dark text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 md:h-9 md:w-9"
                   aria-label={`Quick view ${product.name}`}
                   onClick={() => setQuickViewOpen(true)}
                 >
                   <Eye size={15} className="shrink-0" />
                 </button>
                 <button
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-dark text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 md:h-9 md:w-9"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-dark text-dark transition-all duration-200 hover:bg-dark hover:text-white active:scale-95 focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:opacity-50 md:h-9 md:w-9"
                   aria-label={
                     isWishlisted
                       ? `Remove ${product.name} from wishlist`
@@ -223,7 +223,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                   disabled={wishlistLoading}
                 >
                   {isWishlisted ? (
-                    <Check size={15} className="shrink-0 text-primary" />
+                    <Check size={15} className="shrink-0 text-primary-600" />
                   ) : (
                     <Heart size={15} className="shrink-0" />
                   )}

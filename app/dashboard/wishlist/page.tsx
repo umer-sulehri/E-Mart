@@ -225,7 +225,7 @@ function WishlistContent() {
                 <button
                   onClick={() => removeItem(entry.productId)}
                   disabled={isRemoving}
-                  className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-muted-400 shadow-sm transition-colors hover:bg-danger hover:text-white disabled:opacity-50"
+                  className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-muted-400 shadow-sm transition-colors hover:bg-danger-600 hover:text-white disabled:opacity-50"
                 >
                   <X className="size-4" />
                 </button>
@@ -250,7 +250,7 @@ function WishlistContent() {
                       <del className="text-xs text-muted-500">
                         {formatPrice(original)}
                       </del>
-                      <span className="text-sm font-bold text-primary">
+                      <span className="text-sm font-bold text-primary-600">
                         {formatPrice(current)}
                       </span>
                       <span className="rounded border border-muted-200 bg-white px-1 py-0.5 text-[10px] text-muted-600">

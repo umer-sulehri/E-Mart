@@ -40,7 +40,7 @@ export default function CartPage() {
           <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-600">
             <Link
               href="/"
-              className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary"
+              className="flex items-center gap-1 text-muted-600 transition-colors hover:text-primary-600"
             >
               <Home size={14} />
               Home
@@ -182,7 +182,7 @@ export default function CartPage() {
                       <div className="mt-3 md:mt-0 md:col-span-1">
                         <button
                           onClick={() => removeItem(item.productId)}
-                          className="rounded p-1.5 text-muted-400 transition-colors hover:bg-danger-50 hover:text-danger"
+                          className="rounded p-1.5 text-muted-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
                           aria-label={`Remove ${item.product.name}`}
                         >
                           <Trash2 size={16} />
@@ -196,7 +196,7 @@ export default function CartPage() {
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-muted-100 pt-6">
                   <Link
                     href="/products"
-                    className="text-sm font-medium text-secondary-700 transition-colors hover:text-primary"
+                    className="text-sm font-medium text-secondary-700 transition-colors hover:text-primary-600"
                   >
                     ← Continue Shopping
                   </Link>

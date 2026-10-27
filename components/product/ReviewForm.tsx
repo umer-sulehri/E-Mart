@@ -167,7 +167,7 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
           </p>
           <a
             href="/login"
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-sm font-medium text-primary-600 hover:underline"
           >
             Login to review
           </a>
@@ -209,7 +209,7 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
                   className={cn(
                     'transition-colors',
                     star <= displayRating
-                      ? 'fill-warning text-warning'
+                      ? 'fill-warning text-warning-700'
                       : 'fill-none text-muted-300'
                   )}
                 />
@@ -226,7 +226,7 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
             )}
           </div>
           {errors.rating && (
-            <p className="mt-1.5 text-xs text-danger">{errors.rating}</p>
+            <p className="mt-1.5 text-xs text-danger-600">{errors.rating}</p>
           )}
         </div>
 
@@ -251,14 +251,14 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
               'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
               'placeholder:text-muted-400',
               'transition-colors',
-              'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+              'focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
               errors.title
-                ? 'border-danger focus:border-danger focus:ring-danger/20'
+                ? 'border-danger focus:border-danger focus:ring-danger-600'
                 : 'border-muted-200'
             )}
           />
           {errors.title && (
-            <p className="mt-1.5 text-xs text-danger">{errors.title}</p>
+            <p className="mt-1.5 text-xs text-danger-600">{errors.title}</p>
           )}
         </div>
 
@@ -283,14 +283,14 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
               'w-full resize-none rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
               'placeholder:text-muted-400',
               'transition-colors',
-              'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+              'focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
               errors.comment
-                ? 'border-danger focus:border-danger focus:ring-danger/20'
+                ? 'border-danger focus:border-danger focus:ring-danger-600'
                 : 'border-muted-200'
             )}
           />
           {errors.comment && (
-            <p className="mt-1.5 text-xs text-danger">{errors.comment}</p>
+            <p className="mt-1.5 text-xs text-danger-600">{errors.comment}</p>
           )}
           <p className="mt-1 text-xs text-muted-500">
             {comment.length}/500 characters
@@ -298,7 +298,7 @@ const ReviewForm = React.forwardRef<HTMLFormElement, ReviewFormProps>(
         </div>
 
         {submitError && (
-          <div className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+          <div className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger-600">
             {submitError}
           </div>
         )}

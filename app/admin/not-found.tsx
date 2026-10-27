@@ -40,7 +40,7 @@ export default function AdminNotFound() {
             <Link
               key={link.href}
               href={link.href}
-              className="inline-flex flex-col items-center gap-2 rounded-lg border border-muted-200 bg-white px-4 py-4 text-sm font-medium text-secondary-700 transition-colors hover:border-primary hover:bg-primary-50 hover:text-primary"
+              className="inline-flex flex-col items-center gap-2 rounded-lg border border-muted-200 bg-white px-4 py-4 text-sm font-medium text-secondary-700 transition-colors hover:border-primary-600 hover:bg-primary-50 hover:text-primary-600"
             >
               <Icon className="h-5 w-5" />
               {link.label}

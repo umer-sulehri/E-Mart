@@ -6,6 +6,7 @@ import ProductTabs from '@/components/product/ProductTabs';
 import ProductDetailClient from './ProductDetailClient';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import { resolvePriceDisplay } from '@/lib/utils';
+import { resolveImage } from '@/lib/imageLoader';
 import { generateProductMetadata, SITE_URL } from '@/lib/seo';
 import { apiProductToCardProduct, tryParseJson, type ApiProduct } from '@/lib/api';
 import { getSiteUrl } from '@/lib/absolute-url';
@@ -234,9 +235,7 @@ export default async function ProductDetailPage({
             name: product.name,
             description:
               product.shortDescription || product.description?.slice(0, 500),
-            image: product.images?.[0]
-              ? `${SITE_URL}${product.images[0]}`
-              : undefined,
+            image: product.images?.[0] ? resolveImage(product.images[0]) : undefined,
             sku: product.sku || undefined,
             brand: product.brand
               ? { '@type': 'Brand', name: product.brand.name }
@@ -297,7 +296,7 @@ export default async function ProductDetailPage({
       <section className="border-b border-muted-100 bg-white py-4">
         <div className="container mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8">
           <Breadcrumb
-            activeItemClassName="text-primary"
+            activeItemClassName="text-primary-600"
             items={[
               {
                 label: product.category.name,

@@ -24,7 +24,7 @@ export default function NotFound() {
 
       <Link
         href="/"
-        className="mt-8 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-500"
+        className="mt-8 inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-500"
       >
         Back to Home
       </Link>
@@ -38,7 +38,7 @@ export default function NotFound() {
             <Link
               key={link.label}
               href={link.href}
-              className="inline-flex items-center gap-2 rounded-full border border-muted-200 px-5 py-2.5 text-sm font-medium text-secondary-700 transition-colors hover:border-primary hover:text-primary"
+              className="inline-flex items-center gap-2 rounded-full border border-muted-200 px-5 py-2.5 text-sm font-medium text-secondary-700 transition-colors hover:border-primary-600 hover:text-primary-600"
             >
               <Icon className="h-4 w-4" />
               {link.label}

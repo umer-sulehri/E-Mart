@@ -166,7 +166,7 @@ export default function AdminStoresPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger">{error}</div>
+        <div className="rounded-lg bg-danger-50 p-3 text-sm text-danger-600">{error}</div>
       )}
 
       {showForm && (
@@ -175,7 +175,7 @@ export default function AdminStoresPage() {
             <h2 className="font-semibold text-secondary-800">
               {editing ? 'Edit Brand' : 'New Brand'}
             </h2>
-            <button onClick={() => setShowForm(false)} className="rounded p-1 text-muted-500 hover:bg-muted-100">
+            <button onClick={() => setShowForm(false)} aria-label="Close form" className="rounded p-1 text-muted-500 hover:bg-muted-100">
               <X className="size-5" />
             </button>
           </div>
@@ -214,7 +214,7 @@ export default function AdminStoresPage() {
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}
-              className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               placeholder="Short description"
             />
           </div>
@@ -223,7 +223,7 @@ export default function AdminStoresPage() {
               type="checkbox"
               checked={form.is_active}
               onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-              className="h-4 w-4 rounded border-muted-300 text-primary"
+              className="h-4 w-4 rounded border-muted-300 text-primary-600"
             />
             Active
           </label>
@@ -247,13 +247,13 @@ export default function AdminStoresPage() {
             placeholder="Search brands..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
           />
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="size-8 animate-spin text-primary" />
+            <Loader2 className="size-8 animate-spin text-primary-600" />
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -286,27 +286,27 @@ export default function AdminStoresPage() {
                         href={brand.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded p-1.5 text-muted-500 hover:bg-muted-100 hover:text-primary"
+                        className="rounded p-1.5 text-muted-500 hover:bg-muted-100 hover:text-primary-600"
                       >
                         <ExternalLink className="size-4" />
                       </a>
                     )}
                     <button
                       onClick={() => toggleActive(brand)}
-                      className="rounded px-2 py-1.5 text-xs font-medium text-muted-500 hover:bg-muted-100 hover:text-primary"
+                      className="rounded px-2 py-1.5 text-xs font-medium text-muted-500 hover:bg-muted-100 hover:text-primary-600"
                     >
                       {brand.is_active ? 'Deactivate' : 'Activate'}
                     </button>
                     <button
                       onClick={() => openEdit(brand)}
-                      className="rounded p-1.5 text-muted-500 hover:bg-muted-100 hover:text-primary"
+                      className="rounded p-1.5 text-muted-500 hover:bg-muted-100 hover:text-primary-600"
                     >
                       <Pencil className="size-4" />
                     </button>
                     <button
                       onClick={() => remove(brand.id)}
                       disabled={deleting === brand.id}
-                      className="rounded p-1.5 text-muted-500 hover:bg-danger-50 hover:text-danger"
+                      className="rounded p-1.5 text-muted-500 hover:bg-danger-50 hover:text-danger-600"
                     >
                       {deleting === brand.id ? (
                         <Loader2 className="size-4 animate-spin" />

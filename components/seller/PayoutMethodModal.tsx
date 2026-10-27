@@ -128,7 +128,7 @@ export default function PayoutMethodModal({
           value={bankName}
           onChange={(e) => setBankName(e.target.value)}
           placeholder="e.g. HBL, Meezan, UBL"
-          className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
         />
       </div>
       <div>
@@ -143,12 +143,12 @@ export default function PayoutMethodModal({
           placeholder="Full name on the account"
           className={`w-full rounded-lg border px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
             errors.accountTitle
-              ? 'border-danger focus:border-danger focus:ring-danger/20'
-              : 'border-muted-200 focus:border-primary focus:ring-primary/20'
+              ? 'border-danger focus:border-danger focus:ring-danger-600'
+              : 'border-muted-200 focus:border-primary-600 focus:ring-primary-600'
           }`}
         />
         {errors.accountTitle && (
-          <p className="mt-1 text-xs text-danger">{errors.accountTitle}</p>
+          <p className="mt-1 text-xs text-danger-600">{errors.accountTitle}</p>
         )}
       </div>
       <div>
@@ -163,12 +163,12 @@ export default function PayoutMethodModal({
           placeholder="Enter your account number"
           className={`w-full rounded-lg border px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
             errors.accountNumber
-              ? 'border-danger focus:border-danger focus:ring-danger/20'
-              : 'border-muted-200 focus:border-primary focus:ring-primary/20'
+              ? 'border-danger focus:border-danger focus:ring-danger-600'
+              : 'border-muted-200 focus:border-primary-600 focus:ring-primary-600'
           }`}
         />
         {errors.accountNumber && (
-          <p className="mt-1 text-xs text-danger">{errors.accountNumber}</p>
+          <p className="mt-1 text-xs text-danger-600">{errors.accountNumber}</p>
         )}
       </div>
       <div>
@@ -180,7 +180,7 @@ export default function PayoutMethodModal({
           value={iban}
           onChange={(e) => setIban(e.target.value)}
           placeholder="e.g. PK36 HBLB 0011 1111 1111 1111"
-          className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full rounded-lg border border-muted-200 px-3 py-2 text-base sm:text-sm focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
         />
       </div>
     </>
@@ -203,12 +203,12 @@ const phoneField =
           placeholder="03xx-xxxxxxx"
           className={`w-full rounded-lg border px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
             errors[`${method}Phone`]
-              ? 'border-danger focus:border-danger focus:ring-danger/20'
-              : 'border-muted-200 focus:border-primary focus:ring-primary/20'
+              ? 'border-danger focus:border-danger focus:ring-danger-600'
+              : 'border-muted-200 focus:border-primary-600 focus:ring-primary-600'
           }`}
         />
         {errors[`${method}Phone`] && (
-          <p className="mt-1 text-xs text-danger">{errors[`${method}Phone`]}</p>
+          <p className="mt-1 text-xs text-danger-600">{errors[`${method}Phone`]}</p>
         )}
         <p className="mt-1 text-xs text-muted-400">
           Payouts will be sent to this number.
@@ -255,7 +255,7 @@ const phoneField =
                   onClick={() => handleMethodChange(value)}
                   className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-xs font-medium transition-colors ${
                     method === value
-                      ? 'border-primary bg-primary-50 text-primary'
+                      ? 'border-primary-600 bg-primary-50 text-primary-600'
                       : 'border-muted-200 text-muted-600 hover:border-muted-300'
                   }`}
                 >
@@ -268,7 +268,7 @@ const phoneField =
             <div className="space-y-3">{method === 'bank' ? bankFields : phoneField}</div>
 
             {errors.form && (
-              <p className="mt-2 text-xs text-danger">{errors.form}</p>
+              <p className="mt-2 text-xs text-danger-600">{errors.form}</p>
             )}
 
             <div className="mt-6 flex gap-3">

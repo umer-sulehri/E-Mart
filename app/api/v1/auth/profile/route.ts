@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 
 const updateProfileSchema = z.object({
@@ -26,7 +27,10 @@ export async function GET() {
       );
     }
 
-    const { data: profile, error } = await supabase
+    // Session proven above; the row is keyed to that same user id. The
+    // service-role client is needed because email/phone/date_of_birth are
+    // outside the authenticated role's column grant.
+    const { data: profile, error } = await createAdminClient()
       .from("profiles")
       .select("*")
       .eq("id", user.id)
@@ -100,12 +104,15 @@ export async function PUT(request: NextRequest) {
 
     updates.updated_at = new Date().toISOString();
 
-    const { data: profile, error } = await supabase
+    // The UPDATE itself stays on the user-scoped client so RLS (own row) and
+    // the privilege-escalation trigger still see the real caller; only the
+    // response re-read (which includes PII columns) uses the service role.
+    // The updates object is built from the whitelist above, never from a
+    // spread of the request body, so role/is_blocked cannot be injected.
+    const { error } = await supabase
       .from("profiles")
       .update(updates)
-      .eq("id", user.id)
-      .select()
-      .single();
+      .eq("id", user.id);
 
     if (error) {
       return NextResponse.json(
@@ -113,6 +120,12 @@ export async function PUT(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    const { data: profile } = await createAdminClient()
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
 
     return NextResponse.json({
       success: true,

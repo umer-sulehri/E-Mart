@@ -254,7 +254,7 @@ function BlogContent() {
               Home
             </Link>
             <ChevronRight className="size-4" />
-            <span className="text-primary">Blog</span>
+            <span className="text-primary-600">Blog</span>
           </div>
         </div>
       </section>
@@ -270,7 +270,7 @@ function BlogContent() {
                 onClick={() => setActiveCategory(cat)}
                 className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
                   activeCategory === cat
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-muted-100 text-secondary-700 hover:bg-muted-200'
                 }`}
               >
@@ -325,12 +325,12 @@ function BlogContent() {
                           className="object-cover transition-transform group-hover:scale-105"
                           sizes="(max-width: 640px) 100vw, 50vw"
                         />
-                        <span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white">
+                        <span className="absolute left-3 top-3 rounded-full bg-primary-600 px-3 py-1 text-xs font-semibold text-white">
                           {post.category}
                         </span>
                       </div>
                       <div className="p-5">
-                        <h2 className="font-heading text-lg font-bold text-secondary-800 line-clamp-2 group-hover:text-primary transition-colors">
+                        <h2 className="font-heading text-lg font-bold text-secondary-800 line-clamp-2 group-hover:text-primary-600 transition-colors">
                           {post.title}
                         </h2>
                         <p className="mt-2 text-sm text-muted-500 line-clamp-2">
@@ -360,7 +360,7 @@ function BlogContent() {
                               </p>
                             </div>
                           </div>
-                          <span className="text-xs font-medium text-primary group-hover:underline">
+                          <span className="text-xs font-medium text-primary-600 group-hover:underline">
                             Read More
                           </span>
                         </div>
@@ -397,7 +397,7 @@ function BlogContent() {
                     placeholder="Search articles..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
                   />
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400" />
                 </div>
@@ -445,7 +445,7 @@ function BlogContent() {
                         />
                       </div>
                       <div>
-                        <h4 className="text-sm font-semibold text-secondary-800 line-clamp-2 group-hover:text-primary transition-colors">
+                        <h4 className="text-sm font-semibold text-secondary-800 line-clamp-2 group-hover:text-primary-600 transition-colors">
                           {post.title}
                         </h4>
                         <p className="mt-1 text-xs text-muted-500">
@@ -461,7 +461,7 @@ function BlogContent() {
               </div>
 
               {/* Newsletter */}
-              <div className="rounded-2xl bg-primary p-5 text-white">
+              <div className="rounded-2xl bg-primary-600 p-5 text-white">
                 <h3 className="mb-2 font-heading text-lg font-bold">
                   Newsletter
                 </h3>
@@ -473,7 +473,7 @@ function BlogContent() {
                   placeholder="Your email"
                   className="mb-3 w-full rounded-lg bg-white/20 px-4 py-2.5 text-base sm:text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/40"
                 />
-                <button className="w-full rounded-lg bg-white py-2.5 text-sm font-bold text-primary transition-colors hover:bg-muted-100">
+                <button className="w-full rounded-lg bg-white py-2.5 text-sm font-bold text-primary-600 transition-colors hover:bg-muted-100">
                   Subscribe
                 </button>
               </div>

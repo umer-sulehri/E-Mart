@@ -40,7 +40,7 @@ export default async function DashboardLayout({
           <nav className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted-500">
             <Link
               href="/"
-              className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary"
+              className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary-600"
             >
               <Home className="size-3.5" />
               Home
@@ -50,7 +50,9 @@ export default async function DashboardLayout({
           </nav>
 
           {/* Content */}
-          <main className="mt-4">{children}</main>
+          <main id="main-content" className="mt-4">
+            {children}
+          </main>
         </div>
       </div>
     </div>

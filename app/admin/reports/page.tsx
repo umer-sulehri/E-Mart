@@ -328,7 +328,7 @@ export default function AdminReportsPage() {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
+            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary-600 focus:outline-none"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
@@ -402,7 +402,7 @@ export default function AdminReportsPage() {
                 <h2 className="mb-4 text-lg font-semibold text-secondary-800">Daily Revenue</h2>
                 <BarChartSimple
                   data={salesData.dailyRevenue.map((d) => ({ label: d.date, value: d.amount }))}
-                  color="bg-primary"
+                  color="bg-primary-600"
                 />
               </div>
 
@@ -500,7 +500,7 @@ export default function AdminReportsPage() {
                           <p className="text-xs text-muted-500">{item.reviews} reviews</p>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Star className="size-4 fill-warning text-warning" />
+                          <Star className="size-4 fill-warning text-warning-700" />
                           <span className="font-semibold text-secondary-800">{item.rating}</span>
                         </div>
                       </div>
@@ -519,7 +519,7 @@ export default function AdminReportsPage() {
                       <div className="flex-1">
                         <div className="h-4 overflow-hidden rounded-full bg-muted-100">
                           <div
-                            className="h-full rounded-full bg-primary transition-all"
+                            className="h-full rounded-full bg-primary-600 transition-all"
                             style={{ width: `${cat.percentage}%` }}
                           />
                         </div>
@@ -636,7 +636,7 @@ function MetricCard({
               <span
                 className={cn(
                   'inline-flex items-center text-xs font-medium',
-                  isNegative ? 'text-danger' : change >= 0 ? 'text-success' : 'text-danger'
+                  isNegative ? 'text-danger-600' : change >= 0 ? 'text-success-700' : 'text-danger-600'
                 )}
               >
                 {change >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}

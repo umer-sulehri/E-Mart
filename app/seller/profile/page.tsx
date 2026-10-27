@@ -116,7 +116,7 @@ export default function SellerProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <Loader2 className="size-8 animate-spin text-primary-600" />
       </div>
     );
   }
@@ -131,7 +131,7 @@ export default function SellerProfilePage() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
-            <Store className="size-5 text-primary" />
+            <Store className="size-5 text-primary-600" />
           </div>
           <h3 className="text-lg font-bold text-secondary-800">Store Information</h3>
         </div>
@@ -141,7 +141,7 @@ export default function SellerProfilePage() {
             <label className="mb-1.5 block text-sm font-medium text-secondary-800">Store Logo</label>
             <div
               onClick={() => logoInputRef.current?.click()}
-              className="group flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-muted-200 transition-colors hover:border-primary"
+              className="group flex h-32 w-32 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-muted-200 transition-colors hover:border-primary-600"
             >
               {logoForDisplay ? (
                 <Image
@@ -153,7 +153,7 @@ export default function SellerProfilePage() {
                 />
               ) : (
                 <div className="text-center">
-                  <Camera className="mx-auto mb-1 size-6 text-muted-400 group-hover:text-primary" />
+                  <Camera className="mx-auto mb-1 size-6 text-muted-400 group-hover:text-primary-600" />
                   <p className="text-[10px] text-muted-400">
                     {uploading ? 'Uploading...' : 'Upload Logo'}
                   </p>
@@ -185,7 +185,7 @@ export default function SellerProfilePage() {
               rows={4}
               value={form.description}
               onChange={(e) => updateField('description', e.target.value)}
-              className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
             />
           </div>
 

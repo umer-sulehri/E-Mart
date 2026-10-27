@@ -160,7 +160,7 @@ function WishlistContent() {
         <nav aria-label="Breadcrumb" className="mt-3 flex items-center gap-2 text-sm text-white/70">
           <Link href="/" className="hover:text-white transition-colors">Home</Link>
           <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
-          <span className="text-primary">Wishlist</span>
+          <span className="text-primary-600">Wishlist</span>
         </nav>
       </div>
     </section>
@@ -172,7 +172,7 @@ function WishlistContent() {
       <>
         {hero}
         <section className="flex items-center justify-center py-20">
-          <Loader2 size={32} className="animate-spin text-primary" aria-label="Loading" />
+          <Loader2 size={32} className="animate-spin text-primary-600" aria-label="Loading" />
         </section>
       </>
     );
@@ -288,7 +288,7 @@ function WishlistContent() {
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
                         {!item.inStock && (
-                          <span className="absolute left-2 top-2 rounded-full bg-danger px-3 py-1 text-xs font-semibold text-white">
+                          <span className="absolute left-2 top-2 rounded-full bg-danger-600 px-3 py-1 text-xs font-semibold text-white">
                             Out of Stock
                           </span>
                         )}
@@ -297,13 +297,13 @@ function WishlistContent() {
                       <div className="mt-4">
                         <Link
                           href={`/products/${item.slug}`}
-                          className="font-heading text-base font-bold text-secondary-800 hover:text-primary transition-colors"
+                          className="font-heading text-base font-bold text-secondary-800 hover:text-primary-600 transition-colors"
                         >
                           {item.name}
                         </Link>
 
                         <div className="mt-2 flex items-baseline gap-2">
-                          <span className="text-lg font-bold text-primary">
+                          <span className="text-lg font-bold text-primary-600">
                             {formatPrice(current)}
                           </span>
                           {original !== null && (
@@ -330,7 +330,7 @@ function WishlistContent() {
                             aria-label={`Remove ${item.name} from wishlist`}
                             onClick={() => handleRemove(item.productId)}
                           >
-                            <Trash2 size={14} className="text-danger" aria-hidden="true" />
+                            <Trash2 size={14} className="text-danger-600" aria-hidden="true" />
                           </Button>
                         </div>
                       </div>

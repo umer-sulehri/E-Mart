@@ -44,11 +44,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               "w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800",
               "placeholder:text-muted-400",
               "transition-colors",
-              "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+              "focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600",
               "disabled:cursor-not-allowed disabled:bg-muted-50 disabled:opacity-60",
               icon && "pl-10",
               error
-                ? "border-danger focus:border-danger focus:ring-danger/20"
+                ? "border-danger focus:border-danger focus:ring-danger-600"
                 : "border-muted-200",
               className
             )}
@@ -56,7 +56,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
         {error && (
-          <p id={`${inputId}-error`} className="mt-1.5 text-xs text-danger">
+          <p id={`${inputId}-error`} className="mt-1.5 text-xs text-danger-600">
             {error}
           </p>
         )}

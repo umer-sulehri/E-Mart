@@ -109,7 +109,7 @@ export default function SellerOrderDetailPage() {
       <div className="py-12 text-center">
         <Package className="mx-auto mb-3 size-12 text-muted-300" />
         <p className="text-sm text-muted-500">Order not found</p>
-        <Link href="/seller/orders" className="mt-3 inline-block text-sm font-medium text-primary hover:text-primary-500">
+        <Link href="/seller/orders" className="mt-3 inline-block text-sm font-medium text-primary-600 hover:text-primary-500">
           Back to Orders
         </Link>
       </div>
@@ -139,7 +139,7 @@ export default function SellerOrderDetailPage() {
             value={order.status}
             onChange={(e) => handleStatusUpdate(e.target.value)}
             disabled={updating}
-            className="rounded-lg border border-muted-200 bg-white px-2 py-1.5 text-xs text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+            className="rounded-lg border border-muted-200 bg-white px-2 py-1.5 text-xs text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600 disabled:opacity-50"
           >
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>

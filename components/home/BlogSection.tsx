@@ -132,7 +132,7 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
                   </span>
                 </div>
 
-                <h3 className="mb-2 text-lg font-bold leading-snug text-secondary-800 transition-colors group-hover:text-primary">
+                <h3 className="mb-2 text-lg font-bold leading-snug text-secondary-800 transition-colors group-hover:text-primary-600">
                   <Link href={`/blog/${post.slug}`} className="hover:underline">
                     {post.title}
                   </Link>
@@ -144,7 +144,7 @@ const BlogSection = React.forwardRef<HTMLDivElement, { className?: string }>(
 
                 <Link
                   href={`/blog/${post.slug}`}
-                  className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary-500"
+                  className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-500"
                 >
                   Read More
                   <span className="sr-only"> about {post.title}</span>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { loginSchema } from "@/lib/validators";
 import { rateLimitByIp, rateLimitHeaders } from "@/lib/rate-limit";
 
@@ -38,11 +39,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: profile } = await supabase
+    // The profile row carries PII columns (phone) that are no longer part of
+    // the authenticated role's SELECT grant, so it is read through the
+    // service-role client right after the session was proven above.
+    const admin = createAdminClient();
+    const { data: profile } = await admin
       .from("profiles")
       .select("*")
       .eq("id", data.user.id)
       .single();
+
+    // Blocked accounts never get a usable session, regardless of role.
+    if (profile?.is_blocked) {
+      await supabase.auth.signOut();
+      return NextResponse.json(
+        {
+          success: false,
+          error: "This account has been suspended. Please contact support.",
+        },
+        { status: 403 }
+      );
+    }
 
     // Role scoping: the account's actual role must match the selected role.
     // This prevents an admin/seller from signing into the buyer flow (and vice-versa).

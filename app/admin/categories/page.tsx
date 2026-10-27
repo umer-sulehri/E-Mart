@@ -244,7 +244,7 @@ function AdminCategoriesContent() {
         <div className="rounded-xl bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-secondary-800">{editingId ? 'Edit Category' : 'Add New Category'}</h2>
-            <button onClick={() => { setShowForm(false); setEditingId(null); }} className="rounded-lg p-1 text-muted-500 hover:bg-muted-100">
+            <button onClick={() => { setShowForm(false); setEditingId(null); }} aria-label="Close form" className="rounded-lg p-1 text-muted-500 hover:bg-muted-100">
               <X className="size-5" />
             </button>
           </div>
@@ -256,7 +256,7 @@ function AdminCategoriesContent() {
                 value={newCategory.name}
                 onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
                 placeholder="Category name"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -266,7 +266,7 @@ function AdminCategoriesContent() {
                 value={newCategory.description}
                 onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
                 placeholder="Short description"
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
             <div>
@@ -284,7 +284,7 @@ function AdminCategoriesContent() {
                 type="number"
                 value={newCategory.displayOrder}
                 onChange={(e) => setNewCategory({ ...newCategory, displayOrder: Number(e.target.value) })}
-                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
           </div>
@@ -308,7 +308,7 @@ function AdminCategoriesContent() {
                       {cat.image_url ? (
                         <Image src={cat.image_url} alt={cat.name} width={40} height={40} className="h-10 w-10 rounded object-cover" />
                       ) : (
-                        <Grid className="size-5 text-primary" />
+                        <Grid className="size-5 text-primary-600" />
                       )}
                     </div>
                     <div>
@@ -326,10 +326,10 @@ function AdminCategoriesContent() {
                   {/* Mobile-first: the actions are always visible on touch
                       devices, which have no hover to reveal them. */}
                   <div className="flex shrink-0 items-center gap-1 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-                    <button onClick={() => startEdit(cat)} aria-label={`Edit ${cat.name}`} className="rounded p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary">
+                    <button onClick={() => startEdit(cat)} aria-label={`Edit ${cat.name}`} className="rounded p-2 text-muted-500 transition-colors hover:bg-muted-100 hover:text-primary-600">
                       <Edit3 className="size-3.5" />
                     </button>
-                    <button onClick={() => setDeleteTarget(cat)} aria-label={`Delete ${cat.name}`} className="rounded p-2 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger">
+                    <button onClick={() => setDeleteTarget(cat)} aria-label={`Delete ${cat.name}`} className="rounded p-2 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger-600">
                       <Trash2 className="size-3.5" />
                     </button>
                   </div>

@@ -659,6 +659,41 @@ ALTER TABLE refunds ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
+-- SECURITY HELPERS (see supabase/2028-security-hardening.sql)
+-- ============================================================
+
+-- Canonical admin predicate. SECURITY DEFINER so policies and triggers can
+-- ask "is this caller an admin?" without tripping the profiles self-recursion
+-- (ERROR 42P17) that a plain subquery causes.
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO anon;
+
+-- True when the current transaction contains a write already authorised by
+-- one of the SECURITY DEFINER guard triggers (e.g. the orders trigger
+-- incrementing coupons.used_count). Only our triggers set this GUC.
+CREATE OR REPLACE FUNCTION public.trusted_write()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT COALESCE(current_setting('emart.trusted_write', true), '') = 'on';
+$$;
+
+-- ============================================================
 -- RLS POLICIES: profiles
 -- ============================================================
 
@@ -676,6 +711,15 @@ DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile"
   ON profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
+
+-- Column-level SELECT lockdown: the row policies still decide *which* rows
+-- are visible (public name/avatar for everyone), while column grants decide
+-- *which columns* exist for each role. email, phone and date_of_birth are
+-- PII: hidden from anon and from other authenticated users. Routes needing
+-- PII switch to the service-role client behind an ownership/admin check.
+-- The REVOKE/GRANT statements run at the end of this file (they reference
+-- the is_blocked column, which is added there) — see the SECURITY HARDENING
+-- section and supabase/2028-security-hardening.sql.
 
 -- ============================================================
 -- RLS POLICIES: categories
@@ -757,7 +801,7 @@ DROP POLICY IF EXISTS "Active products are viewable by everyone" ON products;
 CREATE POLICY "Active products are viewable by everyone"
   ON products FOR SELECT
   USING (
-    is_active = true
+    (is_active = true AND moderation_status = 'approved')
     OR vendor_id IN (SELECT id FROM vendors WHERE user_id = auth.uid())
     OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
@@ -1077,15 +1121,19 @@ CREATE POLICY "Published blog posts are viewable by everyone"
   ON blog_posts FOR SELECT
   USING (status = 'published' OR auth.uid() = author_id);
 
+-- Blog posts are curated content: the application has no user-facing blog
+-- write path, so writes are admin-only (was: any authenticated user could
+-- insert/update posts, including status = 'published').
 DROP POLICY IF EXISTS "Authenticated users can create blog posts" ON blog_posts;
-CREATE POLICY "Authenticated users can create blog posts"
+CREATE POLICY "Admins can create blog posts"
   ON blog_posts FOR INSERT
-  WITH CHECK (auth.uid() = author_id);
+  WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authors can update own blog posts" ON blog_posts;
-CREATE POLICY "Authors can update own blog posts"
+CREATE POLICY "Admins can update blog posts"
   ON blog_posts FOR UPDATE
-  USING (auth.uid() = author_id);
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admins can manage all blog posts" ON blog_posts;
 CREATE POLICY "Admins can manage all blog posts"
@@ -1127,10 +1175,12 @@ CREATE POLICY "Users can view own notifications"
   ON notifications FOR SELECT
   USING (auth.uid() = user_id);
 
+-- WITH CHECK (true) let any session push notifications to any user_id;
+-- the application writes notifications through the service role.
 DROP POLICY IF EXISTS "System can insert notifications" ON notifications;
 CREATE POLICY "System can insert notifications"
   ON notifications FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (auth.uid() IS NULL OR auth.uid() = user_id OR public.is_admin());
 
 DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 CREATE POLICY "Users can update own notifications"
@@ -1176,10 +1226,21 @@ CREATE POLICY "Users can manage own notification preferences"
 -- RLS POLICIES: settings
 -- ============================================================
 
+-- Public by default, but never for key-shaped rows: a secret dropped into
+-- this table (API key, token, SMTP password) must not become world-readable
+-- just because the table is. Admins keep the blanket policy below.
+CREATE OR REPLACE FUNCTION public.settings_key_is_public(p_key text)
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT p_key !~* '(secret|password|passwd|private|api_?key|token|credential|webhook_?secret|smtp|salt)';
+$$;
+
 DROP POLICY IF EXISTS "Settings are viewable by everyone" ON settings;
 CREATE POLICY "Settings are viewable by everyone"
   ON settings FOR SELECT
-  USING (true);
+  USING (public.settings_key_is_public(key));
 
 DROP POLICY IF EXISTS "Admins can manage settings" ON settings;
 CREATE POLICY "Admins can manage settings"
@@ -1506,13 +1567,17 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
+  -- Role is always 'customer': signup metadata must never be able to mint
+  -- an admin/seller (it previously could). Elevated roles are assigned
+  -- after the fact through the service role (admin user creation, demo
+  -- seeding), which bypasses this gate. See supabase/2028-security-hardening.sql.
   INSERT INTO public.profiles (id, email, first_name, last_name, role)
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
-    COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
-    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'customer')
+    LEFT(COALESCE(NEW.raw_user_meta_data->>'first_name', ''), 100),
+    LEFT(COALESCE(NEW.raw_user_meta_data->>'last_name', ''), 100),
+    'customer'::public.user_role
   );
   RETURN NEW;
 END;
@@ -1698,3 +1763,640 @@ ALTER TABLE profiles
 ALTER TABLE vendors
   ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;
+
+-- ============================================================
+-- SECURITY HARDENING (2028)
+-- Mirrors supabase/2028-security-hardening.sql so a fresh install that only
+-- runs this file still gets the column lockdown, guard triggers and
+-- constraints. The migration file stays the source of truth for existing
+-- projects; both are idempotent.
+-- ============================================================
+
+-- --- profiles: column-level SELECT lockdown (PII) -------------------------
+-- Requires is_blocked, added above. Row visibility is still governed by the
+-- profiles RLS policies; these grants narrow each role's visible columns.
+REVOKE SELECT ON public.profiles FROM anon, authenticated;
+
+GRANT SELECT (
+  id, first_name, last_name, profile_image_url, created_at
+) ON public.profiles TO anon;
+
+GRANT SELECT (
+  id, first_name, last_name, profile_image_url, role,
+  is_email_verified, is_blocked, created_at, updated_at
+) ON public.profiles TO authenticated;
+
+-- --- unused views expose customer PII; API roles must not read them ------
+REVOKE ALL ON public.product_summary, public.order_summary, public.seller_dashboard
+  FROM anon, authenticated;
+
+-- --- profiles: privilege-escalation guards --------------------------------
+CREATE OR REPLACE FUNCTION public.protect_profile_privileges()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL OR public.is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  NEW.id := OLD.id;
+  NEW.email := OLD.email;
+  IF NEW.role IS DISTINCT FROM OLD.role THEN
+    NEW.role := OLD.role;
+  END IF;
+  IF NEW.is_blocked IS DISTINCT FROM OLD.is_blocked THEN
+    NEW.is_blocked := OLD.is_blocked;
+  END IF;
+  IF NEW.is_email_verified IS DISTINCT FROM OLD.is_email_verified THEN
+    NEW.is_email_verified := OLD.is_email_verified;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS protect_profile_privileges ON public.profiles;
+CREATE TRIGGER protect_profile_privileges
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.protect_profile_privileges();
+
+CREATE OR REPLACE FUNCTION public.protect_profile_insert()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RETURN NEW;
+  END IF;
+  NEW.id := auth.uid();
+  NEW.role := 'customer';
+  NEW.is_blocked := FALSE;
+  NEW.is_email_verified := FALSE;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS protect_profile_insert ON public.profiles;
+CREATE TRIGGER protect_profile_insert
+  BEFORE INSERT ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.protect_profile_insert();
+
+-- --- vendors: no self-approval --------------------------------------------
+CREATE OR REPLACE FUNCTION public.protect_vendor_fields()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL OR public.is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    NEW.user_id := auth.uid();
+    NEW.status := 'pending';
+    NEW.verified_at := NULL;
+    NEW.suspended_at := NULL;
+  ELSE
+    NEW.user_id := OLD.user_id;
+    IF NEW.status IS DISTINCT FROM OLD.status THEN
+      NEW.status := OLD.status;
+    END IF;
+    NEW.verified_at := OLD.verified_at;
+    NEW.suspended_at := OLD.suspended_at;
+    IF NEW.commission_rate IS DISTINCT FROM OLD.commission_rate THEN
+      NEW.commission_rate := OLD.commission_rate;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS protect_vendor_fields ON public.vendors;
+CREATE TRIGGER protect_vendor_fields
+  BEFORE INSERT OR UPDATE ON public.vendors
+  FOR EACH ROW EXECUTE FUNCTION public.protect_vendor_fields();
+
+-- --- reviews: moderation + counters are server-authoritative --------------
+CREATE OR REPLACE FUNCTION public.protect_review_fields()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL OR public.is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    NEW.user_id := auth.uid();
+    NEW.status := 'pending';
+    NEW.helpful_count := 0;
+    NEW.seller_reply := NULL;
+    NEW.seller_reply_at := NULL;
+    NEW.created_at := NOW();
+    NEW.is_verified_purchase := EXISTS (
+      SELECT 1
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+      WHERE oi.product_id = NEW.product_id
+        AND o.user_id = auth.uid()
+        AND o.status = 'delivered'
+    );
+  ELSE
+    NEW.user_id := OLD.user_id;
+    NEW.product_id := OLD.product_id;
+    NEW.helpful_count := OLD.helpful_count;
+    NEW.is_verified_purchase := OLD.is_verified_purchase;
+    NEW.seller_reply := OLD.seller_reply;
+    NEW.seller_reply_at := OLD.seller_reply_at;
+    NEW.created_at := OLD.created_at;
+    IF NEW.status IS DISTINCT FROM OLD.status AND NEW.status <> 'pending' THEN
+      NEW.status := OLD.status;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS protect_review_fields ON public.reviews;
+CREATE TRIGGER protect_review_fields
+  BEFORE INSERT OR UPDATE ON public.reviews
+  FOR EACH ROW EXECUTE FUNCTION public.protect_review_fields();
+
+-- --- coupons: value constraints + creator/used_count protection -----------
+DO $$
+DECLARE
+  c text;
+BEGIN
+  SELECT conname INTO c FROM pg_constraint
+   WHERE conrelid = 'public.coupons'::regclass
+     AND conname = 'coupons_percentage_value_le_100';
+  IF c IS NULL THEN
+    ALTER TABLE public.coupons
+      ADD CONSTRAINT coupons_percentage_value_le_100
+      CHECK (discount_type <> 'percentage' OR discount_value <= 100);
+  END IF;
+
+  SELECT conname INTO c FROM pg_constraint
+   WHERE conrelid = 'public.coupons'::regclass
+     AND conname = 'coupons_minimum_order_nonnegative';
+  IF c IS NULL THEN
+    ALTER TABLE public.coupons
+      ADD CONSTRAINT coupons_minimum_order_nonnegative
+      CHECK (minimum_order_amount IS NULL OR minimum_order_amount >= 0);
+  END IF;
+
+  SELECT conname INTO c FROM pg_constraint
+   WHERE conrelid = 'public.coupons'::regclass
+     AND conname = 'coupons_usage_limit_positive';
+  IF c IS NULL THEN
+    ALTER TABLE public.coupons
+      ADD CONSTRAINT coupons_usage_limit_positive
+      CHECK (usage_limit IS NULL OR usage_limit > 0);
+  END IF;
+
+  SELECT conname INTO c FROM pg_constraint
+   WHERE conrelid = 'public.coupons'::regclass
+     AND conname = 'coupons_per_user_limit_positive';
+  IF c IS NULL THEN
+    ALTER TABLE public.coupons
+      ADD CONSTRAINT coupons_per_user_limit_positive
+      CHECK (per_user_limit IS NULL OR per_user_limit > 0);
+  END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.protect_coupon_fields()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL OR public.is_admin() OR public.trusted_write() THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    NEW.created_by := auth.uid();
+    NEW.used_count := 0;
+  ELSE
+    NEW.created_by := OLD.created_by;
+    IF NEW.used_count IS DISTINCT FROM OLD.used_count THEN
+      NEW.used_count := OLD.used_count;
+    END IF;
+    NEW.created_at := OLD.created_at;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS protect_coupon_fields ON public.coupons;
+CREATE TRIGGER protect_coupon_fields
+  BEFORE INSERT OR UPDATE ON public.coupons
+  FOR EACH ROW EXECUTE FUNCTION public.protect_coupon_fields();
+
+-- --- orders: server-authoritative money + role-scoped transitions ---------
+CREATE OR REPLACE FUNCTION public.orders_guard_insert()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_sub     numeric;
+  v_tax     numeric;
+  v_ship    numeric;
+  v_disc    numeric := 0;
+  v_coupon  public.coupons%ROWTYPE;
+  v_code    text;
+BEGIN
+  IF auth.uid() IS NULL OR public.is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  NEW.user_id := auth.uid();
+  NEW.created_at := NOW();
+  NEW.status := 'pending';
+  NEW.payment_status := 'pending';
+
+  v_sub := GREATEST(0, COALESCE(NEW.subtotal, 0));
+  -- Mirrors checkout (app/api/v1/orders/route.ts); keep constants in step.
+  v_tax := ROUND(v_sub * 0.05);
+  v_ship := CASE WHEN v_sub >= 2000 THEN 0 ELSE 150 END;
+
+  v_code := NULLIF(BTRIM(COALESCE(NEW.coupon_code, '')), '');
+
+  IF v_code IS NULL THEN
+    v_disc := 0;
+    NEW.coupon_code := NULL;
+  ELSE
+    SELECT * INTO v_coupon
+      FROM public.coupons
+     WHERE UPPER(code) = UPPER(v_code)
+     FOR UPDATE;
+
+    IF NOT FOUND
+       OR NOT v_coupon.is_active
+       OR (v_coupon.starts_at IS NOT NULL AND v_coupon.starts_at > NOW())
+       OR (v_coupon.expires_at IS NOT NULL AND v_coupon.expires_at < NOW())
+       OR (v_coupon.usage_limit IS NOT NULL
+           AND COALESCE(v_coupon.used_count, 0) >= v_coupon.usage_limit)
+       OR (COALESCE(v_coupon.minimum_order_amount, 0) > v_sub)
+    THEN
+      RAISE EXCEPTION 'INVALID_COUPON'
+        USING ERRCODE = 'P0001',
+              HINT = 'Coupon is missing, inactive, expired, exhausted, or below its minimum order amount.';
+    END IF;
+
+    IF v_coupon.discount_type = 'percentage' THEN
+      v_disc := (v_sub * v_coupon.discount_value) / 100;
+      IF v_coupon.maximum_discount_amount IS NOT NULL
+         AND v_disc > v_coupon.maximum_discount_amount THEN
+        v_disc := v_coupon.maximum_discount_amount;
+      END IF;
+    ELSIF v_coupon.discount_type = 'fixed_amount' THEN
+      v_disc := v_coupon.discount_value;
+    ELSE
+      v_disc := 0;
+      v_ship := 0;
+    END IF;
+
+    UPDATE public.coupons
+       SET used_count = COALESCE(used_count, 0) + 1
+     WHERE id = v_coupon.id;
+  END IF;
+
+  NEW.subtotal := v_sub;
+  NEW.tax := v_tax;
+  NEW.shipping_cost := v_ship;
+  NEW.discount := v_disc;
+  NEW.total := GREATEST(0, v_sub + v_tax + v_ship - FLOOR(v_disc));
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS orders_guard_insert ON public.orders;
+CREATE TRIGGER orders_guard_insert
+  BEFORE INSERT ON public.orders
+  FOR EACH ROW EXECUTE FUNCTION public.orders_guard_insert();
+
+CREATE OR REPLACE FUNCTION public.orders_guard_update()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_sub      numeric;
+  v_tax      numeric;
+  v_ship     numeric;
+  v_disc     numeric := 0;
+  v_coupon   public.coupons%ROWTYPE;
+  v_code     text;
+  v_is_owner boolean;
+BEGIN
+  IF auth.uid() IS NULL OR public.is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  NEW.id := OLD.id;
+  NEW.user_id := OLD.user_id;
+  NEW.order_number := OLD.order_number;
+  NEW.created_at := OLD.created_at;
+
+  -- Only after the identity clamp above, so a user_id swap cannot masquerade
+  -- as the owner below.
+  v_is_owner := (NEW.user_id = auth.uid());
+
+  IF NEW.payment_status IS DISTINCT FROM OLD.payment_status THEN
+    IF v_is_owner AND NEW.payment_status IN ('processing', 'failed')
+       AND OLD.payment_status IN ('pending', 'processing') THEN
+      NULL;
+    ELSE
+      NEW.payment_status := OLD.payment_status;
+    END IF;
+  END IF;
+
+  IF NEW.status IS DISTINCT FROM OLD.status THEN
+    IF OLD.status IN ('cancelled', 'returned', 'refunded') THEN
+      NEW.status := OLD.status;
+    ELSIF v_is_owner THEN
+      IF NOT (
+           (NEW.status = 'processing'    AND OLD.status IN ('pending', 'confirmed'))
+        OR (NEW.status = 'cancelled'     AND OLD.status IN ('pending', 'confirmed', 'processing'))
+        OR (NEW.status = 'returned'      AND OLD.status IN ('shipped', 'out_for_delivery', 'delivered'))
+      ) THEN
+        NEW.status := OLD.status;
+      END IF;
+    ELSIF public.user_can_view_order(NEW.id) THEN
+      IF NOT (
+           NEW.status IN ('confirmed', 'processing', 'shipped',
+                          'out_for_delivery', 'delivered', 'cancelled')
+           AND OLD.status NOT IN ('cancelled', 'returned', 'refunded', 'delivered')
+      ) THEN
+        NEW.status := OLD.status;
+      END IF;
+    ELSE
+      NEW.status := OLD.status;
+    END IF;
+  END IF;
+
+  IF (NEW.subtotal, NEW.tax, NEW.shipping_cost, NEW.discount, NEW.total,
+      NEW.coupon_code)
+     IS DISTINCT FROM
+     (OLD.subtotal, OLD.tax, OLD.shipping_cost, OLD.discount, OLD.total,
+      OLD.coupon_code)
+  THEN
+    SELECT COALESCE(SUM(price * quantity), 0)
+      INTO v_sub
+      FROM public.order_items
+     WHERE order_id = NEW.id;
+
+    v_tax := ROUND(v_sub * 0.05);
+    v_ship := CASE WHEN v_sub >= 2000 THEN 0 ELSE 150 END;
+
+    v_code := NULLIF(BTRIM(COALESCE(NEW.coupon_code, '')), '');
+    IF v_code IS NULL THEN
+      NEW.coupon_code := NULL;
+    ELSE
+      SELECT * INTO v_coupon
+        FROM public.coupons
+       WHERE UPPER(code) = UPPER(v_code)
+       LIMIT 1;
+
+      IF FOUND
+         AND v_coupon.is_active
+         AND (v_coupon.starts_at IS NULL OR v_coupon.starts_at <= NOW())
+         AND (v_coupon.expires_at IS NULL OR v_coupon.expires_at >= NOW())
+         AND COALESCE(v_coupon.minimum_order_amount, 0) <= v_sub
+      THEN
+        IF v_coupon.discount_type = 'percentage' THEN
+          v_disc := (v_sub * v_coupon.discount_value) / 100;
+          IF v_coupon.maximum_discount_amount IS NOT NULL
+             AND v_disc > v_coupon.maximum_discount_amount THEN
+            v_disc := v_coupon.maximum_discount_amount;
+          END IF;
+        ELSIF v_coupon.discount_type = 'fixed_amount' THEN
+          v_disc := v_coupon.discount_value;
+        ELSE
+          v_disc := 0;
+          v_ship := 0;
+        END IF;
+      END IF;
+    END IF;
+
+    NEW.subtotal := v_sub;
+    NEW.tax := v_tax;
+    NEW.shipping_cost := v_ship;
+    NEW.discount := v_disc;
+    NEW.total := GREATEST(0, v_sub + v_tax + v_ship - FLOOR(v_disc));
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS orders_guard_update ON public.orders;
+CREATE TRIGGER orders_guard_update
+  BEFORE UPDATE ON public.orders
+  FOR EACH ROW EXECUTE FUNCTION public.orders_guard_update();
+
+CREATE OR REPLACE FUNCTION public.orders_guard_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL OR public.is_admin() THEN
+    RETURN OLD;
+  END IF;
+
+  IF OLD.status <> 'pending' THEN
+    RAISE EXCEPTION 'ORDER_DELETE_DENIED'
+      USING ERRCODE = 'P0001',
+            HINT = 'Only pending orders can be deleted by their owner.';
+  END IF;
+
+  IF OLD.coupon_code IS NOT NULL AND BTRIM(OLD.coupon_code) <> '' THEN
+    PERFORM set_config('emart.trusted_write', 'on', true);
+    UPDATE public.coupons
+       SET used_count = GREATEST(0, COALESCE(used_count, 0) - 1)
+     WHERE UPPER(code) = UPPER(OLD.coupon_code);
+  END IF;
+  RETURN OLD;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS orders_guard_delete ON public.orders;
+CREATE TRIGGER orders_guard_delete
+  BEFORE DELETE ON public.orders
+  FOR EACH ROW EXECUTE FUNCTION public.orders_guard_delete();
+
+-- --- order_items: price/stock/vendor authority + parent recompute ---------
+CREATE OR REPLACE FUNCTION public.order_item_guard()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_owner     uuid;
+  v_status    public.order_status;
+  v_price     numeric;
+  v_sale      numeric;
+  v_stock     integer;
+  v_vendor    uuid;
+  v_effective numeric;
+BEGIN
+  IF auth.uid() IS NULL OR public.is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT user_id, status
+    INTO v_owner, v_status
+    FROM public.orders
+   WHERE id = NEW.order_id;
+
+  IF NOT FOUND OR v_owner <> auth.uid() OR v_status <> 'pending' THEN
+    RAISE EXCEPTION 'ORDER_ITEM_INSERT_DENIED'
+      USING ERRCODE = 'P0001',
+            HINT = 'Order items may only be added to your own pending order.';
+  END IF;
+
+  IF NEW.product_id IS NULL THEN
+    RAISE EXCEPTION 'ORDER_ITEM_PRODUCT_REQUIRED'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT price, discount_price, stock_quantity, vendor_id
+    INTO v_price, v_sale, v_stock, v_vendor
+    FROM public.products
+   WHERE id = NEW.product_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'ORDER_ITEM_PRODUCT_MISSING'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  v_effective := COALESCE(v_sale, v_price);
+  IF NEW.price IS DISTINCT FROM v_effective THEN
+    RAISE EXCEPTION 'ORDER_ITEM_PRICE_MISMATCH'
+      USING ERRCODE = 'P0001',
+            HINT = 'Item price does not match the current product price.';
+  END IF;
+
+  IF COALESCE(v_stock, 0) < NEW.quantity THEN
+    RAISE EXCEPTION 'ORDER_ITEM_INSUFFICIENT_STOCK'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF NEW.vendor_id IS DISTINCT FROM v_vendor THEN
+    NEW.vendor_id := v_vendor;
+  END IF;
+
+  NEW.total := NEW.price * NEW.quantity;
+  NEW.discount := 0;
+  NEW.created_at := NOW();
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS order_item_guard ON public.order_items;
+CREATE TRIGGER order_item_guard
+  BEFORE INSERT ON public.order_items
+  FOR EACH ROW EXECUTE FUNCTION public.order_item_guard();
+
+CREATE OR REPLACE FUNCTION public.order_item_recompute_order()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_order uuid;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  v_order := CASE TG_OP
+    WHEN 'DELETE' THEN OLD.order_id
+    ELSE NEW.order_id
+  END;
+
+  UPDATE public.orders
+     SET subtotal = (
+       SELECT COALESCE(SUM(price * quantity), 0)
+         FROM public.order_items
+        WHERE order_id = v_order
+     )
+   WHERE id = v_order;
+
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS order_item_recompute_insert ON public.order_items;
+CREATE TRIGGER order_item_recompute_insert
+  AFTER INSERT ON public.order_items
+  FOR EACH ROW EXECUTE FUNCTION public.order_item_recompute_order();
+
+DROP TRIGGER IF EXISTS order_item_recompute_delete ON public.order_items;
+CREATE TRIGGER order_item_recompute_delete
+  AFTER DELETE ON public.order_items
+  FOR EACH ROW EXECUTE FUNCTION public.order_item_recompute_order();
+
+-- --- seller_payouts: positive amount, forced pending ----------------------
+DO $$
+DECLARE
+  c text;
+BEGIN
+  SELECT conname INTO c FROM pg_constraint
+   WHERE conrelid = 'public.seller_payouts'::regclass
+     AND conname = 'seller_payouts_amount_positive';
+  IF c IS NULL THEN
+    ALTER TABLE public.seller_payouts
+      ADD CONSTRAINT seller_payouts_amount_positive
+      CHECK (amount > 0);
+  END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.protect_payout_fields()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL OR public.is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    NEW.seller_id := auth.uid();
+    NEW.status := 'pending';
+    NEW.processed_at := NULL;
+  ELSE
+    NEW.seller_id := OLD.seller_id;
+    IF NEW.status IS DISTINCT FROM OLD.status THEN
+      NEW.status := OLD.status;
+    END IF;
+    NEW.amount := OLD.amount;
+    NEW.processed_at := OLD.processed_at;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS protect_payout_fields ON public.seller_payouts;
+CREATE TRIGGER protect_payout_fields
+  BEFORE INSERT OR UPDATE ON public.seller_payouts
+  FOR EACH ROW EXECUTE FUNCTION public.protect_payout_fields();

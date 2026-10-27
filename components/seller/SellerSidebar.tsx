@@ -62,7 +62,7 @@ export default function SellerSidebar() {
   const sidebarContent = (
     <div className="flex min-h-full flex-col">
       <div className="flex items-center gap-3 border-b border-muted-200 p-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-lg font-bold text-white">
           {initials}
         </div>
         <div className="min-w-0">
@@ -90,7 +90,7 @@ return (
               className={cn(
                 'flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'border-l-[3px] border-primary bg-primary-50 text-primary-600'
+                  ? 'border-l-[3px] border-primary-600 bg-primary-50 text-primary-600'
                   : 'text-muted-600 hover:bg-muted-50 hover:text-secondary-800'
               )}
             >
@@ -114,7 +114,7 @@ return (
       {/* Become a Seller banner */}
       <div className="mx-4 mb-4 rounded-lg border border-primary-200 bg-primary-50 p-4">
         <div className="flex items-start gap-3">
-          <Info className="size-5 shrink-0 text-primary" />
+          <Info className="size-5 shrink-0 text-primary-600" />
           <div>
             <p className="text-xs font-semibold text-primary-700">
               Seller Tips
@@ -137,7 +137,7 @@ return (
             setMobileOpen(false);
             router.push('/login');
           }}
-          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger-50"
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-danger-600 transition-colors hover:bg-danger-50"
         >
           <LogOut className="size-5" />
           Logout
@@ -184,7 +184,7 @@ return (
       >
         <div className="flex shrink-0 items-center justify-between border-b border-muted-200 bg-white px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <Leaf className="size-6 text-primary" />
+            <Leaf className="size-6 text-primary-600" />
             <span className="font-heading text-lg font-bold text-secondary-800">
               E-Mart
             </span>

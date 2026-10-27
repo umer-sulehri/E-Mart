@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Printer, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice, formatDate } from "@/lib/utils";
+import PrintButton from "./PrintButton";
 
 interface InvoicePageProps {
   params: Promise<{ orderId: string }>;
@@ -50,26 +51,18 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
     ? order.profiles[0]
     : order.profiles;
 
-  const print = () => window.print();
-
   return (
     <div className="min-h-screen bg-muted-50 py-8">
       <div className="container mx-auto max-w-[860px] px-4">
         <div className="mb-6 flex items-center justify-between print:hidden">
           <Link
             href={isAdmin ? "/admin/orders" : "/dashboard/orders"}
-            className="inline-flex items-center gap-2 text-sm font-medium text-secondary-800 hover:text-primary"
+            className="inline-flex items-center gap-2 text-sm font-medium text-secondary-800 hover:text-primary-600"
           >
             <ArrowLeft size={16} />
             Back to orders
           </Link>
-          <button
-            onClick={print}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-500"
-          >
-            <Printer size={16} />
-            Print Invoice
-          </button>
+          <PrintButton />
         </div>
 
         <div className="rounded-2xl border border-muted-200 bg-white p-8 shadow-sm print:rounded-none print:border-0 print:shadow-none">

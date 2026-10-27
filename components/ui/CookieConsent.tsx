@@ -275,7 +275,7 @@ export default function CookieConsent() {
             <p className="mt-4 text-xs text-secondary-500">
               You can change these choices at any time from the “Cookie Settings” link in
               the footer. See our{' '}
-              <Link href="/cookie-policy" className="underline hover:text-primary">
+              <Link href="/cookie-policy" className="underline hover:text-primary-600">
                 Cookie Policy
               </Link>{' '}
               for details.

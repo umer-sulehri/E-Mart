@@ -1,6 +1,13 @@
 function escapeCsv(value: unknown): string {
   if (value === null || value === undefined) return "";
-  const str = String(value);
+  let str = String(value);
+  // Neutralise CSV formula injection (a.k.a. spreadsheet injection): a cell
+  // beginning with = + - @ or a control char is executed as a formula by Excel
+  // / Sheets when the export is opened. Prefixing a single quote forces the
+  // value to be treated as text.
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = "'" + str;
+  }
   if (/[",\n\r]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }

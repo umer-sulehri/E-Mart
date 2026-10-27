@@ -25,9 +25,9 @@ function getPasswordStrength(password: string) {
 }
 
 function getStrengthLabel(score: number) {
-  if (score <= 2) return { label: 'Weak', color: 'bg-danger' };
-  if (score <= 3) return { label: 'Medium', color: 'bg-warning' };
-  return { label: 'Strong', color: 'bg-success' };
+  if (score <= 2) return { label: 'Weak', color: 'bg-danger-600' };
+  if (score <= 3) return { label: 'Medium', color: 'bg-warning-700' };
+  return { label: 'Strong', color: 'bg-success-700' };
 }
 
 function RegisterContent() {
@@ -139,7 +139,7 @@ function RegisterContent() {
               className={cn(
                 'flex flex-col items-center gap-1 rounded-xl border-2 p-4 transition-all',
                 role === 'customer'
-                  ? 'border-primary bg-primary-50 text-primary-700'
+                  ? 'border-primary-600 bg-primary-50 text-primary-700'
                   : 'border-muted-200 text-muted-500 hover:border-primary-300'
               )}
               aria-pressed={role === 'customer'}
@@ -154,7 +154,7 @@ function RegisterContent() {
               className={cn(
                 'flex flex-col items-center gap-1 rounded-xl border-2 p-4 transition-all',
                 role === 'seller'
-                  ? 'border-primary bg-primary-50 text-primary-700'
+                  ? 'border-primary-600 bg-primary-50 text-primary-700'
                   : 'border-muted-200 text-muted-500 hover:border-primary-300'
               )}
               aria-pressed={role === 'seller'}
@@ -260,18 +260,18 @@ function RegisterContent() {
         <label className="flex items-start gap-2 text-sm text-muted-600">
           <input
             type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-muted-300 text-primary focus:ring-primary"
+            className="mt-0.5 h-4 w-4 rounded border-muted-300 text-primary-600 focus:ring-primary-600"
             {...register('agreeToTerms')}
           />
           <span>
             I agree to{' '}
-            <Link href="/terms" className="font-medium text-primary hover:text-primary-500" target="_blank">
+            <Link href="/terms" className="font-medium text-primary-600 hover:text-primary-500" target="_blank">
               Terms &amp; Conditions
             </Link>
           </span>
         </label>
         {errors.agreeToTerms && (
-          <p className="text-xs text-danger">{errors.agreeToTerms.message}</p>
+          <p className="text-xs text-danger-600">{errors.agreeToTerms.message}</p>
         )}
 
         <Button type="submit" loading={isLoading} className="w-full" size="lg">
@@ -318,7 +318,7 @@ function RegisterContent() {
 
       <p className="mt-8 text-center text-sm text-muted-500">
         Already have an account?{' '}
-        <Link href="/login" className="font-medium text-primary hover:text-primary-500">
+        <Link href="/login" className="font-medium text-primary-600 hover:text-primary-500">
           Login
         </Link>
       </p>

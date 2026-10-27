@@ -265,12 +265,12 @@ export default function ProductForm({
               className={cn(
                 'w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800',
                 'placeholder:text-muted-400 transition-colors',
-                'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+                'focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
                 errors.description ? 'border-danger' : 'border-muted-200'
               )}
             />
             {errors.description && (
-              <p className="mt-1.5 text-xs text-danger">{errors.description}</p>
+              <p className="mt-1.5 text-xs text-danger-600">{errors.description}</p>
             )}
           </div>
           <div>
@@ -285,7 +285,7 @@ export default function ProductForm({
               }}
               className={cn(
                 'w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
-                'transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+                'transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600',
                 errors.category ? 'border-danger' : 'border-muted-200'
               )}
             >
@@ -297,7 +297,7 @@ export default function ProductForm({
               ))}
             </select>
             {errors.category && (
-              <p className="mt-1.5 text-xs text-danger">{errors.category}</p>
+              <p className="mt-1.5 text-xs text-danger-600">{errors.category}</p>
             )}
           </div>
           <div>
@@ -310,7 +310,7 @@ export default function ProductForm({
               disabled={!selectedCategory?.subcategories?.length}
               className={cn(
                 'w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-secondary-800',
-                'transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-muted-50 disabled:text-muted-400',
+                'transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600 disabled:bg-muted-50 disabled:text-muted-400',
                 'border-muted-200'
               )}
             >
@@ -386,7 +386,7 @@ export default function ProductForm({
                 className={cn(
                   'flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors',
                   form.status === 'active'
-                    ? 'border-success bg-success text-white'
+                    ? 'border-success bg-success-700 text-white'
                     : 'border-muted-200 text-muted-600 hover:bg-muted-50'
                 )}
               >
@@ -398,7 +398,7 @@ export default function ProductForm({
                 className={cn(
                   'flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors',
                   form.status === 'draft'
-                    ? 'border-warning bg-warning text-white'
+                    ? 'border-warning bg-warning-700 text-white'
                     : 'border-muted-200 text-muted-600 hover:bg-muted-50'
                 )}
               >
@@ -435,7 +435,7 @@ export default function ProductForm({
                   onClick={() => setPrimaryImage(index)}
                   className={cn(
                     'rounded-lg p-2 text-white transition-colors',
-                    index === 0 ? 'bg-primary' : 'bg-white/20 hover:bg-white/40'
+                    index === 0 ? 'bg-primary-600' : 'bg-white/20 hover:bg-white/40'
                   )}
                   title="Set as primary"
                   aria-label={
@@ -449,7 +449,7 @@ export default function ProductForm({
                 <button
                   type="button"
                   onClick={() => removeImage(index)}
-                  className="rounded-lg bg-white/20 p-2 text-white transition-colors hover:bg-danger"
+                  className="rounded-lg bg-white/20 p-2 text-white transition-colors hover:bg-danger-600"
                   title="Remove image"
                   aria-label={`Remove image ${index + 1} of ${form.images.length}`}
                 >
@@ -474,8 +474,8 @@ export default function ProductForm({
               className={cn(
                 'flex h-40 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors',
                 dragActive
-                  ? 'border-primary bg-primary-50'
-                  : 'border-muted-200 hover:border-primary hover:bg-muted-50'
+                  ? 'border-primary-600 bg-primary-50'
+                  : 'border-muted-200 hover:border-primary-600 hover:bg-muted-50'
               )}
             >
               <Upload className="mb-2 size-8 text-muted-400" aria-hidden="true" />
@@ -498,7 +498,7 @@ export default function ProductForm({
         />
 
         {errors.images && (
-          <div className="mt-4 flex items-center gap-2 rounded-lg bg-danger-50 p-3 text-sm text-danger">
+          <div className="mt-4 flex items-center gap-2 rounded-lg bg-danger-50 p-3 text-sm text-danger-600">
             <ImageIcon className="size-4 shrink-0" aria-hidden="true" />
             {errors.images}
           </div>
@@ -529,7 +529,7 @@ export default function ProductForm({
           Cancel
         </Button>
         {mode === 'add' && quotaBlocked && (
-          <p className="text-sm text-danger" role="status">
+          <p className="text-sm text-danger-600" role="status">
             {/* Reset time comes from the server (next Asia/Karachi midnight), so
                 it states when *this seller's* allowance refills, not a guess. */}
             Daily limit reached. Try again tomorrow

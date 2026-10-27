@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeOrder } from "@/lib/orders";
 
 export async function GET(
@@ -22,13 +23,17 @@ export async function GET(
       );
     }
 
+    // Role is part of the authenticated column grant, so the caller's role
+    // can still be read on the user-scoped client.
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
 
-    let query = supabase
+    // The email embed on this query requires the service role; ownership is
+    // still enforced in code below for non-admins.
+    let query = createAdminClient()
       .from("orders")
       .select(
         "*, order_items(*, products(id, name, slug, images), vendors(name)), shipping_address:addresses!shipping_address_id(*), profile:profiles!orders_user_id_fkey(email)",

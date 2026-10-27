@@ -145,7 +145,7 @@ function AdminProductsContent() {
       {flaggedCount > 0 && (
         <div className="rounded-xl border border-danger-200 bg-danger-50 p-4">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="size-5 text-danger" />
+            <AlertTriangle className="size-5 text-danger-600" />
             <div>
               <p className="font-medium text-secondary-800">{flaggedCount} products flagged for moderation</p>
               <p className="text-sm text-muted-600">Review flagged products for policy violations</p>
@@ -163,14 +163,14 @@ function AdminProductsContent() {
               placeholder="Search products..."
               defaultValue={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-muted-200 bg-white py-2 pl-10 pr-4 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             aria-label="Filter by status"
-            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary focus:outline-none"
+            className="rounded-lg border border-muted-200 bg-white px-3 py-2 text-sm text-secondary-700 focus:border-primary-600 focus:outline-none"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -222,7 +222,7 @@ function AdminProductsContent() {
                       </td>
                       <td className="py-3 font-medium text-secondary-800">{formatPrice(product.price)}</td>
                       <td className="hidden py-3 lg:table-cell">
-                        <span className={cn('font-medium', (product.stock_quantity ?? 0) < 20 ? 'text-danger' : 'text-secondary-800')}>
+                        <span className={cn('font-medium', (product.stock_quantity ?? 0) < 20 ? 'text-danger-600' : 'text-secondary-800')}>
                           {product.stock_quantity ?? 0}
                         </span>
                       </td>
@@ -233,7 +233,7 @@ function AdminProductsContent() {
                             <button
                               onClick={() => handleModeration(product.id, 'approved')}
                               disabled={moderating === product.id}
-                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
+                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success-700 disabled:opacity-50"
                               title="Approve"
                             >
                               <CheckCircle2 className="size-4" />
@@ -243,7 +243,7 @@ function AdminProductsContent() {
                             <button
                               onClick={() => handleModeration(product.id, 'flagged')}
                               disabled={moderating === product.id}
-                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-warning-50 hover:text-warning disabled:opacity-50"
+                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-warning-50 hover:text-warning-700 disabled:opacity-50"
                               title="Flag"
                             >
                               <Flag className="size-4" />
@@ -253,7 +253,7 @@ function AdminProductsContent() {
                             <button
                               onClick={() => handleModeration(product.id, 'removed')}
                               disabled={moderating === product.id}
-                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-50"
+                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
                               title="Remove"
                             >
                               <ShieldAlert className="size-4" />
@@ -263,7 +263,7 @@ function AdminProductsContent() {
                             <button
                               onClick={() => handleModeration(product.id, 'approved')}
                               disabled={moderating === product.id}
-                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success disabled:opacity-50"
+                              className="rounded p-1.5 text-muted-500 transition-colors hover:bg-success-50 hover:text-success-700 disabled:opacity-50"
                               title="Reactivate (make Active)"
                             >
                               <RotateCcw className="size-4" />

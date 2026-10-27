@@ -7,19 +7,19 @@ type ButtonRounded = "rounded" | "pill";
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 focus-visible:ring-primary/40",
+    "bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 focus-visible:ring-primary-600/50",
   secondary:
-    "bg-secondary text-white hover:bg-secondary-600 active:bg-secondary-700 focus-visible:ring-secondary/40",
+    "bg-secondary text-white hover:bg-secondary-600 active:bg-secondary-700 focus-visible:ring-secondary-600",
   outline:
-    "border border-primary text-primary hover:bg-primary hover:text-white active:bg-primary-500 focus-visible:ring-primary/40",
+    "border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white active:bg-primary-700 focus-visible:ring-primary-600/50",
   ghost:
     "text-secondary hover:bg-muted-100 active:bg-muted-200 focus-visible:ring-muted/30",
   danger:
-    "bg-danger text-white hover:bg-danger-600 active:bg-danger-700 focus-visible:ring-danger/40",
+    "bg-danger-600 text-white hover:bg-danger-700 active:bg-danger-800 focus-visible:ring-danger-600",
   warning:
-    "bg-warning text-white hover:bg-warning-600 active:bg-warning-700 focus-visible:ring-warning/40",
+    "bg-warning-700 text-white hover:bg-warning-800 active:bg-warning-900 focus-visible:ring-warning-700",
   success:
-    "bg-success text-white hover:bg-success-600 active:bg-success-700 focus-visible:ring-success/40",
+    "bg-success-700 text-white hover:bg-success-800 active:bg-success-900 focus-visible:ring-success-700",
 };
 
 // `sm` is used for dense desktop toolbars but is also the smallest control

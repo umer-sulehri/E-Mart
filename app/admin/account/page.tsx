@@ -116,7 +116,7 @@ export default function AdminAccountPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <Loader2 className="size-8 animate-spin text-primary-600" />
       </div>
     );
   }
@@ -132,8 +132,8 @@ export default function AdminAccountPage() {
         <div
           className={
             message.type === 'success'
-              ? 'rounded-lg bg-success-50 p-3 text-sm text-success'
-              : 'rounded-lg bg-danger-50 p-3 text-sm text-danger'
+              ? 'rounded-lg bg-success-50 p-3 text-sm text-success-700'
+              : 'rounded-lg bg-danger-50 p-3 text-sm text-danger-600'
           }
         >
           {message.text}
@@ -185,7 +185,7 @@ export default function AdminAccountPage() {
                       type="button"
                       onClick={handleResendVerification}
                       disabled={resending}
-                      className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
+                      className="text-xs font-medium text-primary-600 hover:underline disabled:opacity-50"
                     >
                       {resending ? 'Sending...' : 'Resend'}
                     </button>
@@ -244,7 +244,7 @@ export default function AdminAccountPage() {
 
           <form onSubmit={changePassword} className="rounded-xl bg-white p-6 shadow-sm">
             <h2 className="mb-4 flex items-center gap-2 font-semibold text-secondary-800">
-              <KeyRound className="size-5 text-primary" />
+              <KeyRound className="size-5 text-primary-600" />
               Change Password
             </h2>
             <div className="space-y-4">
@@ -258,7 +258,7 @@ export default function AdminAccountPage() {
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 pr-10 text-base sm:text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 pr-10 text-base sm:text-sm text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
                   />
                   <button
                     type="button"
@@ -279,7 +279,7 @@ export default function AdminAccountPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-lg border border-muted-200 bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
                 />
               </div>
               <p className="text-xs text-muted-500">

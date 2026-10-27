@@ -134,7 +134,7 @@ function SellerOrdersContent() {
               className={cn(
                 'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                 activeTab === tab.key
-                  ? 'bg-primary text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'text-muted-600 hover:bg-muted-50'
               )}
             >
@@ -195,7 +195,7 @@ function SellerOrdersContent() {
                             value={order.status}
                             onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
                             disabled={updatingId === order.id}
-                            className="rounded-lg border border-muted-200 bg-white px-2 py-1.5 text-xs text-secondary-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                            className="rounded-lg border border-muted-200 bg-white px-2 py-1.5 text-xs text-secondary-800 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600 disabled:opacity-50"
                           >
                             <option value="pending">Pending</option>
                             <option value="processing">Processing</option>

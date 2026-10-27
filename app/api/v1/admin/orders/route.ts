@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { buildPaginationMeta, parsePagination } from "@/lib/pagination";
 import { safeOrTerm } from "@/lib/search-safe";
 
@@ -37,7 +38,9 @@ const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const search = searchParams.get("search") || "";
 
-    let query = supabase
+    // The customer embed includes email (outside the authenticated column
+    // grant); the admin role was verified above.
+    let query = createAdminClient()
       .from("orders")
       .select("*, order_items(*), profiles!inner(first_name, last_name, email)", { count: "exact" });
 

@@ -122,17 +122,17 @@ export default function AddProductPage() {
       <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-500">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary"
+          className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary-600"
         >
           <Home className="size-3.5" />
           Home
         </Link>
         <ChevronRight className="size-3.5" />
-        <Link href="/seller" className="text-muted-500 transition-colors hover:text-primary">
+        <Link href="/seller" className="text-muted-500 transition-colors hover:text-primary-600">
           Seller Dashboard
         </Link>
         <ChevronRight className="size-3.5" />
-        <Link href="/seller/products" className="text-muted-500 transition-colors hover:text-primary">
+        <Link href="/seller/products" className="text-muted-500 transition-colors hover:text-primary-600">
           Products
         </Link>
         <ChevronRight className="size-3.5" />

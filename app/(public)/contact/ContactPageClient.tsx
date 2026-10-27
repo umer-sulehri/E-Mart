@@ -146,7 +146,7 @@ export default function ContactPageClient() {
               Home
             </Link>
             <ChevronRight className="size-4" />
-            <span className="text-primary">Contact Us</span>
+            <span className="text-primary-600">Contact Us</span>
           </div>
         </div>
       </section>
@@ -209,14 +209,14 @@ export default function ContactPageClient() {
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Write your message here..."
-                    className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                    className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600 ${
                       errors.message
-                        ? 'border-danger focus:border-danger focus:ring-danger/20'
+                        ? 'border-danger focus:border-danger focus:ring-danger-600'
                         : 'border-muted-200'
                     }`}
                   />
                   {errors.message && (
-                    <p className="mt-1.5 text-xs text-danger">{errors.message}</p>
+                    <p className="mt-1.5 text-xs text-danger-600">{errors.message}</p>
                   )}
                 </div>
                 <Button
@@ -250,7 +250,7 @@ export default function ContactPageClient() {
                     key={item.title}
                     className="flex gap-4 rounded-2xl bg-muted-50 p-5"
                   >
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-600">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>

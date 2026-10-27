@@ -91,7 +91,7 @@ export default function AdminSidebar() {
   const sidebarContent = (
     <div className="flex min-h-full flex-col">
       <div className="flex items-center gap-3 border-b border-muted-200 p-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-lg font-bold text-white">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-600 text-lg font-bold text-white">
           <Shield className="size-6" />
         </div>
         <div className="min-w-0">
@@ -119,7 +119,7 @@ export default function AdminSidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
                 active
-                  ? 'border-l-[3px] border-primary bg-primary-50 text-primary-600'
+                  ? 'border-l-[3px] border-primary-600 bg-primary-50 text-primary-600'
                   : 'text-muted-600 hover:bg-muted-50 hover:text-secondary-800'
               )}
             >
@@ -140,7 +140,7 @@ export default function AdminSidebar() {
         </Link>
         <button
           onClick={handleLogout}
-          className="mt-1 flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger-50"
+          className="mt-1 flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-danger-600 transition-colors hover:bg-danger-50"
         >
           <LogOut className="size-5" />
           Logout
@@ -184,7 +184,7 @@ export default function AdminSidebar() {
       >
         <div className="flex shrink-0 items-center justify-between border-b border-muted-200 bg-white px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <Shield className="size-6 text-primary" />
+            <Shield className="size-6 text-primary-600" />
             <span className="font-heading text-lg font-bold text-secondary-800">
               E-Mart Admin
             </span>

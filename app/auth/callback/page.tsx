@@ -133,10 +133,10 @@ function AuthCallbackContent() {
   if (error) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
-        <p className="text-sm text-danger">{error}</p>
+        <p className="text-sm text-danger-600">{error}</p>
         <button
           onClick={() => router.push('/login')}
-          className="text-sm font-medium text-primary hover:text-primary-500"
+          className="text-sm font-medium text-primary-600 hover:text-primary-500"
         >
           Back to Login
         </button>
@@ -146,7 +146,7 @@ function AuthCallbackContent() {
 
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
-      <Loader2 className="size-8 animate-spin text-primary" />
+      <Loader2 className="size-8 animate-spin text-primary-600" />
       <p className="text-sm text-muted-500">Signing you in...</p>
     </div>
   );
@@ -157,7 +157,7 @@ export default function AuthCallbackPage() {
     <Suspense
       fallback={
         <div className="flex min-h-[400px] items-center justify-center">
-          <Loader2 className="size-8 animate-spin text-primary" />
+          <Loader2 className="size-8 animate-spin text-primary-600" />
         </div>
       }
     >

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { loadSeedAccounts, type SeedAccount } from "@/lib/seed-accounts";
+import {
+  loadSeedAccounts,
+  demoLoginEnabled,
+  demoPrivilegedEnabled,
+  type SeedAccount,
+} from "@/lib/seed-accounts";
 
 // POST /api/v1/auth/demo/seed-all
 // Bulk-creates all seed accounts in Supabase Auth + profiles + vendor rows.
@@ -20,11 +25,7 @@ interface SeedResult {
 }
 
 export async function POST(_request: NextRequest) {
-  const demoEnabled =
-    process.env.NODE_ENV !== "production" ||
-    process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true";
-
-  if (!demoEnabled) {
+  if (!demoLoginEnabled() || !demoPrivilegedEnabled()) {
     return NextResponse.json(
       { success: false, error: "Seed is not enabled on this environment." },
       { status: 403 }

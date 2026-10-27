@@ -32,22 +32,25 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https: http:",
-              "font-src 'self' data: https:",
-              "connect-src 'self' https: wss: http://localhost:* ws://localhost:*",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "frame-ancestors 'none'",
-              "upgrade-insecure-requests",
-            ].join('; '),
-          },
+            {
+              key: 'Content-Security-Policy',
+              value: [
+                "default-src 'self'",
+                // Google Analytics loads from googletagmanager.com; without the
+                // host allow-list the consented snippet is blocked even though
+                // the CSP allows inline scripts for the app itself.
+                "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com",
+                "style-src 'self' 'unsafe-inline'",
+                "img-src 'self' data: blob: https: http:",
+                "font-src 'self' data: https:",
+                "connect-src 'self' https: wss: http://localhost:* ws://localhost:*",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+                "frame-ancestors 'none'",
+                "upgrade-insecure-requests",
+              ].join('; '),
+            },
         ],
       },
     ];

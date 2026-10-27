@@ -39,7 +39,10 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const role = searchParams.get("role");
 
-    let query = supabase
+    // Full profile rows include PII columns outside the authenticated grant;
+    // the admin role was verified just above.
+    const admin = createAdminClient();
+    let query = admin
       .from("profiles")
       .select("*", { count: "exact" });
 

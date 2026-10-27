@@ -72,12 +72,12 @@ export default function SellerDebugPage() {
   return (
     <div className="space-y-6">
       <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-500">
-        <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary">
+        <Link href="/" className="inline-flex items-center gap-1 text-muted-500 transition-colors hover:text-primary-600">
           <Home className="size-3.5" />
           Home
         </Link>
         <ChevronRight className="size-3.5" />
-        <Link href="/seller" className="text-muted-500 transition-colors hover:text-primary">
+        <Link href="/seller" className="text-muted-500 transition-colors hover:text-primary-600">
           Seller Dashboard
         </Link>
         <ChevronRight className="size-3.5" />
@@ -94,7 +94,7 @@ export default function SellerDebugPage() {
         </div>
         <button
           onClick={runChecks}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-500"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-500"
         >
           <RefreshCw className="size-4" />
           Re-run checks
@@ -107,11 +107,11 @@ export default function SellerDebugPage() {
           <p className="text-xs text-muted-500">Endpoints</p>
         </div>
         <div className="rounded-xl bg-white p-4 text-center shadow-sm">
-          <p className="text-2xl font-bold text-success">{okCount}</p>
+          <p className="text-2xl font-bold text-success-700">{okCount}</p>
           <p className="text-xs text-muted-500">Healthy</p>
         </div>
         <div className="rounded-xl bg-white p-4 text-center shadow-sm">
-          <p className={cn('text-2xl font-bold', failed > 0 ? 'text-danger' : 'text-secondary-800')}>
+          <p className={cn('text-2xl font-bold', failed > 0 ? 'text-danger-600' : 'text-secondary-800')}>
             {failed}
           </p>
           <p className="text-xs text-muted-500">Failed</p>
@@ -133,12 +133,12 @@ export default function SellerDebugPage() {
               </span>
             )}
             {r.status === 'ok' && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success-700">
                 <CheckCircle2 className="size-4" /> OK{r.httpStatus ? ` · ${r.httpStatus}` : ''}
               </span>
             )}
             {r.status === 'error' && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-danger/10 px-3 py-1 text-xs font-semibold text-danger">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-danger/10 px-3 py-1 text-xs font-semibold text-danger-600">
                 <XCircle className="size-4" />
                 {r.message || `HTTP ${r.httpStatus}`}
               </span>

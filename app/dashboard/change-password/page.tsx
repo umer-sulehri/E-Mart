@@ -37,7 +37,7 @@ export default function ChangePasswordPage() {
   }, [newPassword]);
 
   const strengthColor =
-    strength <= 2 ? 'bg-danger' : strength <= 3 ? 'bg-warning' : 'bg-success';
+    strength <= 2 ? 'bg-danger-600' : strength <= 3 ? 'bg-warning-700' : 'bg-success-700';
 
   const strengthLabel =
     strength <= 2 ? 'Weak' : strength <= 3 ? 'Fair' : strength === 4 ? 'Good' : 'Strong';
@@ -76,7 +76,7 @@ export default function ChangePasswordPage() {
     <div className="mx-auto max-w-lg space-y-6">
       <Link
         href="/dashboard/profile"
-        className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted-600 transition-colors hover:text-primary-600"
       >
         <ArrowLeft className="size-4" />
         Back to Profile
@@ -90,20 +90,22 @@ export default function ChangePasswordPage() {
 
         <div className="mt-6 space-y-5">
           <div className="relative">
-            <label className="mb-1.5 block text-sm font-medium text-secondary-800">
+            <label htmlFor="current-password" className="mb-1.5 block text-sm font-medium text-secondary-800">
               Current Password
             </label>
             <div className="relative">
               <input
+                id="current-password"
                 type={showCurrent ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="Enter current password"
-                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
               <button
                 type="button"
                 onClick={() => setShowCurrent((s) => !s)}
+                aria-label={showCurrent ? 'Hide current password' : 'Show current password'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-muted-600"
               >
                 {showCurrent ? (
@@ -116,20 +118,22 @@ export default function ChangePasswordPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-secondary-800">
+            <label htmlFor="new-password" className="mb-1.5 block text-sm font-medium text-secondary-800">
               New Password
             </label>
             <div className="relative">
               <input
+                id="new-password"
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-muted-200 bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
               <button
                 type="button"
                 onClick={() => setShowNew((s) => !s)}
+                aria-label={showNew ? 'Hide new password' : 'Show new password'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-muted-600"
               >
                 {showNew ? (
@@ -148,10 +152,10 @@ export default function ChangePasswordPage() {
                     className={cn(
                       'text-xs font-medium',
                       strength <= 2
-                        ? 'text-danger'
+                        ? 'text-danger-600'
                         : strength <= 3
-                        ? 'text-warning'
-                        : 'text-success'
+                        ? 'text-warning-700'
+                        : 'text-success-700'
                     )}
                   >
                     {strengthLabel}
@@ -174,7 +178,7 @@ export default function ChangePasswordPage() {
                     <div
                       className={cn(
                         'flex h-4 w-4 items-center justify-center rounded-full',
-                        met ? 'bg-success text-white' : 'bg-muted-200'
+                        met ? 'bg-success-700 text-white' : 'bg-muted-200'
                       )}
                     >
                       {met && <Check className="size-2.5" />}
@@ -182,7 +186,7 @@ export default function ChangePasswordPage() {
                     <span
                       className={cn(
                         'text-xs',
-                        met ? 'text-success' : 'text-muted-500'
+                        met ? 'text-success-700' : 'text-muted-500'
                       )}
                     >
                       {req.label}
@@ -194,27 +198,30 @@ export default function ChangePasswordPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-secondary-800">
+            <label htmlFor="confirm-password" className="mb-1.5 block text-sm font-medium text-secondary-800">
               Confirm New Password
             </label>
             <div className="relative">
               <input
+                id="confirm-password"
                 type={showConfirm ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"
+                aria-invalid={confirmPassword.length > 0 && !passwordsMatch ? true : undefined}
                 className={cn(
                   'w-full rounded-lg border bg-white py-2.5 pl-3.5 pr-11 text-base sm:text-sm text-secondary-800 placeholder:text-muted-400 focus:outline-none focus:ring-2',
                   confirmPassword.length > 0
                     ? passwordsMatch
-                      ? 'border-success focus:border-success focus:ring-success/20'
-                      : 'border-danger focus:border-danger focus:ring-danger/20'
-                    : 'border-muted-200 focus:border-primary focus:ring-primary/20'
+                      ? 'border-success focus:border-success focus:ring-success-600'
+                      : 'border-danger focus:border-danger focus:ring-danger-600'
+                    : 'border-muted-200 focus:border-primary-600 focus:ring-primary-600'
                 )}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm((s) => !s)}
+                aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-400 hover:text-muted-600"
               >
                 {showConfirm ? (
@@ -225,10 +232,10 @@ export default function ChangePasswordPage() {
               </button>
             </div>
             {confirmPassword.length > 0 && !passwordsMatch && (
-              <p className="mt-1 text-xs text-danger">Passwords do not match</p>
+              <p className="mt-1 text-xs text-danger-600">Passwords do not match</p>
             )}
             {passwordsMatch && (
-              <p className="mt-1 text-xs text-success">Passwords match</p>
+              <p className="mt-1 text-xs text-success-700">Passwords match</p>
             )}
           </div>
         </div>
