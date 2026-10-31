@@ -117,6 +117,10 @@ must apply the incremental migrations in order, in the Supabase SQL editor:
    settings policy hardening. **Apply this before deploying the matching code**:
    the API routes that read PII now use the service-role client after their own
    auth/role checks, so the DB and app must ship together.
+4. `supabase/2029-fix-admin-policy-rls.sql` — rewrites the remaining admin RLS
+   policies that still queried `profiles.role` directly to use
+   `public.is_admin()`. Required for anonymous product/search/seller queries
+   after the 2028 PII lockdown.
 
 ## API
 

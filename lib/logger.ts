@@ -41,13 +41,11 @@ export const logger = {
   },
   warn: (scope: string, ...args: unknown[]) => {
     if (isEnabled('warn')) {
-      // eslint-disable-next-line no-console
       if (typeof console !== 'undefined') console.warn(`[${scope}]`, ...formatArgs(args));
     }
   },
   error: (scope: string, ...args: unknown[]) => {
     if (isEnabled('error')) {
-      // eslint-disable-next-line no-console
       if (typeof console !== 'undefined') console.error(`[${scope}]`, ...formatArgs(args));
     }
   },

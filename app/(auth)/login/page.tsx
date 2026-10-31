@@ -151,6 +151,7 @@ function RoleLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
+  const sellerPending = searchParams.get('error') === 'seller_pending';
   const { login } = useAuthStore();
   const [role, setRole] = useState<Role | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -267,6 +268,12 @@ function RoleLoginForm() {
   if (!role) {
     return (
       <div className="space-y-4">
+        {sellerPending && (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-center text-xs font-medium text-amber-700">
+            Your seller application is pending approval. You will be able to
+            access the seller dashboard once an admin approves your store.
+          </p>
+        )}
         <RoleSelector onStart={handleDemoLogin} loadingRole={demoLoading} />
         {demoError && (
           <p className="rounded-lg bg-danger/5 px-3 py-2 text-center text-xs font-medium text-danger-600">

@@ -39,6 +39,15 @@ export async function GET(request: NextRequest) {
         .limit(3),
     ]);
 
+    const firstError =
+      productsResult.error ?? categoriesResult.error ?? brandsResult.error;
+    if (firstError) {
+      return NextResponse.json(
+        { success: false, error: firstError.message },
+        { status: 500 }
+      );
+    }
+
     const suggestions = [
       ...(categoriesResult.data || []).map((cat) => ({
         text: cat.name,

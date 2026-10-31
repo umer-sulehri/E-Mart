@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Seller status check: a seller whose store was suspended or rejected must
-    // not be able to access the seller dashboard.
+    // Seller status check: only an approved store may sign in to the seller
+    // area. Pending applications stay locked until an admin verifies them.
     if (profile?.role === "seller") {
       const { data: vendor } = await supabase
         .from("vendors")
@@ -85,15 +85,21 @@ export async function POST(request: NextRequest) {
         .eq("user_id", data.user.id)
         .maybeSingle();
 
-      if (vendor && (vendor.status === "suspended" || vendor.status === "rejected")) {
+      const sellerStatus = vendor?.status;
+
+      if (!vendor || sellerStatus !== "approved") {
         await supabase.auth.signOut();
         return NextResponse.json(
           {
             success: false,
             error:
-              vendor.status === "suspended"
+              sellerStatus === "suspended"
                 ? "Your seller account has been suspended. Contact support."
-                : "Your seller application was not approved. Contact support.",
+                : sellerStatus === "rejected"
+                  ? "Your seller application was not approved. Contact support."
+                  : sellerStatus === "pending"
+                    ? "Your seller application is pending approval. You will be notified once it is reviewed."
+                    : "Your seller store is not available. Contact support.",
           },
           { status: 403 }
         );

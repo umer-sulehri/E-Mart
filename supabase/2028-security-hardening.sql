@@ -956,7 +956,7 @@ CREATE POLICY "Active products are viewable by everyone"
   USING (
     (is_active = true AND moderation_status = 'approved')
     OR vendor_id IN (SELECT id FROM vendors WHERE user_id = auth.uid())
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    OR public.is_admin()
   );
 
 COMMIT;

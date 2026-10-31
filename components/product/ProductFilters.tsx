@@ -132,7 +132,6 @@ export default function ProductFilters({
     ) {
       setPrice(next);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.minPrice, filters.maxPrice, boundsMin, boundsMax]);
 
   useEffect(() => {

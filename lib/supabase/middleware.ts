@@ -60,10 +60,34 @@ export async function updateSession(request: NextRequest) {
       } else {
         supabaseResponse.cookies.delete("sb-user-blocked");
       }
+
+      // Seller status is cached for the same reason: pending/suspended/
+      // rejected stores must not reach the seller dashboard or seller APIs.
+      if (profile.role === "seller") {
+        const { data: vendor } = await supabase
+          .from("vendors")
+          .select("status")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        supabaseResponse.cookies.set(
+          "sb-user-seller-status",
+          vendor?.status ?? "missing",
+          {
+            ...AUTH_COOKIE_OPTIONS,
+            maxAge: USER_ROLE_COOKIE_MAX_AGE,
+          }
+        );
+      } else {
+        supabaseResponse.cookies.delete("sb-user-seller-status");
+      }
+    } else {
+      supabaseResponse.cookies.delete("sb-user-seller-status");
     }
   } else {
     supabaseResponse.cookies.delete("sb-user-role");
     supabaseResponse.cookies.delete("sb-user-blocked");
+    supabaseResponse.cookies.delete("sb-user-seller-status");
   }
 
   return supabaseResponse;

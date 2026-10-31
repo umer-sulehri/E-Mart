@@ -123,6 +123,25 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Seller stores must be approved before the dashboard or seller APIs are
+  // reachable. updateSession caches the current vendor status in this cookie.
+  const sellerStatus = supabaseResponse.cookies.get("sb-user-seller-status")?.value;
+  if (sellerStatus && sellerStatus !== "approved") {
+    if (pathname.startsWith("/api/v1/seller")) {
+      return NextResponse.json(
+        { success: false, error: "Seller account is not approved." },
+        { status: 403 }
+      );
+    }
+
+    if (isProtectedRoute(pathname, "/seller")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.search = "?error=seller_pending";
+      return redirectWithCookies(url, supabaseResponse);
+    }
+  }
+
   if (isPublicRoute(pathname)) {
     return supabaseResponse;
   }

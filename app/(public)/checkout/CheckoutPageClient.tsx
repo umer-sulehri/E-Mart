@@ -57,7 +57,7 @@ const paymentSchema = z.object({
 
 const reviewSchema = z.object({
   acceptTerms: z.literal(true, {
-    errorMap: () => ({ message: 'You must accept the terms & conditions' }),
+    message: 'You must accept the terms & conditions',
   }),
 });
 
@@ -111,7 +111,7 @@ type PaymentConfig = Partial<
 // Helpers
 // ──────────────────────────────────────────
 
-function fieldErrors(result: z.SafeParseReturnType<unknown, unknown>): Record<string, string> {
+function fieldErrors(result: z.ZodSafeParseResult<unknown>): Record<string, string> {
   if (result.success) return {};
   const errors: Record<string, string> = {};
   for (const issue of result.error.issues) {

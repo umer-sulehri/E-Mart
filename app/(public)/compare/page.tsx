@@ -12,12 +12,13 @@ export const metadata: Metadata = generatePageMetadata(
   '/compare'
 );
 
-export default function ComparePage({
+export default async function ComparePage({
   searchParams,
 }: {
-  searchParams: { products?: string };
+  searchParams: Promise<{ products?: string }>;
 }) {
-  const initialProductSlugs = (searchParams.products || '')
+  const params = await searchParams;
+  const initialProductSlugs = (params.products || '')
     .split(',')
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);

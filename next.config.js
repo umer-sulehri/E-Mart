@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV !== 'production';
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -41,9 +43,9 @@ const nextConfig = {
                 // the CSP allows inline scripts for the app itself.
                 "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com",
                 "style-src 'self' 'unsafe-inline'",
-                "img-src 'self' data: blob: https: http:",
+                `img-src 'self' data: blob: https:${isDev ? ' http:' : ''}`,
                 "font-src 'self' data: https:",
-                "connect-src 'self' https: wss: http://localhost:* ws://localhost:*",
+                `connect-src 'self' https: wss:${isDev ? ' http://localhost:* ws://localhost:*' : ''}`,
                 "object-src 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",

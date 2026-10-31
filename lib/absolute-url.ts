@@ -18,9 +18,8 @@ import { SITE_URL } from './seo';
 export async function getSiteUrl(): Promise<string> {
   let host: string | null | undefined;
   try {
-    const h = headers();
-    // Next 14 returns a sync Headers instance; Next 15 returns a Promise.
-    host = typeof h.get === 'function' ? h.get('x-forwarded-host') || h.get('host') : (await h).get('x-forwarded-host') || (await h).get('host');
+    const h = await headers();
+    host = h.get('x-forwarded-host') || h.get('host');
   } catch {
     host = null;
   }

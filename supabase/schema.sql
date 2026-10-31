@@ -734,21 +734,21 @@ DROP POLICY IF EXISTS "Admins can insert categories" ON categories;
 CREATE POLICY "Admins can insert categories"
   ON categories FOR INSERT
   WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can update categories" ON categories;
 CREATE POLICY "Admins can update categories"
   ON categories FOR UPDATE
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can delete categories" ON categories;
 CREATE POLICY "Admins can delete categories"
   ON categories FOR DELETE
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -764,7 +764,7 @@ DROP POLICY IF EXISTS "Admins can manage brands" ON brands;
 CREATE POLICY "Admins can manage brands"
   ON brands FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -790,7 +790,7 @@ DROP POLICY IF EXISTS "Admins can manage all vendors" ON vendors;
 CREATE POLICY "Admins can manage all vendors"
   ON vendors FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -803,7 +803,7 @@ CREATE POLICY "Active products are viewable by everyone"
   USING (
     (is_active = true AND moderation_status = 'approved')
     OR vendor_id IN (SELECT id FROM vendors WHERE user_id = auth.uid())
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    OR public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Sellers can insert own products" ON products;
@@ -811,7 +811,7 @@ CREATE POLICY "Sellers can insert own products"
   ON products FOR INSERT
   WITH CHECK (
     vendor_id IN (SELECT id FROM vendors WHERE user_id = auth.uid())
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    OR public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Sellers can update own products" ON products;
@@ -819,7 +819,7 @@ CREATE POLICY "Sellers can update own products"
   ON products FOR UPDATE
   USING (
     vendor_id IN (SELECT id FROM vendors WHERE user_id = auth.uid())
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    OR public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Sellers can delete own products" ON products;
@@ -827,7 +827,7 @@ CREATE POLICY "Sellers can delete own products"
   ON products FOR DELETE
   USING (
     vendor_id IN (SELECT id FROM vendors WHERE user_id = auth.uid())
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    OR public.is_admin()
   );
 
 -- ============================================================
@@ -843,7 +843,7 @@ DROP POLICY IF EXISTS "Admins can manage product tags" ON product_tags;
 CREATE POLICY "Admins can manage product tags"
   ON product_tags FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -875,7 +875,7 @@ DROP POLICY IF EXISTS "Admins can manage all reviews" ON reviews;
 CREATE POLICY "Admins can manage all reviews"
   ON reviews FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -943,7 +943,7 @@ DROP POLICY IF EXISTS "Admins can manage coupons" ON coupons;
 CREATE POLICY "Admins can manage coupons"
   ON coupons FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- Sellers manage coupons they created (the seller API sets created_by
@@ -979,14 +979,14 @@ DROP POLICY IF EXISTS "Admins can view all orders" ON orders;
 CREATE POLICY "Admins can view all orders"
   ON orders FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can update all orders" ON orders;
 CREATE POLICY "Admins can update all orders"
   ON orders FOR UPDATE
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- Buyers update their own orders (COD confirmation, cancellation, etc.)
@@ -1084,7 +1084,7 @@ DROP POLICY IF EXISTS "Admins can view all order items" ON order_items;
 CREATE POLICY "Admins can view all order items"
   ON order_items FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Sellers can view their order items" ON order_items;
@@ -1109,7 +1109,7 @@ DROP POLICY IF EXISTS "Admins can manage banners" ON banners;
 CREATE POLICY "Admins can manage banners"
   ON banners FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1139,7 +1139,7 @@ DROP POLICY IF EXISTS "Admins can manage all blog posts" ON blog_posts;
 CREATE POLICY "Admins can manage all blog posts"
   ON blog_posts FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1246,7 +1246,7 @@ DROP POLICY IF EXISTS "Admins can manage settings" ON settings;
 CREATE POLICY "Admins can manage settings"
   ON settings FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1262,14 +1262,14 @@ DROP POLICY IF EXISTS "Admins can view subscribers" ON newsletter_subscribers;
 CREATE POLICY "Admins can view subscribers"
   ON newsletter_subscribers FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can manage subscribers" ON newsletter_subscribers;
 CREATE POLICY "Admins can manage subscribers"
   ON newsletter_subscribers FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1285,14 +1285,14 @@ DROP POLICY IF EXISTS "Admins can view contact submissions" ON contact_submissio
 CREATE POLICY "Admins can view contact submissions"
   ON contact_submissions FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can manage contact submissions" ON contact_submissions;
 CREATE POLICY "Admins can manage contact submissions"
   ON contact_submissions FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1308,14 +1308,14 @@ DROP POLICY IF EXISTS "Admins can view all social links" ON social_links;
 CREATE POLICY "Admins can view all social links"
   ON social_links FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can manage social links" ON social_links;
 CREATE POLICY "Admins can manage social links"
   ON social_links FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1341,7 +1341,7 @@ DROP POLICY IF EXISTS "Admins can view all search history" ON search_history;
 CREATE POLICY "Admins can view all search history"
   ON search_history FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1362,14 +1362,14 @@ DROP POLICY IF EXISTS "Admins can view all payouts" ON seller_payouts;
 CREATE POLICY "Admins can view all payouts"
   ON seller_payouts FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can manage all payouts" ON seller_payouts;
 CREATE POLICY "Admins can manage all payouts"
   ON seller_payouts FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1385,7 +1385,7 @@ DROP POLICY IF EXISTS "Admins can manage translations" ON translations;
 CREATE POLICY "Admins can manage translations"
   ON translations FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1425,7 +1425,7 @@ DROP POLICY IF EXISTS "Admins can manage review reports" ON review_reports;
 CREATE POLICY "Admins can manage review reports"
   ON review_reports FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1436,7 +1436,7 @@ DROP POLICY IF EXISTS "Admins can manage refunds" ON refunds;
 CREATE POLICY "Admins can manage refunds"
   ON refunds FOR ALL
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================
@@ -1447,14 +1447,14 @@ DROP POLICY IF EXISTS "Admins can view admin logs" ON admin_logs;
 CREATE POLICY "Admins can view admin logs"
   ON admin_logs FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can insert admin logs" ON admin_logs;
 CREATE POLICY "Admins can insert admin logs"
   ON admin_logs FOR INSERT
   WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    public.is_admin()
   );
 
 -- ============================================================

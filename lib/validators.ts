@@ -23,7 +23,7 @@ export const registerSchema = z
       .min(1, "Last name is required")
       .max(50, "Last name is too long"),
     agreeToTerms: z.literal(true, {
-      errorMap: () => ({ message: "You must agree to the terms" }),
+      message: "You must agree to the terms",
     }),
     role: z.enum(["customer", "seller"]).default("customer"),
     storeName: z
@@ -93,10 +93,10 @@ export const checkoutSchema = z.object({
   shippingAddress: addressSchema,
   billingAddress: addressSchema.optional(),
   paymentMethod: z.enum(["cod", "easypaisa", "jazzcash", "stripe"], {
-    errorMap: () => ({ message: "Please select a payment method" }),
+    message: "Please select a payment method",
   }),
   shippingMethod: z.enum(["standard", "express", "same_day"], {
-    errorMap: () => ({ message: "Please select a shipping method" }),
+    message: "Please select a shipping method",
   }),
 });
 
