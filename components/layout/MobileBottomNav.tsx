@@ -6,12 +6,16 @@ import { usePathname } from 'next/navigation';
 import { Home, Search, ShoppingCart, User } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
+import { getRoleHomeHref } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 const MobileBottomNav = () => {
   const pathname = usePathname();
   const itemCount = useCartStore((s) => s.uniqueItemCount());
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const role = useAuthStore((s) => s.user?.role);
+
+  const accountHref = isAuthenticated ? getRoleHomeHref(role) : '/login';
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -39,10 +43,10 @@ const MobileBottomNav = () => {
       active: isActive('/cart') || isActive('/checkout'),
     },
     {
-      href: isAuthenticated ? '/dashboard' : '/login',
+      href: accountHref,
       label: 'Account',
       icon: User,
-      active: isActive('/dashboard') || pathname === '/login',
+      active: isAuthenticated ? isActive(accountHref) : pathname === '/login',
     },
   ];
 

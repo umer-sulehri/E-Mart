@@ -19,7 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
 import { tryParseJson } from '@/lib/api';
-import { PAGES_LINKS } from '@/lib/constants';
+import { getRoleHomeHref, PAGES_LINKS } from '@/lib/constants';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import { useWishlistStore } from '@/store/wishlistStore';
@@ -346,7 +346,7 @@ function UserMenu({
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-muted-200 bg-white p-2 shadow-lg">
           <Link
-            href={user.role === 'admin' ? '/admin' : user.role === 'seller' ? '/seller' : '/dashboard'}
+            href={getRoleHomeHref(user.role)}
             onClick={() => setOpen(false)}
             aria-label="My Account"
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary hover:bg-primary-50 hover:text-primary-600 transition-colors"

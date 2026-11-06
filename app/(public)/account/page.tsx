@@ -3,21 +3,22 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store';
+import { getRoleHomeHref } from '@/lib/constants';
 import { Loader2 } from 'lucide-react';
 
 export default function AccountPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
 
   useEffect(() => {
     if (isLoading) return;
 
     if (isAuthenticated) {
-      router.replace('/dashboard');
+      router.replace(getRoleHomeHref(user?.role));
     } else {
       router.replace('/login?redirect=/account');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, user?.role]);
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">

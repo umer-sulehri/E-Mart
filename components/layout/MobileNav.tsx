@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useBodyScrollLock, useEscapeKey } from '@/hooks/useOverlay';
-import { PAGES_LINKS } from '@/lib/constants';
+import { getRoleHomeHref, PAGES_LINKS } from '@/lib/constants';
+import { useAuthStore } from '@/store/authStore';
 import {
   X,
   Apple,
@@ -61,6 +62,8 @@ interface MobileNavProps {
 
 export default function MobileNav({ open, onClose }: MobileNavProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const { user, isAuthenticated } = useAuthStore();
+  const accountHref = isAuthenticated ? getRoleHomeHref(user?.role) : '/login';
 
   // Reference-counted: the cart drawer can be opened from inside this menu, and
   // a plain body.overflow reset on unmount would re-enable scrolling behind it.
@@ -116,7 +119,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                 { label: 'Shop', href: '/products' },
                 { label: 'Cart', href: '/cart' },
                 { label: 'Wishlist', href: '/wishlist' },
-                { label: 'My Account', href: '/dashboard' },
+                { label: 'My Account', href: accountHref },
               ] as const
             ).map((link) => (
               <li key={link.label}>

@@ -170,6 +170,21 @@ export function getRoleLabel(role: string): string {
   }
 }
 
+// The landing area for each role. Account entry points (header menu, mobile
+// drawer, bottom nav, /account redirect) must use this instead of hardcoding
+// `/dashboard`, otherwise admins and sellers land in the buyer dashboard and
+// see the wrong sidebar.
+export function getRoleHomeHref(role: string | null | undefined): string {
+  switch (role) {
+    case "admin":
+      return "/admin";
+    case "seller":
+      return "/seller";
+    default:
+      return "/dashboard";
+  }
+}
+
 export const SITE_CONFIG = {
   name: "E-Mart",
   title: "E-Mart - Online Grocery Store",
